@@ -2342,3 +2342,16 @@ main {
     aspect-ratio: 180 / 250 !important;
   }
 }
+
+/* ===================================================
+   SOPORTE DRAG AND DROP TÁCTIL (MÓVILES Y TABLETS)
+=================================================== */
+[draggable="true"],
+.die,
+.equip-slot,
+.orb,
+.goblin-card {
+  touch-action: none !important; /* Evita que Android/iOS asuma que se quiere hacer scroll al tocar */
+  -webkit-touch-callout: none !important; /* Evita el menú contextual emergente en móviles al mantener pulsado */
+  user-select: none !important; /* Evita selección de texto accidental al mantener pulsado */
+}

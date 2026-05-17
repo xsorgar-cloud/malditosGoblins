@@ -391,15 +391,20 @@
     <script src="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0/index.min.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/mobile-drag-drop@2.3.0/scroll-behaviour.min.js"></script>
     <script>
-        // Inicializar el polyfill de Mobile Drag and Drop con opciones avanzadas
         window.addEventListener('DOMContentLoaded', () => {
+            // Opciones avanzadas del polyfill para máxima compatibilidad Android/iOS
             MobileDragDrop.polyfill({
-                // Opciones para mejorar la respuesta táctil
                 dragImageTranslateOverride: MobileDragDrop.scrollBehaviourDragImageTranslateOverride,
-                holdToDrag: 100 // ms que el usuario debe mantener pulsado antes de arrastrar (evita conflictos con scroll)
+                holdToDrag: 150, // Pequeño retardo para distinguir toque de arrastre
+                iterationInterval: 50 // Frecuencia de actualización del drag en Android
             });
-            // Evitar comportamiento por defecto del scroll al arrastrar en iOS/Android
-            window.addEventListener('touchmove', () => {}, { passive: false });
+
+            // Evitar scroll nativo de Android durante el arrastre
+            document.addEventListener('touchmove', (e) => {
+                if (document.body.classList.contains('dnd-poly-drag-active')) {
+                    e.preventDefault();
+                }
+            }, { passive: false });
         });
     </script>
 
