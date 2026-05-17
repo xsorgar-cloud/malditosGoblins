@@ -1,0 +1,93 @@
+﻿=== Sheet: Equipo Separado ===
+NORMAL							ROTO										
+Tipo	Nombre	Precio	Bloque	Limite	Efecto	Extra	Limite	Efecto	Extra								
+Inicial	Espada	-	2	-	Daño dado		MAX 5	Daño dado									
+	Escudo	-	1	-	Escudo dado MAX 4		-	Escudo dado MAX 3									
+Ataque	Daga	6	1	MAX 4	Daño dado +1	Reutilizable x3	MAX 2	Daño dado +1	Reutilizable								
+	Afilado	6	2	PAR	Daño dado	Con un 4: daño 6	PAR	Daño dado									
+	Añadir Pinchos	6	2	IMPAR	Daño dado	Con un 5: daño 6	IMPAR	Daño dado									
+	Cuchillo	3	1	-	Daño 3		-	Daño 3									
+	Serrado	6	2	-	Daño dado		MAX 4	Daño dado									
+	Oxidado	3	2	-	Daño dado Max 4		MAX 4	Daño dado									
+Curaciones	Cristal de Curación	4	1		Cura dado Max 4			Cura dado Max 3									
+	Gema Regeneración	4	2	MAX 4	Daño dado	Con un impar: cura 2	MAX 3	Daño dado	Con un impar: cura 1								
+	Corazón Elástico	4	2	MAX 4	Varia entre daño y vida		MAX 3	Varia entre daño y vida									
+	Vendaje	4	1		Cura 2	Reutilizable		Cura 1									
+	Drenar	4	2	MAX 4	Daño dado	Cura Max 2	MAX 3	Daño dado	Cura dado Max 2								
+	Drenar Justo	4	2	MAX 4	Daño 2	Con un 3: cura 3	MAX 3	Daño 1	Con un 2: cura 2								
+Escudo	Reforzado de Pinchos	6	2	MAX 5	Par: daño dado	Impar: Escudo dado	MAX 3	Par: daño dado	Impar: Escudo dado								
+	Reforzado de Hierro	6	2	-	Escudo dado		-	Escudo dado									
+	Rodela	3	1	MAX 4	Escudo dado +1	Reutilizable x3	MAX 3	Escudo dado									
+	Doble Reforzado	3	2	MAX 3	Escudo dado x2		MAX 2	Escudo dado x2									
+	Reforzado de Cuero	6	1		Escudo dado -1		MAX 4	Escudo dado -1									
+	Reforzado de Placas	3	1	-	Escudo dado MAX 4		-	Escudo dado MAX 3									
+																	
+																	
+				# Cartas por máximo													
+				MAX 6:	11												
+				MAX 5:	2												
+				MAX 4:	6												
+				MAX 3:	1												
+																	
+																	
+				# Cartas por máximo													
+				MAX 6:	7												
+				MAX 5:	2												
+				MAX 4:	3												
+				MAX 3:	6												
+				MAX 2:	2												
+=== Sheet: Goblins ===
+Tirada	Nivel 1	Nivel 2	Nivel 3	Nivel 4	Nivel 5	
+1	Daño Directo	Daño Directo	Rotura no esquivable + Daño Directo	Rotura no esquivable + Daño Directo	Rotura no esquivable + Daño Directo + 1 tembleque	
+2		1 calambre	1 tembleque	Rotura	Rotura no esquivable + 1 calambre	
+3			1 escozor	Rotura	Rotura no esquivable + 1 escozor	
+4	Rotura no esquivable	1 escozor	Rotura no esquivable + (lanza +1d4)	Rotura no esquivable + 1 escozor	Rotura no esquivable + 1 escozor	
+5	-		-	Rotura no esquivable + 1 calambre	Rotura no esquivable + 1 calambre	
+6	-	Rotura no esquivable	-	Rotura no esquivable + 1 tembleque	Rotura no esquivable + 1 tembleque	
+						
+						
+						
+						
+						
+Nivel	PV	Mo Recompensa	PEX Recompensa	Dado verde		
+1	5	2	1	1d4		
+2	10	3	2	1d6 + 1		
+3	15	4	3	1d4 + 1 + 1d4 + 1		
+4	20	6	5	1d4 + 1 + 1d6 + 1		
+5	25	8	8	1d6 + 2 + 1d6 + 2		
+=== Sheet: Mejoras ===
+Mejora	Coste	Cargas	Efecto	
+Remache	3	-	El daño final de la carta equipada se incrementa en +1. Solo equipable a cartas de daño.	
+Remache Escudo	3	-	La defensa final de la carta equipada se incrementa en +1. Solo equipable a cartas de escudo.	
+=== Sheet: Roles ===
+			Energías por Dado							
+Rol	Cambio	Efecto	1	2	3	4	5	6		
+Guerrero:	1 Energía --> 1 Daño	Consume Energías para asestar un punto de daño a un goblin contra el que estés en combate. 	0	0	2	3	4	4		
+Mago:	1 Energía --> 1 Daño	Consume Energías para asestar un punto de daño no letal a cualquiera de tus goblins boca arriba.	0	1	2	2	3	3		
+Protector:	1 Energía --> 1 Escudo
+2 Energías --> 1 Escudo Otro Jugador	Consume Energías para obtener un punto de Escudo dentro del combate.	2	2	2	3	3	4		
+Sanador:	1 Energía --> 1 PV
+2 Energías --> 1 PV Otro Jugador	Consume Energías para recuperar un punto de vida fuera del combate.	0	2	3	3	3	1		
+Ladrón:	1 Energía --> 1 mo	Consume Energías para obtener una moneda.	1	1	2	2	2	3		
+Curandero:	1 Energía --> 1 Quitar Debilitar
+2 Energías --> 1 Quitar Debilitar Otro Jugador	Consume Energías para curar una debilidad o para causar/curar un efecto de debilidad sobre la carta deseada de otro jugador.	1	2	2	3	3	0		
+										
+										
+										
+										
+		 								
+=== Sheet: Mascotas ===
+Nombre	Habilidad	
+Urraca Ladrona	 Si obtienes 2 o más Energías en el Rol, ganas 1 mo.	
+Escarabajo de Carga	Cada vez que ganes una energía, sumas +1 Energía.	
+Gato del Vacío	Si el dado NEGRO es un 1 o un 2 puedes relanzarlo. Aplica CANSADO sobre el Gato del Vacío.	
+Hurón Saqueador	Obtienes +1 mo adicional cada vez que ganes monedas.	
+Sanguijuela de Lago	Cada vez que recuperes vida, la Sanguijuela  de Lago te permite recuperar 1 PV adicional por fuente.	
+Sapo Guardián	Puedes quitar un efecto sobre ti. Aplica CANSADO sobre el Sapo Guardián.	
+Búho Vigía	Puedes modificar en +/-1 un dado NEGRO. Aplica CANSADO sobre el Búho Vigía.	
+Araña de Telaraña	Puedes gastar 2 energías del Rol para relanzar un dado ROJO.	
+Camaleón de Piedra	Ignora un efecto de Rotura. Aplica CANSADO sobre el Camaleón de Piedra.	
+Fénix de Ceniza	Recuperas 2 PV de forma automática tras eliminar un Goblin.	
+Cría de Draco	Suma 1 al daño total producido en tu Ataque contra Goblins.	
+Tortuga de Granito	Proporciona 2 punto de Escudo permanente en el combate contra Goblins.	
+		
