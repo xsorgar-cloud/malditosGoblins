@@ -512,7 +512,7 @@ function updateUI() {
     hitoBtn.disabled = true;
   } else {
     let hito = DB.hitos.iniciacion[gameState.currentHito - 1];
-    hitoBtn.innerText = `Enfrentar Hito ${gameState.currentHito}: ${hito.name}`;
+    hitoBtn.innerText = `Enfrentar Hito ${gameState.currentHito}`;
     hitoBtn.disabled = false;
   }
 
