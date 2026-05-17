@@ -2354,4 +2354,22 @@ main {
   touch-action: none !important; /* Evita que Android/iOS asuma que se quiere hacer scroll al tocar */
   -webkit-touch-callout: none !important; /* Evita el menú contextual emergente en móviles al mantener pulsado */
   user-select: none !important; /* Evita selección de texto accidental al mantener pulsado */
+  -webkit-user-drag: none !important; /* Evita que el motor nativo de Android intente arrastrar a nivel de SO */
+}
+
+/* ===================================================
+   SISTEMA DE RESPALDO TÁCTIL (TAP-TO-SELECT / CLICK)
+=================================================== */
+.die-selected {
+  box-shadow: 0 0 20px 8px var(--gold) !important;
+  transform: scale(1.15) !important;
+  z-index: 1000 !important;
+  border: 2px solid #fff !important;
+}
+
+.equip-selected {
+  box-shadow: 0 0 25px 10px #00d2ff !important;
+  transform: scale(1.08) !important;
+  z-index: 1000 !important;
+  border: 2px solid #fff !important;
 }

@@ -4,6 +4,10 @@ const gameState = new GameState();
 const COIN_SVG = `<svg viewBox="0 0 24 24" width="18" height="18" style="vertical-align: middle; margin-right: 3px;"><circle cx="12" cy="12" r="10" fill="#ffd700" stroke="#c79a32" stroke-width="2"/><circle cx="12" cy="12" r="7" fill="none" stroke="#e6c200" stroke-width="1" stroke-dasharray="2,2"/><path d="M12 7v10" stroke="#c79a32" stroke-width="2" stroke-linecap="round"/></svg>`;
 const SACK_SVG = `<svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align: middle; margin-right: 3px;"><path d="M9 3C8.5 3 8 4 8.5 5.5C9 7 9 7 9 7C6 8 4 12 4 18C4 20.5 6 21 12 21C18 21 20 20.5 20 18C20 12 18 8 15 7C15 7 15 7 15.5 5.5C16 4 15.5 3 15 3C13 3 11 3.5 9 3Z" fill="#ffffff" stroke="#000000" stroke-width="1.8" stroke-linejoin="round"/><rect x="8" y="6.5" width="8" height="2.5" rx="1" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"/><path d="M13 9C13 11 12 12 12 12C12 12 14 11 14 9Z" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"/><path d="M11 9C11 11 12 12 12 12C12 12 10 11 10 9Z" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"/></svg>`;
 
+// Variables Globales para Sistema de Respaldo Táctil (Tap-to-Select)
+let activeSelectedDieId = null;
+let activeSelectedEquipId = null;
+
 // Sobrescribir window.alert nativo por un modal inmersivo del juego
 window.alert = function (messageText) {
   const overlay = document.getElementById('global-event-overlay');
@@ -284,18 +288,44 @@ function renderRoleFillDice() {
 
     if (die.type === 'black' && !die.rerolled && roleFillAssigned !== die.id) {
       dieEl.style.cursor = 'pointer';
-      dieEl.title = 'Click para relanzar';
+      dieEl.title = 'Click para elegir acción (Relanzar o Asignar)';
       dieEl.onclick = () => {
-        dieEl.classList.add('die-spin');
-        const newVal = Math.floor(Math.random() * die.faces) + 1;
-        setTimeout(() => {
-          dieEl.innerText = newVal;
-        }, 300);
-        setTimeout(() => {
-          die.val = newVal;
-          die.rerolled = true;
+        const modal = document.getElementById('die-action-overlay');
+        document.getElementById('die-action-val').innerText = die.val;
+
+        const btnReroll = document.getElementById('btn-die-action-reroll');
+        const btnSelect = document.getElementById('btn-die-action-select');
+        const btnCancel = document.getElementById('btn-die-action-cancel');
+
+        btnReroll.onclick = () => {
+          modal.classList.add('hidden');
+          dieEl.classList.add('die-spin');
+          const newVal = Math.floor(Math.random() * die.faces) + 1;
+          setTimeout(() => {
+            dieEl.innerText = newVal;
+          }, 300);
+          setTimeout(() => {
+            die.val = newVal;
+            die.rerolled = true;
+            renderRoleFillDice();
+          }, 600);
+        };
+
+        btnSelect.onclick = () => {
+          modal.classList.add('hidden');
+          roleFillAssigned = die.id;
+          const placeholder = document.getElementById('role-fill-placeholder');
+          placeholder.innerText = die.val;
+          placeholder.className = 'die-placeholder active ' + die.type;
+          if (die.faces === 4) placeholder.classList.add('d4');
           renderRoleFillDice();
-        }, 600);
+          document.getElementById('btn-confirm-role-fill').disabled = false;
+        };
+
+        btnCancel.onclick = () => {
+          modal.classList.add('hidden');
+        };
+        modal.classList.remove('hidden');
       };
     } else if (roleFillAssigned === die.id) {
       dieEl.style.cursor = 'pointer';
@@ -306,6 +336,19 @@ function renderRoleFillDice() {
         document.getElementById('role-fill-placeholder').className = 'die-placeholder';
         document.getElementById('btn-confirm-role-fill').disabled = true;
         renderRoleFillDice();
+      };
+    } else if (roleFillAssigned !== die.id) {
+      // SISTEMA DE RESPALDO: Permitir asignar el dado al rol haciendo clic en él
+      dieEl.style.cursor = 'pointer';
+      dieEl.title = 'Click para asignar al rol';
+      dieEl.onclick = () => {
+        roleFillAssigned = die.id;
+        const placeholder = document.getElementById('role-fill-placeholder');
+        placeholder.innerText = die.val;
+        placeholder.className = 'die-placeholder active ' + die.type;
+        if (die.faces === 4) placeholder.classList.add('d4');
+        renderRoleFillDice();
+        document.getElementById('btn-confirm-role-fill').disabled = false;
       };
     }
 
@@ -519,6 +562,8 @@ btnConfirmAttack.addEventListener('click', () => {
   if (gameState.startCombat(selectedGoblins)) {
     currentAssignments = {};
     interceptionAssignments = {};
+    activeSelectedDieId = null;
+    activeSelectedEquipId = null;
     renderCombatOverlay();
   }
 });
@@ -827,6 +872,8 @@ function renderCombatOverlay() {
       gameState.resolveCombat(currentAssignments, interceptionAssignments);
       document.getElementById('combat-overlay').classList.add('hidden');
       selectedGoblins = [];
+      activeSelectedDieId = null;
+      activeSelectedEquipId = null;
       document.querySelectorAll('.goblin-card').forEach(el => el.classList.remove('selectable', 'selected'));
       document.getElementById('btn-confirm-attack').innerText = `Atacar Goblins (0)`;
       updateUI();
@@ -837,6 +884,8 @@ function renderCombatOverlay() {
     gameState.cancelCombat();
     document.getElementById('combat-overlay').classList.add('hidden');
     selectedGoblins = [];
+    activeSelectedDieId = null;
+    activeSelectedEquipId = null;
     document.querySelectorAll('.goblin-card').forEach(el => el.classList.remove('selectable', 'selected'));
     document.getElementById('btn-confirm-attack').innerText = `Atacar Goblins (0)`;
     updateUI();
@@ -917,6 +966,62 @@ function renderCombatOverlay() {
         }
         renderCombatOverlay();
         e.stopPropagation();
+      }
+    });
+
+    // SISTEMA DE RESPALDO (TAP-TO-SELECT): Asignar dado seleccionado o equipo seleccionado al goblin al hacer clic
+    gobCard.addEventListener('click', (e) => {
+      if (activeSelectedDieId) {
+        const dieData = c.playerDice.find(d => d.id === activeSelectedDieId);
+        if (dieData) {
+          if (isCrampPhase) return;
+          if (dieData.isCramped && !isCrampPhase) return;
+
+          const playerDieVal = dieData.value;
+          const goblinDice = c.dice.green[gob.uid].details.filter(d => d.type === 'die');
+
+          if (!interceptionAssignments[gob.uid]) interceptionAssignments[gob.uid] = [];
+
+          let targetDieIndex = -1;
+          for (let i = 0; i < goblinDice.length; i++) {
+            const alreadyIntercepted = interceptionAssignments[gob.uid].some(asg => asg.goblinDieIndex === i);
+            if (!alreadyIntercepted && goblinDice[i].val === playerDieVal) {
+              targetDieIndex = i;
+              break;
+            }
+          }
+
+          if (targetDieIndex !== -1) {
+            clearDieAssignment(activeSelectedDieId);
+            clearInterception(activeSelectedDieId);
+
+            if (!interceptionAssignments[gob.uid]) interceptionAssignments[gob.uid] = [];
+
+            interceptionAssignments[gob.uid].push({
+              dieId: activeSelectedDieId,
+              value: playerDieVal,
+              goblinDieIndex: targetDieIndex
+            });
+            dieData.assignedTo = `intercept-${gob.uid}-${targetDieIndex}`;
+            activeSelectedDieId = null;
+            renderCombatOverlay();
+          } else {
+            alert(`Para interceptar, el dado del jugador (${playerDieVal}) debe coincidir con algún dado natural del Goblin que no esté ya interceptado.`);
+          }
+          e.stopPropagation();
+        }
+      } else if (activeSelectedEquipId) {
+        if (currentAssignments[activeSelectedEquipId]) {
+          let asgs = currentAssignments[activeSelectedEquipId];
+          if (Array.isArray(asgs)) {
+            asgs.forEach(a => a.targetUid = gob.uid);
+          } else {
+            asgs.targetUid = gob.uid;
+          }
+          activeSelectedEquipId = null;
+          renderCombatOverlay();
+          e.stopPropagation();
+        }
       }
     });
 
@@ -1079,18 +1184,54 @@ function renderCombatOverlay() {
 
     if (die.type === 'black' && !die.rerolled && !die.assignedTo) {
       dieEl.style.cursor = 'pointer';
-      dieEl.title = 'Click para relanzar';
+      dieEl.title = 'Click para elegir acción (Relanzar o Asignar)';
+      if (activeSelectedDieId === die.id) {
+        dieEl.classList.add('die-selected');
+      }
       dieEl.onclick = () => {
-        dieEl.classList.add('die-spin');
-        setTimeout(() => {
-          let newVal = gameState.rerollDie(die.id);
-          if (newVal) {
-            dieEl.innerText = newVal;
-          }
-        }, 300);
-        setTimeout(() => {
+        if (activeSelectedDieId === die.id) {
+          activeSelectedDieId = null;
           renderCombatOverlay();
-        }, 600);
+          return;
+        }
+
+        const modal = document.getElementById('die-action-overlay');
+        document.getElementById('die-action-val').innerText = die.value;
+
+        const btnReroll = document.getElementById('btn-die-action-reroll');
+        const btnSelect = document.getElementById('btn-die-action-select');
+        const btnCancel = document.getElementById('btn-die-action-cancel');
+
+        btnReroll.onclick = () => {
+          modal.classList.add('hidden');
+          dieEl.classList.add('die-spin');
+          setTimeout(() => {
+            let newVal = gameState.rerollDie(die.id);
+            if (newVal) {
+              dieEl.innerText = newVal;
+            }
+          }, 300);
+          setTimeout(() => {
+            renderCombatOverlay();
+          }, 600);
+        };
+
+        btnSelect.onclick = () => {
+          modal.classList.add('hidden');
+          if (activeSelectedDieId === die.id) {
+            activeSelectedDieId = null;
+            renderCombatOverlay();
+          } else {
+            activeSelectedDieId = die.id;
+            activeSelectedEquipId = null; // Limpiar selección de equipo
+            renderCombatOverlay();
+          }
+        };
+
+        btnCancel.onclick = () => {
+          modal.classList.add('hidden');
+        };
+        modal.classList.remove('hidden');
       };
     } else if (die.assignedTo) {
       // No permitir desasignar calambre si ya pasó su fase
@@ -1104,6 +1245,23 @@ function renderCombatOverlay() {
           clearDieAssignment(die.id);
         };
       }
+    } else if (!die.assignedTo) {
+      // SISTEMA DE RESPALDO (TAP-TO-SELECT): Seleccionar dado para aplicarlo a un objetivo
+      dieEl.style.cursor = 'pointer';
+      dieEl.title = 'Click para seleccionar dado';
+      if (activeSelectedDieId === die.id) {
+        dieEl.classList.add('die-selected');
+      }
+      dieEl.onclick = () => {
+        if (activeSelectedDieId === die.id) {
+          activeSelectedDieId = null;
+          renderCombatOverlay();
+        } else {
+          activeSelectedDieId = die.id;
+          activeSelectedEquipId = null; // Limpiar selección de equipo
+          renderCombatOverlay();
+        }
+      };
     }
     let dieWrapper = document.createElement('div');
     dieWrapper.className = 'die-wrapper';
@@ -1194,6 +1352,24 @@ function renderCombatOverlay() {
     renderCombatOverlay();
   });
 
+  // SISTEMA DE RESPALDO (TAP-TO-SELECT): Asignar dado activo al rol al hacer clic
+  roleSlot.addEventListener('click', (e) => {
+    if (activeSelectedDieId) {
+      const dieData = c.playerDice.find(d => d.id === activeSelectedDieId);
+      if (!dieData) return;
+
+      clearDieAssignment(activeSelectedDieId);
+
+      if (!currentAssignments['role']) currentAssignments['role'] = [];
+      currentAssignments['role'].push({ dieId: activeSelectedDieId, value: dieData.value, isRole: true });
+
+      dieData.assignedTo = 'role';
+      activeSelectedDieId = null;
+      renderCombatOverlay();
+      e.stopPropagation();
+    }
+  });
+
   // RESTAURAR ESTADO DE ROL
   const roleAsgs = currentAssignments['role'];
   if (roleAsgs && Array.isArray(roleAsgs)) {
@@ -1261,6 +1437,10 @@ function renderCombatOverlay() {
     slot.style.backgroundImage = `url('${eq.image}')`;
     slot.innerHTML = `<div class="die-placeholder" data-id="${eq.id}"></div>`;
 
+    if (activeSelectedEquipId === eq.id) {
+      slot.classList.add('equip-selected');
+    }
+
     slot.addEventListener('dragover', (e) => e.preventDefault());
     slot.addEventListener('drop', (e) => {
       e.preventDefault();
@@ -1287,6 +1467,45 @@ function renderCombatOverlay() {
       currentAssignments[eq.id].push({ dieId: dieId, value: dieData.value, targetUid: null });
       dieData.assignedTo = eq.id;
       renderCombatOverlay();
+    });
+
+    // SISTEMA DE RESPALDO (TAP-TO-SELECT): Asignar dado activo al equipo o seleccionar equipo cargado al hacer clic
+    slot.addEventListener('click', (e) => {
+      if (activeSelectedDieId) {
+        const dieData = c.playerDice.find(d => d.id === activeSelectedDieId);
+        if (!dieData) return;
+
+        if (!gameState.isValidDieForEquipment(dieData.value, eq)) return;
+
+        clearDieAssignment(activeSelectedDieId);
+
+        if (!currentAssignments[eq.id]) currentAssignments[eq.id] = [];
+
+        const extra = (eq.extra || '').toLowerCase();
+        const isReusable = extra.includes('reutilizable');
+        const maxUses = extra.includes('x3') ? 3 : (isReusable ? 6 : 1);
+
+        if (currentAssignments[eq.id].length >= maxUses) return;
+
+        currentAssignments[eq.id].push({ dieId: activeSelectedDieId, value: dieData.value, targetUid: null });
+        dieData.assignedTo = eq.id;
+        activeSelectedDieId = null;
+        renderCombatOverlay();
+        e.stopPropagation();
+      } else {
+        const asgs = currentAssignments[eq.id];
+        if (asgs && asgs.length > 0) {
+          if (activeSelectedEquipId === eq.id) {
+            activeSelectedEquipId = null;
+            renderCombatOverlay();
+          } else {
+            activeSelectedEquipId = eq.id;
+            activeSelectedDieId = null; // Limpiar selección de dado
+            renderCombatOverlay();
+          }
+          e.stopPropagation();
+        }
+      }
     });
 
     // RESTAURAR ESTADO DE EQUIPO
@@ -1918,6 +2137,8 @@ function updateNarrowStates() {
   });
 }
 
+let activeSelectedOrbUid = null;
+
 function renderRetaliationModal() {
   const overlay = document.getElementById('global-event-overlay');
   const title = document.getElementById('event-modal-title');
@@ -1932,7 +2153,7 @@ function renderRetaliationModal() {
 
   title.innerHTML = `⚔️ FASE DE REPRESALIA ⚔️`;
   title.style.color = 'var(--accent-red)';
-  desc.innerHTML = `Tienes un total de <strong style="font-size: 1.4rem; color: var(--accent-red);">${totalDamage} </strong> de daño por asignar.<br>Arrastra los orbes hacia los jugadores.`;
+  desc.innerHTML = `Tienes un total de <strong style="font-size: 1.4rem; color: var(--accent-red);">${totalDamage} </strong> de daño por asignar.<br>Arrastra los orbes hacia los jugadores o tócalos para seleccionar.`;
 
   container.innerHTML = '';
   // Asegurar flujo vertical con clase CSS
@@ -1949,6 +2170,24 @@ function renderRetaliationModal() {
       orb.innerText = gob.level;
       orb.draggable = true;
       orb.dataset.uid = gob.uid;
+      orb.title = "Arrastra o haz clic para seleccionar";
+
+      if (activeSelectedOrbUid === gob.uid) {
+        orb.classList.add('orb-selected');
+        orb.style.boxShadow = '0 0 15px 5px var(--accent-red), 0 0 25px 10px #ff0000';
+        orb.style.transform = 'scale(1.15)';
+      }
+
+      orb.addEventListener('click', (e) => {
+        if (activeSelectedOrbUid === gob.uid) {
+          activeSelectedOrbUid = null;
+          renderRetaliationModal();
+        } else {
+          activeSelectedOrbUid = gob.uid;
+          renderRetaliationModal();
+        }
+        e.stopPropagation();
+      });
 
       orb.addEventListener('dragstart', (e) => {
         e.dataTransfer.setData('text/plain', gob.uid);
@@ -1972,11 +2211,21 @@ function renderRetaliationModal() {
       const zone = document.createElement('div');
       zone.className = 'player-drop-zone';
       if (p.hp <= 0) zone.classList.add('is-dead');
+      zone.title = "Arrastra un orbe aquí o haz clic si tienes un orbe seleccionado";
 
       zone.innerHTML = `
         <h4>${p.name}</h4>
         <div class="hp-info">HP Actual: ${p.hp}</div>
       `;
+
+      zone.addEventListener('click', (e) => {
+        if (activeSelectedOrbUid && p.hp > 0) {
+          const chosenUid = activeSelectedOrbUid;
+          activeSelectedOrbUid = null;
+          handleRetaliationChoice(chosenUid, idx);
+          e.stopPropagation();
+        }
+      });
 
       if (p.hp > 0) {
         const bulkBtn = document.createElement('button');
@@ -2019,6 +2268,7 @@ function renderRetaliationModal() {
 function assignAllRetaliationToPlayer(pIndex) {
   const container = document.getElementById('event-choices-container');
   const remaining = [...gameState.retaliationQueue];
+  activeSelectedOrbUid = null;
 
   remaining.forEach(gob => {
     gameState.assignRetaliationDamage(gob.uid, pIndex);
@@ -2040,6 +2290,7 @@ function assignAllRetaliationToPlayer(pIndex) {
 }
 
 function handleRetaliationChoice(gobUid, playerIdx) {
+  activeSelectedOrbUid = null;
   if (gameState.assignRetaliationDamage(gobUid, playerIdx)) {
     // Pequeño retardo para que se vea la actualización del HUD antes de re-renderizar el modal
     setTimeout(() => {
