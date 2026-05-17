@@ -278,9 +278,9 @@ function renderRoleFillDice() {
     dieEl.draggable = roleFillAssigned !== die.id;
     dieEl.style.opacity = roleFillAssigned === die.id ? '0.3' : '1';
 
-    dieEl.ondragstart = (e) => {
+    dieEl.addEventListener('dragstart', (e) => {
       e.dataTransfer.setData('text/plain', die.id);
-    };
+    });
 
     if (die.type === 'black' && !die.rerolled && roleFillAssigned !== die.id) {
       dieEl.style.cursor = 'pointer';
@@ -326,8 +326,8 @@ function renderRoleFillDice() {
   });
 }
 
-document.getElementById('role-fill-slot').ondragover = (e) => e.preventDefault();
-document.getElementById('role-fill-slot').ondrop = (e) => {
+document.getElementById('role-fill-slot').addEventListener('dragover', (e) => e.preventDefault());
+document.getElementById('role-fill-slot').addEventListener('drop', (e) => {
   e.preventDefault();
   const dieId = e.dataTransfer.getData('text/plain');
   const die = roleFillDice.find(d => d.id === dieId);
@@ -343,7 +343,7 @@ document.getElementById('role-fill-slot').ondrop = (e) => {
 
   renderRoleFillDice();
   document.getElementById('btn-confirm-role-fill').disabled = false;
-};
+});
 
 document.getElementById('btn-confirm-role-fill').addEventListener('click', () => {
   if (!roleFillAssigned) return;
@@ -856,8 +856,8 @@ function renderCombatOverlay() {
     gobCard.innerHTML = `<div class="goblin-hp">${gob.currentHp}</div>`;
 
     // Drop zone logic for the goblin
-    gobCard.ondragover = (e) => e.preventDefault();
-    gobCard.ondrop = (e) => {
+    gobCard.addEventListener('dragover', (e) => e.preventDefault());
+    gobCard.addEventListener('drop', (e) => {
       e.preventDefault();
 
       // 1. Intercepción con dados del jugador
@@ -918,7 +918,7 @@ function renderCombatOverlay() {
         renderCombatOverlay();
         e.stopPropagation();
       }
-    };
+    });
 
     let assignedEqContainer = document.createElement('div');
     assignedEqContainer.id = `assigned-${gob.uid}`;
@@ -937,9 +937,9 @@ function renderCombatOverlay() {
           miniEl.style.backgroundImage = `url('${eqObj.image}')`;
           miniEl.title = `Asignado a ${gob.name}`;
           miniEl.draggable = true;
-          miniEl.ondragstart = (ev) => {
+          miniEl.addEventListener('dragstart', (ev) => {
             ev.dataTransfer.setData('text/equipId', eqId);
-          };
+          });
           assignedEqContainer.appendChild(miniEl);
         }
       }
@@ -1029,8 +1029,8 @@ function renderCombatOverlay() {
   // Permitir desasignar equipo soltándolo en el fondo
   const combatMain = document.getElementById('combat-main');
   if (combatMain) {
-    combatMain.ondragover = (e) => e.preventDefault();
-    combatMain.ondrop = (e) => {
+    combatMain.addEventListener('dragover', (e) => e.preventDefault());
+    combatMain.addEventListener('drop', (e) => {
       let eqId = e.dataTransfer.getData('text/equipId');
       if (eqId && currentAssignments[eqId]) {
         let asgData = currentAssignments[eqId];
@@ -1043,7 +1043,7 @@ function renderCombatOverlay() {
         // El renderCombatOverlay se encargará de limpiar los mini-iconos y resetear los slots
         renderCombatOverlay();
       }
-    };
+    });
   }
 
   // Render Dados
@@ -1073,9 +1073,9 @@ function renderCombatOverlay() {
       dieEl.title = die.assignedTo ? "Calambre: Asignado" : "Calambre: Dado perdido";
     }
 
-    dieEl.ondragstart = (e) => {
+    dieEl.addEventListener('dragstart', (e) => {
       e.dataTransfer.setData('text/plain', die.id);
-    };
+    });
 
     if (die.type === 'black' && !die.rerolled && !die.assignedTo) {
       dieEl.style.cursor = 'pointer';
@@ -1178,8 +1178,8 @@ function renderCombatOverlay() {
   if (!canUseRole) roleSlot.style.borderColor = '#00d2ff'; // Azul para el rol
   roleSlot.innerHTML = `<div class="die-placeholder" data-id="role"></div>`;
 
-  roleSlot.ondragover = (e) => e.preventDefault();
-  roleSlot.ondrop = (e) => {
+  roleSlot.addEventListener('dragover', (e) => e.preventDefault());
+  roleSlot.addEventListener('drop', (e) => {
     e.preventDefault();
     const dieId = e.dataTransfer.getData('text/plain');
     const dieData = c.playerDice.find(d => d.id === dieId);
@@ -1192,7 +1192,7 @@ function renderCombatOverlay() {
 
     dieData.assignedTo = 'role';
     renderCombatOverlay();
-  };
+  });
 
   // RESTAURAR ESTADO DE ROL
   const roleAsgs = currentAssignments['role'];
@@ -1261,8 +1261,8 @@ function renderCombatOverlay() {
     slot.style.backgroundImage = `url('${eq.image}')`;
     slot.innerHTML = `<div class="die-placeholder" data-id="${eq.id}"></div>`;
 
-    slot.ondragover = (e) => e.preventDefault();
-    slot.ondrop = (e) => {
+    slot.addEventListener('dragover', (e) => e.preventDefault());
+    slot.addEventListener('drop', (e) => {
       e.preventDefault();
       const dieId = e.dataTransfer.getData('text/plain');
       const dieData = c.playerDice.find(d => d.id === dieId);
@@ -1287,7 +1287,7 @@ function renderCombatOverlay() {
       currentAssignments[eq.id].push({ dieId: dieId, value: dieData.value, targetUid: null });
       dieData.assignedTo = eq.id;
       renderCombatOverlay();
-    };
+    });
 
     // RESTAURAR ESTADO DE EQUIPO
     const asgs = currentAssignments[eq.id];
@@ -1317,9 +1317,9 @@ function renderCombatOverlay() {
       if (asgs.length > 0) {
         slot.classList.add('loaded');
         slot.draggable = true;
-        slot.ondragstart = (ev) => {
+        slot.addEventListener('dragstart', (ev) => {
           ev.dataTransfer.setData('text/equipId', eq.id);
-        };
+        });
         if (asgs.some(a => a.targetUid)) slot.style.opacity = '0.5';
       }
     }
