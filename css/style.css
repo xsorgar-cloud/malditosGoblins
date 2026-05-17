@@ -2035,3 +2035,310 @@ main {
 #target-modal .modal-content.wide-modal {
   max-width: 95vw;
 }
+
+/* ===================================================
+   DISEÑO RESPONSIVE FLUIDO (MÓVILES, TABLETS Y MENOR)
+=================================================== */
+@media (max-width: 1180px), (max-height: 720px) {
+  body {
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    font-size: 0.85rem !important; /* TEXTO BASE MÁS PEQUEÑO */
+  }
+
+  #game-container {
+    display: flex !important;
+    flex-direction: column !important;
+    height: auto !important;
+    min-height: 100vh !important;
+    gap: 10px !important;
+    padding: 10px !important;
+  }
+
+  header, main, footer {
+    overflow: visible !important;
+    height: auto !important;
+    flex: 0 0 auto !important;
+  }
+
+  /* --- ZONA DE MERCADO --- */
+  #market-zone {
+    padding-top: 35px !important;
+  }
+
+  #market-zone h2 {
+    top: 5px !important;
+    font-size: 1.1rem !important; /* TÍTULO MÁS PEQUEÑO */
+  }
+
+  .market-decks {
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .market-decks .deck {
+    flex: 1 1 60px !important;
+    width: auto !important;
+    min-width: 50px !important;
+    max-width: 85px !important; /* ¡REDUCCIÓN ESTRICTA DE TAMAÑO! */
+    height: auto !important;
+    max-height: 120px !important;
+    aspect-ratio: 125 / 175 !important;
+  }
+
+  /* --- ZONA DE CAMPO DE BATALLA (GOBLINS Y BOTONES) --- */
+  #battlefield-zone {
+    padding: 15px 10px !important;
+  }
+
+  .wave-info {
+    position: relative !important;
+    top: 0 !important;
+    right: 0 !important;
+    margin: 0 auto 15px auto !important;
+    justify-content: center !important;
+    width: fit-content !important;
+  }
+
+  .wave-info h2 {
+    font-size: 1rem !important; /* TÍTULO DE OLEADA MÁS PEQUEÑO */
+  }
+
+  .goblins-container {
+    flex-wrap: wrap !important;
+    padding: 5px !important;
+    gap: 10px !important;
+    justify-content: center !important;
+    margin-bottom: 15px !important;
+    width: 100% !important;
+  }
+
+  #goblins-container .goblin-card {
+    flex: 1 1 70px !important;
+    width: auto !important;
+    min-width: 60px !important;
+    max-width: 110px !important; /* ¡REDUCCIÓN ESTRICTA DE TAMAÑO! */
+    height: auto !important;
+    max-height: 155px !important;
+    aspect-ratio: 180 / 255 !important;
+  }
+
+  .goblin-hp {
+    font-size: 1.1rem !important; /* VIDA DE GOBLINS MÁS PEQUEÑA */
+    width: 32px !important;
+    height: 32px !important;
+  }
+
+  /* --- BOTONES DE ACCIÓN GENERALES MÁS PEQUEÑOS --- */
+  button, .btn {
+    font-size: 0.8rem !important;
+    padding: 5px 10px !important;
+    height: auto !important;
+    min-height: 30px !important;
+  }
+
+  .battle-actions {
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 8px !important;
+    margin-top: 15px !important;
+    position: relative !important;
+    z-index: 500 !important;
+  }
+
+  #action-buttons {
+    position: relative !important;
+    display: flex !important;
+    flex-direction: row !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: center !important;
+    z-index: 500 !important;
+    width: 100% !important;
+  }
+
+  #action-buttons button,
+  .battle-actions button,
+  #hito-actions button {
+    font-size: 0.8rem !important; /* BOTONES MÁS PEQUEÑOS */
+    padding: 5px 10px !important;
+    height: 32px !important;
+  }
+
+  #hito-actions {
+    position: relative !important;
+    display: flex !important;
+    flex-direction: row !important;
+    justify-content: center !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin-bottom: 8px !important;
+    z-index: 505 !important;
+  }
+
+  /* --- ZONA DE JUGADORES --- */
+  .players-container {
+    flex-direction: column !important;
+    overflow-y: visible !important;
+    overflow-x: hidden !important;
+    gap: 15px !important;
+  }
+
+  .player-panel {
+    min-width: 100% !important;
+    width: 100% !important;
+    height: auto !important;
+  }
+
+  .player-name, .player-header {
+    font-size: 0.95rem !important; /* TÍTULOS DE JUGADOR MÁS PEQUEÑOS */
+  }
+
+  /* MANTENEMOS LA CARTA DE ROL A LA IZQUIERDA PERO MÁS PEQUEÑA */
+  .player-dashboard {
+    display: grid !important;
+    grid-template-columns: 60px 1fr !important; /* ROL A LA IZQ, EQUIPO A LA DCHA */
+    gap: 12px !important;
+  }
+
+  .player-role {
+    width: 60px !important;
+    height: 90px !important; /* CARTA DE ROL MÁS PEQUEÑA Y VERTICAL */
+    margin: 0 !important;
+  }
+
+  .role-energy {
+    font-size: 0.85rem !important; /* ENERGÍA MÁS PEQUEÑA */
+  }
+
+  .player-equipment {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    justify-content: flex-start !important;
+    align-items: center !important;
+    overflow-x: visible !important;
+    width: 100% !important;
+    gap: 8px !important;
+  }
+
+  .equipment-card {
+    flex: 1 1 60px !important;
+    width: auto !important;
+    min-width: 50px !important;
+    max-width: 90px !important; /* ¡REDUCCIÓN ESTRICTA DE TAMAÑO! */
+    height: auto !important;
+    max-height: 130px !important;
+    aspect-ratio: 140 / 200 !important;
+  }
+
+  /* --- SELECCIÓN DE ROLES (SETUP MODAL) --- */
+  #setup-content {
+    padding: 20px !important;
+    width: 95% !important;
+    max-width: 95% !important;
+  }
+
+  /* Mantenemos las 2 columnas horizontales intactas */
+  #setup-content > div {
+    display: flex !important;
+    flex-direction: row !important; /* COLUMNAS IZQ Y DCHA MANTENIDAS */
+    gap: 20px !important;
+    align-items: flex-start !important;
+  }
+
+  #role-selection-container {
+    flex: 1 1 60% !important;
+  }
+
+  #setup-role-preview {
+    flex: 1 1 40% !important;
+    width: auto !important;
+    max-width: 240px !important;
+    padding: 15px !important;
+  }
+
+  #setup-role-card {
+    width: 100% !important;
+    max-width: 160px !important; /* IMAGEN DE ROL MÁS PEQUEÑA */
+    height: auto !important;
+    aspect-ratio: 220 / 330 !important;
+    margin-bottom: 15px !important;
+  }
+
+  /* --- PANTALLA DE COMBATE (COMBAT OVERLAY) --- */
+  #combat-overlay .combat-panel {
+    display: flex !important;
+    flex-direction: row !important; /* MANTENEMOS EL MENÚ A LA IZQUIERDA */
+    width: 98% !important;
+    max-width: 98% !important;
+    height: 92vh !important;
+    overflow: hidden !important;
+  }
+
+  #combat-sidebar {
+    width: 260px !important; /* MENÚ IZQUIERDO MÁS ESTRECHO Y COMPACTO */
+    padding: 15px !important;
+    border-right: 1px solid rgba(212, 175, 55, 0.3) !important;
+    border-bottom: none !important;
+    flex: 0 0 260px !important;
+    overflow-y: auto !important;
+  }
+
+  #combat-player-stats div {
+    font-size: 1rem !important; /* STATS DE COMBATE MÁS PEQUEÑAS */
+  }
+
+  .die {
+    font-size: 1.3rem !important; /* DADOS MÁS PEQUEÑOS */
+    width: 40px !important;
+    height: 40px !important;
+  }
+
+  #combat-main {
+    flex: 1 !important;
+    padding: 15px !important;
+    overflow-y: auto !important;
+  }
+
+  #combat-goblins-container {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    justify-content: center !important;
+    margin-bottom: 20px !important;
+  }
+
+  #combat-goblins-container .goblin-combat-wrapper {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #combat-goblins-container .goblin-card {
+    flex: 0 0 90px !important;
+    width: 90px !important; /* GOBLINS DE COMBATE MÁS PEQUEÑOS */
+    min-width: 90px !important;
+    max-width: 90px !important;
+    height: 127px !important;
+    max-height: 127px !important;
+    aspect-ratio: 180 / 255 !important;
+  }
+
+  .combat-equipment {
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+    gap: 10px !important;
+    width: 100% !important;
+  }
+
+  .combat-equipment .equip-slot {
+    flex: 0 0 80px !important;
+    width: 80px !important;
+    min-width: 80px !important;
+    max-width: 80px !important;
+    height: 111px !important;
+    max-height: 111px !important;
+    aspect-ratio: 180 / 250 !important;
+  }
+}
