@@ -875,7 +875,27 @@ function renderCombatOverlay() {
         }
       }
 
+      const pBefore = gameState.getCurrentPlayer();
+      const hpBefore = pBefore.hp;
+
       gameState.resolveCombat(currentAssignments, interceptionAssignments);
+
+      const hpAfter = pBefore.hp;
+      if (hpAfter < hpBefore) {
+        const flash = document.createElement('div');
+        flash.style.cssText = `
+          position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+          background: rgba(230, 57, 70, 0.55);
+          pointer-events: none;
+          z-index: 999999;
+          transition: background 0.5s ease-out;
+        `;
+        document.body.appendChild(flash);
+        flash.getBoundingClientRect(); // Forzar reflow
+        flash.style.background = 'rgba(230, 57, 70, 0)';
+        setTimeout(() => flash.remove(), 500);
+      }
+
       document.getElementById('combat-overlay').classList.add('hidden');
       selectedGoblins = [];
       activeSelectedDieId = null;
