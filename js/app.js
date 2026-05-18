@@ -744,9 +744,11 @@ function openExploreMarketModal() {
   modal.classList.remove('hidden');
 }
 
+let animatedGoblinUids = new Set();
+
 function renderBattlefield() {
   waveLevelSpan.innerText = gameState.battlefield.waveLevel;
-  
+
   const actionStars = document.querySelectorAll('#action-stars-container .action-star');
   const currentAction = gameState.battlefield.actionCount; // 0, 1, 2
   actionStars.forEach((star, idx) => {
@@ -804,6 +806,18 @@ function renderBattlefield() {
       gobEl.innerHTML = `<div class="goblin-hp" style="background: var(--accent-red); color: white;">0</div>`;
     } else {
       gobEl.innerHTML = `<div class="goblin-hp">${goblin.currentHp}</div>`;
+
+      // Comprobar si es un goblin nuevo para aplicarle la animación correspondiente
+      if (!animatedGoblinUids.has(goblin.uid)) {
+        animatedGoblinUids.add(goblin.uid);
+        setTimeout(() => {
+          if (goblin.isMutated) {
+            gobEl.classList.add('goblin-mutation-active');
+          } else {
+            gobEl.classList.add('goblin-wobble-active');
+          }
+        }, 150); // 150ms después de aparecer en el DOM
+      }
 
       if (!gameState.isMarketPhase) {
         gobEl.classList.add('selectable');
@@ -2457,7 +2471,7 @@ function assignAllRetaliationToPlayer(pIndex) {
 function handleRetaliationChoice(gobUids, playerIdx) {
   activeSelectedOrbUids = [];
   const uids = Array.isArray(gobUids) ? gobUids : [gobUids];
-  
+
   let anyAssigned = false;
   uids.forEach(uid => {
     if (gameState.assignRetaliationDamage(uid, playerIdx)) {
@@ -2500,7 +2514,7 @@ function renderGameOver() {
     <div style="font-size: 1.5rem; margin-bottom: 20px; color: #fff;">¡Habéis sido derrotados!</div>
     <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(230, 57, 70, 0.3);">
       <p style="margin-bottom: 10px;">Llegasteis hasta la <strong>Oleada ${gameState.battlefield.waveLevel}</strong></p>
-      <p style="font-size: 0.9rem; color: var(--text-dim); font-style: italic;">"${phrase}"</p>
+      <p style="font-size: 0.9rem; color: var(--text-cita); font-style: italic;">"${phrase}"</p>
     </div>
   `;
 

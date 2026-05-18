@@ -813,7 +813,8 @@ class GameState {
         this.battlefield.goblins.push({
           ...DB.goblins[lvl + 1],
           uid: Date.now() + Math.random(),
-          currentHp: DB.goblins[lvl + 1].hp
+          currentHp: DB.goblins[lvl + 1].hp,
+          isMutated: true
         });
       }
 
@@ -823,7 +824,8 @@ class GameState {
           ...DB.goblins[lvl + 1],
           uid: Date.now() + Math.random(),
           currentHp: DB.goblins[lvl + 1].hp,
-          isHito: true
+          isHito: true,
+          isMutated: true
         });
       }
     }
