@@ -571,6 +571,7 @@ btnConfirmAttack.addEventListener('click', () => {
 function renderMarket() {
   marketDecks.innerHTML = '';
   const types = ['ataque', 'escudos', 'curacion'];
+  const p = gameState.getCurrentPlayer();
 
   types.forEach(type => {
     const deck = gameState.market[type];
@@ -580,6 +581,10 @@ function renderMarket() {
       deckEl.className = 'deck';
       deckEl.style.backgroundImage = `url('${topCard.image}')`;
       deckEl.innerHTML = '';
+
+      if (p && p.mo >= topCard.cost) {
+        deckEl.classList.add('market-affordable');
+      }
 
       deckEl.addEventListener('click', () => {
         const topCard = deck[0];
@@ -626,7 +631,6 @@ function renderMarket() {
   marketDecks.appendChild(potionsDeck);
 
   // 5. Botón de Explorar Mercado (si tiene al menos 1 moneda)
-  const p = gameState.getCurrentPlayer();
   const marketZone = document.getElementById('market-zone');
   if (marketZone) {
     const oldBtn = marketZone.querySelector('.btn-explore-market');
@@ -2352,11 +2356,19 @@ function openPotionsModal() {
       const poc = DB.equipment.pociones.find(x => x.id === pocId);
       const btn = card.querySelector('button');
       if (btn && poc) {
-        btn.disabled = p.mo < poc.cost;
+        const canAfford = p.mo >= poc.cost;
+        btn.disabled = !canAfford;
+        if (canAfford) {
+          card.classList.add('potion-affordable');
+        } else {
+          card.classList.remove('potion-affordable');
+        }
       }
     });
     const hpSpan = document.getElementById('potion-modal-current-hp');
     if (hpSpan) hpSpan.innerText = p.hp;
+    const goldSpan = document.getElementById('potion-modal-current-gold');
+    if (goldSpan) goldSpan.innerText = p.mo;
     return;
   }
 
@@ -2368,8 +2380,13 @@ function openPotionsModal() {
   title.innerText = "ALQUIMIA Y POCIONES";
   title.style.color = "var(--gold)";
   desc.innerHTML = `Elige una pócima para ayudarte en tu aventura. No ocupan espacio de equipo.<br><br>
-    <div style="display: inline-block; background: rgba(255, 0, 0, 0.15); border: 1px solid var(--accent-red); padding: 6px 18px; border-radius: 20px; font-weight: bold; font-size: 1.1rem; color: white; box-shadow: 0 0 12px rgba(255,0,0,0.4);">
-      Salud del Jugador: <span id="potion-modal-current-hp">${p.hp}</span> / ${p.maxHp} ❤️
+    <div style="display: flex; gap: 20px; justify-content: center; align-items: center; flex-wrap: wrap;">
+      <div style="background: rgba(255, 0, 0, 0.15); border: 1px solid var(--accent-red); padding: 6px 18px; border-radius: 20px; font-weight: bold; font-size: 1.1rem; color: white; box-shadow: 0 0 12px rgba(255,0,0,0.4);">
+        Salud: <span id="potion-modal-current-hp">${p.hp}</span> / ${p.maxHp} ❤️
+      </div>
+      <div style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--gold); padding: 6px 18px; border-radius: 20px; font-weight: bold; font-size: 1.1rem; color: white; box-shadow: 0 0 12px rgba(212, 175, 55, 0.4); display: flex; align-items: center; gap: 6px;">
+        Monedas: <span id="potion-modal-current-gold">${p.mo}</span> ${COIN_SVG}
+      </div>
     </div>`;
 
   container.innerHTML = '';
@@ -2378,6 +2395,9 @@ function openPotionsModal() {
   DB.equipment.pociones.forEach(poc => {
     const card = document.createElement('div');
     card.className = 'potion-card';
+    if (p.mo >= poc.cost) {
+      card.classList.add('potion-affordable');
+    }
     card.dataset.potionId = poc.id; // Guardamos el ID para actualizaciones rápidas
     card.style.cssText = `
       background: rgba(255,255,255,0.05);
@@ -2436,11 +2456,19 @@ function openPotionsModal() {
           const cPoc = DB.equipment.pociones.find(x => x.id === cPocId);
           const cBtn = c.querySelector('button');
           if (cBtn && cPoc) {
-            cBtn.disabled = newP.mo < cPoc.cost;
+            const canAfford = newP.mo >= cPoc.cost;
+            cBtn.disabled = !canAfford;
+            if (canAfford) {
+              c.classList.add('potion-affordable');
+            } else {
+              c.classList.remove('potion-affordable');
+            }
           }
         });
         const hpSpan = document.getElementById('potion-modal-current-hp');
         if (hpSpan) hpSpan.innerText = newP.hp;
+        const goldSpan = document.getElementById('potion-modal-current-gold');
+        if (goldSpan) goldSpan.innerText = newP.mo;
       }
     };
 

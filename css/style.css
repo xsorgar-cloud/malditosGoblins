@@ -464,6 +464,40 @@ main {
   }
 }
 
+/* ===================================================
+   Efecto de Brillo para Cartas de Mercado Comprables
+=================================================== */
+.deck.market-affordable,
+.potion-card.potion-affordable {
+  border: 2px solid var(--gold);
+  box-shadow: 0 0 15px var(--gold), inset 0 0 10px rgba(212, 175, 55, 0.5);
+  animation: marketAffordablePulse 2s infinite ease-in-out !important;
+}
+
+@keyframes marketAffordablePulse {
+  0% {
+    box-shadow: 0 0 5px var(--gold), inset 0 0 5px rgba(212, 175, 55, 0.3);
+    border-color: rgba(212, 175, 55, 0.5);
+  }
+  15% {
+    box-shadow: 0 0 25px var(--gold), inset 0 0 15px rgba(212, 175, 55, 0.8);
+    border-color: #ffffff;
+  }
+  30% {
+    box-shadow: 0 0 8px var(--gold), inset 0 0 6px rgba(212, 175, 55, 0.4);
+    border-color: var(--gold);
+  }
+  45% {
+    box-shadow: 0 0 25px var(--gold), inset 0 0 15px rgba(212, 175, 55, 0.8);
+    border-color: #ffffff;
+  }
+  65%,
+  100% {
+    box-shadow: 0 0 5px var(--gold), inset 0 0 5px rgba(212, 175, 55, 0.3);
+    border-color: rgba(212, 175, 55, 0.5);
+  }
+}
+
 .role-energy-badge {
   position: absolute;
   top: -8px;
