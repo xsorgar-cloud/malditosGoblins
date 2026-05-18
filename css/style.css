@@ -2423,3 +2423,7 @@ main {
   z-index: 1000 !important;
   border: 2px solid #fff !important;
 }
+
+.equip-slot.broken.equip-selected {
+  transform: rotate(180deg) scale(1.08) !important;
+}

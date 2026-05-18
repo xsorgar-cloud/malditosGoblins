@@ -86,7 +86,7 @@ const DB = {
       { id: 2, name: "Alerta de Mutación", goblins: [1, 1, 2], isBoss: false },
       { id: 3, name: "Acero y Desgaste", goblins: [3], isBoss: false },
       { id: 4, name: "El Despertar del Rol", goblins: [4], isBoss: false },
-      { id: 5, name: "Desafío Final", goblins: [5], isBoss: true, bossStats: { hpMultiplier: 25, regen: 5, dice: ['2d6', '+2'], image: 'assets/Monstruos/Jefes/Inicicion.jpg' } }
+      { id: 5, name: "Desafío Final", goblins: [5], isBoss: true, bossStats: { hpMultiplier: 25, regen: 5, dice: ['1d6', '+2', '1d6', '+2'], image: 'assets/Monstruos/Jefes/Inicicion.jpg' } }
     ]
   },
 

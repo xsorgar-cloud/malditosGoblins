@@ -173,7 +173,12 @@ btnStartGame.addEventListener('click', () => {
   const rawLevel = parseInt(document.getElementById('input-init-level').value, 10);
   const initLevel = isNaN(rawLevel) ? 1 : rawLevel;
 
-  gameState.setupPlayers(numPlayers, finalRoles, { hp: initHp, maxHp: initMaxHp, energy: initEnergy, mo: initGold, hito: initHito, level: initLevel });
+  const rawWave = parseInt(document.getElementById('input-init-wave').value, 10);
+  const initWave = isNaN(rawWave) ? 1 : rawWave;
+
+  lastWaveLevel = initWave;
+
+  gameState.setupPlayers(numPlayers, finalRoles, { hp: initHp, maxHp: initMaxHp, energy: initEnergy, mo: initGold, hito: initHito, level: initLevel, wave: initWave });
   setupModal.classList.add('hidden');
   const versionBadge = document.getElementById('game-version-badge');
   if (versionBadge) versionBadge.style.display = 'none';
@@ -815,6 +820,49 @@ function renderBattlefield() {
 let currentAssignments = {};
 let interceptionAssignments = {};
 
+function showElasticModal(dieId, dieValue, eqId, onConfirm) {
+  const modal = document.getElementById('elastic-modal');
+  const btnClose = document.getElementById('btn-close-elastic-x');
+  const btnConfirm = document.getElementById('btn-confirm-elastic');
+  const rangeInput = document.getElementById('range-elastic');
+  const dieValSpan = document.getElementById('elastic-die-val');
+  const dmgPreview = document.getElementById('elastic-dmg-preview');
+  const healPreview = document.getElementById('elastic-heal-preview');
+
+  dieValSpan.innerText = dieValue;
+  rangeInput.max = dieValue;
+  rangeInput.value = Math.floor(dieValue / 2);
+
+  const updatePreviews = () => {
+    const dmg = parseInt(rangeInput.value);
+    const heal = dieValue - dmg;
+    dmgPreview.innerText = dmg;
+    healPreview.innerText = heal;
+  };
+
+  updatePreviews();
+  rangeInput.oninput = updatePreviews;
+
+  btnConfirm.onclick = null;
+  btnClose.onclick = null;
+
+  const closeModal = () => {
+    modal.classList.add('hidden');
+  };
+
+  btnClose.onclick = () => {
+    closeModal();
+  };
+
+  btnConfirm.onclick = () => {
+    closeModal();
+    const chosenDmg = parseInt(rangeInput.value);
+    onConfirm(chosenDmg);
+  };
+
+  modal.classList.remove('hidden');
+}
+
 function renderCombatOverlay() {
   const overlay = document.getElementById('combat-overlay');
   const c = gameState.currentCombat;
@@ -1201,6 +1249,9 @@ function renderCombatOverlay() {
     // En fase de calambre, ocultar dados rojos
     if (isCrampPhase && die.type === 'red') return;
 
+    // Fuera de la fase de calambre, ocultar dados con calambre no asignados (dados perdidos)
+    if (!isCrampPhase && die.isCramped && !die.assignedTo) return;
+
     let dieEl = document.createElement('div');
     dieEl.className = `die ${die.type}`;
     if (die.faces === 4) dieEl.classList.add('d4');
@@ -1224,7 +1275,7 @@ function renderCombatOverlay() {
       e.dataTransfer.setData('text/plain', die.id);
     });
 
-    if (die.type === 'black' && !die.rerolled && !die.assignedTo) {
+    if (die.type === 'black' && !die.rerolled && !die.assignedTo && (!die.isCramped || isCrampPhase)) {
       dieEl.style.cursor = 'pointer';
       dieEl.title = 'Click para elegir acción (Relanzar o Asignar)';
       if (activeSelectedDieId === die.id) {
@@ -1287,7 +1338,7 @@ function renderCombatOverlay() {
           clearDieAssignment(die.id);
         };
       }
-    } else if (!die.assignedTo) {
+    } else if (!die.assignedTo && (!die.isCramped || isCrampPhase)) {
       // SISTEMA DE RESPALDO (TAP-TO-SELECT): Seleccionar dado para aplicarlo a un objetivo
       dieEl.style.cursor = 'pointer';
       dieEl.title = 'Click para seleccionar dado';
@@ -1506,7 +1557,16 @@ function renderCombatOverlay() {
         return;
       }
 
-      currentAssignments[eq.id].push({ dieId: dieId, value: dieData.value, targetUid: null });
+      if (eq.id === 'corazon_elastico') {
+        showElasticModal(dieId, dieData.value, eq.id, (damageChosen) => {
+          currentAssignments[eq.id].push({ dieId: dieId, value: dieData.value, targetUid: null, elasticDamage: damageChosen });
+          dieData.assignedTo = eq.id;
+          renderCombatOverlay();
+        });
+        return;
+      }
+
+      currentAssignments[eq.id].push({ dieId: dieId, value: dieData.value, targetUid: null, elasticDamage: null });
       dieData.assignedTo = eq.id;
       renderCombatOverlay();
     });
@@ -1529,7 +1589,21 @@ function renderCombatOverlay() {
 
         if (currentAssignments[eq.id].length >= maxUses) return;
 
-        currentAssignments[eq.id].push({ dieId: activeSelectedDieId, value: dieData.value, targetUid: null });
+        if (eq.id === 'corazon_elastico') {
+          const curDieId = activeSelectedDieId;
+          const curDieVal = dieData.value;
+          activeSelectedDieId = null;
+
+          showElasticModal(curDieId, curDieVal, eq.id, (damageChosen) => {
+            currentAssignments[eq.id].push({ dieId: curDieId, value: curDieVal, targetUid: null, elasticDamage: damageChosen });
+            dieData.assignedTo = eq.id;
+            renderCombatOverlay();
+          });
+          e.stopPropagation();
+          return;
+        }
+
+        currentAssignments[eq.id].push({ dieId: activeSelectedDieId, value: dieData.value, targetUid: null, elasticDamage: null });
         dieData.assignedTo = eq.id;
         activeSelectedDieId = null;
         renderCombatOverlay();

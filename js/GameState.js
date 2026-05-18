@@ -57,10 +57,14 @@ class GameState {
     let details = [];
     for (let part of goblin.dice) {
       if (part.includes('d')) {
-        let faces = parseInt(part.split('d')[1]);
-        let val = this.rollDice(faces);
-        total += val;
-        details.push({ type: 'die', faces: faces, val: val });
+        let parts = part.split('d');
+        let count = parseInt(parts[0]) || 1;
+        let faces = parseInt(parts[1]);
+        for (let c = 0; c < count; c++) {
+          let val = this.rollDice(faces);
+          total += val;
+          details.push({ type: 'die', faces: faces, val: val });
+        }
       } else {
         let mod = parseInt(part);
         total += mod;
@@ -447,9 +451,10 @@ class GameState {
         goblinsFoughtThisTurn: []
       });
     }
+    this.battlefield.waveLevel = customSettings.wave !== undefined ? customSettings.wave : 1;
     this.currentPlayerIndex = 0;
     this.spawnInitialGoblins();
-    this.addLog("¡La aventura comienza! Fase de Mercado.");
+    this.addLog(`¡La aventura comienza en la Oleada ${this.battlefield.waveLevel}! Fase de Mercado.`);
   }
 
   spawnInitialGoblins() {
@@ -459,6 +464,18 @@ class GameState {
         uid: Date.now() + i,
         currentHp: DB.goblins[1].hp
       });
+    }
+    // Si empieza en una oleada avanzada, generar el enemigo de oleada correspondiente
+    if (this.battlefield.waveLevel > 1) {
+      let nivelMaximoBD = 5;
+      let nivelAparecer = Math.min(this.battlefield.waveLevel, nivelMaximoBD);
+      if (DB.goblins[nivelAparecer]) {
+        this.battlefield.goblins.push({
+          ...DB.goblins[nivelAparecer],
+          uid: Date.now() + 1000,
+          currentHp: DB.goblins[nivelAparecer].hp
+        });
+      }
     }
   }
 
@@ -833,6 +850,16 @@ class GameState {
       });
       this.addLog(`🔥 <span style="color:#f54281"><strong>Aparición:</strong></span> 1 x G${nivelAparecer}`);
     }
+
+    // Regeneración de Jefes en la mesa
+    this.battlefield.goblins.forEach(g => {
+      if (g.isBoss && g.currentHp > 0) {
+        let regenAmount = (g.regen || 5) * this.players.length;
+        g.currentHp = Math.min(g.maxHp, g.currentHp + regenAmount);
+        this.addLog(`💖 <span style="color:#ff477e"><strong>Regeneración de Jefe:</strong></span> ${g.name} recuperó ${regenAmount} PV (Total: ${g.currentHp}/${g.maxHp}).`);
+      }
+    });
+
     this.addLog(`<span style="color:#f54281"><strong>*******************************************</strong></span>`);
   }
 
@@ -1113,11 +1140,14 @@ class GameState {
         return;
 
       case 'corazon_elastico':
-        // Par: Daño, Impar: Vida (Siempre igual, pero los límites los marca isValidDie)
-        if (val % 2 === 0) {
-          if (targetUid) damagePerTarget[targetUid].damage += val;
-        } else {
-          healObj.heal += val;
+        let dmgElastic = (asg.elasticDamage !== undefined && asg.elasticDamage !== null) ? asg.elasticDamage : (val % 2 === 0 ? val : 0);
+        let healElastic = (asg.elasticDamage !== undefined && asg.elasticDamage !== null) ? (val - asg.elasticDamage) : (val % 2 === 0 ? 0 : val);
+
+        if (dmgElastic > 0 && targetUid) {
+          damagePerTarget[targetUid].damage += dmgElastic;
+        }
+        if (healElastic > 0) {
+          healObj.heal += healElastic;
         }
         return;
 
