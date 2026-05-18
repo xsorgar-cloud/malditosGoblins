@@ -992,7 +992,7 @@ class GameState {
         const brokenItems = targetP.equipped.filter(e => e.isBroken);
         if (brokenItems.length > 0) {
           p.energy -= energyCost;
-          brokenItems.forEach(e => e.isBroken = false);
+          brokenItems.forEach(e => { e.isBroken = false; e.brokenAnimationPlayed = false; });
           this.addLog(`⚡ <strong>${p.name}</strong> usó su rol (Curandero) para <span style="color:#2a9d8f">REPARAR</span> el equipo de ${targetP.name}.`);
           return true;
         }
@@ -1246,6 +1246,7 @@ class GameState {
       const randomIndex = Math.floor(Math.random() * breakable.length);
       const itemToBreak = breakable[randomIndex];
       itemToBreak.isBroken = true;
+      itemToBreak.brokenAnimationPlayed = false;
       itemToBreak.brokenInCombatId = this.lastCombatId;
       this.addLog(`🛠️ ¡CRACK! El equipo <strong>${itemToBreak.name}</strong> de <strong>${player.name}</strong> se ha <span style="color:var(--accent-red)">ROTO</span>.`);
       return true;

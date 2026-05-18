@@ -462,10 +462,19 @@ function showWaveAnnouncement(level) {
 
 function showActionNotification(count) {
   const overlay = document.getElementById('action-notification');
-  const valueSpan = document.getElementById('action-value');
-  if (!overlay || !valueSpan) return;
+  const toastStars = document.querySelectorAll('#toast-action-stars .toast-star');
+  if (!overlay || toastStars.length === 0) return;
 
-  valueSpan.innerText = `${count + 1}/3`;
+  toastStars.forEach((star, idx) => {
+    if (idx <= count) {
+      star.style.color = '#ff4d4d';
+      star.style.textShadow = '0 0 20px rgba(255, 77, 77, 0.8)';
+    } else {
+      star.style.color = '#444';
+      star.style.textShadow = 'none';
+    }
+  });
+
   overlay.classList.remove('hidden');
   overlay.style.opacity = '1';
 
@@ -729,7 +738,18 @@ function openExploreMarketModal() {
 
 function renderBattlefield() {
   waveLevelSpan.innerText = gameState.battlefield.waveLevel;
-  actionCountSpan.innerText = gameState.battlefield.actionCount + 1;
+  
+  const actionStars = document.querySelectorAll('#action-stars-container .action-star');
+  const currentAction = gameState.battlefield.actionCount; // 0, 1, 2
+  actionStars.forEach((star, idx) => {
+    if (idx <= currentAction) {
+      star.style.color = '#ff4d4d';
+      star.style.textShadow = '0 0 10px rgba(255, 77, 77, 0.6)';
+    } else {
+      star.style.color = '#444';
+      star.style.textShadow = 'none';
+    }
+  });
 
   const pLeader = gameState.players[0];
   if (pLeader) {
@@ -1693,10 +1713,20 @@ function renderPlayer() {
     // Generar HTML del equipo
     let eqHTML = '';
     p.equipped.forEach((eq, eqIdx) => {
-      let extraStyle = eq.isBroken ? 'transform: rotate(180deg);' : '';
+      const currentCombatId = gameState.lastCombatId || 0;
+      const justBroken = eq.isBroken && eq.brokenInCombatId === currentCombatId && !eq.brokenAnimationPlayed;
+
+      let extraStyle = '';
+      let justBrokenClass = '';
+      if (justBroken) {
+        justBrokenClass = 'just-broken';
+        extraStyle = 'transform: rotate(0deg); transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);';
+      } else if (eq.isBroken) {
+        extraStyle = 'transform: rotate(180deg);';
+      }
+
       let activeClass = eq.isActive ? '' : 'inactive';
 
-      const currentCombatId = gameState.lastCombatId || 0;
       const canRepair = eq.isBroken &&
         p.mo >= 1 &&
         gameState.lastActionWasCombat &&
@@ -1705,7 +1735,7 @@ function renderPlayer() {
         eq.usedInCombatId === currentCombatId;
       const repairBtnHTML = canRepair ? `<button class="btn primary repair-btn" style="position: absolute; top: 5px; left: 50%; transform: translateX(-50%) rotate(180deg); font-size: 0.75rem; padding: 4px 8px; z-index: 20; display: none;">Reparar</button>` : '';
 
-      eqHTML += `<div class="equipment-card ${activeClass}" 
+      eqHTML += `<div class="equipment-card ${activeClass} ${justBrokenClass}" 
                       data-player-index="${index}" 
                       data-eq-index="${eqIdx}" 
                       style="background-image: url('${eq.image}'); ${extraStyle}">
@@ -1800,6 +1830,7 @@ function renderPlayer() {
           if (playerObj.mo >= 1 && eqObj.isBroken) {
             playerObj.mo -= 1;
             eqObj.isBroken = false;
+            eqObj.brokenAnimationPlayed = false;
             gameState.addLog(`🛠️ <strong>${playerObj.name}</strong> pagó 1 mo para reparar <strong>${eqObj.name}</strong>.`);
             updateUI();
           }
@@ -1883,6 +1914,18 @@ function renderPlayer() {
     // Actualizar historial de stats para el próximo render
     prevPlayerStats[index] = { hp: p.hp, mo: p.mo, energy: p.energy, pex: p.pex, level: p.level, blocks: currentBlocks };
   });
+
+  setTimeout(() => {
+    document.querySelectorAll('.equipment-card.just-broken').forEach(card => {
+      card.style.transform = 'rotate(180deg)';
+      card.classList.remove('just-broken');
+      const pIdx = card.dataset.playerIndex;
+      const eqIdx = card.dataset.eqIndex;
+      if (gameState.players[pIdx] && gameState.players[pIdx].equipped[eqIdx]) {
+        gameState.players[pIdx].equipped[eqIdx].brokenAnimationPlayed = true;
+      }
+    });
+  }, 100);
 }
 
 window.showTargetSelectionModal = function (playerIndex) {

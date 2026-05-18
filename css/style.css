@@ -144,11 +144,11 @@ main {
   top: 5px;
   right: 20px;
   display: flex;
-  gap: 25px;
+  gap: 10px;
   align-items: baseline;
   z-index: 20;
   background: rgba(0, 0, 0, 0.5);
-  padding: 8px 20px;
+  padding: 2px 20px;
   border-radius: 20px;
   backdrop-filter: blur(5px);
   border: 1px solid rgba(255, 255, 255, 0.1);
@@ -164,7 +164,7 @@ main {
   align-items: baseline;
   z-index: 20;
   background: rgba(0, 0, 0, 0.5);
-  padding: 8px 20px;
+  padding: 2px 20px;
   border-radius: 20px;
   backdrop-filter: blur(5px);
   border: 1px solid rgba(212, 175, 55, 0.2);
@@ -495,18 +495,22 @@ main {
     box-shadow: 0 0 5px var(--gold), inset 0 0 5px rgba(212, 175, 55, 0.3);
     border-color: rgba(212, 175, 55, 0.5);
   }
+
   15% {
     box-shadow: 0 0 25px var(--gold), inset 0 0 15px rgba(212, 175, 55, 0.8);
     border-color: #ffffff;
   }
+
   30% {
     box-shadow: 0 0 8px var(--gold), inset 0 0 6px rgba(212, 175, 55, 0.4);
     border-color: var(--gold);
   }
+
   45% {
     box-shadow: 0 0 25px var(--gold), inset 0 0 15px rgba(212, 175, 55, 0.8);
     border-color: #ffffff;
   }
+
   65%,
   100% {
     box-shadow: 0 0 5px var(--gold), inset 0 0 5px rgba(212, 175, 55, 0.3);
@@ -2089,11 +2093,13 @@ main {
 /* ===================================================
    DISEÑO RESPONSIVE FLUIDO (MÓVILES, TABLETS Y MENOR)
 =================================================== */
-@media (max-width: 1180px), (max-height: 720px) {
+@media (max-width: 1180px),
+(max-height: 720px) {
   body {
     overflow-y: auto !important;
     overflow-x: hidden !important;
-    font-size: 0.85rem !important; /* TEXTO BASE MÁS PEQUEÑO */
+    font-size: 0.85rem !important;
+    /* TEXTO BASE MÁS PEQUEÑO */
   }
 
   #game-container {
@@ -2105,7 +2111,9 @@ main {
     padding: 10px !important;
   }
 
-  header, main, footer {
+  header,
+  main,
+  footer {
     overflow: visible !important;
     height: auto !important;
     flex: 0 0 auto !important;
@@ -2118,7 +2126,8 @@ main {
 
   #market-zone h2 {
     top: 5px !important;
-    font-size: 1.1rem !important; /* TÍTULO MÁS PEQUEÑO */
+    font-size: 1.1rem !important;
+    /* TÍTULO MÁS PEQUEÑO */
   }
 
   .market-decks {
@@ -2132,7 +2141,8 @@ main {
     flex: 1 1 60px !important;
     width: auto !important;
     min-width: 50px !important;
-    max-width: 85px !important; /* ¡REDUCCIÓN ESTRICTA DE TAMAÑO! */
+    max-width: 85px !important;
+    /* ¡REDUCCIÓN ESTRICTA DE TAMAÑO! */
     height: auto !important;
     max-height: 120px !important;
     aspect-ratio: 125 / 175 !important;
@@ -2153,7 +2163,8 @@ main {
   }
 
   .wave-info h2 {
-    font-size: 1rem !important; /* TÍTULO DE OLEADA MÁS PEQUEÑO */
+    font-size: 1rem !important;
+    /* TÍTULO DE OLEADA MÁS PEQUEÑO */
   }
 
   .goblins-container {
@@ -2169,20 +2180,23 @@ main {
     flex: 1 1 70px !important;
     width: auto !important;
     min-width: 60px !important;
-    max-width: 110px !important; /* ¡REDUCCIÓN ESTRICTA DE TAMAÑO! */
+    max-width: 110px !important;
+    /* ¡REDUCCIÓN ESTRICTA DE TAMAÑO! */
     height: auto !important;
     max-height: 155px !important;
     aspect-ratio: 180 / 255 !important;
   }
 
   .goblin-hp {
-    font-size: 1.1rem !important; /* VIDA DE GOBLINS MÁS PEQUEÑA */
+    font-size: 1.1rem !important;
+    /* VIDA DE GOBLINS MÁS PEQUEÑA */
     width: 32px !important;
     height: 32px !important;
   }
 
   /* --- BOTONES DE ACCIÓN GENERALES MÁS PEQUEÑOS --- */
-  button, .btn {
+  button,
+  .btn {
     font-size: 0.8rem !important;
     padding: 5px 10px !important;
     height: auto !important;
@@ -2212,7 +2226,8 @@ main {
   #action-buttons button,
   .battle-actions button,
   #hito-actions button {
-    font-size: 0.8rem !important; /* BOTONES MÁS PEQUEÑOS */
+    font-size: 0.8rem !important;
+    /* BOTONES MÁS PEQUEÑOS */
     padding: 5px 10px !important;
     height: 32px !important;
   }
@@ -2242,25 +2257,30 @@ main {
     height: auto !important;
   }
 
-  .player-name, .player-header {
-    font-size: 0.95rem !important; /* TÍTULOS DE JUGADOR MÁS PEQUEÑOS */
+  .player-name,
+  .player-header {
+    font-size: 0.95rem !important;
+    /* TÍTULOS DE JUGADOR MÁS PEQUEÑOS */
   }
 
   /* MANTENEMOS LA CARTA DE ROL A LA IZQUIERDA PERO MÁS PEQUEÑA */
   .player-dashboard {
     display: grid !important;
-    grid-template-columns: 60px 1fr !important; /* ROL A LA IZQ, EQUIPO A LA DCHA */
+    grid-template-columns: 60px 1fr !important;
+    /* ROL A LA IZQ, EQUIPO A LA DCHA */
     gap: 12px !important;
   }
 
   .player-role {
     width: 60px !important;
-    height: 90px !important; /* CARTA DE ROL MÁS PEQUEÑA Y VERTICAL */
+    height: 90px !important;
+    /* CARTA DE ROL MÁS PEQUEÑA Y VERTICAL */
     margin: 0 !important;
   }
 
   .role-energy {
-    font-size: 0.85rem !important; /* ENERGÍA MÁS PEQUEÑA */
+    font-size: 0.85rem !important;
+    /* ENERGÍA MÁS PEQUEÑA */
   }
 
   .player-equipment {
@@ -2277,7 +2297,8 @@ main {
     flex: 1 1 60px !important;
     width: auto !important;
     min-width: 50px !important;
-    max-width: 90px !important; /* ¡REDUCCIÓN ESTRICTA DE TAMAÑO! */
+    max-width: 90px !important;
+    /* ¡REDUCCIÓN ESTRICTA DE TAMAÑO! */
     height: auto !important;
     max-height: 130px !important;
     aspect-ratio: 140 / 200 !important;
@@ -2291,9 +2312,10 @@ main {
   }
 
   /* Mantenemos las 2 columnas horizontales intactas */
-  #setup-content > div {
+  #setup-content>div {
     display: flex !important;
-    flex-direction: row !important; /* COLUMNAS IZQ Y DCHA MANTENIDAS */
+    flex-direction: row !important;
+    /* COLUMNAS IZQ Y DCHA MANTENIDAS */
     gap: 20px !important;
     align-items: flex-start !important;
   }
@@ -2311,7 +2333,8 @@ main {
 
   #setup-role-card {
     width: 100% !important;
-    max-width: 160px !important; /* IMAGEN DE ROL MÁS PEQUEÑA */
+    max-width: 160px !important;
+    /* IMAGEN DE ROL MÁS PEQUEÑA */
     height: auto !important;
     aspect-ratio: 220 / 330 !important;
     margin-bottom: 15px !important;
@@ -2320,7 +2343,8 @@ main {
   /* --- PANTALLA DE COMBATE (COMBAT OVERLAY) --- */
   #combat-overlay .combat-panel {
     display: flex !important;
-    flex-direction: row !important; /* MANTENEMOS EL MENÚ A LA IZQUIERDA */
+    flex-direction: row !important;
+    /* MANTENEMOS EL MENÚ A LA IZQUIERDA */
     width: 98% !important;
     max-width: 98% !important;
     height: 92vh !important;
@@ -2328,7 +2352,8 @@ main {
   }
 
   #combat-sidebar {
-    width: 260px !important; /* MENÚ IZQUIERDO MÁS ESTRECHO Y COMPACTO */
+    width: 260px !important;
+    /* MENÚ IZQUIERDO MÁS ESTRECHO Y COMPACTO */
     padding: 15px !important;
     border-right: 1px solid rgba(212, 175, 55, 0.3) !important;
     border-bottom: none !important;
@@ -2337,11 +2362,13 @@ main {
   }
 
   #combat-player-stats div {
-    font-size: 1rem !important; /* STATS DE COMBATE MÁS PEQUEÑAS */
+    font-size: 1rem !important;
+    /* STATS DE COMBATE MÁS PEQUEÑAS */
   }
 
   .die {
-    font-size: 1.3rem !important; /* DADOS MÁS PEQUEÑOS */
+    font-size: 1.3rem !important;
+    /* DADOS MÁS PEQUEÑOS */
     width: 40px !important;
     height: 40px !important;
   }
@@ -2367,7 +2394,8 @@ main {
 
   #combat-goblins-container .goblin-card {
     flex: 0 0 90px !important;
-    width: 90px !important; /* GOBLINS DE COMBATE MÁS PEQUEÑOS */
+    width: 90px !important;
+    /* GOBLINS DE COMBATE MÁS PEQUEÑOS */
     min-width: 90px !important;
     max-width: 90px !important;
     height: 127px !important;
@@ -2401,10 +2429,14 @@ main {
 .equip-slot,
 .orb,
 .goblin-card {
-  touch-action: none !important; /* Evita que Android/iOS asuma que se quiere hacer scroll al tocar */
-  -webkit-touch-callout: none !important; /* Evita el menú contextual emergente en móviles al mantener pulsado */
-  user-select: none !important; /* Evita selección de texto accidental al mantener pulsado */
-  -webkit-user-drag: none !important; /* Evita que el motor nativo de Android intente arrastrar a nivel de SO */
+  touch-action: none !important;
+  /* Evita que Android/iOS asuma que se quiere hacer scroll al tocar */
+  -webkit-touch-callout: none !important;
+  /* Evita el menú contextual emergente en móviles al mantener pulsado */
+  user-select: none !important;
+  /* Evita selección de texto accidental al mantener pulsado */
+  -webkit-user-drag: none !important;
+  /* Evita que el motor nativo de Android intente arrastrar a nivel de SO */
 }
 
 /* ===================================================
