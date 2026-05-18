@@ -778,7 +778,14 @@ function renderBattlefield() {
   gameState.battlefield.goblins.forEach(goblin => {
     const gobEl = document.createElement('div');
     gobEl.className = 'goblin-card';
-    if (goblin.isHito) gobEl.classList.add('goblin-hito');
+    if (goblin.isHito) {
+      gobEl.classList.add('goblin-hito');
+    } else {
+      const pLeader = gameState.players[gameState.currentPlayerIndex] || gameState.players[0];
+      if (goblin.level < pLeader.level) {
+        gobEl.classList.add('goblin-no-reward');
+      }
+    }
     gobEl.style.backgroundImage = `url('${goblin.image}')`;
 
     if (goblin.isDying) {
@@ -1012,6 +1019,11 @@ function renderCombatOverlay() {
     gobCard.className = 'goblin-card';
     if (gob.isHito) {
       gobCard.classList.add('goblin-hito');
+    } else {
+      const pActive = gameState.players[gameState.currentPlayerIndex] || gameState.players[0];
+      if (gob.level < pActive.level) {
+        gobCard.classList.add('goblin-no-reward');
+      }
     }
     gobCard.style.backgroundImage = `url('${gob.image}')`;
     gobCard.innerHTML = `<div class="goblin-hp">${gob.currentHp}</div>`;
@@ -1705,9 +1717,10 @@ function renderPlayer() {
         currentCombatId > 0 &&
         eq.brokenInCombatId !== currentCombatId &&
         eq.usedInCombatId === currentCombatId;
-      const repairBtnHTML = canRepair ? `<button class="btn primary repair-btn" style="position: absolute; top: 5px; left: 50%; transform: translateX(-50%) rotate(180deg); font-size: 0.75rem; padding: 4px 8px; z-index: 20; display: none;">Reparar</button>` : '';
+      const repairBtnHTML = canRepair ? `<button class="btn primary repair-btn" style="position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%) rotate(180deg); font-size: 0.75rem; padding: 4px 8px; z-index: 20;">Reparar</button>` : '';
+      let repairableClass = canRepair ? 'can-repair-glow' : '';
 
-      eqHTML += `<div class="equipment-card ${activeClass} ${justBrokenClass}" 
+      eqHTML += `<div class="equipment-card ${activeClass} ${justBrokenClass} ${repairableClass}" 
                       data-player-index="${index}" 
                       data-eq-index="${eqIdx}" 
                       style="background-image: url('${eq.image}'); ${extraStyle}">

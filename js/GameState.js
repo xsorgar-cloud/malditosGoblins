@@ -484,8 +484,12 @@ class GameState {
   }
 
   nextTurn() {
-    const prevIndex = this.currentPlayerIndex;
     this.isMarketPhase = false;
+    this.lastActionWasCombat = false;
+    if (this.players[this.currentPlayerIndex]) {
+      this.players[this.currentPlayerIndex].goblinsFoughtThisTurn = [];
+    }
+
     this.currentPlayerIndex++;
     if (this.currentPlayerIndex >= this.players.length) {
       this.currentPlayerIndex = 0;
@@ -493,12 +497,6 @@ class GameState {
 
       if (this.battlefield.actionCount >= 3) {
         this.resolveWavePhase();
-      }
-    }
-    if (this.currentPlayerIndex !== prevIndex) {
-      this.lastActionWasCombat = false;
-      if (this.players[this.currentPlayerIndex]) {
-        this.players[this.currentPlayerIndex].goblinsFoughtThisTurn = [];
       }
     }
   }
