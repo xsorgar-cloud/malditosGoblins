@@ -299,48 +299,7 @@ function renderRoleFillDice() {
       e.dataTransfer.setData('text/plain', die.id);
     });
 
-    if (die.type === 'black' && !die.rerolled && roleFillAssigned !== die.id) {
-      dieEl.style.cursor = 'pointer';
-      dieEl.title = 'Click para elegir acción (Relanzar o Asignar)';
-      dieEl.onclick = () => {
-        const modal = document.getElementById('die-action-overlay');
-        document.getElementById('die-action-val').innerText = die.val;
-
-        const btnReroll = document.getElementById('btn-die-action-reroll');
-        const btnSelect = document.getElementById('btn-die-action-select');
-        const btnCancel = document.getElementById('btn-die-action-cancel');
-
-        btnReroll.onclick = () => {
-          modal.classList.add('hidden');
-          dieEl.classList.add('die-spin');
-          const newVal = Math.floor(Math.random() * die.faces) + 1;
-          setTimeout(() => {
-            dieEl.innerText = newVal;
-          }, 300);
-          setTimeout(() => {
-            die.val = newVal;
-            die.rerolled = true;
-            renderRoleFillDice();
-          }, 600);
-        };
-
-        btnSelect.onclick = () => {
-          modal.classList.add('hidden');
-          roleFillAssigned = die.id;
-          const placeholder = document.getElementById('role-fill-placeholder');
-          placeholder.innerText = die.val;
-          placeholder.className = 'die-placeholder active ' + die.type;
-          if (die.faces === 4) placeholder.classList.add('d4');
-          renderRoleFillDice();
-          document.getElementById('btn-confirm-role-fill').disabled = false;
-        };
-
-        btnCancel.onclick = () => {
-          modal.classList.add('hidden');
-        };
-        modal.classList.remove('hidden');
-      };
-    } else if (roleFillAssigned === die.id) {
+    if (roleFillAssigned === die.id) {
       dieEl.style.cursor = 'pointer';
       dieEl.title = 'Click para desasignar';
       dieEl.onclick = () => {
@@ -351,7 +310,7 @@ function renderRoleFillDice() {
         renderRoleFillDice();
       };
     } else if (roleFillAssigned !== die.id) {
-      // SISTEMA DE RESPALDO: Permitir asignar el dado al rol haciendo clic en él
+      // SISTEMA DE RESPALDO: Permitir asignar el dado al rol haciendo clic en él (incluso negros)
       dieEl.style.cursor = 'pointer';
       dieEl.title = 'Click para asignar al rol';
       dieEl.onclick = () => {
@@ -368,6 +327,27 @@ function renderRoleFillDice() {
     let dieWrapper = document.createElement('div');
     dieWrapper.className = 'die-wrapper';
     dieWrapper.style.position = 'relative';
+
+    if (die.type === 'black' && !die.rerolled && roleFillAssigned !== die.id) {
+      const rerollBtn = document.createElement('button');
+      rerollBtn.className = 'die-reroll-icon';
+      rerollBtn.innerHTML = '↻';
+      rerollBtn.title = 'Relanzar dado negro';
+      rerollBtn.onclick = (e) => {
+        e.stopPropagation();
+        dieEl.classList.add('die-spin');
+        const newVal = Math.floor(Math.random() * die.faces) + 1;
+        setTimeout(() => {
+          dieEl.innerText = newVal;
+        }, 300);
+        setTimeout(() => {
+          die.val = newVal;
+          die.rerolled = true;
+          renderRoleFillDice();
+        }, 600);
+      };
+      dieWrapper.appendChild(rerollBtn);
+    }
 
     if (die.rerolled) {
       let lock = document.createElement('div');
@@ -1317,58 +1297,7 @@ function renderCombatOverlay() {
       e.dataTransfer.setData('text/plain', die.id);
     });
 
-    if (die.type === 'black' && !die.rerolled && !die.assignedTo && (!die.isCramped || isCrampPhase)) {
-      dieEl.style.cursor = 'pointer';
-      dieEl.title = 'Click para elegir acción (Relanzar o Asignar)';
-      if (activeSelectedDieId === die.id) {
-        dieEl.classList.add('die-selected');
-      }
-      dieEl.onclick = () => {
-        if (activeSelectedDieId === die.id) {
-          activeSelectedDieId = null;
-          renderCombatOverlay();
-          return;
-        }
-
-        const modal = document.getElementById('die-action-overlay');
-        document.getElementById('die-action-val').innerText = die.value;
-
-        const btnReroll = document.getElementById('btn-die-action-reroll');
-        const btnSelect = document.getElementById('btn-die-action-select');
-        const btnCancel = document.getElementById('btn-die-action-cancel');
-
-        btnReroll.onclick = () => {
-          modal.classList.add('hidden');
-          dieEl.classList.add('die-spin');
-          setTimeout(() => {
-            let newVal = gameState.rerollDie(die.id);
-            if (newVal) {
-              dieEl.innerText = newVal;
-            }
-          }, 300);
-          setTimeout(() => {
-            renderCombatOverlay();
-          }, 600);
-        };
-
-        btnSelect.onclick = () => {
-          modal.classList.add('hidden');
-          if (activeSelectedDieId === die.id) {
-            activeSelectedDieId = null;
-            renderCombatOverlay();
-          } else {
-            activeSelectedDieId = die.id;
-            activeSelectedEquipId = null; // Limpiar selección de equipo
-            renderCombatOverlay();
-          }
-        };
-
-        btnCancel.onclick = () => {
-          modal.classList.add('hidden');
-        };
-        modal.classList.remove('hidden');
-      };
-    } else if (die.assignedTo) {
+    if (die.assignedTo) {
       // No permitir desasignar calambre si ya pasó su fase
       if (die.isCramped && !isCrampPhase) {
         dieEl.style.cursor = 'default';
@@ -1381,7 +1310,7 @@ function renderCombatOverlay() {
         };
       }
     } else if (!die.assignedTo && (!die.isCramped || isCrampPhase)) {
-      // SISTEMA DE RESPALDO (TAP-TO-SELECT): Seleccionar dado para aplicarlo a un objetivo
+      // SISTEMA DE RESPALDO (TAP-TO-SELECT): Seleccionar dado para aplicarlo a un objetivo (incluso negros)
       dieEl.style.cursor = 'pointer';
       dieEl.title = 'Click para seleccionar dado';
       if (activeSelectedDieId === die.id) {
@@ -1401,6 +1330,27 @@ function renderCombatOverlay() {
     let dieWrapper = document.createElement('div');
     dieWrapper.className = 'die-wrapper';
     dieWrapper.style.position = 'relative';
+
+    if (die.type === 'black' && !die.rerolled && !die.assignedTo && (!die.isCramped || isCrampPhase)) {
+      const rerollBtn = document.createElement('button');
+      rerollBtn.className = 'die-reroll-icon';
+      rerollBtn.innerHTML = '↻';
+      rerollBtn.title = 'Relanzar dado negro';
+      rerollBtn.onclick = (e) => {
+        e.stopPropagation(); // Evitar seleccionar el dado
+        dieEl.classList.add('die-spin');
+        setTimeout(() => {
+          let newVal = gameState.rerollDie(die.id);
+          if (newVal) {
+            dieEl.innerText = newVal;
+          }
+        }, 300);
+        setTimeout(() => {
+          renderCombatOverlay();
+        }, 600);
+      };
+      dieWrapper.appendChild(rerollBtn);
+    }
 
     if (die.rerolled) {
       let lock = document.createElement('div');
