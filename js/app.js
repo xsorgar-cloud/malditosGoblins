@@ -4,10 +4,12 @@ const gameState = new GameState();
 const COIN_SVG = `<svg viewBox="0 0 24 24" width="18" height="18" style="vertical-align: middle; margin-right: 3px;"><circle cx="12" cy="12" r="10" fill="#ffd700" stroke="#c79a32" stroke-width="2"/><circle cx="12" cy="12" r="7" fill="none" stroke="#e6c200" stroke-width="1" stroke-dasharray="2,2"/><path d="M12 7v10" stroke="#c79a32" stroke-width="2" stroke-linecap="round"/></svg>`;
 const SACK_SVG = `<svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align: middle; margin-right: 3px;"><path d="M9 3C8.5 3 8 4 8.5 5.5C9 7 9 7 9 7C6 8 4 12 4 18C4 20.5 6 21 12 21C18 21 20 20.5 20 18C20 12 18 8 15 7C15 7 15 7 15.5 5.5C16 4 15.5 3 15 3C13 3 11 3.5 9 3Z" fill="#ffffff" stroke="#000000" stroke-width="1.8" stroke-linejoin="round"/><rect x="8" y="6.5" width="8" height="2.5" rx="1" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"/><path d="M13 9C13 11 12 12 12 12C12 12 14 11 14 9Z" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"/><path d="M11 9C11 11 12 12 12 12C12 12 10 11 10 9Z" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"/></svg>`;
 
-// Pantalla de Presentación (Splash Screen) al cargar la web
-window.addEventListener('DOMContentLoaded', () => {
-  const splash = document.getElementById('splash-screen');
-  if (splash) {
+// Pantalla de Presentación (Splash Screen) autogestionada y compatible con móviles/tablets
+(function initSplashScreen() {
+  const setupSplash = () => {
+    const splash = document.getElementById('splash-screen');
+    if (!splash) return;
+
     let isRemoving = false;
     const removeSplash = () => {
       if (isRemoving) return;
@@ -19,12 +21,22 @@ window.addEventListener('DOMContentLoaded', () => {
 
     const timer = setTimeout(removeSplash, 1000);
 
-    splash.addEventListener('click', () => {
-      clearTimeout(timer);
-      removeSplash();
+    // Soporte total para clic en PC y toque táctil en móviles/tablets
+    ['click', 'touchstart'].forEach(evt => {
+      splash.addEventListener(evt, (e) => {
+        e.preventDefault();
+        clearTimeout(timer);
+        removeSplash();
+      }, { once: true });
     });
+  };
+
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', setupSplash);
+  } else {
+    setupSplash();
   }
-});
+})();
 
 
 // Variables Globales para Sistema de Respaldo Táctil (Tap-to-Select)
