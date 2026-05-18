@@ -724,7 +724,7 @@ function renderBattlefield() {
 
   if (gameState.currentHito <= 5) {
     let hito = DB.hitos.iniciacion[gameState.currentHito - 1];
-    btnDeployHito.innerText = `Enfrentar Hito ${gameState.currentHito}: ${hito.name}`;
+    btnDeployHito.innerText = `Enfrentar Hito ${gameState.currentHito}`;
     if (hitoActionsDiv) hitoActionsDiv.style.display = 'flex';
 
     // Desactivar si ya hay goblins de hito vivos
