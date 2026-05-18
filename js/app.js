@@ -466,9 +466,17 @@ function showActionNotification(count) {
   if (!overlay || toastStars.length === 0) return;
 
   toastStars.forEach((star, idx) => {
-    if (idx <= count) {
+    star.classList.remove('star-pop-active');
+    star.style.transform = 'scale(1)';
+
+    if (idx < count) {
       star.style.color = '#ff4d4d';
       star.style.textShadow = '0 0 20px rgba(255, 77, 77, 0.8)';
+    } else if (idx === count) {
+      star.style.color = '#ff4d4d';
+      star.style.textShadow = '0 0 20px rgba(255, 77, 77, 0.8)';
+      void star.offsetWidth; // Forzar reflow para reiniciar la animación
+      star.classList.add('star-pop-active');
     } else {
       star.style.color = '#444';
       star.style.textShadow = 'none';
@@ -2294,7 +2302,7 @@ function updateNarrowStates() {
   });
 }
 
-let activeSelectedOrbUid = null;
+let activeSelectedOrbUids = [];
 
 function renderRetaliationModal() {
   const overlay = document.getElementById('global-event-overlay');
@@ -2310,7 +2318,7 @@ function renderRetaliationModal() {
 
   title.innerHTML = `⚔️ FASE DE REPRESALIA ⚔️`;
   title.style.color = 'var(--accent-red)';
-  desc.innerHTML = `Tienes un total de <strong style="font-size: 1.4rem; color: var(--accent-red);">${totalDamage} </strong> de daño por asignar.<br>Arrastra los orbes hacia los jugadores o tócalos para seleccionar.`;
+  desc.innerHTML = `Tienes un total de <strong style="font-size: 1.4rem; color: var(--accent-red);">${totalDamage} </strong> de daño por asignar.<br>Arrastra los orbes hacia los jugadores o tócalos para seleccionar varios.`;
 
   container.innerHTML = '';
   // Asegurar flujo vertical con clase CSS
@@ -2327,22 +2335,22 @@ function renderRetaliationModal() {
       orb.innerText = gob.level;
       orb.draggable = true;
       orb.dataset.uid = gob.uid;
-      orb.title = "Arrastra o haz clic para seleccionar";
+      orb.title = "Arrastra o haz clic para seleccionar/deseleccionar";
 
-      if (activeSelectedOrbUid === gob.uid) {
+      if (activeSelectedOrbUids.includes(gob.uid)) {
         orb.classList.add('orb-selected');
         orb.style.boxShadow = '0 0 15px 5px var(--accent-red), 0 0 25px 10px #ff0000';
         orb.style.transform = 'scale(1.15)';
       }
 
       orb.addEventListener('click', (e) => {
-        if (activeSelectedOrbUid === gob.uid) {
-          activeSelectedOrbUid = null;
-          renderRetaliationModal();
+        const pos = activeSelectedOrbUids.indexOf(gob.uid);
+        if (pos !== -1) {
+          activeSelectedOrbUids.splice(pos, 1);
         } else {
-          activeSelectedOrbUid = gob.uid;
-          renderRetaliationModal();
+          activeSelectedOrbUids.push(gob.uid);
         }
+        renderRetaliationModal();
         e.stopPropagation();
       });
 
@@ -2368,7 +2376,7 @@ function renderRetaliationModal() {
       const zone = document.createElement('div');
       zone.className = 'player-drop-zone';
       if (p.hp <= 0) zone.classList.add('is-dead');
-      zone.title = "Arrastra un orbe aquí o haz clic si tienes un orbe seleccionado";
+      zone.title = "Arrastra un orbe aquí o haz clic si tienes orbes seleccionados";
 
       zone.innerHTML = `
         <h4>${p.name}</h4>
@@ -2376,10 +2384,10 @@ function renderRetaliationModal() {
       `;
 
       zone.addEventListener('click', (e) => {
-        if (activeSelectedOrbUid && p.hp > 0) {
-          const chosenUid = activeSelectedOrbUid;
-          activeSelectedOrbUid = null;
-          handleRetaliationChoice(chosenUid, idx);
+        if (activeSelectedOrbUids.length > 0 && p.hp > 0) {
+          const chosenUids = [...activeSelectedOrbUids];
+          activeSelectedOrbUids = [];
+          handleRetaliationChoice(chosenUids, idx);
           e.stopPropagation();
         }
       });
@@ -2425,7 +2433,7 @@ function renderRetaliationModal() {
 function assignAllRetaliationToPlayer(pIndex) {
   const container = document.getElementById('event-choices-container');
   const remaining = [...gameState.retaliationQueue];
-  activeSelectedOrbUid = null;
+  activeSelectedOrbUids = [];
 
   remaining.forEach(gob => {
     gameState.assignRetaliationDamage(gob.uid, pIndex);
@@ -2446,9 +2454,18 @@ function assignAllRetaliationToPlayer(pIndex) {
   }
 }
 
-function handleRetaliationChoice(gobUid, playerIdx) {
-  activeSelectedOrbUid = null;
-  if (gameState.assignRetaliationDamage(gobUid, playerIdx)) {
+function handleRetaliationChoice(gobUids, playerIdx) {
+  activeSelectedOrbUids = [];
+  const uids = Array.isArray(gobUids) ? gobUids : [gobUids];
+  
+  let anyAssigned = false;
+  uids.forEach(uid => {
+    if (gameState.assignRetaliationDamage(uid, playerIdx)) {
+      anyAssigned = true;
+    }
+  });
+
+  if (anyAssigned) {
     // Pequeño retardo para que se vea la actualización del HUD antes de re-renderizar el modal
     setTimeout(() => {
       updateUI();
