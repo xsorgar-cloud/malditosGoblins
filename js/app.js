@@ -169,6 +169,8 @@ btnStartGame.addEventListener('click', () => {
 
   gameState.setupPlayers(numPlayers, finalRoles, { hp: initHp, maxHp: initMaxHp, energy: initEnergy, mo: initGold });
   setupModal.classList.add('hidden');
+  const versionBadge = document.getElementById('game-version-badge');
+  if (versionBadge) versionBadge.style.display = 'none';
   updateUI();
 });
 
