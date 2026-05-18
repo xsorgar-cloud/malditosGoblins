@@ -408,7 +408,15 @@ class GameState {
     }
   }
 
-  setupPlayers(numPlayers, selectedRoles = [], customSettings = { hp: 10, maxHp: 10, energy: 0, mo: 2 }) {
+  setupPlayers(numPlayers, selectedRoles = [], customSettings = { hp: 10, maxHp: 10, energy: 0, mo: 2, hito: 1, level: 1 }) {
+    this.currentHito = customSettings.hito !== undefined ? customSettings.hito : 1;
+    let initLvl = customSettings.level !== undefined ? customSettings.level : 1;
+    let basePex = 0;
+    if (initLvl === 2) basePex = 2;
+    if (initLvl === 3) basePex = 6;
+    if (initLvl === 4) basePex = 12;
+    let pendingChoices = initLvl > 1 ? initLvl - 1 : 0;
+
     this.players = [];
     for (let i = 0; i < numPlayers; i++) {
       let roleId = selectedRoles[i] || 'guerrero';
@@ -420,8 +428,8 @@ class GameState {
         hp: customSettings.hp,
         maxHp: customSettings.maxHp !== undefined ? customSettings.maxHp : customSettings.hp,
         mo: customSettings.mo,
-        pex: 0,
-        level: 1,
+        pex: basePex,
+        level: initLvl,
         shield: 0,
         role: roleObj,
         energy: customSettings.energy,
@@ -434,7 +442,8 @@ class GameState {
           { type: 'red', faces: 6 },
           { type: 'black', faces: 6 }
         ],
-        pendingLevelUpChoice: false,
+        pendingLevelUpChoices: pendingChoices,
+        pendingLevelUpChoice: pendingChoices > 0,
         goblinsFoughtThisTurn: []
       });
     }
@@ -1000,7 +1009,10 @@ class GameState {
       this.addLog(`🌟 <span style="color:#ecf542">¡<strong>Los jugadores subieron al Nivel ${p.level}! </span> 🌟`);
 
       // Activar flag de elección para todos los jugadores
-      this.players.forEach(pl => pl.pendingLevelUpChoice = true);
+      this.players.forEach(pl => {
+        pl.pendingLevelUpChoices = (pl.pendingLevelUpChoices || 0) + 1;
+        pl.pendingLevelUpChoice = true;
+      });
     }
   }
 
@@ -1015,7 +1027,12 @@ class GameState {
         bonusMsg = " y ganó 1 mo extra";
       }
 
-      p.pendingLevelUpChoice = false;
+      if (p.pendingLevelUpChoices && p.pendingLevelUpChoices > 1) {
+        p.pendingLevelUpChoices--;
+      } else {
+        p.pendingLevelUpChoices = 0;
+        p.pendingLevelUpChoice = false;
+      }
       this.addLog(`🎲 <strong>${p.name}</strong> añadió un dado ${dieType === 'red' ? 'Rojo d6' : 'Negro d4'} a su colección${bonusMsg}.`);
       return true;
     }

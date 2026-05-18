@@ -167,7 +167,13 @@ btnStartGame.addEventListener('click', () => {
   const rawGold = parseInt(document.getElementById('input-init-gold').value, 10);
   const initGold = isNaN(rawGold) ? 2 : rawGold;
 
-  gameState.setupPlayers(numPlayers, finalRoles, { hp: initHp, maxHp: initMaxHp, energy: initEnergy, mo: initGold });
+  const rawHito = parseInt(document.getElementById('input-init-hito').value, 10);
+  const initHito = isNaN(rawHito) ? 1 : rawHito;
+
+  const rawLevel = parseInt(document.getElementById('input-init-level').value, 10);
+  const initLevel = isNaN(rawLevel) ? 1 : rawLevel;
+
+  gameState.setupPlayers(numPlayers, finalRoles, { hp: initHp, maxHp: initMaxHp, energy: initEnergy, mo: initGold, hito: initHito, level: initLevel });
   setupModal.classList.add('hidden');
   const versionBadge = document.getElementById('game-version-badge');
   if (versionBadge) versionBadge.style.display = 'none';
@@ -454,7 +460,7 @@ function showActionNotification(count) {
   const valueSpan = document.getElementById('action-value');
   if (!overlay || !valueSpan) return;
 
-  valueSpan.innerText = `${count}/3`;
+  valueSpan.innerText = `${count + 1}/3`;
   overlay.classList.remove('hidden');
   overlay.style.opacity = '1';
 
@@ -718,7 +724,19 @@ function openExploreMarketModal() {
 
 function renderBattlefield() {
   waveLevelSpan.innerText = gameState.battlefield.waveLevel;
-  actionCountSpan.innerText = gameState.battlefield.actionCount;
+  actionCountSpan.innerText = gameState.battlefield.actionCount + 1;
+
+  const pLeader = gameState.players[0];
+  if (pLeader) {
+    const expReq = { 1: 2, 2: 6, 3: 12, 4: 22 };
+    const nextExpLeader = expReq[pLeader.level] || 'MAX';
+    const groupLevelSpan = document.getElementById('group-level');
+    const groupPexSpan = document.getElementById('group-pex');
+    const groupNextPexSpan = document.getElementById('group-next-pex');
+    if (groupLevelSpan) groupLevelSpan.innerText = pLeader.level;
+    if (groupPexSpan) groupPexSpan.innerText = pLeader.pex;
+    if (groupNextPexSpan) groupNextPexSpan.innerText = nextExpLeader;
+  }
 
   const hitoActionsDiv = document.getElementById('hito-actions');
 
@@ -828,8 +846,6 @@ function renderCombatOverlay() {
         ${p.shield > 0 ? `<div class="stat shield" style="display: flex; align-items: center; gap: 10px; height: 24px; color: #33cc33;" title="Escudos del Protector"><span style="display: flex; align-items: center; width: 24px; justify-content: center;">🛡️</span> <span>Escudos: <span>${p.shield}</span></span></div>` : ''}
         <div class="stat gold" style="display: flex; align-items: center; gap: 10px; height: 24px;"><span style="display: flex; align-items: center; width: 24px; justify-content: center;">${COIN_SVG}</span> <span>Oro: <span>${p.mo}</span></span></div>
         <div class="stat energy" style="display: flex; align-items: center; gap: 10px; height: 24px; color: #00d2ff;" title="Energía del Rol"><span style="display: flex; align-items: center; width: 24px; justify-content: center;">⚡</span> <span>Energía: <span>${p.energy}</span></span></div>
-        <div class="stat pex" style="display: flex; align-items: center; gap: 10px; height: 24px;"><span style="display: flex; align-items: center; width: 24px; justify-content: center;">✨</span> <span>PEX: <span>${p.pex}/${nextExp}</span></span></div>
-        <div class="stat level" style="display: flex; align-items: center; gap: 10px; height: 24px;"><span style="display: flex; align-items: center; width: 24px; justify-content: center;">⭐</span> <span>Nivel: <span>${p.level}</span></span></div>
       </div>
     `;
   }
@@ -1673,8 +1689,6 @@ function renderPlayer() {
                 <div class="stat hp ${isLowHP ? 'low-hp' : ''}" title="Puntos de Vida">❤️ <span class="${hpPulse}">${p.hp}</span>/<span>${p.maxHp}</span></div>
                 <div class="stat gold" title="Monedas">${COIN_SVG} <span class="${moPulse}">${p.mo}</span></div>
                 <div class="stat blocks" title="Carga de Equipo" style="${isOverweight ? 'color: var(--accent-red);' : ''}">${SACK_SVG} <span class="${blocksPulse}">${currentBlocks}</span>/<span>${maxBlocks}</span></div>
-                <div class="stat pex" title="Puntos de Experiencia">✨ <span class="${pexPulse}">${p.pex}/${nextExp}</span></div>
-                <div class="stat level" title="Nivel del Jugador">⭐ <span class="${levelPulse}">${p.level}</span></div>
             </div>
         </div>
         
@@ -2071,7 +2085,7 @@ function checkLevelUpChoice() {
       header.innerHTML = `
         <div style="text-align: left;">
           <h3 style="margin: 0; font-size: 1.4rem;">${p.name}</h3>
-          <span style="color: var(--text-dim); font-size: 0.9rem;">Ha subido al nivel ${p.level}</span>
+          <span style="color: var(--text-dim); font-size: 0.9rem;">Ha subido al nivel ${p.level}${p.pendingLevelUpChoices > 1 ? ` (Elección 1 de ${p.pendingLevelUpChoices})` : ''}</span>
         </div>
         <div class="collection-mini">
           <span style="font-size: 0.7rem; color: #888; text-transform: uppercase; margin-right: 5px;">Colección:</span>

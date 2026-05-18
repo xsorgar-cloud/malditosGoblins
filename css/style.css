@@ -155,6 +155,22 @@ main {
   box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
 }
 
+.group-info {
+  position: absolute;
+  top: 5px;
+  left: 20px;
+  display: flex;
+  gap: 25px;
+  align-items: baseline;
+  z-index: 20;
+  background: rgba(0, 0, 0, 0.5);
+  padding: 8px 20px;
+  border-radius: 20px;
+  backdrop-filter: blur(5px);
+  border: 1px solid rgba(212, 175, 55, 0.2);
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+}
+
 .goblins-container {
   display: flex;
   gap: 20px;
