@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --bg-color: #0f1115;
   --panel-bg: rgba(25, 28, 36, 0.85);
   --panel-active-bg: rgba(3, 40, 46, 0.85);
@@ -11,6 +11,10 @@
   --accent-blue: #457b9d;
   --gold: #f4d35e;
   --text-cita: #bbb81c;
+}
+
+.hidden {
+  display: none !important;
 }
 
 * {
@@ -187,7 +191,7 @@ main {
 
 .goblin-card {
   z-index: 5;
-  /* Aseguramos que esté por encima de fondos */
+  /* Aseguramos que estÃ© por encima de fondos */
   width: 180px;
   height: 255px;
   border: 2px solid var(--accent-red);
@@ -200,7 +204,7 @@ main {
   cursor: pointer;
 }
 
-/* EFECTO ACORDEÓN SOLO EN LA PANTALLA PRINCIPAL */
+/* EFECTO ACORDEÃ“N SOLO EN LA PANTALLA PRINCIPAL */
 #goblins-container .goblin-card {
   flex: 0 1 180px;
   min-width: 44px;
@@ -655,7 +659,7 @@ main {
   flex: 1;
 }
 
-/* AJUSTES DINÁMICOS PARA 4 JUGADORES */
+/* AJUSTES DINÃMICOS PARA 4 JUGADORES */
 .players-container.count-4 .player-panel {
   min-width: 410px;
 }
@@ -697,7 +701,7 @@ main {
   z-index: 1;
   background-repeat: no-repeat;
   background-color: var(--bg-color);
-  /* Fondo sólido para que no se vea lo de debajo al solaparse */
+  /* Fondo sÃ³lido para que no se vea lo de debajo al solaparse */
 }
 
 .equipment-card:hover {
@@ -728,7 +732,7 @@ main {
   align-items: flex-start;
   justify-content: center;
   padding-top: 30px;
-  font-size: 1.5rem;
+  font-size: 2.5rem;
   background: rgba(0, 0, 0, 0.4);
   border-radius: 8px;
   color: white;
@@ -1066,7 +1070,7 @@ main {
   box-shadow: 0 0 50px rgba(244, 211, 94, 0.3);
 }
 
-/* ANIMACIÓN DE MUERTE DE GOBLINS */
+/* ANIMACIÃ“N DE MUERTE DE GOBLINS */
 .goblin-card.dying {
   /* Sin recompensa: Gris y encoge */
   pointer-events: none;
@@ -1127,7 +1131,7 @@ main {
   }
 }
 
-/* ANIMACIÓN DE PULSO PARA STATS (SOLO NÚMEROS) */
+/* ANIMACIÃ“N DE PULSO PARA STATS (SOLO NÃšMEROS) */
 .pulse-stat,
 .pulse-action {
   display: inline-block;
@@ -1145,7 +1149,7 @@ main {
   }
 
   30% {
-    /* Recogida rápida */
+    /* Recogida rÃ¡pida */
     transform: scale(1);
   }
 
@@ -1172,7 +1176,7 @@ main {
   padding: 40px !important;
   box-shadow: 0 0 60px rgba(0, 0, 0, 0.8), 0 0 30px rgba(212, 175, 55, 0.2) !important;
   max-width: 1000px;
-  /* Un poco más ancho para las tarjetas en horizontal */
+  /* Un poco mÃ¡s ancho para las tarjetas en horizontal */
   width: 95%;
   margin: 0 auto;
   text-align: center;
@@ -1319,13 +1323,13 @@ main {
   left: 0;
   width: 100%;
   height: 120px;
-  /* Sombra radial elíptica que se desvanece en todas direcciones */
+  /* Sombra radial elÃ­ptica que se desvanece en todas direcciones */
   background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 80%);
   transform: translateY(-50%);
   z-index: 1000;
   pointer-events: none;
   transition: opacity 0.8s;
-  /* Desvanecimiento más lento */
+  /* Desvanecimiento mÃ¡s lento */
   display: flex;
   align-items: center;
   justify-content: center;
@@ -1352,7 +1356,7 @@ main {
   font-family: 'Cinzel', serif;
   font-size: 1rem;
   color: #ffffff;
-  /* Texto más claro */
+  /* Texto mÃ¡s claro */
   letter-spacing: 3px;
   font-weight: 700;
 }
@@ -1391,7 +1395,7 @@ main {
   }
 }
 
-/* ANIMACIÓN PULSO PARA EL CONTADOR DEL HUD */
+/* ANIMACIÃ“N PULSO PARA EL CONTADOR DEL HUD */
 .pulse-action {
   animation: actionPulseHUD 0.5s ease-out;
 }
@@ -1611,13 +1615,13 @@ main {
   background: #333 !important;
 }
 
-/* EFECTO ESCOZOR (PARPADEO TÉRMICO ROJO/NARANJA) */
+/* EFECTO ESCOZOR (PARPADEO TÃ‰RMICO ROJO/NARANJA) */
 #combat-dice-pool .die.stung,
 .die-placeholder.active.stung,
 .die.stung {
   border-color: #ff3300 !important;
   background: #ff3300 !important;
-  /* Rojo sólido para que la animación se vea clara */
+  /* Rojo sÃ³lido para que la animaciÃ³n se vea clara */
   color: white !important;
   box-shadow: 0 0 12px #ff3300, 0 0 5px #ff9900 !important;
   animation: stingFlicker 0.3s infinite;
@@ -1643,7 +1647,7 @@ main {
   }
 }
 
-/* EFECTO CALAMBRE (PARPADEO ELÉCTRICO, COLOR AMARILLO Y TOQUE ROJO) */
+/* EFECTO CALAMBRE (PARPADEO ELÃ‰CTRICO, COLOR AMARILLO Y TOQUE ROJO) */
 .die.cramped {
   border-color: #ffcc00 !important;
   background: #ffcc00 !important;
@@ -1674,7 +1678,7 @@ main {
   }
 }
 
-/* EFECTO TEMBLEQUE (VIBRACIÓN SUTIL Y COLOR AZUL) */
+/* EFECTO TEMBLEQUE (VIBRACIÃ“N SUTIL Y COLOR AZUL) */
 .die-placeholder.active.shaking,
 .die.shaking {
   border-color: #00e5ff !important;
@@ -1815,7 +1819,7 @@ main {
 }
 
 .player-drop-zone.drag-over::after {
-  content: 'SOLTAR AQUÍ';
+  content: 'SOLTAR AQUÃ';
   position: absolute;
   bottom: -25px;
   font-size: 0.7rem;
@@ -1876,7 +1880,7 @@ main {
   background: rgba(255, 255, 255, 0.1) !important;
 }
 
-/* --- MODAL DE SELECCIÓN DE OBJETIVO (ROLES) --- */
+/* --- MODAL DE SELECCIÃ“N DE OBJETIVO (ROLES) --- */
 #target-modal-title {
   margin-bottom: 10px;
   color: var(--gold);
@@ -1895,7 +1899,7 @@ main {
   width: 100%;
 }
 
-/* Visor de Energía en el Modal */
+/* Visor de EnergÃ­a en el Modal */
 .modal-energy-visor {
   display: flex;
   align-items: center;
@@ -2151,11 +2155,11 @@ main {
   background-size: cover;
 }
 
-/* Evitar que las cartas se ensanchen al pasar el cursor en el modal de reparación */
+/* Evitar que las cartas se ensanchen al pasar el cursor en el modal de reparaciÃ³n */
 .repair-cards-grid .equipment-card:hover {
   min-width: 120px !important;
   transform: translateY(-5px);
-  /* Mantener la elevación pero sin ensanchar */
+  /* Mantener la elevaciÃ³n pero sin ensanchar */
 }
 
 /* Layout horizontal de jugadores SOLO para Curandero */
@@ -2186,7 +2190,7 @@ main {
 }
 
 /* ===================================================
-   DISEÑO RESPONSIVE FLUIDO (MÓVILES, TABLETS Y MENOR)
+   DISEÃ‘O RESPONSIVE FLUIDO (MÃ“VILES, TABLETS Y MENOR)
 =================================================== */
 @media (max-width: 1180px),
 (max-height: 720px) {
@@ -2194,7 +2198,7 @@ main {
     overflow-y: auto !important;
     overflow-x: hidden !important;
     font-size: 0.85rem !important;
-    /* TEXTO BASE MÁS PEQUEÑO */
+    /* TEXTO BASE MÃS PEQUEÃ‘O */
   }
 
   #game-container {
@@ -2222,7 +2226,7 @@ main {
   #market-zone h2 {
     top: 5px !important;
     font-size: 1.1rem !important;
-    /* TÍTULO MÁS PEQUEÑO */
+    /* TÃTULO MÃS PEQUEÃ‘O */
   }
 
   .market-decks {
@@ -2237,7 +2241,7 @@ main {
     width: auto !important;
     min-width: 50px !important;
     max-width: 85px !important;
-    /* ¡REDUCCIÓN ESTRICTA DE TAMAÑO! */
+    /* Â¡REDUCCIÃ“N ESTRICTA DE TAMAÃ‘O! */
     height: auto !important;
     max-height: 120px !important;
     aspect-ratio: 125 / 175 !important;
@@ -2259,7 +2263,7 @@ main {
 
   .wave-info h2 {
     font-size: 1rem !important;
-    /* TÍTULO DE OLEADA MÁS PEQUEÑO */
+    /* TÃTULO DE OLEADA MÃS PEQUEÃ‘O */
   }
 
   .goblins-container {
@@ -2276,7 +2280,7 @@ main {
     width: auto !important;
     min-width: 60px !important;
     max-width: 110px !important;
-    /* ¡REDUCCIÓN ESTRICTA DE TAMAÑO! */
+    /* Â¡REDUCCIÃ“N ESTRICTA DE TAMAÃ‘O! */
     height: auto !important;
     max-height: 155px !important;
     aspect-ratio: 180 / 255 !important;
@@ -2284,12 +2288,12 @@ main {
 
   .goblin-hp {
     font-size: 1.1rem !important;
-    /* VIDA DE GOBLINS MÁS PEQUEÑA */
+    /* VIDA DE GOBLINS MÃS PEQUEÃ‘A */
     width: 32px !important;
     height: 32px !important;
   }
 
-  /* --- BOTONES DE ACCIÓN GENERALES MÁS PEQUEÑOS --- */
+  /* --- BOTONES DE ACCIÃ“N GENERALES MÃS PEQUEÃ‘OS --- */
   button,
   .btn {
     font-size: 0.8rem !important;
@@ -2322,7 +2326,7 @@ main {
   .battle-actions button,
   #hito-actions button {
     font-size: 0.8rem !important;
-    /* BOTONES MÁS PEQUEÑOS */
+    /* BOTONES MÃS PEQUEÃ‘OS */
     padding: 5px 10px !important;
     height: 32px !important;
   }
@@ -2355,10 +2359,10 @@ main {
   .player-name,
   .player-header {
     font-size: 0.95rem !important;
-    /* TÍTULOS DE JUGADOR MÁS PEQUEÑOS */
+    /* TÃTULOS DE JUGADOR MÃS PEQUEÃ‘OS */
   }
 
-  /* MANTENEMOS LA CARTA DE ROL A LA IZQUIERDA PERO MÁS PEQUEÑA */
+  /* MANTENEMOS LA CARTA DE ROL A LA IZQUIERDA PERO MÃS PEQUEÃ‘A */
   .player-dashboard {
     display: grid !important;
     grid-template-columns: 60px 1fr !important;
@@ -2369,13 +2373,13 @@ main {
   .player-role {
     width: 60px !important;
     height: 90px !important;
-    /* CARTA DE ROL MÁS PEQUEÑA Y VERTICAL */
+    /* CARTA DE ROL MÃS PEQUEÃ‘A Y VERTICAL */
     margin: 0 !important;
   }
 
   .role-energy {
     font-size: 0.85rem !important;
-    /* ENERGÍA MÁS PEQUEÑA */
+    /* ENERGÃA MÃS PEQUEÃ‘A */
   }
 
   .player-equipment {
@@ -2393,13 +2397,13 @@ main {
     width: auto !important;
     min-width: 50px !important;
     max-width: 90px !important;
-    /* ¡REDUCCIÓN ESTRICTA DE TAMAÑO! */
+    /* Â¡REDUCCIÃ“N ESTRICTA DE TAMAÃ‘O! */
     height: auto !important;
     max-height: 130px !important;
     aspect-ratio: 140 / 200 !important;
   }
 
-  /* --- SELECCIÓN DE ROLES (SETUP MODAL) --- */
+  /* --- SELECCIÃ“N DE ROLES (SETUP MODAL) --- */
   #setup-content {
     padding: 20px !important;
     width: 95% !important;
@@ -2429,7 +2433,7 @@ main {
   #setup-role-card {
     width: 100% !important;
     max-width: 160px !important;
-    /* IMAGEN DE ROL MÁS PEQUEÑA */
+    /* IMAGEN DE ROL MÃS PEQUEÃ‘A */
     height: auto !important;
     aspect-ratio: 220 / 330 !important;
     margin-bottom: 15px !important;
@@ -2439,7 +2443,7 @@ main {
   #combat-overlay .combat-panel {
     display: flex !important;
     flex-direction: row !important;
-    /* MANTENEMOS EL MENÚ A LA IZQUIERDA */
+    /* MANTENEMOS EL MENÃš A LA IZQUIERDA */
     width: 98% !important;
     max-width: 98% !important;
     height: 92vh !important;
@@ -2448,7 +2452,7 @@ main {
 
   #combat-sidebar {
     width: 260px !important;
-    /* MENÚ IZQUIERDO MÁS ESTRECHO Y COMPACTO */
+    /* MENÃš IZQUIERDO MÃS ESTRECHO Y COMPACTO */
     padding: 15px !important;
     border-right: 1px solid rgba(212, 175, 55, 0.3) !important;
     border-bottom: none !important;
@@ -2458,12 +2462,12 @@ main {
 
   #combat-player-stats div {
     font-size: 1rem !important;
-    /* STATS DE COMBATE MÁS PEQUEÑAS */
+    /* STATS DE COMBATE MÃS PEQUEÃ‘AS */
   }
 
   .die {
     font-size: 1.3rem !important;
-    /* DADOS MÁS PEQUEÑOS */
+    /* DADOS MÃS PEQUEÃ‘OS */
     width: 40px !important;
     height: 40px !important;
   }
@@ -2490,7 +2494,7 @@ main {
   #combat-goblins-container .goblin-card {
     flex: 0 0 90px !important;
     width: 90px !important;
-    /* GOBLINS DE COMBATE MÁS PEQUEÑOS */
+    /* GOBLINS DE COMBATE MÃS PEQUEÃ‘OS */
     min-width: 90px !important;
     max-width: 90px !important;
     height: 127px !important;
@@ -2517,7 +2521,7 @@ main {
 }
 
 /* ===================================================
-   SOPORTE DRAG AND DROP TÁCTIL (MÓVILES Y TABLETS)
+   SOPORTE DRAG AND DROP TÃCTIL (MÃ“VILES Y TABLETS)
 =================================================== */
 [draggable="true"],
 .die,
@@ -2527,13 +2531,13 @@ main {
   touch-action: none !important;
   /* Evita que Android/iOS asuma que se quiere hacer scroll al tocar */
   -webkit-touch-callout: none !important;
-  /* Evita el menú contextual emergente en móviles al mantener pulsado */
+  /* Evita el menÃº contextual emergente en mÃ³viles al mantener pulsado */
   user-select: none !important;
-  /* Evita selección de texto accidental al mantener pulsado */
+  /* Evita selecciÃ³n de texto accidental al mantener pulsado */
 }
 
 /* ===================================================
-   SISTEMA DE RESPALDO TÁCTIL (TAP-TO-SELECT / CLICK)
+   SISTEMA DE RESPALDO TÃCTIL (TAP-TO-SELECT / CLICK)
 =================================================== */
 .die-selected {
   box-shadow: 0 0 20px 8px var(--gold) !important;
@@ -2606,14 +2610,40 @@ main {
     opacity: 0;
     filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.2));
   }
+
   60% {
     transform: scale(1.05);
     opacity: 1;
     filter: drop-shadow(0 0 50px rgba(212, 175, 55, 0.9));
   }
+
   100% {
     transform: scale(1);
     opacity: 1;
     filter: drop-shadow(0 0 25px rgba(212, 175, 55, 0.5));
   }
+}
+
+@keyframes tutorial-pulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.7);
+  }
+
+  70% {
+    transform: scale(1.1);
+    box-shadow: 0 0 0 15px rgba(212, 175, 55, 0);
+  }
+
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0);
+  }
+}
+
+.tutorial-pulse {
+  animation: tutorial-pulse 2s infinite cubic-bezier(0.66, 0, 0, 1);
+  background: linear-gradient(135deg, #d4af37, #f1c40f) !important;
+  color: #000 !important;
+  border-color: #fff !important;
 }

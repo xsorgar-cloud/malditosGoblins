@@ -416,9 +416,9 @@ class GameState {
     this.currentHito = customSettings.hito !== undefined ? customSettings.hito : 1;
     let initLvl = customSettings.level !== undefined ? customSettings.level : 1;
     let basePex = 0;
-    if (initLvl === 2) basePex = 2;
-    if (initLvl === 3) basePex = 6;
-    if (initLvl === 4) basePex = 12;
+    if (initLvl === 2) basePex = 2 * numPlayers;
+    if (initLvl === 3) basePex = 6 * numPlayers;
+    if (initLvl === 4) basePex = 12 * numPlayers;
     let pendingChoices = initLvl > 1 ? initLvl - 1 : 0;
 
     this.players = [];
@@ -1013,10 +1013,10 @@ class GameState {
     // Definimos la tabla de experiencia requerida para pasar de cada nivel al siguiente.
     // La clave es el nivel actual, el valor son los PEX necesarios.
     const expRequerida = {
-      1: 2,
-      2: 6,
-      3: 12,
-      4: 22
+      1: 2 * this.players.length,
+      2: 6 * this.players.length,
+      3: 12 * this.players.length,
+      4: 22 * this.players.length
     };
 
     // El bucle comprueba dos cosas:

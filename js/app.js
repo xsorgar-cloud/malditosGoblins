@@ -38,6 +38,177 @@ const SACK_SVG = `<svg viewBox="0 0 24 24" width="20" height="20" style="vertica
   }
 })();
 
+// --- SISTEMA DE TUTORIAL ---
+const TutorialManager = {
+  enabled: localStorage.getItem('tutorialEnabled') !== 'false',
+  seen: JSON.parse(localStorage.getItem('tutorialSeen') || '{}'),
+  currentSituation: null,
+
+  content: {
+    seleccion_rol: {
+      title: "Selección de Grupo",
+      body: `
+      <ul>
+        <li><strong>Roles:</strong> En el inicio de la partida debes seleccionra de 1 a 4 héroes. Cada rol tiene una habilidad única que consume ⚡ Puntos de Energía.</li>
+        <li><br><strong>Ajustes (⚙️):</strong> Puedes configurar la dificultad inicial (Oleada y Hito) y los estados iniciales con los que empieza cada héroe.</li>
+      </ul>`
+    },
+    inicio_partida: {
+      title: "Tablero Principal",
+      body: `
+      <div style="text-align: center; margin-bottom: 15px;">
+        <img src="assets/logo.png" style="height: 50px; filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.4));">
+      </div>
+      <ul>
+        <li>La pantalla principal se divide en 3 zonas diferenciadas.</li>
+        <li><strong>Mercado (Arriba):</strong> Cartas de equipo disponibles. Su coste en oro está arriba a la derecha de la carta.</li>
+        <li><strong>Monstruos (Centro):</strong> Los Goblins a los que puedes enfrentarte. Goblins con borde negro <strong>no dan recompensa</strong> (nivel inferior al tuyo).</li>
+        <li><strong>Acciones de Turno:</strong> En tu turno puedes <strong>Explorar</strong> (combatir), <strong>Cobrar</strong> (+ oro), o <strong>Rellenar Rol</strong> (+ energía).</li>
+      </ul>`
+    },
+    combate: {
+      title: "Combate Táctico",
+      body: `
+      <div style="display: flex; justify-content: center; gap: 15px; margin-bottom: 15px;">
+        <div class="die red" style="position: static; transform: none; box-shadow: none;">5</div>
+        <div class="die black" style="position: static; transform: none; box-shadow: none;">2</div>
+      </div>
+      <ul>
+        <li><strong>Tus Dados:</strong> Lanza y asigna los dados a tus cartas de equipo arrastrándolos (o tocándolos). Tienes <strong>2 relanzamientos globales</strong> gratuitos.</li>
+        <li><strong>Dados Negros:</strong> Algunos equipos generan dados negros de fatiga. Tócalos para relanzarlos (cuesta 1 PV) o asígnalos por su valor inicial.</li>
+        <li><strong>Orbes de Daño:</strong> El daño del monstruo se representa con orbes morados. Debes cubrirlos con Escudos 🛡️ o sufrirás daño directo.</li>
+      </ul>`
+    },
+    fin_combate: {
+      title: "Represalia y Fin",
+      body: `
+      <div style="text-align: center; margin-bottom: 15px;">
+        <img src="assets/Monstruos/03.jpg" style="height: 70px; border-radius: 8px; border: 2px solid #8B0000; box-shadow: 0 0 15px rgba(255,0,0,0.4);">
+      </div>
+      <ul>
+        <li><strong>Daño Recibido:</strong> Recibirás 1 PV de daño por cada orbe morado no bloqueado.</li>
+        <li><strong>Regla de Honor:</strong> Solo recibes oro/PEX de Goblins cuyo nivel sea igual o superior al tuyo (borde rojo). Los de borde negro no dan nada.</li>
+        <li><strong>Roturas:</strong> Ciertos ataques o defensas extremas pueden <strong>romper</strong> tu equipo (se volteará). Podrás repararlo pagando 1 moneda después del combate.</li>
+      </ul>`
+    },
+    mercado: {
+      title: "Fase de Mercado",
+      body: `
+      <div style="text-align: center; margin-bottom: 15px;">
+        <img src="assets/Equipo/inicial/!1-Espada.jpg" style="height: 70px; border-radius: 8px; border: 1px solid #aaa;">
+      </div>
+      <ul>
+        <li><strong>Comprar:</strong> Si tienes monedas, haz clic en el equipo de arriba para comprarlo. Irá a tu inventario inactivo 📦.</li>
+        <li><strong>Fin de Turno:</strong> Una vez hayas terminado, pulsa 'Pasar Turno' para ceder el control al siguiente jugador.</li>
+      </ul>`
+    },
+    incremento_oleada: {
+      title: "Nueva Oleada",
+      body: `
+      <div style="text-align: center; margin-bottom: 15px; font-size: 3rem;">
+        🌊
+      </div>
+      <ul>
+        <li><strong>Peligro Creciente:</strong> ¡La Oleada ha aumentado! Aparecerán monstruos más duros y equipo de nivel superior en el mercado.</li>
+        <li><strong>Supervivencia:</strong> A partir de la Oleada 3 empezarán a aparecer pociones de curación en el mercado.</li>
+      </ul>`
+    }
+  },
+
+  init() {
+    const toggle = document.getElementById('toggle-tutorial');
+    if (toggle) {
+      toggle.checked = this.enabled;
+      toggle.addEventListener('change', (e) => {
+        this.enabled = e.target.checked;
+        localStorage.setItem('tutorialEnabled', this.enabled);
+        this.evaluateSituation();
+      });
+    }
+
+    const btnHelp = document.getElementById('btn-tutorial');
+    const modal = document.getElementById('tutorial-modal');
+    const btnCloseX = document.getElementById('btn-close-tutorial-x');
+    const btnClose = document.getElementById('btn-close-tutorial');
+
+    if (btnHelp) {
+      btnHelp.addEventListener('click', () => {
+        if (!this.currentSituation || !this.content[this.currentSituation]) return;
+
+        // Marcar como visto
+        this.seen[this.currentSituation] = true;
+        localStorage.setItem('tutorialSeen', JSON.stringify(this.seen));
+        this.updateButton(); // Quitar el latido
+
+        // Mostrar modal
+        document.getElementById('tutorial-title').innerHTML = `❔ ` + this.content[this.currentSituation].title;
+        document.getElementById('tutorial-content').innerHTML = this.content[this.currentSituation].body;
+        modal.classList.remove('hidden');
+      });
+    }
+
+    const closeHandler = () => modal.classList.add('hidden');
+    if (btnCloseX) btnCloseX.addEventListener('click', closeHandler);
+    if (btnClose) btnClose.addEventListener('click', closeHandler);
+  },
+
+  evaluateSituation() {
+    if (!this.enabled) {
+      this.currentSituation = null;
+      this.updateButton();
+      return;
+    }
+
+    let sit = null;
+    const combatOverlay = document.getElementById('combat-overlay');
+    const setupModal = document.getElementById('setup-modal');
+
+    if (setupModal && !setupModal.classList.contains('hidden')) {
+      sit = 'seleccion_rol';
+    } else if (combatOverlay && !combatOverlay.classList.contains('hidden')) {
+      const btnResolve = document.getElementById('btn-resolve-combat');
+      const btnEnd = document.getElementById('btn-end-combat');
+      if (btnEnd && !btnEnd.classList.contains('hidden')) {
+        sit = 'fin_combate';
+      } else {
+        sit = 'combate';
+      }
+    } else if (gameState && gameState.isMarketPhase) {
+      sit = 'mercado';
+    } else if (gameState && gameState.battlefield && gameState.battlefield.waveLevel > lastWaveLevel && lastWaveLevel > 0) {
+      sit = 'incremento_oleada';
+    } else {
+      sit = 'inicio_partida';
+    }
+
+    this.currentSituation = sit;
+    this.updateButton();
+  },
+
+  updateButton() {
+    const btn = document.getElementById('btn-tutorial');
+    if (!btn) return;
+
+    if (!this.enabled || !this.currentSituation) {
+      btn.classList.add('hidden');
+      return;
+    }
+
+    btn.classList.remove('hidden');
+
+    if (!this.seen[this.currentSituation]) {
+      btn.classList.add('tutorial-pulse');
+    } else {
+      btn.classList.remove('tutorial-pulse');
+    }
+  }
+};
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', () => TutorialManager.init());
+} else {
+  TutorialManager.init();
+}
 
 // Variables Globales para Sistema de Respaldo Táctil (Tap-to-Select)
 let activeSelectedDieId = null;
@@ -156,6 +327,7 @@ function renderRoleSelection() {
     row.appendChild(optionsDiv);
     roleSelectionContainer.appendChild(row);
   }
+  TutorialManager.evaluateSituation();
 }
 
 
@@ -246,13 +418,14 @@ document.getElementById('btn-info-hitos').addEventListener('click', () => {
   const content = document.getElementById('hitos-info-content');
   const bossPreview = document.getElementById('hitos-boss-preview');
 
-  let html = '<ul style="list-style: none; padding: 0;">';
+  let html = '<p style="font-size: 1rem; color: #ccc; margin-bottom: 15px;">Goblins a invocar (Por jugador):</p>';
+  html += '<ul style="list-style: none; padding: 0;">';
   let bossImgHTML = '';
 
   DB.hitos.iniciacion.forEach(hito => {
     let gobsDesc = hito.isBoss
-      ? `Jefe: ${hito.name} (HP Base: ${hito.bossStats.hpMultiplier} x Jugadores)`
-      : `Goblins a invocar (Por jugador): G${hito.goblins.join(' + G')}`;
+      ? `Jefe: ${hito.name} (Jefe de Iniciación)`
+      : hito.goblins.map(lvl => `<img src="assets/g${lvl}.png" style="height: 50px; vertical-align: middle; margin: 0 4px;" alt="G${lvl}">`).join(' ');
 
     if (hito.isBoss && hito.bossStats.image) {
       bossImgHTML = `<div style="width: 100%; aspect-ratio: 2.5/3.5; background-image: url('${hito.bossStats.image}'); background-size: cover; border-radius: 10px; border: 2px solid #9d4edd; box-shadow: 0 0 20px rgba(157,78,221,0.5);"></div>`;
@@ -583,6 +756,7 @@ function updateUI() {
   }
 
   checkLevelUpChoice();
+  TutorialManager.evaluateSituation();
 }
 
 // Botones de acción
@@ -638,17 +812,25 @@ function renderMarket() {
         // Si no tiene dinero, no hacemos nada (la UI ya debería reflejarlo o buyFromMarket fallará)
         if (player.mo < topCard.cost) return;
 
-        const hasCard = player.equipped.some(eq => eq.id === topCard.id);
+        const buyAction = () => {
+          const hasCard = player.equipped.some(eq => eq.id === topCard.id);
 
-        if (hasCard) {
-          openDuplicateWarningModal(type, topCard);
-        } else {
-          const result = gameState.buyFromMarket(type);
-          if (result === "OVERWEIGHT") {
-            alert(`¡DEMASIADO PESO! No puedes llevar más de ${DB.playerLevels[player.level - 1].blocks} bloques de equipo. Sube de nivel para aumentar tu capacidad.`);
-          } else if (result) {
-            updateUI();
+          if (hasCard) {
+            openDuplicateWarningModal(type, topCard);
+          } else {
+            const result = gameState.buyFromMarket(type);
+            if (result === "OVERWEIGHT") {
+              alert(`¡DEMASIADO PESO! No puedes llevar más de ${DB.playerLevels[player.level - 1].blocks} bloques de equipo. Sube de nivel para aumentar tu capacidad.`);
+            } else if (result) {
+              updateUI();
+            }
           }
+        };
+
+        if (!gameState.isMarketPhase) {
+          openActionLossWarningModal(buyAction);
+        } else {
+          buyAction();
         }
       });
 
@@ -778,7 +960,12 @@ function renderBattlefield() {
 
   const pLeader = gameState.players[0];
   if (pLeader) {
-    const expReq = { 1: 2, 2: 6, 3: 12, 4: 22 };
+    const expReq = {
+      1: 2 * gameState.players.length,
+      2: 6 * gameState.players.length,
+      3: 12 * gameState.players.length,
+      4: 22 * gameState.players.length
+    };
     const nextExpLeader = expReq[pLeader.level] || 'MAX';
     const groupLevelSpan = document.getElementById('group-level');
     const groupPexSpan = document.getElementById('group-pex');
@@ -898,8 +1085,8 @@ function showElasticModal(dieId, dieValue, eqId, onConfirm) {
   rangeInput.value = Math.floor(dieValue / 2);
 
   const updatePreviews = () => {
-    const dmg = parseInt(rangeInput.value);
-    const heal = dieValue - dmg;
+    const heal = parseInt(rangeInput.value);
+    const dmg = dieValue - heal;
     dmgPreview.innerText = dmg;
     healPreview.innerText = heal;
   };
@@ -920,7 +1107,8 @@ function showElasticModal(dieId, dieValue, eqId, onConfirm) {
 
   btnConfirm.onclick = () => {
     closeModal();
-    const chosenDmg = parseInt(rangeInput.value);
+    const heal = parseInt(rangeInput.value);
+    const chosenDmg = dieValue - heal;
     onConfirm(chosenDmg);
   };
 
@@ -1313,10 +1501,9 @@ function renderCombatOverlay() {
   // Render Dados
   const dicePoolContainer = document.getElementById('combat-dice-pool');
   dicePoolContainer.innerHTML = '';
-
   c.playerDice.forEach(die => {
-    // En fase de calambre, ocultar dados rojos
-    if (isCrampPhase && die.type === 'red') return;
+    // En fase de calambre, ocultar dados rojos y dados negros que no tengan calambre
+    if (isCrampPhase && (die.type === 'red' || (die.type === 'black' && !die.isCramped))) return;
 
     // Fuera de la fase de calambre, ocultar dados con calambre no asignados (dados perdidos)
     if (!isCrampPhase && die.isCramped && !die.assignedTo) return;
@@ -1700,6 +1887,8 @@ function renderCombatOverlay() {
 
     equipSlots.appendChild(slot);
   });
+
+  TutorialManager.evaluateSituation();
 }
 
 // El control de btn-cancel-combat y btn-resolve-combat se gestiona íntegramente
@@ -2698,6 +2887,43 @@ function openDuplicateWarningModal(type, card) {
     gameState.buyFromMarket(type);
     overlay.classList.add('hidden');
     updateUI();
+  };
+
+  const btnNo = document.createElement('button');
+  btnNo.className = 'btn secondary';
+  btnNo.innerText = "CANCELAR COMPRA";
+  btnNo.onclick = () => {
+    overlay.classList.add('hidden');
+  };
+
+  container.appendChild(btnYes);
+  container.appendChild(btnNo);
+  overlay.classList.remove('hidden');
+}
+
+function openActionLossWarningModal(onConfirm) {
+  const overlay = document.getElementById('global-event-overlay');
+  const title = document.getElementById('event-modal-title');
+  const desc = document.getElementById('event-modal-desc');
+  const container = document.getElementById('event-choices-container');
+
+  title.innerText = "¡ACCIÓN PENDIENTE!";
+  title.style.color = "var(--gold)";
+  desc.innerHTML = `Aún tienes la oportunidad de realizar tu acción básica de este turno (Atacar, Cobrar o Rellenar Rol).<br><br>Si continúas con la compra, <strong>perderás la oportunidad</strong> de realizar tu acción de este turno.<br><br>¿Deseas continuar con la compra de todos modos?`;
+
+  container.innerHTML = '';
+  // Añadimos un marcador para evitar cierres accidentales
+  const marker = document.createElement('div');
+  marker.className = 'action-loss-warning-card';
+  container.appendChild(marker);
+
+  const btnYes = document.createElement('button');
+  btnYes.className = 'btn primary';
+  btnYes.style.marginRight = '10px';
+  btnYes.innerText = "SÍ, CONTINUAR";
+  btnYes.onclick = () => {
+    overlay.classList.add('hidden');
+    onConfirm();
   };
 
   const btnNo = document.createElement('button');
