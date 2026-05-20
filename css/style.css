@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --bg-color: #0f1115;
   --panel-bg: rgba(25, 28, 36, 0.85);
   --panel-active-bg: rgba(3, 40, 46, 0.85);
@@ -2799,5 +2799,36 @@ main {
 @media (max-width: 480px) {
   #hitos-boss-preview {
     width: 220px;
+  }
+}
+/* Estilos de las estrellas de accion y toast */
+.action-star {
+  font-size: 1.2rem;
+}
+.toast-star {
+  font-size: 2.3rem;
+}
+/* Layout para el setup-modal de inicio con columnas de Roles y Senda */
+#setup-modal-layout {
+  display: flex;
+  gap: 30px;
+  align-items: stretch;
+  justify-content: center;
+  max-width: 95vw;
+}
+
+@media (max-width: 1250px) {
+  #setup-modal-layout {
+    flex-direction: column;
+    align-items: center;
+    overflow-y: auto;
+    max-height: 90vh;
+    padding: 10px;
+  }
+  
+  #setup-modal-layout .modal-content {
+    width: 100% !important;
+    max-width: 800px;
+    margin-bottom: 20px !important;
   }
 }

@@ -410,8 +410,8 @@ class GameState {
 
             attacksForThisDie.forEach(eff => {
               const effLow = eff.toLowerCase();
-              const isUnskippable = effLow === 'rotura no esquivable';
-              const isNormalBreak = effLow === 'rotura';
+              const isUnskippable = effLow.includes('rotura no esquivable');
+              const isNormalBreak = !isUnskippable && (effLow === 'rotura' || effLow.includes('rotura'));
               const isStatus = effLow.includes('escozor') || effLow.includes('tembleque') || effLow.includes('calambre');
 
               // La Rotura no esquivable se aplica SIEMPRE.

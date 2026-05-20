@@ -1,4 +1,4 @@
-﻿let lastWaveLevel = 0;
+let lastWaveLevel = 0;
 let lastActionCount = 0;
 const gameState = new GameState();
 const COIN_SVG = `<svg viewBox="0 0 24 24" width="18" height="18" style="vertical-align: middle; margin-right: 3px;"><circle cx="12" cy="12" r="10" fill="#ffd700" stroke="#c79a32" stroke-width="2"/><circle cx="12" cy="12" r="7" fill="none" stroke="#e6c200" stroke-width="1" stroke-dasharray="2,2"/><path d="M12 7v10" stroke="#c79a32" stroke-width="2" stroke-linecap="round"/></svg>`;
@@ -341,6 +341,55 @@ let selectedGoblins = [];
 
 // Initial render
 renderRoleSelection();
+
+// Previsualizacion dinamica de reglas de senda en la pantalla de inicio
+function updateSetupSendaPreview() {
+  const selectSenda = document.getElementById('select-senda');
+  const previewContainer = document.getElementById('setup-senda-preview');
+  if (!selectSenda || !previewContainer) return;
+
+  const sendaVal = selectSenda.value;
+  const rules = DB.sendaReglasGenerales[sendaVal] || [];
+  
+  let html = `<h4 style="margin: 0 0 12px 0; color: var(--gold); font-family: 'Cinzel', serif; border-bottom: 1px solid rgba(212,175,55,0.2); padding-bottom: 6px; font-size: 1.1rem; letter-spacing: 0.5px;">Reglas Especiales</h4>`;
+  if (rules.length === 0 || (rules.length === 1 && rules[0].name === "Sin reglas especiales")) {
+    html += `<p style="margin: 0; color: #aaa; font-style: italic; font-size: 0.95rem;">Esta senda no aplica ninguna regla de entorno adicional.</p>`;
+  } else {
+    rules.forEach(rule => {
+      html += `<div style="margin-bottom: 15px;">
+        <strong style="color: #fff; font-size: 0.95rem; display: block; margin-bottom: 2px;">${rule.name}</strong>
+        <p style="margin: 0; color: #ccc; font-size: 0.9rem; line-height: 1.4;">${rule.desc}</p>
+      </div>`;
+    });
+  }
+
+  const sendaHitos = DB.hitos[sendaVal] || [];
+  const bossHito = sendaHitos.find(h => h.isBoss);
+  if (bossHito) {
+    html += `<h4 style="margin: 25px 0 12px 0; color: var(--accent-red); font-family: 'Cinzel', serif; border-bottom: 1px solid rgba(239,35,60,0.2); padding-bottom: 6px; font-size: 1.1rem; letter-spacing: 0.5px;">Jefe Final</h4>
+    <div style="display: flex; justify-content: center; align-items: center;">`;
+    if (bossHito.bossStats && bossHito.bossStats.image) {
+      html += `<img id="setup-boss-image" src="${bossHito.bossStats.image}" style="width: 147px; height: 207px; border-radius: 8px; border: 2px solid #9d4edd; box-shadow: 0 4px 15px rgba(157,78,221,0.5); object-fit: cover; cursor: zoom-in;" alt="${bossHito.name}">`;
+    }
+    html += `</div>`;
+  }
+
+  previewContainer.innerHTML = html;
+
+  // Manejar hover de la imagen del jefe para mostrar el modal de previsualizacion grande
+  const bossImgEl = document.getElementById('setup-boss-image');
+  const hoverModal = document.getElementById('boss-hover-modal');
+  const hoverModalImg = document.getElementById('boss-hover-modal-img');
+  if (bossImgEl && hoverModal && hoverModalImg) {
+    bossImgEl.addEventListener('mouseenter', () => {
+      hoverModalImg.src = bossImgEl.src;
+      hoverModal.style.opacity = '1';
+    });
+    bossImgEl.addEventListener('mouseleave', () => {
+      hoverModal.style.opacity = '0';
+    });
+  }
+}
 
 const settingsModal = document.getElementById('settings-modal');
 document.getElementById('btn-open-settings').addEventListener('click', () => {
@@ -3353,3 +3402,13 @@ document.addEventListener('keydown', (e) => {
     }
   }
 });
+
+
+// Inicializar preview de Senda en setup-modal
+setTimeout(() => {
+  const selectSendaEl = document.getElementById('select-senda');
+  if (selectSendaEl) {
+    selectSendaEl.addEventListener('change', updateSetupSendaPreview);
+    updateSetupSendaPreview();
+  }
+}, 100);

@@ -168,57 +168,79 @@
         </div>
     </div>
 
-    <!-- MODAL DE INICIO Y SETUP -->
+            <!-- MODAL DE INICIO Y SETUP -->
     <div id="setup-modal" class="modal">
-        <!-- PANEL PRINCIPAL DE SELECCIÓN DE ROLES -->
+      <div id="setup-modal-layout">
+        <!-- PANEL IZQUIERDO: CONFIGURACION DE GRUPO -->
         <div class="modal-content" id="setup-content"
-            style="max-width: 1100px; width: 95%; max-height: 90vh; overflow-y: auto; padding: 40px; position: relative;">
+            style="max-width: 1150px; width: 95%; height: 800px; max-height: 92vh; overflow-y: auto; padding: 40px; position: relative; margin: 0; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; border: 2px solid var(--gold); border-radius: 20px; box-shadow: 0 10px 50px rgba(0,0,0,0.9), inset 0 0 35px rgba(212, 175, 55, 0.15); background: rgba(10, 10, 10, 0.95);">
+            <div>
+                <!-- BOTON DE ENGRANAJE PARA AJUSTES INICIALES -->
+                <button id="btn-open-settings"
+                    style="position: absolute; top: 25px; left: 25px; background: transparent; border: none; font-size: 1.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--gold); transition: transform 0.3s ease; padding: 0; box-shadow: none;"
+                    title="Ajustes Iniciales de Partida" onmouseover="this.style.transform='rotate(45deg)'"
+                    onmouseout="this.style.transform='rotate(0deg)'">
+                    &#9881;&#65039;
+                </button>
 
-            <!-- BOTÓN DE ENGRANAJE PARA AJUSTES INICIALES -->
-            <button id="btn-open-settings"
-                style="position: absolute; top: 25px; left: 25px; background: transparent; border: none; font-size: 1.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--gold); transition: transform 0.3s ease; padding: 0; box-shadow: none;"
-                title="Ajustes Iniciales de Partida" onmouseover="this.style.transform='rotate(45deg)'"
-                onmouseout="this.style.transform='rotate(0deg)'">
-                ⚙️
-            </button>
-
-            <!-- NÚMERO DE VERSIÓN (A LA DERECHA DEL ENGRANAJE) -->
-            <div id="game-version-badge"
-                style="position: absolute; top: 28px; left: 70px; z-index: 10; font-family: 'Cinzel', serif; font-size: 0.85rem; font-weight: bold; color: var(--gold); background: rgba(10, 10, 15, 0.8); padding: 4px 12px; border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); backdrop-filter: blur(5px); letter-spacing: 1px;">
-                v.1.83
-            </div>
-
-            <h2 style="margin-top: 0; margin-bottom: 10px; font-size: 2.2rem;">Configura tu Grupo</h2>
-            <p style="font-size: 1rem; color: var(--text-dim); margin-bottom: 30px;">Selecciona al menos un rol para
-                cada jugador que vaya a participar en la aventura.</p>
-
-            <div style="display: flex; gap: 40px; align-items: flex-start; justify-content: space-between;">
-                <!-- COLUMNA IZQUIERDA: SELECCIÓN -->
-                <div id="role-selection-container"
-                    style="flex-grow: 1; text-align: left; display: flex; flex-direction: column; gap: 8px;">
-                    <!-- Se llena dinámicamente -->
+                <!-- NUMERO DE VERSION (A LA DERECHA DEL ENGRANAJE) -->
+                <div id="game-version-badge"
+                    style="position: absolute; top: 28px; left: 70px; z-index: 10; font-family: 'Cinzel', serif; font-size: 0.85rem; font-weight: bold; color: var(--gold); background: rgba(10, 10, 15, 0.8); padding: 4px 12px; border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); backdrop-filter: blur(5px); letter-spacing: 1px;">
+                    v.1.84
                 </div>
 
-                <!-- COLUMNA DERECHA: VISOR DE CARTA DE ROL -->
-                <div id="setup-role-preview"
-                    style="width: 280px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 25px 20px 20px 20px; height: 530px; min-height: 530px; max-height: 530px; box-sizing: border-box; overflow: hidden; box-shadow: inset 0 0 25px rgba(0,0,0,0.6);">
-                    <div id="setup-role-name"
-                        style="margin-bottom: 15px; width: 100%; height: 30px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.4rem; font-weight: 700; letter-spacing: 1px; color: var(--gold); text-align: center; font-family: 'Cinzel', serif; text-shadow: 0 2px 5px rgba(0,0,0,0.8);">
+                <h2 style="margin-top: 0; margin-bottom: 10px; font-size: 2.2rem; text-align: center;">Configura tu Grupo</h2>
+                <p style="font-size: 1rem; color: var(--text-dim); margin-bottom: 30px; text-align: center;">Selecciona al menos un rol para cada jugador que vaya a participar en la aventura.</p>
+
+                <div style="display: flex; gap: 40px; align-items: flex-start; justify-content: space-between;">
+                    <!-- COLUMNA IZQUIERDA: SELECCION -->
+                    <div id="role-selection-container"
+                        style="flex-grow: 1; text-align: left; display: flex; flex-direction: column; gap: 8px;">
+                        <!-- Se llena dinamicamente -->
                     </div>
-                    <div id="setup-role-card"
-                        style="width: 220px; height: 330px; flex-shrink: 0; background-image: url('assets/Roles/back_rol.jpg'); background-size: cover; background-position: center; border-radius: 12px; border: 2px solid var(--gold); box-shadow: 0 8px 25px rgba(0,0,0,0.7); transition: background-image 0.2s ease;">
-                    </div>
-                    <div id="setup-role-effect"
-                        style="margin-top: 25px; width: 100%; height: 85px; min-height: 85px; max-height: 85px; flex-shrink: 0; display: flex; align-items: flex-start; justify-content: center; font-size: 1rem; font-weight: 600; line-height: 1.4; letter-spacing: 0.5px; color: var(--gold); text-align: center; font-family: 'Cinzel', serif; overflow: hidden;">
+
+                    <!-- COLUMNA DERECHA: VISOR DE CARTA DE ROL -->
+                    <div id="setup-role-preview"
+                        style="width: 280px; flex-shrink: 0; display: flex; flex-direction: column; align-items: center; justify-content: flex-start; background: rgba(0,0,0,0.5); border: 1px solid rgba(255,255,255,0.15); border-radius: 16px; padding: 25px 20px 20px 20px; height: 510px; min-height: 510px; max-height: 510px; box-sizing: border-box; overflow: hidden; box-shadow: inset 0 0 25px rgba(0,0,0,0.6);">
+                        <div id="setup-role-name"
+                            style="margin-bottom: 15px; width: 100%; height: 30px; flex-shrink: 0; display: flex; align-items: center; justify-content: center; font-size: 1.2rem; font-weight: 700; letter-spacing: 1px; color: var(--gold); text-align: center; font-family: 'Cinzel', serif; text-shadow: 0 2px 5px rgba(0,0,0,0.8);">
+                        </div>
+                        <div id="setup-role-card"
+                            style="width: 210px; height: 315px; flex-shrink: 0; background-image: url('assets/Roles/back_rol.jpg'); background-size: cover; background-position: center; border-radius: 12px; border: 2px solid var(--gold); box-shadow: 0 8px 25px rgba(0,0,0,0.7); transition: background-image 0.2s ease;">
+                        </div>
+                        <div id="setup-role-effect"
+                            style="margin-top: 22px; width: 100%; height: 80px; min-height: 80px; max-height: 80px; flex-shrink: 0; display: flex; align-items: flex-start; justify-content: center; font-size: 1rem; font-weight: 600; line-height: 1.4; letter-spacing: 0.5px; color: var(--gold); text-align: center; font-family: 'Cinzel', serif; overflow: hidden;">
+                        </div>
                     </div>
                 </div>
             </div>
 
             <button id="btn-start-game" class="btn primary"
-                style="margin: 35px auto 0 auto; display: block; padding: 15px 60px; font-size: 1.2rem; min-width: 280px;">
+                style="margin: 25px auto 0 auto; display: block; padding: 15px 80px; font-size: 1.2rem; min-width: 320px; font-family: 'Cinzel', serif;">
                 Comenzar Partida
             </button>
         </div>
+
+        <!-- PANEL DERECHO: SELECCION DE SENDA -->
+        <div class="modal-content" id="setup-senda-content"
+            style="max-width: 420px; width: 95%; height: 800px; max-height: 92vh; overflow-y: auto; padding: 40px 30px; margin: 0; box-sizing: border-box; display: flex; flex-direction: column; justify-content: flex-start; border: 2px solid var(--gold); border-radius: 20px; box-shadow: 0 10px 50px rgba(0,0,0,0.9), inset 0 0 35px rgba(212, 175, 55, 0.15); background: rgba(10, 10, 10, 0.95);">
+            <h2 style="margin-top: 0; margin-bottom: 15px; font-size: 2.2rem; font-family: 'Cinzel', serif; color: var(--gold); text-align: center; letter-spacing: 1px;">Senda Activa</h2>
+
+            <!-- Selector de Senda -->
+            <div style="display: flex; flex-direction: column; gap: 8px; background: rgba(255,255,255,0.03); padding: 12px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1); margin-bottom: 25px; text-align: left;">
+                <select id="select-senda" style="width: 100%; padding: 10px 12px; border-radius: 8px; border: 2px solid var(--gold); background: #0a0a0a; color: #fff; font-size: 1rem; font-family: 'Outfit', sans-serif; outline: none; cursor: pointer; transition: all 0.3s ease;">
+                    <option value="iniciacion" selected>Senda de Iniciaci&oacute;n</option>
+                    <option value="guerrero">Senda de El Ze&ntilde;or de la Guerra</option>
+                    <option value="rey_brujo">Senda de El Rey Brujo</option>
+                </select>
+            </div>
+
+            <!-- Previsualizacion de Reglas de Senda -->
+            <div id="setup-senda-preview" style="text-align: left; background: rgba(0, 0, 0, 0.4); border: 1px solid rgba(212, 175, 55, 0.2); border-radius: 12px; padding: 20px; flex-grow: 1; overflow-y: auto; box-sizing: border-box;">
+                <!-- Se llena dinamicamente -->
+            </div>
+        </div>
+      </div>
     </div>
 
     <!-- MODAL DE AJUSTES INICIALES DE LA PARTIDA -->
@@ -326,19 +348,6 @@
                     <h4
                         style="margin: 0; color: var(--gold); border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom: 6px; font-size: 1.1rem; font-family: 'Cinzel', serif; text-align: center;">
                         Senda y Entorno</h4>
-                    <!-- Senda Activa -->
-                    <div
-                        style="display: flex; flex-direction: column; gap: 6px; background: rgba(255,255,255,0.03); padding: 8px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
-                        <label for="select-senda"
-                            style="font-size: 1.05rem; color: var(--gold); font-weight: bold; display: flex; align-items: center; gap: 8px; margin: 0;">🛣️
-                            Senda Activa</label>
-                        <select id="select-senda"
-                            style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 2px solid var(--gold); background: #0a0a0a; color: #fff; font-size: 1rem; font-family: 'Outfit', sans-serif; outline: none; cursor: pointer; transition: all 0.3s ease;">
-                            <option value="iniciacion" selected>Senda de Iniciación</option>
-                            <option value="guerrero">Senda de El Zeñor de la Guerra</option>
-                            <option value="rey_brujo">Senda de El Rey Brujo</option>
-                        </select>
-                    </div>
                     <!-- Hito Inicial -->
                     <div
                         style="display: flex; flex-direction: column; gap: 6px; background: rgba(255,255,255,0.03); padding: 8px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
@@ -648,6 +657,11 @@
                 <!-- Dynamically populated buttons representing the player's equipped cards -->
             </div>
         </div>
+    </div>
+
+    <!-- MODAL DE PREVISUALIZACIÓN DE JEFE DE SENDA AL HACER HOVER -->
+    <div id="boss-hover-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 9999; pointer-events: none; opacity: 0; transition: opacity 0.25s ease;">
+        <img id="boss-hover-modal-img" src="" style="max-height: 80vh; max-width: 80vw; border-radius: 16px; border: 3px solid #9d4edd; box-shadow: 0 0 35px rgba(157,78,221,0.6); object-fit: contain;">
     </div>
 
     <script src="js/database.js?v=1.83"></script>
