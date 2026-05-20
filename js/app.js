@@ -1,4 +1,4 @@
-let lastWaveLevel = 0;
+﻿let lastWaveLevel = 0;
 let lastActionCount = 0;
 const gameState = new GameState();
 const COIN_SVG = `<svg viewBox="0 0 24 24" width="18" height="18" style="vertical-align: middle; margin-right: 3px;"><circle cx="12" cy="12" r="10" fill="#ffd700" stroke="#c79a32" stroke-width="2"/><circle cx="12" cy="12" r="7" fill="none" stroke="#e6c200" stroke-width="1" stroke-dasharray="2,2"/><path d="M12 7v10" stroke="#c79a32" stroke-width="2" stroke-linecap="round"/></svg>`;
@@ -428,7 +428,7 @@ btnDeployHito.addEventListener('click', () => {
   }
 });
 
-document.getElementById('btn-info-hitos').addEventListener('click', () => {
+function openHitosModal() {
   const modal = document.getElementById('hitos-modal');
   const content = document.getElementById('hitos-info-content');
   const bossPreview = document.getElementById('hitos-boss-preview');
@@ -436,15 +436,34 @@ document.getElementById('btn-info-hitos').addEventListener('click', () => {
   const titleEl = modal.querySelector('h2');
   if (titleEl) {
     const sendaNames = {
-      iniciacion: "Senda de Iniciación",
-      guerrero: "Senda de El Zeñor de la Guerra"
+      iniciacion: "Senda de Iniciaci\u00F3n",
+      guerrero: "Senda de El Ze\u00F1or de la Guerra",
+      rey_brujo: "Senda de El Rey Brujo"
     };
-    const sendaName = sendaNames[gameState.activeSenda] || "Senda de Iniciación";
-    titleEl.innerText = `${sendaName} - Hitos`;
+    const sendaName = sendaNames[gameState.activeSenda] || "Senda de Iniciaci\u00F3n";
+    titleEl.innerText = `${sendaName} - Hitos y Reglas`;
   }
 
-  let html = '<p style="font-size: 1rem; color: #ccc; margin-bottom: 15px;">Goblins a invocar (Por jugador):</p>';
-  html += '<ul style="list-style: none; padding: 0;">';
+  let html = '';
+  let rulesHTML = '';
+
+  // 1. Preparar las reglas generales de la Senda
+  const generalRules = DB.sendaReglasGenerales[gameState.activeSenda] || [];
+  if (generalRules.length > 0) {
+    rulesHTML += `<div style="background: rgba(212, 175, 55, 0.05); border: 1px solid rgba(212, 175, 55, 0.2); padding: 15px; border-radius: 10px; box-shadow: 0 4px 15px rgba(0,0,0,0.2);">
+      <h3 style="color: var(--gold); margin-top: 0; font-family: 'Cinzel', serif; font-size: 1.15rem; border-bottom: 1px solid rgba(212, 175, 55, 0.2); padding-bottom: 8px; margin-bottom: 12px; letter-spacing: 1px;">&#128220; REGLAS GENERALES</h3>
+      <div style="display: flex; flex-direction: column; gap: 12px;">`;
+    generalRules.forEach(rule => {
+      rulesHTML += `<div>
+        <strong style="color: #fff; font-size: 1rem; display: flex; align-items: center; gap: 6px;">${rule.name}</strong>
+        <p style="margin: 4px 0 0 0; color: #bbb; font-size: 0.92rem; line-height: 1.5; font-family: 'Inter', sans-serif;">${rule.desc}</p>
+      </div>`;
+    });
+    rulesHTML += `</div></div>`;
+  }
+
+  html += '<p style="font-size: 1rem; color: #ccc; margin-bottom: 15px; font-family: \'Cinzel\', serif; letter-spacing: 1px;">&#128739;&#65039; Goblins a invocar (Por jugador):</p>';
+  html += '<ul style="list-style: none; padding: 0; display: flex; flex-direction: column; gap: 10px;">';
   let bossImgHTML = '';
 
   const sendaHitos = DB.hitos[gameState.activeSenda] || DB.hitos.iniciacion;
@@ -455,22 +474,22 @@ document.getElementById('btn-info-hitos').addEventListener('click', () => {
       : hito.goblins.map(lvl => `<img src="assets/g${lvl}.png" style="height: 50px; vertical-align: middle; margin: 0 4px;" alt="G${lvl}">`).join(' ');
 
     if (hito.isBoss && hito.bossStats.image) {
-      bossImgHTML = `<div style="width: 100%; aspect-ratio: 2.5/3.5; background-image: url('${hito.bossStats.image}'); background-size: cover; border-radius: 10px; border: 2px solid #9d4edd; box-shadow: 0 0 20px rgba(157,78,221,0.5);"></div>`;
+      bossImgHTML = `<div style="width: 100%; max-width: 261px; max-height: 373px; aspect-ratio: 2.5/3.5; background-image: url('${hito.bossStats.image}'); background-size: cover; background-position: center; border-radius: 10px; border: 2px solid #9d4edd; box-shadow: 0 0 20px rgba(157,78,221,0.5); margin: 0 auto;"></div>`;
     }
 
     const isCompleted = hito.id < gameState.currentHito;
     const bgStyle = isCompleted ? 'background: rgba(27, 67, 50, 0.7); border: 1px solid #52b788;' : 'background: rgba(0,0,0,0.6); border: 1px solid rgba(212, 175, 55, 0.5);';
     const titleColor = isCompleted ? '#74c69d' : 'var(--accent-red)';
-    const badgeHTML = isCompleted ? `<div style="background: #2d6a4f; color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; border: 1px solid #52b788; box-shadow: 0 0 10px rgba(82,183,136,0.5);">✓</div>` : '';
+    const badgeHTML = isCompleted ? `<div style="background: #2d6a4f; color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; border: 1px solid #52b788; box-shadow: 0 0 10px rgba(82,183,136,0.5);">&#10003;</div>` : '';
 
     let ruleHTML = '';
     if (hito.ruleDesc) {
       ruleHTML = `<div style="font-size: 0.85rem; color: var(--gold); margin-top: 4px; font-style: italic;">Regla: ${hito.ruleDesc}</div>`;
     }
 
-    html += `<li style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding: 15px; border-radius: 8px; ${bgStyle}">
+    html += `<li style="display: flex; align-items: center; justify-content: space-between; padding: 10px; border-radius: 8px; ${bgStyle}">
       <div>
-        <strong style="color: ${titleColor}; font-size: 1.1rem;">Hito ${hito.id}: ${hito.name}</strong><br>
+        <strong style="color: ${titleColor}; font-size: 1.0rem;">Hito ${hito.id}: ${hito.name}</strong><br>
         <span style="color: #ccc;">${gobsDesc}</span>
         ${ruleHTML}
       </div>
@@ -480,9 +499,11 @@ document.getElementById('btn-info-hitos').addEventListener('click', () => {
   html += '</ul>';
 
   content.innerHTML = html;
-  bossPreview.innerHTML = bossImgHTML;
+  bossPreview.innerHTML = rulesHTML + bossImgHTML;
   modal.classList.remove('hidden');
-});
+}
+
+document.getElementById('btn-info-hitos').addEventListener('click', openHitosModal);
 
 document.getElementById('btn-close-hitos').addEventListener('click', () => {
   document.getElementById('hitos-modal').classList.add('hidden');
@@ -755,7 +776,12 @@ function updateUI() {
   renderMarket();
   renderBattlefield();
   renderPlayer();
-  renderLogs(); // Actualizar el log si está abierto
+  renderLogs(); // Actualizar el log si est\u00E1 abierto
+
+  if (gameState.pendingCorrosionChoice) {
+    showCorrosionModal(gameState.pendingCorrosionChoice);
+    return;
+  }
 
   if (gameState.currentCombat) {
     renderCombatOverlay();
@@ -1296,6 +1322,67 @@ function showElasticModal(dieId, dieValue, eqId, onConfirm) {
     const chosenDmg = dieValue - heal;
     onConfirm(chosenDmg);
   };
+
+  modal.classList.remove('hidden');
+}
+
+function showCorrosionModal(pendingChoice) {
+  const modal = document.getElementById('corrosion-modal');
+  const messageEl = document.getElementById('corrosion-message');
+  const listContainer = document.getElementById('corrosion-items-list');
+
+  const player = pendingChoice.player;
+  messageEl.innerHTML = `<strong>${player.name}</strong> ha recibido da\u00F1o de un goblin. Debes elegir una carta de tu equipo equipado para romperla a causa del entorno de <strong>Corrosi\u00F3n</strong>.`;
+  listContainer.innerHTML = '';
+
+  const breakable = player.equipped.filter(eq => eq.isActive && !eq.isBroken);
+  
+  breakable.forEach(eq => {
+    const btn = document.createElement('button');
+    btn.className = 'btn';
+    btn.style.width = '100%';
+    btn.style.padding = '12px 16px';
+    btn.style.background = 'rgba(239, 35, 60, 0.1)';
+    btn.style.border = '1px solid rgba(239, 35, 60, 0.3)';
+    btn.style.color = '#ffccd5';
+    btn.style.borderRadius = '8px';
+    btn.style.cursor = 'pointer';
+    btn.style.fontFamily = "'Outfit', sans-serif";
+    btn.style.fontWeight = 'bold';
+    btn.style.fontSize = '1.05rem';
+    btn.style.transition = 'all 0.2s ease';
+    btn.innerText = eq.name;
+
+    btn.onmouseover = () => {
+      btn.style.background = 'rgba(239, 35, 60, 0.25)';
+      btn.style.borderColor = 'rgba(239, 35, 60, 0.7)';
+      btn.style.color = '#fff';
+      btn.style.boxShadow = '0 0 10px rgba(239, 35, 60, 0.4)';
+    };
+    btn.onmouseout = () => {
+      btn.style.background = 'rgba(239, 35, 60, 0.1)';
+      btn.style.borderColor = 'rgba(239, 35, 60, 0.3)';
+      btn.style.color = '#ffccd5';
+      btn.style.boxShadow = 'none';
+    };
+
+    btn.onclick = () => {
+      eq.isBroken = true;
+      eq.brokenAnimationPlayed = false;
+      eq.brokenInCombatId = gameState.lastCombatId;
+      gameState.addLog(`&#128736;&#65039; <strong>Corrosi\u00F3n:</strong> <strong>${player.name}</strong> elige romper su <strong>${eq.name}</strong>.`);
+      
+      gameState.pendingCorrosionChoice = null;
+      modal.classList.add('hidden');
+      
+      if (pendingChoice.callback) {
+        pendingChoice.callback();
+      }
+      updateUI();
+    };
+
+    listContainer.appendChild(btn);
+  });
 
   modal.classList.remove('hidden');
 }
@@ -2200,7 +2287,10 @@ function renderPlayer() {
       statusHTML += `<div class="status-icon escudo" title="Escudos: ${p.shield}">🛡️ <span>${p.shield}</span></div>`;
     }
     if (p.statusEffects.escozor > 0) {
-      statusHTML += `<div class="status-icon escozor" title="Escozor: ${p.statusEffects.escozor}">🔥 <span>${p.statusEffects.escozor}</span></div>`;
+      statusHTML += `<div class="status-icon escozor" title="Escozor: ${p.statusEffects.escozor}">&#128293; <span>${p.statusEffects.escozor}</span></div>`;
+    }
+    if (p.statusEffects.eliminaRojo > 0) {
+      statusHTML += `<div class="status-icon elimina-rojo" style="background: #ef233c; border-color: #d90429;" title="Dado rojo anulado: ${p.statusEffects.eliminaRojo}">&#127922;&#10060; <span>${p.statusEffects.eliminaRojo}</span></div>`;
     }
     if (p.statusEffects.calambre > 0) {
       statusHTML += `<div class="status-icon calambre" title="Calambre: ${p.statusEffects.calambre}">⚡ <span>${p.statusEffects.calambre}</span></div>`;

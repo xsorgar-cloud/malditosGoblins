@@ -23,6 +23,7 @@ class GameState {
     this.isGameOver = false;
     this.activeSenda = 'iniciacion';
     this.pendingHito1Goblins = 0;
+    this.pendingCorrosionChoice = null;
     this.lastCombatId = 0;
     this.lastActionWasCombat = false;
 
@@ -98,7 +99,7 @@ class GameState {
   }
 
   checkSpawnNextHito1Goblin(deadGoblin) {
-    if (this.activeSenda === 'guerrero' && this.currentHito === 2 && deadGoblin.isHito && deadGoblin.level === 1) {
+    if ((this.activeSenda === 'guerrero' || this.activeSenda === 'rey_brujo') && this.currentHito === 2 && deadGoblin.isHito && deadGoblin.level === 1) {
       if (this.pendingHito1Goblins > 0) {
         this.pendingHito1Goblins--;
         this.battlefield.goblins.push({
@@ -119,10 +120,41 @@ class GameState {
     if (validGoblins.length === 0) return false;
 
     let p = this.players[this.currentPlayerIndex];
+    let originalStatusSnapshot = { ...p.statusEffects };
+
+    // Generar la reserva de dados para este combate
+    let dicePoolToRoll = [...p.dicePool];
+    
+    // Regla de Hito 4 de El Rey Brujo: -1 dado rojo
+    if (this.activeSenda === 'rey_brujo' && this.currentHito === 5 && validGoblins.some(g => g.isHito)) {
+      let redIdx = dicePoolToRoll.findIndex(d => d.type === 'red');
+      if (redIdx !== -1) {
+        dicePoolToRoll.splice(redIdx, 1);
+        this.addLog(`🔮 <strong>El Asalto:</strong> Combates con un dado <span style="color:#ef233c">ROJO</span> menos.`);
+      }
+    }
+    
+    // Efecto "Elimina un d6 ROJO" de El Rey Brujo
+    if (p.statusEffects.eliminaRojo && p.statusEffects.eliminaRojo > 0) {
+      let countToRemove = p.statusEffects.eliminaRojo;
+      let removedCount = 0;
+      for (let i = 0; i < countToRemove; i++) {
+        let redIdx = dicePoolToRoll.findIndex(d => d.type === 'red');
+        if (redIdx !== -1) {
+          dicePoolToRoll.splice(redIdx, 1);
+          removedCount++;
+        }
+      }
+      if (removedCount > 0) {
+        this.addLog(`🔮 <strong>Efecto Rey Brujo:</strong> Pierdes ${removedCount} dado(s) <span style="color:#ef233c">ROJO(S)</span> por la maldición.`);
+      }
+      p.statusEffects.eliminaRojo = 0; // Se consume el efecto
+    }
+
     let combatData = {
       goblins: validGoblins,
-      originalStatus: { ...p.statusEffects }, // Snapshot para restaurar si se cancela
-      playerDice: p.dicePool.map((d, index) => ({
+      originalStatus: originalStatusSnapshot,
+      playerDice: dicePoolToRoll.map((d, index) => ({
         ...d,
         id: `die-${index}`,
         value: this.rollDice(d.faces),
@@ -297,14 +329,43 @@ class GameState {
         if (this.isGoblinInvulnerable(targetGoblin)) {
           this.addLog(`🛡️ ${targetGoblin.name || ('G' + targetGoblin.level)} es invulnerable y no recibe daño.`);
         } else {
-          targetGoblin.currentHp -= stats.damage;
-          msgParts.push(`inflige ${stats.damage} daño`);
+          let damageNegated = false;
+          if (targetGoblin.isBoss && targetGoblin.name === "Rey Brujo") {
+            let forceFieldRoll = this.rollDice(6);
+            if (forceFieldRoll >= 5) {
+              damageNegated = true;
+              this.addLog(`🔮 <strong>Campo de Fuerza:</strong> El Rey Brujo lanzó un <strong>${forceFieldRoll}</strong> en 1d6. ¡El ataque de ${p.name} es anulado por completo!`);
+            } else {
+              this.addLog(`🔮 <strong>Campo de Fuerza:</strong> El Rey Brujo lanzó un <strong>${forceFieldRoll}</strong> en 1d6. El ataque atraviesa el escudo.`);
+            }
+          }
+
+          if (damageNegated) {
+            msgParts.push(`ataque anulado por Campo de Fuerza`);
+          } else {
+            targetGoblin.currentHp -= stats.damage;
+            msgParts.push(`inflige ${stats.damage} daño`);
+          }
         }
       }
 
       // El Goblin contraataca
       let greenDiceResult = c.dice.green[targetUid];
       let goblinDmg = greenDiceResult ? greenDiceResult.total : 1;
+
+      // Si el goblin es el Rey Brujo, sus daños son estáticos según la tirada natural del dado verde
+      if (targetGoblin.isBoss && targetGoblin.name === "Rey Brujo" && greenDiceResult && greenDiceResult.details) {
+        let naturalDie = greenDiceResult.details.find(d => d.type === 'die');
+        if (naturalDie) {
+          let rollVal = naturalDie.val;
+          if (rollVal === 1) goblinDmg = 4;
+          else if (rollVal === 2) goblinDmg = 3;
+          else if (rollVal === 3) goblinDmg = 0;
+          else if (rollVal === 4) goblinDmg = 1;
+          else if (rollVal === 5) goblinDmg = 4;
+          else if (rollVal === 6) goblinDmg = 1;
+        }
+      }
 
       // Hito 2 de El Zeñor de la Guerra: +1 al ataque del goblin Nvl 2 por cada Nvl 1 vivo
       if (this.activeSenda === 'guerrero' && targetGoblin.level === 2) {
@@ -368,6 +429,30 @@ class GameState {
                   p.statusEffects.calambre = (p.statusEffects.calambre || 0) + 1;
                   this.addLog(`⚡ <strong>${p.name}</strong> ha recibido <span style="color:#ffcc00">CALAMBRE</span>.`);
                 }
+              } else if (effLow.includes('drena')) {
+                if (!isIntercepted) {
+                  let amount = 4;
+                  let match = effLow.match(/drena\s+(\d+)/);
+                  if (match) amount = parseInt(match[1]);
+                  targetGoblin.currentHp = Math.min(targetGoblin.maxHp, targetGoblin.currentHp + amount);
+                  this.addLog(`🔮 <strong>Drenaje:</strong> El Rey Brujo recupera <span style="color:#ff477e">${amount} PV</span> (Total: ${targetGoblin.currentHp}/${targetGoblin.maxHp}).`);
+                }
+              } else if (effLow.includes('elimina un d6 rojo')) {
+                if (!isIntercepted) {
+                  p.statusEffects.eliminaRojo = (p.statusEffects.eliminaRojo || 0) + 1;
+                  this.addLog(`🔮 <strong>Maldición:</strong> <strong>${p.name}</strong> tendrá 1 dado <span style="color:#ef233c">ROJO</span> menos en su próximo ataque.`);
+                }
+              } else if (effLow.includes('invocación') || effLow.includes('invocacion')) {
+                if (!isIntercepted) {
+                  this.battlefield.goblins.push({
+                    ...DB.goblins[1],
+                    uid: Date.now() + Math.random(),
+                    currentHp: DB.goblins[1].hp,
+                    mo: 0,
+                    isSummoned: true
+                  });
+                  this.addLog(`🔮 <strong>Invocación:</strong> ¡El Rey Brujo invoca un Goblin de Nivel 1 (sin recompensa de oro)!`);
+                }
               } else if (effLow.includes('lanza +')) {
                 // El daño extra de un dado NO interceptado se suma
                 if (!isIntercepted) {
@@ -412,7 +497,7 @@ class GameState {
         });
       }
 
-      let isDirect = allSpecialAttacks.includes('Daño Directo');
+      let isDirect = allSpecialAttacks.some(a => a.toLowerCase().includes('daño directo'));
       goblinDmg = Math.max(0, goblinDmg);
 
       if (isDirect) {
@@ -497,10 +582,41 @@ class GameState {
       }
     });
 
+    // Habilidad del Zeñor de la Guerra: Golpe Certero
+    let warlordInCombat = c.goblins.some(g => g.isBoss && g.name === "Zeñor de la Guerra");
+    if (warlordInCombat) {
+      let playerTookDamage = (totalDirectGoblinDamage > 0) || (totalNormalGoblinDamage > globalShield);
+      if (playerTookDamage) {
+        let extraD4 = this.rollDice(4);
+        p.hp = Math.max(0, p.hp - extraD4);
+        this.addLog(`⚔️ <strong>Golpe Certero:</strong> ¡El Zeñor de la Guerra infligió daño y sumó <span style="color:#ff4d4d"><strong>${extraD4} (1d4) de daño extra</strong></span>!`);
+      }
+    }
+
+    // Comprobar si se dañó al jugador en la senda del Rey Brujo para Corrosión
+    let hasCorrosion = false;
+    if (this.activeSenda === 'rey_brujo') {
+      let playerTookDamage = (totalDirectGoblinDamage > 0) || (totalNormalGoblinDamage > globalShield);
+      if (playerTookDamage && p.hp > 0 && p.equipped.some(eq => eq.isActive && !eq.isBroken)) {
+        hasCorrosion = true;
+      }
+    }
+
     p.shield = 0; // Limpiar escudo tras el combate
     this.currentCombat = null;
-    this.checkGameOver();
-    this.postActionPhase();
+
+    if (hasCorrosion) {
+      this.pendingCorrosionChoice = {
+        player: p,
+        callback: () => {
+          this.checkGameOver();
+          this.postActionPhase();
+        }
+      };
+    } else {
+      this.checkGameOver();
+      this.postActionPhase();
+    }
   }
 
   shuffleDecks() {
@@ -540,7 +656,7 @@ class GameState {
           { ...DB.equipment.inicial[0], isBroken: false, isActive: true },
           { ...DB.equipment.inicial[1], isBroken: false, isActive: true }
         ],
-        statusEffects: { escozor: 0, calambre: 0, tembleque: 0 },
+        statusEffects: { escozor: 0, calambre: 0, tembleque: 0, eliminaRojo: 0 },
         dicePool: [
           { type: 'red', faces: 6 },
           { type: 'black', faces: 6 }
@@ -596,6 +712,19 @@ class GameState {
 
       if (this.battlefield.actionCount >= 3) {
         this.resolveWavePhase();
+      }
+    }
+
+    // Aire Viciado: Al inicio del turno del nuevo jugador activo
+    if (!this.isGameOver) {
+      let nextPlayer = this.getCurrentPlayer();
+      if (nextPlayer && this.activeSenda === 'rey_brujo') {
+        const brokenCount = nextPlayer.equipped.filter(eq => eq.isActive && eq.isBroken).length;
+        if (brokenCount >= 2) {
+          nextPlayer.hp = Math.max(0, nextPlayer.hp - brokenCount);
+          this.addLog(`💨 <strong>Aire Viciado:</strong> <strong>${nextPlayer.name}</strong> tiene ${brokenCount} equipos rotos y sufre <span style="color:#ff4d4d"><strong>${brokenCount} Daño Directo</strong></span>.`);
+          this.checkGameOver();
+        }
       }
     }
   }
@@ -777,8 +906,8 @@ class GameState {
         image: hito.bossStats.image || 'assets/Monstruos/Jefes/Inicicion.jpg'
       });
     } else {
-      if (this.activeSenda === 'guerrero' && this.currentHito === 1) {
-        // Hito 1 de El Zeñor de la Guerra: Despliégalos uno a uno
+      if ((this.activeSenda === 'guerrero' || this.activeSenda === 'rey_brujo') && this.currentHito === 1) {
+        // Hito 1: Despliégalos uno a uno
         let totalGobs = hito.goblins.length * this.players.length;
         this.pendingHito1Goblins = totalGobs - 1;
         this.battlefield.goblins.push({
@@ -848,10 +977,25 @@ class GameState {
         this.isRetaliationPhase = false;
         return true;
       }
+
       const anyAlive = this.players.some(p => p.hp > 0);
-      if (this.retaliationQueue.length === 0 || !anyAlive) {
-        this.isRetaliationPhase = false;
-        this.completeWaveAdvancement();
+      
+      // Comprobar Corrosión en represalia
+      if (this.activeSenda === 'rey_brujo' && damage > 0 && player.hp > 0 && player.equipped.some(eq => eq.isActive && !eq.isBroken)) {
+        this.pendingCorrosionChoice = {
+          player: player,
+          callback: () => {
+            if (this.retaliationQueue.length === 0 || !anyAlive) {
+              this.isRetaliationPhase = false;
+              this.completeWaveAdvancement();
+            }
+          }
+        };
+      } else {
+        if (this.retaliationQueue.length === 0 || !anyAlive) {
+          this.isRetaliationPhase = false;
+          this.completeWaveAdvancement();
+        }
       }
       return true;
     }
@@ -860,6 +1004,25 @@ class GameState {
 
   completeWaveAdvancement() {
     this.battlefield.actionCount = 0;
+    
+    // Regla de Hito 3 de El Rey Brujo: La Plaga (respawn de derrotados)
+    if (this.activeSenda === 'rey_brujo' && this.currentHito === 4) {
+      let aliveHitoGoblins = this.battlefield.goblins.filter(g => g.isHito && g.currentHp > 0);
+      let targetCount = 3 * this.players.length;
+      if (aliveHitoGoblins.length > 0 && aliveHitoGoblins.length < targetCount) {
+        let toSpawn = targetCount - aliveHitoGoblins.length;
+        for (let i = 0; i < toSpawn; i++) {
+          this.battlefield.goblins.push({
+            ...DB.goblins[1],
+            uid: Date.now() + Math.random(),
+            currentHp: DB.goblins[1].hp,
+            isHito: true
+          });
+        }
+        this.addLog(`🔮 <strong>La Plaga:</strong> ¡Se reinvocan ${toSpawn} G1 del Hito 3 que habían sido eliminados!`);
+      }
+    }
+
     this.battlefield.waveLevel++;
 
     this.addLog(`<span style="color:#f54281"><strong>*******************************************</strong></span>`);

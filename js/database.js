@@ -93,7 +93,27 @@ const DB = {
       { id: 2, name: "La Emboscada", goblins: [1, 2], isBoss: false, ruleDesc: "El goblin de nivel 2 obtiene +1 en Ataque por cada goblin de nivel 1." },
       { id: 3, name: "El Capitán", goblins: [1, 3], isBoss: false, ruleDesc: "El Nivel 3 es inmune al daño mientras esté acompañado de niveles inferiores." },
       { id: 4, name: "La Horda", goblins: [2, 2, 3], isBoss: false, ruleDesc: "Mientras algún nivel 1 siga vivo, el nivel 2 y el nivel 3 son invulnerables." },
-      { id: 5, name: "Zeñor de la Guerra", goblins: [5], isBoss: true, bossStats: { hpMultiplier: 35, regen: 5, dice: ['2d6', '+2', '1d4'], image: 'assets/Monstruos/Jefes/Señor-de-la-Guerra.jpg', attacks: { 1: ['Daño Directo', 'Rotura no esquivable'], 2: ['1 calambre', 'Rotura no esquivable'], 3: ['1 escozor', 'Rotura no esquivable'], 4: ['1 tembleque'], 5: ['Rotura no esquivable', 'daño+2'], 6: ['Golpe Brutal'] } }, ruleDesc: "Jefe Final. Golpe Brutal: Si el Jefe saca un '6' en cualquiera de sus dados d6, te rompe una pieza de armadura antes de asignar tus dados." }
+      { id: 5, name: "Zeñor de la Guerra", goblins: [5], isBoss: true, bossStats: { hpMultiplier: 35, regen: 5, dice: ['2d6', '+2'], image: 'assets/Monstruos/Jefes/Señor-de-la-Guerra.jpg', attacks: { 1: ['Daño Directo', 'Rotura no esquivable'], 2: ['1 calambre', 'Rotura no esquivable'], 3: ['1 escozor', 'Rotura no esquivable'], 4: ['1 tembleque'], 5: ['Rotura no esquivable', 'daño+2'], 6: ['Golpe Brutal'] }, ability: { id: 'golpe_certero', name: 'Golpe Certero', desc: 'Añade 1d4 al daño si el jefe logra dañar al jugador.' } }, ruleDesc: "Jefe Final. Golpe Brutal: Si el Jefe saca un '6' en cualquiera de sus dados d6, te rompe una pieza de armadura antes de asignar tus dados." }
+    ],
+    rey_brujo: [
+      { id: 1, name: "La Patrulla", goblins: [1, 1], isBoss: false, ruleDesc: "Despliégalos uno a uno. Al matar al primero, entra el segundo." },
+      { id: 2, name: "El Oficial", goblins: [1, 1], isBoss: false, ruleDesc: "Atacan al mismo tiempo." },
+      { id: 3, name: "La Plaga", goblins: [1, 1, 1], isBoss: false, ruleDesc: "Si al iniciar una Oleada queda algún Goblin de este hito, invoca otra vez los Goblins eliminados del hito." },
+      { id: 4, name: "El Asalto", goblins: [2, 2], isBoss: false, ruleDesc: "Debes superar el hito con un dado ROJO menos." },
+      { id: 5, name: "Rey Brujo", goblins: [5], isBoss: true, bossStats: { hpMultiplier: 30, regen: 5, dice: ['2d6', '+1'], image: 'assets/Monstruos/Jefes/Rey-Brujo.jpg', attacks: { 1: ['Drena 4 PV Daño Directo'], 2: ['daño 3', '1 calambre'], 3: ['Rotura no esquivable', '1 escozor'], 4: ['Daño Directo', 'Elimina un d6 ROJO'], 5: ['Daño Directo', 'daño+3'], 6: ['Daño Directo', 'Invocación goblin Nivel 1'] }, ability: { id: 'campo_de_fuerza', name: 'Campo de Fuerza', desc: 'Cada vez que le ataques, el Jefe lanza 1d6 extra. Si saca un 5 o 6, tu ataque se anula completamente.' } }, ruleDesc: "Jefe Final. Campo de Fuerza: Cada vez que le ataques, el Jefe lanza 1d6 extra. Si saca un 5 o 6, tu ataque se anula completamente." }
+    ]
+  },
+
+  sendaReglasGenerales: {
+    iniciacion: [
+      { name: "Sin reglas especiales", desc: "Esta senda no aplica ninguna regla de entorno adicional." }
+    ],
+    guerrero: [
+      { name: "Estructura de Turno Estándar", desc: "Al inicio de tus acciones: Si hay Goblins vivos, debes gastar acciones en luchar. Si la mesa está vacía, debes elegir entre sacar un Goblin de Nivel 1 (Opción A) o desplegar el siguiente Hito (Opción B)." }
+    ],
+    rey_brujo: [
+      { name: "💨 Aire Viciado", desc: "Al inicio de tu acción, si tienes 2 o más cartas de equipo rotas, sufres automáticamente 1 punto de Daño Directo por cada equipo roto." },
+      { name: "🧪 Corrosión", desc: "Cuando un Goblin te inflija daño (en combate o por represalia), debes elegir una carta de tu equipo equipado activo para romperla." }
     ]
   },
 
