@@ -249,6 +249,12 @@ class GameState {
 
     let damagePerTarget = {};
     let playerHeal = 0;
+    let totalPlayerShield = 0;
+
+    // Inicializamos damagePerTarget para todos los goblins en combate
+    c.goblins.forEach(g => {
+      damagePerTarget[g.uid] = { damage: 0, shield: 0 };
+    });
 
     for (let eqId in assignments) {
       let asgData = assignments[eqId];
@@ -267,20 +273,19 @@ class GameState {
         if (!eq) return;
         eq.usedInCombatId = this.lastCombatId;
 
-        let targetUid = asg.targetUid;
-        if (targetUid && !damagePerTarget[targetUid]) {
-          damagePerTarget[targetUid] = { damage: 0, shield: 0 };
-        }
-
-        // Aplicar el efecto usando la lógica específica
+        // Aplicar el efecto usando la lógica específica (pasamos shieldObj de forma global)
         let healObj = { heal: 0 };
-        this.applyEquipmentEffect(p, eq, asg, damagePerTarget, healObj);
+        let shieldObj = { shield: 0 };
+        this.applyEquipmentEffect(p, eq, asg, damagePerTarget, healObj, shieldObj);
         playerHeal += healObj.heal;
+        totalPlayerShield += shieldObj.shield;
       });
     }
 
     // Procesar cada goblin en el combate
     let goblinsDefeated = 0;
+    let totalNormalGoblinDamage = 0;
+    let totalDirectGoblinDamage = 0;
 
     c.goblins.forEach(targetGoblin => {
       let targetUid = targetGoblin.uid;
@@ -293,7 +298,7 @@ class GameState {
           this.addLog(`🛡️ ${targetGoblin.name || ('G' + targetGoblin.level)} es invulnerable y no recibe daño.`);
         } else {
           targetGoblin.currentHp -= stats.damage;
-          msgParts.push(`inflige ${stats.damage} daño a G${targetGoblin.level}`); //targetGoblin.name
+          msgParts.push(`inflige ${stats.damage} daño`);
         }
       }
 
@@ -391,8 +396,6 @@ class GameState {
       }
 
       // Antes de aplicar el efecto del jugador, verificamos si el dado usado ya tenía Escozor
-      // Nota: Si el escozor se recibe en este mismo contraataque, afectará a futuras aplicaciones
-      // pero si el dado ya estaba marcado por un goblin anterior, el daño se aplica ahora.
       for (let eqId in assignments) {
         let asgs = assignments[eqId];
         if (!Array.isArray(asgs)) asgs = [asgs];
@@ -403,41 +406,33 @@ class GameState {
             if (dieData && dieData.isStung && !dieData.stungDamageApplied) {
               p.hp = Math.max(0, p.hp - 2);
               dieData.stungDamageApplied = true; // Evitar daño doble si el dado se procesa varias veces
-              this.addLog(`🔥 <strong>${p.name}</strong> usó un dado con escozor y <span style="color:#ff4d4d">sufrió 2 daño</span>!`);
+              this.addLog(`🔥 <strong>${p.name}</strong> usó un dado con escozor contra G${targetGoblin.level} y <span style="color:#ff4d4d">sufrió 2 daño</span>!`);
             }
           }
         });
       }
 
       let isDirect = allSpecialAttacks.includes('Daño Directo');
+      goblinDmg = Math.max(0, goblinDmg);
 
       if (isDirect) {
         if (goblinDmg > 0) {
-          p.hp = Math.max(0, p.hp - goblinDmg);
-          msgParts.push(`<span style="color:#ff4d4d">sufre ${goblinDmg} Daño Directo</span>`);
+          totalDirectGoblinDamage += goblinDmg;
+          msgParts.push(`<span style="color:#ff4d4d">contraataca con ${goblinDmg} Daño Directo</span>`);
         }
       } else {
-        // Restar escudos
-        let totalShield = stats.shield + (p.shield || 0);
-        if (totalShield > 0) {
-          msgParts.push(`bloquea ${totalShield} daño`);
-          goblinDmg -= totalShield;
-        }
-
         if (goblinDmg > 0) {
-          p.hp = Math.max(0, p.hp - goblinDmg);
-          msgParts.push(`<span style="color:#ff4d4d">sufre ${goblinDmg} daño</span>`);
+          totalNormalGoblinDamage += goblinDmg;
+          msgParts.push(`contraataca con ${goblinDmg} daño`);
         } else if (goblinInterceptions.length > 0) {
-          msgParts.push(`anula el ataque de G${targetGoblin.level} gracias a la intercepción`);
+          msgParts.push(`ataque anulado por intercepción`);
         } else {
-          msgParts.push(`anula el contraataque de G${targetGoblin.level}`);
+          msgParts.push(`ataque anulado`);
         }
       }
 
       if (msgParts.length > 0) {
         this.addLog(`Frente a G${targetGoblin.level}: <strong>${p.name}</strong> ${msgParts.join(' y ')}.`);
-      } else {
-        this.addLog(`Frente a G${targetGoblin.level}: <strong>${p.name}</strong> no hizo nada y <span style="color:#ff4d4d">sufrió ${goblinDmg} daño</span>.`);
       }
 
       if (targetGoblin.currentHp <= 0) {
@@ -454,11 +449,37 @@ class GameState {
       }
     });
 
-    // Aplicar curación
-    if (playerHeal > 0) {
+    // RESOLVER DAÑO Y DEFENSA GLOBAL
+    let globalShield = totalPlayerShield + (p.shield || 0);
+
+    // 1. Aplicar daño directo primero
+    if (totalDirectGoblinDamage > 0) {
+      p.hp = Math.max(0, p.hp - totalDirectGoblinDamage);
+      this.addLog(`💥 <strong>${p.name}</strong> sufre <span style="color:#ff4d4d"><strong>${totalDirectGoblinDamage} Daño Directo</strong></span> (no bloqueable).`);
+    }
+
+    // 2. Aplicar daño normal contra el escudo global
+    if (totalNormalGoblinDamage > 0) {
+      let netDamage = Math.max(0, totalNormalGoblinDamage - globalShield);
+      let blockedDamage = Math.min(totalNormalGoblinDamage, globalShield);
+
+      if (blockedDamage > 0) {
+        this.addLog(`🛡️ <strong>${p.name}</strong> bloquea <span style="color:#3a7bd5"><strong>${blockedDamage} daño</strong></span> con sus escudos (Defensa total: ${globalShield}).`);
+      }
+
+      if (netDamage > 0) {
+        p.hp = Math.max(0, p.hp - netDamage);
+        this.addLog(`💥 <strong>${p.name}</strong> recibe <span style="color:#ff4d4d"><strong>${netDamage} daño</strong></span> sobrante.`);
+      } else {
+        this.addLog(`🛡️ <strong>${p.name}</strong> bloqueó todo el daño entrante.`);
+      }
+    }
+
+    // 3. Aplicar curación (si el jugador sigue con vida)
+    if (p.hp > 0 && playerHeal > 0) {
       p.hp += playerHeal;
       if (p.hp > p.maxHp) p.hp = p.maxHp;
-      this.addLog(`💖 <strong>${p.name}</strong> se curó ${playerHeal} HP (Total: ${p.hp}/${p.maxHp}).`);
+      this.addLog(`💖 <strong>${p.name}</strong> se curó <span style="color:#2a9d8f"><strong>${playerHeal} HP</strong></span> (Total: ${p.hp}/${p.maxHp}).`);
     }
 
     // Check level up (10 pex = 1 level)
@@ -469,8 +490,8 @@ class GameState {
       if (g.currentHp <= 0 && !g.isDying) {
         g.isDying = true;
         // El goblin da recompensa si es Hito o si su nivel >= nivel de los jugadores
-        const p = this.players[this.currentPlayerIndex];
-        if (g.isHito || g.level >= p.level) {
+        const pObj = this.players[this.currentPlayerIndex];
+        if (g.isHito || g.level >= pObj.level) {
           g.gaveReward = true;
         }
       }
@@ -1192,7 +1213,7 @@ class GameState {
     return true;
   }
 
-  applyEquipmentEffect(p, eq, asg, damagePerTarget, healObj) {
+  applyEquipmentEffect(p, eq, asg, damagePerTarget, healObj, shieldObj = { shield: 0 }) {
     const val = asg.value;
     const targetUid = asg.targetUid;
 
@@ -1305,7 +1326,7 @@ class GameState {
         let minMatch = effectStr.match(/min\s+(\d+)/);
         if (minMatch) shield = Math.max(shield, parseInt(minMatch[1]));
       }
-      if (targetUid) damagePerTarget[targetUid].shield += shield;
+      shieldObj.shield += shield;
     }
 
     if (effectStr.includes('cura')) {

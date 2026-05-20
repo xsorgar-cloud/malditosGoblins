@@ -517,7 +517,7 @@ main {
 
 
 .player-role {
-  width: 85px;
+  width: 90px;
   flex-grow: 1;
   border: 1px solid var(--gold);
   border-radius: 8px;

@@ -1228,6 +1228,25 @@ function renderBattlefield() {
   }
 }
 
+function doesEquipmentDealDamage(eq, value, asg) {
+  if (!eq) return false;
+  const effectStr = (eq.isBroken && eq.broken ? eq.broken.effect : eq.effect).toLowerCase();
+  
+  if (eq.id === 'corazon_elastico') {
+    if (asg && asg.elasticDamage !== undefined && asg.elasticDamage !== null) {
+      return asg.elasticDamage > 0;
+    }
+    return true;
+  }
+  if (['afilado', 'anadir_pinchos', 'oxidado', 'gema_regeneracion', 'drenar_justo'].includes(eq.id)) {
+    return true;
+  }
+  if (eq.id === 'reforzado_pinchos') {
+    return value % 2 === 0;
+  }
+  return effectStr.includes('daño');
+}
+
 let currentAssignments = {};
 let interceptionAssignments = {};
 
@@ -1326,27 +1345,35 @@ function renderCombatOverlay() {
     btnResolve.innerText = "Resolver Ataque";
     btnResolve.style.background = '';
     btnResolve.onclick = () => {
-      // Automatización: Si solo hay un goblin, asignar automáticamente lo que falte
+      // Automatización: Si solo hay un goblin, asignar automáticamente lo que falte (solo las que hacen daño)
       const combatGoblins = c.goblins;
       if (combatGoblins.length === 1) {
         const targetUid = combatGoblins[0].uid;
         for (let id in currentAssignments) {
+          let eqObj = p.equipped.find(e => e.id === id);
           let asgs = currentAssignments[id];
           if (Array.isArray(asgs)) {
-            asgs.forEach(a => { if (!a.isRole && !a.targetUid) a.targetUid = targetUid; });
+            asgs.forEach(a => {
+              if (!a.isRole && !a.targetUid && doesEquipmentDealDamage(eqObj, a.value, a)) {
+                a.targetUid = targetUid;
+              }
+            });
           } else {
-            if (!asgs.isRole && !asgs.targetUid) asgs.targetUid = targetUid;
+            if (!asgs.isRole && !asgs.targetUid && doesEquipmentDealDamage(eqObj, asgs.value, asgs)) {
+              asgs.targetUid = targetUid;
+            }
           }
         }
       }
 
-      // Validar que todo el equipo cargado tiene un objetivo
+      // Validar que todo el equipo cargado que hace daño tiene un objetivo
       for (let eqId in currentAssignments) {
+        let eqObj = p.equipped.find(e => e.id === eqId);
         let asgs = currentAssignments[eqId];
         const asgList = Array.isArray(asgs) ? asgs : [asgs];
 
-        if (asgList.some(a => !a.isRole && !a.targetUid)) {
-          alert("Asigna un objetivo a todas las cartas de equipo cargadas arrastrándolas sobre un Goblin.");
+        if (asgList.some(a => !a.isRole && !a.targetUid && doesEquipmentDealDamage(eqObj, a.value, a))) {
+          alert("Asigna un objetivo a todas las cartas de ataque cargadas arrastrándolas sobre un Goblin.");
           return;
         }
       }
@@ -1472,14 +1499,18 @@ function renderCombatOverlay() {
       // 2. Asignación de equipo
       let sourceEqId = e.dataTransfer.getData('text/equipId');
       if (sourceEqId && currentAssignments[sourceEqId]) {
+        let eqObj = p.equipped.find(e => e.id === sourceEqId);
         let asgs = currentAssignments[sourceEqId];
-        if (Array.isArray(asgs)) {
-          asgs.forEach(a => a.targetUid = gob.uid);
-        } else {
-          asgs.targetUid = gob.uid;
+        let firstAsg = Array.isArray(asgs) ? asgs[0] : asgs;
+        if (doesEquipmentDealDamage(eqObj, firstAsg.value, firstAsg)) {
+          if (Array.isArray(asgs)) {
+            asgs.forEach(a => a.targetUid = gob.uid);
+          } else {
+            asgs.targetUid = gob.uid;
+          }
+          renderCombatOverlay();
+          e.stopPropagation();
         }
-        renderCombatOverlay();
-        e.stopPropagation();
       }
     });
 
@@ -1947,11 +1978,16 @@ function renderCombatOverlay() {
 
       clearDieAssignment(dieId);
 
-      if (!currentAssignments[eq.id]) currentAssignments[eq.id] = [];
-
       const extra = (eq.extra || '').toLowerCase();
       const isReusable = extra.includes('reutilizable');
       const maxUses = extra.includes('x3') ? 3 : (isReusable ? 6 : 1);
+
+      if (maxUses === 1 && currentAssignments[eq.id] && currentAssignments[eq.id].length > 0) {
+        const oldDieId = currentAssignments[eq.id][0].dieId;
+        clearDieAssignment(oldDieId);
+      }
+
+      if (!currentAssignments[eq.id]) currentAssignments[eq.id] = [];
 
       if (currentAssignments[eq.id].length >= maxUses) {
         return;
@@ -1981,11 +2017,16 @@ function renderCombatOverlay() {
 
         clearDieAssignment(activeSelectedDieId);
 
-        if (!currentAssignments[eq.id]) currentAssignments[eq.id] = [];
-
         const extra = (eq.extra || '').toLowerCase();
         const isReusable = extra.includes('reutilizable');
         const maxUses = extra.includes('x3') ? 3 : (isReusable ? 6 : 1);
+
+        if (maxUses === 1 && currentAssignments[eq.id] && currentAssignments[eq.id].length > 0) {
+          const oldDieId = currentAssignments[eq.id][0].dieId;
+          clearDieAssignment(oldDieId);
+        }
+
+        if (!currentAssignments[eq.id]) currentAssignments[eq.id] = [];
 
         if (currentAssignments[eq.id].length >= maxUses) return;
 
@@ -2011,6 +2052,12 @@ function renderCombatOverlay() {
       } else {
         const asgs = currentAssignments[eq.id];
         if (asgs && asgs.length > 0) {
+          const eqObj = p.equipped.find(e => e.id === eq.id);
+          const dealsDamage = doesEquipmentDealDamage(eqObj, asgs[0].value, asgs[0]);
+          if (!dealsDamage) {
+            e.stopPropagation();
+            return;
+          }
           if (activeSelectedEquipId === eq.id) {
             activeSelectedEquipId = null;
             renderCombatOverlay();
@@ -2051,11 +2098,18 @@ function renderCombatOverlay() {
       // (En este juego, toda la carta se asigna a un objetivo)
       if (asgs.length > 0) {
         slot.classList.add('loaded');
-        slot.draggable = true;
-        slot.addEventListener('dragstart', (ev) => {
-          ev.dataTransfer.setData('text/equipId', eq.id);
-        });
-        if (asgs.some(a => a.targetUid)) slot.style.opacity = '0.5';
+        const eqObj = p.equipped.find(e => e.id === eq.id);
+        const dealsDamage = doesEquipmentDealDamage(eqObj, asgs[0].value, asgs[0]);
+        if (dealsDamage) {
+          slot.draggable = true;
+          slot.addEventListener('dragstart', (ev) => {
+            ev.dataTransfer.setData('text/equipId', eq.id);
+          });
+          if (asgs.some(a => a.targetUid)) slot.style.opacity = '0.5';
+        } else {
+          slot.draggable = false;
+          slot.style.cursor = 'default';
+        }
       }
     }
 
