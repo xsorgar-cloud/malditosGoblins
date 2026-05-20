@@ -3,6 +3,12 @@ let lastActionCount = 0;
 const gameState = new GameState();
 const COIN_SVG = `<svg viewBox="0 0 24 24" width="18" height="18" style="vertical-align: middle; margin-right: 3px;"><circle cx="12" cy="12" r="10" fill="#ffd700" stroke="#c79a32" stroke-width="2"/><circle cx="12" cy="12" r="7" fill="none" stroke="#e6c200" stroke-width="1" stroke-dasharray="2,2"/><path d="M12 7v10" stroke="#c79a32" stroke-width="2" stroke-linecap="round"/></svg>`;
 const SACK_SVG = `<svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align: middle; margin-right: 3px;"><path d="M9 3C8.5 3 8 4 8.5 5.5C9 7 9 7 9 7C6 8 4 12 4 18C4 20.5 6 21 12 21C18 21 20 20.5 20 18C20 12 18 8 15 7C15 7 15 7 15.5 5.5C16 4 15.5 3 15 3C13 3 11 3.5 9 3Z" fill="#ffffff" stroke="#000000" stroke-width="1.8" stroke-linejoin="round"/><rect x="8" y="6.5" width="8" height="2.5" rx="1" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"/><path d="M13 9C13 11 12 12 12 12C12 12 14 11 14 9Z" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"/><path d="M11 9C11 11 12 12 12 12C12 12 10 11 10 9Z" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"/></svg>`;
+const ROLE_NO_ENERGY_WARNING = "⚠️ No tienes energía en tu Rol.<br><br>Para conseguir energía, puedes:<br>1. Usar una de tus acciones en 'RELLENAR ROL' (en tu fase de tablero).<br>2. Asignar dados al Rol en este Panel de Combate.";
+const NO_BROKEN_EQUIP_ALERT = "No tienes equipo roto que reparar.";
+const NO_ENERGY_ALERT = "No tienes suficiente energía para usar esta habilidad.";
+const showInterceptionError = (val) => {
+  alert(`Para interceptar, el dado del jugador (${val}) debe coincidir con algún dado natural del Goblin que no esté ya interceptado.`);
+};
 
 // Pantalla de Presentación (Splash Screen) autogestionada y compatible con móviles/tablets
 (function initSplashScreen() {
@@ -228,7 +234,7 @@ window.alert = function (messageText) {
 
   title.innerText = "¡ATENCIÓN!";
   title.style.color = "var(--gold)";
-  desc.innerHTML = messageText;
+  desc.innerHTML = String(messageText).replace(/\n/g, '<br>');
 
   container.innerHTML = '';
   const marker = document.createElement('div');
@@ -1490,7 +1496,7 @@ function renderCombatOverlay() {
           dieData.assignedTo = `intercept-${gob.uid}-${targetDieIndex}`;
           renderCombatOverlay();
         } else {
-          alert(`Para interceptar, el dado del jugador (${playerDieVal}) debe coincidir con algún dado natural del Goblin que no esté ya interceptado.`);
+          showInterceptionError(playerDieVal);
         }
         e.stopPropagation();
         return;
@@ -1551,7 +1557,7 @@ function renderCombatOverlay() {
             activeSelectedDieId = null;
             renderCombatOverlay();
           } else {
-            alert(`Para interceptar, el dado del jugador (${playerDieVal}) debe coincidir con algún dado natural del Goblin que no esté ya interceptado.`);
+            showInterceptionError(playerDieVal);
           }
           e.stopPropagation();
         }
@@ -1850,14 +1856,14 @@ function renderCombatOverlay() {
   roleContainer.style.height = '250px';
 
   const combatRoles = ['guerrero', 'mago', 'protector'];
-  const canUseRole = combatRoles.includes(p.role.id) && p.energy > 0;
+  const hasCombatRole = combatRoles.includes(p.role.id);
 
   // 1. Render Role Slot
   const roleSlot = document.createElement('div');
   roleSlot.id = `equip-slot-role`;
-  roleSlot.className = `equip-slot ${canUseRole ? 'role-ready' : ''}`;
+  roleSlot.className = `equip-slot ${hasCombatRole && p.energy > 0 ? 'role-ready' : ''}`;
   roleSlot.style.backgroundImage = `url('${p.role.image}')`;
-  if (!canUseRole) roleSlot.style.borderColor = '#00d2ff'; // Azul para el rol
+  if (!hasCombatRole) roleSlot.style.borderColor = '#00d2ff'; // Azul para el rol
   roleSlot.innerHTML = `<div class="die-placeholder" data-id="role"></div>`;
 
   roleSlot.addEventListener('dragover', (e) => e.preventDefault());
@@ -1928,7 +1934,7 @@ function renderCombatOverlay() {
   roleContainer.appendChild(energyBadge);
 
   // Añadir el botón posicionado de forma absoluta debajo de la carta de rol
-  if (canUseRole) {
+  if (hasCombatRole) {
     const btnRole = document.createElement('button');
     btnRole.id = 'btn-combat-role';
     btnRole.className = 'btn primary';
@@ -1940,11 +1946,19 @@ function renderCombatOverlay() {
     btnRole.style.padding = '6px 16px';
     btnRole.style.whiteSpace = 'nowrap';
     btnRole.style.zIndex = '10';
-    btnRole.style.background = 'linear-gradient(135deg, #00d2ff, #3a7bd5)';
+    if (p.energy <= 0) {
+      btnRole.style.background = 'linear-gradient(135deg, #555, #777)';
+    } else {
+      btnRole.style.background = 'linear-gradient(135deg, #00d2ff, #3a7bd5)';
+    }
     btnRole.innerText = `Usar Rol`;
     btnRole.onclick = (e) => {
       e.preventDefault();
       e.stopPropagation();
+      if (p.energy <= 0) {
+        alert(ROLE_NO_ENERGY_WARNING);
+        return;
+      }
       showTargetSelectionModal(gameState.currentPlayerIndex);
     };
     roleContainer.appendChild(btnRole);
@@ -2237,7 +2251,7 @@ function renderPlayer() {
             <div style="display: flex; flex-direction: column; gap: 5px; align-items: center; height: 100%;">
                 <div class="player-role ${canUseRole ? 'role-ready' : ''}" 
                      data-player-index="${index}"
-                     style="background-image: url('${p.role.image.replace('rol_', 'mini_rol_')}'); background-size: cover; background-position: left; cursor: ${isCurrent && p.energy > 0 ? 'pointer' : 'default'};">
+                     style="background-image: url('${p.role.image.replace('rol_', 'mini_rol_')}'); background-size: cover; background-position: left; cursor: ${isCurrent ? 'pointer' : 'default'};">
                      <div class="role-energy-badge ${energyPulse}">⚡ ${p.energy}</div>
                 </div>
             </div>
@@ -2294,8 +2308,15 @@ function renderPlayer() {
     if (roleCard) {
       roleCard.onclick = () => {
         const pIdx = parseInt(roleCard.dataset.playerIndex);
+        if (pIdx !== gameState.currentPlayerIndex) return;
+
         const p = gameState.players[pIdx];
         const roleId = p.role.id;
+
+        if (p.energy <= 0) {
+          alert(ROLE_NO_ENERGY_WARNING);
+          return;
+        }
 
         if (roleId === 'guerrero' && !gameState.currentCombat) {
           const validGobs = gameState.battlefield.goblins.filter(g => p.goblinsFoughtThisTurn && p.goblinsFoughtThisTurn.includes(g.uid) && !g.isDying);
@@ -2314,7 +2335,7 @@ function renderPlayer() {
               showTargetSelectionModal(pIdx);
               return;
             } else if (brokenItems.length === 0) {
-              alert("No tienes equipo roto que reparar.");
+              alert(NO_BROKEN_EQUIP_ALERT);
               return;
             }
             // Si solo hay una, aplicar directamente
@@ -2324,12 +2345,12 @@ function renderPlayer() {
           if (res === true) {
             updateUI();
           } else if (res === "NOT_ENOUGH_ENERGY") {
-            alert("No tienes suficiente energía.");
+            alert(NO_ENERGY_ALERT);
           } else if (res === false) {
             if (roleId === 'sanador' && p.hp >= p.maxHp) {
               alert("Ya tienes la vida al máximo.");
             } else if (roleId === 'curandero') {
-              alert("No tienes equipo roto que reparar.");
+              alert(NO_BROKEN_EQUIP_ALERT);
             }
           }
           return;
@@ -2341,7 +2362,7 @@ function renderPlayer() {
         if (result === "NEED_TARGET") {
           showTargetSelectionModal(pIdx);
         } else if (result === "NOT_ENOUGH_ENERGY") {
-          alert("No tienes suficiente energía para usar esta habilidad.");
+          alert(NO_ENERGY_ALERT);
         } else if (result === true) {
           updateUI();
         }
