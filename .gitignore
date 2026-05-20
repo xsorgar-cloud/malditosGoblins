@@ -1,0 +1,10 @@
+# Ignorar todos los archivos de texto (como pnds.txt)
+*.txt
+
+# Archivos basura del sistema operativo Windows y Mac
+Thumbs.db
+desktop.ini
+.DS_Store
+
+# Archivos locales de configuración (por si usas VS Code)
+.vscode/

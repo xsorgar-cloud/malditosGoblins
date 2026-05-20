@@ -21,6 +21,8 @@ class GameState {
     this.isRetaliationPhase = false;
     this.retaliationQueue = [];
     this.isGameOver = false;
+    this.activeSenda = 'iniciacion';
+    this.pendingHito1Goblins = 0;
     this.lastCombatId = 0;
     this.lastActionWasCombat = false;
 
@@ -74,6 +76,42 @@ class GameState {
     return { total, details };
   }
 
+  isGoblinInvulnerable(goblin) {
+    if (this.activeSenda !== 'guerrero') return false;
+    
+    // Solo los goblins del propio hito son inmunes durante la senda
+    if (!goblin.isHito) return false;
+
+    // Hito 3: El Nivel 3 es inmune al daño mientras esté acompañado de niveles inferiores (nivel 1 o 2)
+    if (goblin.level === 3) {
+      let lowerExists = this.battlefield.goblins.some(g => (g.level === 1 || g.level === 2) && g.currentHp > 0 && g.uid !== goblin.uid);
+      if (lowerExists) return true;
+    }
+
+    // Hito 4: Mientras algún nivel 1 siga vivo, el nivel 2 y el nivel 3 son invulnerables
+    if (goblin.level === 2 || goblin.level === 3) {
+      let lvl1Exists = this.battlefield.goblins.some(g => g.level === 1 && g.currentHp > 0 && g.uid !== goblin.uid);
+      if (lvl1Exists) return true;
+    }
+
+    return false;
+  }
+
+  checkSpawnNextHito1Goblin(deadGoblin) {
+    if (this.activeSenda === 'guerrero' && this.currentHito === 2 && deadGoblin.isHito && deadGoblin.level === 1) {
+      if (this.pendingHito1Goblins > 0) {
+        this.pendingHito1Goblins--;
+        this.battlefield.goblins.push({
+          ...DB.goblins[1],
+          uid: Date.now() + Math.random(),
+          currentHp: DB.goblins[1].hp,
+          isHito: true
+        });
+        this.addLog("⚔️ El primer goblin del Hito 1 ha sido derrotado. ¡Entra el siguiente goblin!");
+      }
+    }
+  }
+
   startCombat(selectedGoblins) {
     if (this.isMarketPhase || !selectedGoblins || selectedGoblins.length === 0) return false;
 
@@ -97,7 +135,27 @@ class GameState {
     };
 
     validGoblins.forEach(goblin => {
-      combatData.dice.green[goblin.uid] = this.rollGreenDice(goblin);
+      const greenRoll = this.rollGreenDice(goblin);
+
+      // Hito 2 de El Zeñor de la Guerra: +1 al ataque del goblin Nvl 2 por cada Nvl 1 vivo
+      if (this.activeSenda === 'guerrero' && goblin.level === 2) {
+        let lvl1Count = this.battlefield.goblins.filter(g => g.level === 1 && g.currentHp > 0).length;
+        if (lvl1Count > 0) {
+          greenRoll.total += lvl1Count;
+          greenRoll.details.push({ type: 'mod', val: lvl1Count, isHitoRule: true });
+        }
+      }
+
+      combatData.dice.green[goblin.uid] = greenRoll;
+
+      // Especial: Golpe Brutal de El Zeñor de la Guerra
+      if (this.activeSenda === 'guerrero' && goblin.isBoss) {
+        let rolledSix = greenRoll.details.some(d => d.type === 'die' && d.faces === 6 && d.val === 6);
+        if (rolledSix) {
+          this.addLog(`💥 <strong>¡GOLPE BRUTAL!</strong> El Zeñor de la Guerra ha sacado un 6 en su ataque y rompe una pieza de equipo antes de asignar los dados.`);
+          this.breakRandomEquipment(p);
+        }
+      }
     });
 
     // APLICAR ESTADOS DIFERIDOS (Tembleque > Escozor)
@@ -231,16 +289,28 @@ class GameState {
 
       // Aplicar Daño al Goblin
       if (stats.damage > 0) {
-        targetGoblin.currentHp -= stats.damage;
-        msgParts.push(`inflige ${stats.damage} daño a G${targetGoblin.level}`); //targetGoblin.name
+        if (this.isGoblinInvulnerable(targetGoblin)) {
+          this.addLog(`🛡️ ${targetGoblin.name || ('G' + targetGoblin.level)} es invulnerable y no recibe daño.`);
+        } else {
+          targetGoblin.currentHp -= stats.damage;
+          msgParts.push(`inflige ${stats.damage} daño a G${targetGoblin.level}`); //targetGoblin.name
+        }
       }
 
       // El Goblin contraataca
       let greenDiceResult = c.dice.green[targetUid];
       let goblinDmg = greenDiceResult ? greenDiceResult.total : 1;
 
+      // Hito 2 de El Zeñor de la Guerra: +1 al ataque del goblin Nvl 2 por cada Nvl 1 vivo
+      if (this.activeSenda === 'guerrero' && targetGoblin.level === 2) {
+        let lvl1Count = this.battlefield.goblins.filter(g => g.level === 1 && g.currentHp > 0).length;
+        if (lvl1Count > 0) {
+          this.addLog(`⚔️ El goblin de nivel 2 obtiene +${lvl1Count} de daño (+1 por cada goblin de nivel 1 vivo).`);
+        }
+      }
+
       // Buscar efectos especiales y procesar intercepciones por dado
-      let gobDB = DB.goblins[targetGoblin.level];
+      let gobDB = targetGoblin.attacks ? targetGoblin : DB.goblins[targetGoblin.level];
       let goblinInterceptions = interceptions[targetUid] || []; // Ahora es un array
       let allSpecialAttacks = [];
 
@@ -306,6 +376,11 @@ class GameState {
                     this.addLog(`🎲 ¡G${targetGoblin.level} lanza un dado extra y suma <span style="color:#ff4d4d">${extraDmg} de daño</span>!`);
                   }
                 }
+              } else if (effLow === 'daño+2') {
+                if (!isIntercepted) {
+                  goblinDmg += 2;
+                  this.addLog(`💥 ¡El ataque del Jefe inflige +2 de daño extra!`);
+                }
               }
 
               // Recoger todos los efectos para saber si es daño directo al final
@@ -368,6 +443,7 @@ class GameState {
       if (targetGoblin.currentHp <= 0) {
         // Goblin derrotado
         goblinsDefeated++;
+        this.checkSpawnNextHito1Goblin(targetGoblin);
         if (targetGoblin.isHito || targetGoblin.level >= p.level) {
           p.mo += targetGoblin.mo;
           this.ganarPex(targetGoblin.pex);
@@ -412,8 +488,10 @@ class GameState {
     }
   }
 
-  setupPlayers(numPlayers, selectedRoles = [], customSettings = { hp: 10, maxHp: 10, energy: 0, mo: 2, hito: 1, level: 1 }) {
+  setupPlayers(numPlayers, selectedRoles = [], customSettings = { hp: 10, maxHp: 10, energy: 0, mo: 2, hito: 1, level: 1, senda: 'iniciacion' }) {
     this.currentHito = customSettings.hito !== undefined ? customSettings.hito : 1;
+    this.activeSenda = customSettings.senda || 'iniciacion';
+    this.pendingHito1Goblins = 0;
     let initLvl = customSettings.level !== undefined ? customSettings.level : 1;
     let basePex = 0;
     if (initLvl === 2) basePex = 2 * numPlayers;
@@ -660,7 +738,8 @@ class GameState {
       return false;
     }
 
-    let hito = DB.hitos.iniciacion[this.currentHito - 1];
+    const sendaHitos = DB.hitos[this.activeSenda] || DB.hitos.iniciacion;
+    let hito = sendaHitos[this.currentHito - 1];
 
     if (hito.isBoss) {
       let bossHp = hito.bossStats.hpMultiplier * this.players.length;
@@ -673,22 +752,35 @@ class GameState {
         isHito: true,
         name: hito.name,
         dice: hito.bossStats.dice,
+        attacks: hito.bossStats.attacks || DB.goblins[5].attacks,
         image: hito.bossStats.image || 'assets/Monstruos/Jefes/Inicicion.jpg'
       });
     } else {
-      for (let p = 0; p < this.players.length; p++) {
-        for (let lvl of hito.goblins) {
-          this.battlefield.goblins.push({
-            ...DB.goblins[lvl],
-            uid: Date.now() + Math.random(),
-            currentHp: DB.goblins[lvl].hp,
-            isHito: true
-          });
+      if (this.activeSenda === 'guerrero' && this.currentHito === 1) {
+        // Hito 1 de El Zeñor de la Guerra: Despliégalos uno a uno
+        let totalGobs = hito.goblins.length * this.players.length;
+        this.pendingHito1Goblins = totalGobs - 1;
+        this.battlefield.goblins.push({
+          ...DB.goblins[1],
+          uid: Date.now() + Math.random(),
+          currentHp: DB.goblins[1].hp,
+          isHito: true
+        });
+      } else {
+        for (let p = 0; p < this.players.length; p++) {
+          for (let lvl of hito.goblins) {
+            this.battlefield.goblins.push({
+              ...DB.goblins[lvl],
+              uid: Date.now() + Math.random(),
+              currentHp: DB.goblins[lvl].hp,
+              isHito: true
+            });
+          }
         }
       }
     }
     this.currentHito++;
-    let hitoName = DB.hitos.iniciacion[this.currentHito - 2].name;
+    let hitoName = sendaHitos[this.currentHito - 2].name;
     this.addLog(`🔥 <strong>HITO DESPLEGADO: ${hitoName}</strong> 🔥`);
     return true;
   }
@@ -940,6 +1032,10 @@ class GameState {
     else if (roleId === 'guerrero' || roleId === 'mago') {
       let gob = this.battlefield.goblins.find(g => g.uid === targetId);
       if (gob && gob.currentHp > 0) {
+        if (this.isGoblinInvulnerable(gob)) {
+          this.addLog(`⚠️ El rol no puede dañar a ${gob.name} porque es invulnerable.`);
+          return false;
+        }
         // Restricción Mago: Nunca puede eliminar el último punto de vida de un goblin
         if (roleId === 'mago' && gob.currentHp === 1) {
           return false;
@@ -955,6 +1051,7 @@ class GameState {
         if (gob.currentHp <= 0) {
           // Goblin derrotado - Marcar para animación
           gob.isDying = true;
+          this.checkSpawnNextHito1Goblin(gob);
           if (gob.isHito || gob.level >= p.level) {
             p.mo += gob.mo;
             this.ganarPex(gob.pex);

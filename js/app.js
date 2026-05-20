@@ -380,12 +380,14 @@ btnStartGame.addEventListener('click', () => {
   const rawLevel = parseInt(document.getElementById('input-init-level').value, 10);
   const initLevel = isNaN(rawLevel) ? 1 : rawLevel;
 
+  const selectSendaEl = document.getElementById('select-senda');
+  const initSenda = selectSendaEl ? selectSendaEl.value : 'iniciacion';
+
   const rawWave = parseInt(document.getElementById('input-init-wave').value, 10);
   const initWave = isNaN(rawWave) ? 1 : rawWave;
-
   lastWaveLevel = initWave;
 
-  gameState.setupPlayers(numPlayers, finalRoles, { hp: initHp, maxHp: initMaxHp, energy: initEnergy, mo: initGold, hito: initHito, level: initLevel, wave: initWave });
+  gameState.setupPlayers(numPlayers, finalRoles, { hp: initHp, maxHp: initMaxHp, energy: initEnergy, mo: initGold, hito: initHito, level: initLevel, wave: initWave, senda: initSenda });
   setupModal.classList.add('hidden');
   const versionBadge = document.getElementById('game-version-badge');
   if (versionBadge) versionBadge.style.display = 'none';
@@ -409,8 +411,15 @@ document.getElementById('btn-end-turn').addEventListener('click', () => {
 
 const btnDeployHito = document.getElementById('btn-deploy-hito');
 btnDeployHito.addEventListener('click', () => {
-  gameState.deployHito();
-  updateUI();
+  const sendaHitos = DB.hitos[gameState.activeSenda] || DB.hitos.iniciacion;
+  const hitoToDeploy = sendaHitos[gameState.currentHito - 1];
+
+  if (gameState.deployHito()) {
+    if (hitoToDeploy && hitoToDeploy.ruleDesc) {
+      showHitoRuleNotification(hitoToDeploy);
+    }
+    updateUI();
+  }
 });
 
 document.getElementById('btn-info-hitos').addEventListener('click', () => {
@@ -418,13 +427,25 @@ document.getElementById('btn-info-hitos').addEventListener('click', () => {
   const content = document.getElementById('hitos-info-content');
   const bossPreview = document.getElementById('hitos-boss-preview');
 
+  const titleEl = modal.querySelector('h2');
+  if (titleEl) {
+    const sendaNames = {
+      iniciacion: "Senda de Iniciación",
+      guerrero: "Senda de El Zeñor de la Guerra"
+    };
+    const sendaName = sendaNames[gameState.activeSenda] || "Senda de Iniciación";
+    titleEl.innerText = `${sendaName} - Hitos`;
+  }
+
   let html = '<p style="font-size: 1rem; color: #ccc; margin-bottom: 15px;">Goblins a invocar (Por jugador):</p>';
   html += '<ul style="list-style: none; padding: 0;">';
   let bossImgHTML = '';
 
-  DB.hitos.iniciacion.forEach(hito => {
+  const sendaHitos = DB.hitos[gameState.activeSenda] || DB.hitos.iniciacion;
+
+  sendaHitos.forEach(hito => {
     let gobsDesc = hito.isBoss
-      ? `Jefe: ${hito.name} (Jefe de Iniciación)`
+      ? `Jefe: ${hito.name}`
       : hito.goblins.map(lvl => `<img src="assets/g${lvl}.png" style="height: 50px; vertical-align: middle; margin: 0 4px;" alt="G${lvl}">`).join(' ');
 
     if (hito.isBoss && hito.bossStats.image) {
@@ -436,10 +457,16 @@ document.getElementById('btn-info-hitos').addEventListener('click', () => {
     const titleColor = isCompleted ? '#74c69d' : 'var(--accent-red)';
     const badgeHTML = isCompleted ? `<div style="background: #2d6a4f; color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; border: 1px solid #52b788; box-shadow: 0 0 10px rgba(82,183,136,0.5);">✓</div>` : '';
 
+    let ruleHTML = '';
+    if (hito.ruleDesc) {
+      ruleHTML = `<div style="font-size: 0.85rem; color: var(--gold); margin-top: 4px; font-style: italic;">Regla: ${hito.ruleDesc}</div>`;
+    }
+
     html += `<li style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 10px; padding: 15px; border-radius: 8px; ${bgStyle}">
       <div>
         <strong style="color: ${titleColor}; font-size: 1.1rem;">Hito ${hito.id}: ${hito.name}</strong><br>
         <span style="color: #ccc;">${gobsDesc}</span>
+        ${ruleHTML}
       </div>
       ${badgeHTML}
     </li>`;
@@ -454,6 +481,39 @@ document.getElementById('btn-info-hitos').addEventListener('click', () => {
 document.getElementById('btn-close-hitos').addEventListener('click', () => {
   document.getElementById('hitos-modal').classList.add('hidden');
 });
+
+document.getElementById('btn-close-hito-rule-notif').addEventListener('click', () => {
+  document.getElementById('hito-rule-notification-modal').classList.add('hidden');
+});
+
+function showHitoRuleNotification(hitoObj) {
+  const modal = document.getElementById('hito-rule-notification-modal');
+  const title = document.getElementById('hito-rule-notif-title');
+  const name = document.getElementById('hito-rule-notif-name');
+  const desc = document.getElementById('hito-rule-notif-desc');
+  const goblinsContainer = document.getElementById('hito-rule-notif-goblins');
+
+  if (modal && title && name && desc && goblinsContainer) {
+    name.innerText = `Hito ${hitoObj.id}: ${hitoObj.name}`;
+    desc.innerText = hitoObj.ruleDesc || '';
+
+    let gobsHTML = '';
+    if (hitoObj.isBoss) {
+      const bossImg = hitoObj.bossStats && hitoObj.bossStats.image ? hitoObj.bossStats.image : 'assets/Monstruos/05.jpg';
+      gobsHTML = `<div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+        <span style="color: var(--accent-red); font-weight: bold; font-family: 'Cinzel', serif; letter-spacing: 1px; font-size: 0.9rem;">JEFE DE LA SENDA</span>
+        <img src="${bossImg}" style="height: 120px; border-radius: 8px; border: 2px solid var(--accent-red); box-shadow: 0 0 15px rgba(230, 57, 70, 0.4);" alt="Jefe">
+      </div>`;
+    } else if (hitoObj.goblins && hitoObj.goblins.length > 0) {
+      gobsHTML = hitoObj.goblins.map(lvl => 
+        `<img src="assets/g${lvl}.png" style="height: 60px; vertical-align: middle; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); margin: 0 5px;" alt="G${lvl}">`
+      ).join('');
+    }
+    goblinsContainer.innerHTML = gobsHTML;
+
+    modal.classList.remove('hidden');
+  }
+}
 
 // -- LÓGICA RELLENAR ROL --
 let roleFillDice = { red1: 0, red2: 0, black: 0 };
@@ -729,7 +789,8 @@ function updateUI() {
     hitoBtn.innerText = "Senda Completada";
     hitoBtn.disabled = true;
   } else {
-    let hito = DB.hitos.iniciacion[gameState.currentHito - 1];
+    const sendaHitos = DB.hitos[gameState.activeSenda] || DB.hitos.iniciacion;
+    let hito = sendaHitos[gameState.currentHito - 1];
     hitoBtn.innerText = `Enfrentar Hito ${gameState.currentHito}`;
     hitoBtn.disabled = false;
   }
@@ -740,19 +801,30 @@ function updateUI() {
   const btnRole = document.getElementById('btn-role');
   const btnEndTurn = document.getElementById('btn-end-turn');
 
-  if (gameState.isMarketPhase) {
+  btnEndTurn.classList.remove('hidden');
+
+  const hasGoblinsAlive = gameState.battlefield.goblins.some(g => !g.isDying);
+  const isWarlordChoicePhase = gameState.activeSenda === 'guerrero' && !hasGoblinsAlive && !gameState.isMarketPhase && !gameState.isRetaliationPhase && !gameState.isGameOver;
+
+  if (gameState.isMarketPhase || isWarlordChoicePhase) {
     btnConfirmAttack.disabled = true;
     btnGold.disabled = true;
     btnGoldDmg.disabled = true;
     btnRole.disabled = true;
-    btnEndTurn.classList.remove('hidden');
   } else {
     btnConfirmAttack.disabled = false;
     btnConfirmAttack.innerText = `Atacar Goblins (${selectedGoblins.length})`;
-    btnGold.disabled = false;
-    btnGoldDmg.disabled = false;
-    btnRole.disabled = false;
-    btnEndTurn.classList.add('hidden');
+
+    if (gameState.activeSenda === 'guerrero' && hasGoblinsAlive) {
+      // Si hay goblins vivos, obligatorio luchar: las demás acciones se desactivan
+      btnGold.disabled = true;
+      btnGoldDmg.disabled = true;
+      btnRole.disabled = true;
+    } else {
+      btnGold.disabled = false;
+      btnGoldDmg.disabled = false;
+      btnRole.disabled = false;
+    }
   }
 
   checkLevelUpChoice();
@@ -975,10 +1047,12 @@ function renderBattlefield() {
     if (groupNextPexSpan) groupNextPexSpan.innerText = nextExpLeader;
   }
 
+
   const hitoActionsDiv = document.getElementById('hito-actions');
 
   if (gameState.currentHito <= 5) {
-    let hito = DB.hitos.iniciacion[gameState.currentHito - 1];
+    const sendaHitos = DB.hitos[gameState.activeSenda] || DB.hitos.iniciacion;
+    let hito = sendaHitos[gameState.currentHito - 1];
     btnDeployHito.innerText = `Enfrentar Hito ${gameState.currentHito}`;
     if (hitoActionsDiv) hitoActionsDiv.style.display = 'flex';
 
@@ -995,6 +1069,85 @@ function renderBattlefield() {
   }
 
   goblinsContainer.innerHTML = '';
+
+  const hasGoblinsAlive = gameState.battlefield.goblins.some(g => !g.isDying);
+
+  if (gameState.activeSenda === 'guerrero' && !hasGoblinsAlive && !gameState.isMarketPhase && !gameState.isRetaliationPhase && !gameState.isGameOver) {
+    const choiceContainer = document.createElement('div');
+    choiceContainer.style.cssText = 'display: flex; flex-direction: column; align-items: center; gap: 15px; grid-column: 1 / -1; width: 100%; max-width: 600px; margin: 20px auto; padding: 25px; background: rgba(0, 0, 0, 0.6); border: 2px solid var(--gold); border-radius: 15px; box-shadow: 0 0 30px rgba(212, 175, 55, 0.2); backdrop-filter: blur(10px); text-align: center;';
+
+    const title = document.createElement('h3');
+    title.innerText = 'MESA VACÍA - EL ZEÑOR DE LA GUERRA';
+    title.style.cssText = 'margin: 0; color: var(--gold); font-family: "Cinzel", serif; font-size: 1.3rem; letter-spacing: 1px;';
+    choiceContainer.appendChild(title);
+
+    const desc = document.createElement('p');
+    desc.innerText = 'Debes elegir una opción para poder continuar con tus acciones:';
+    desc.style.cssText = 'margin: 5px 0 15px 0; color: #ccc; font-size: 0.95rem;';
+    choiceContainer.appendChild(desc);
+
+    const buttonsWrapper = document.createElement('div');
+    buttonsWrapper.style.cssText = 'display: flex; gap: 20px; width: 100%; justify-content: center;';
+
+    const btnOptA = document.createElement('button');
+    btnOptA.innerText = 'Sacar Goblin Nv. 1';
+    btnOptA.className = 'btn warlord-choice-btn';
+    btnOptA.style.cssText = 'padding: 12px 20px; font-family: "Cinzel", serif; font-size: 0.95rem; color: #fff; background: linear-gradient(135deg, #1a1a1a 0%, #2e0854 100%); border: 2px solid #9d4edd; border-radius: 8px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(157, 78, 221, 0.2);';
+    btnOptA.addEventListener('mouseenter', () => {
+      btnOptA.style.transform = 'scale(1.05)';
+      btnOptA.style.boxShadow = '0 6px 20px rgba(157, 78, 221, 0.4)';
+    });
+    btnOptA.addEventListener('mouseleave', () => {
+      btnOptA.style.transform = 'scale(1)';
+      btnOptA.style.boxShadow = '0 4px 15px rgba(157, 78, 221, 0.2)';
+    });
+    btnOptA.addEventListener('click', () => {
+      gameState.battlefield.goblins.push({
+        ...DB.goblins[1],
+        uid: Date.now() + Math.random(),
+        currentHp: DB.goblins[1].hp,
+        isHito: false
+      });
+      gameState.addLog(`⚠️ Ha aparecido un goblin de Nivel 1 (Opción A - Mesa Vacía).`);
+      updateUI();
+    });
+    buttonsWrapper.appendChild(btnOptA);
+
+    const btnOptB = document.createElement('button');
+    btnOptB.innerText = gameState.currentHito > 5 ? 'Senda Completada' : `Desplegar Hito ${gameState.currentHito}`;
+    btnOptB.className = 'btn warlord-choice-btn';
+    btnOptB.style.cssText = 'padding: 12px 20px; font-family: "Cinzel", serif; font-size: 0.95rem; color: #fff; background: linear-gradient(135deg, #1a1a1a 0%, #d4af37 100%); border: 2px solid var(--gold); border-radius: 8px; cursor: pointer; transition: all 0.3s ease; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);';
+    if (gameState.currentHito > 5) {
+      btnOptB.disabled = true;
+      btnOptB.style.opacity = '0.5';
+      btnOptB.style.cursor = 'not-allowed';
+    }
+    btnOptB.addEventListener('mouseenter', () => {
+      if (!btnOptB.disabled) {
+        btnOptB.style.transform = 'scale(1.05)';
+        btnOptB.style.boxShadow = '0 6px 20px rgba(212, 175, 55, 0.4)';
+      }
+    });
+    btnOptB.addEventListener('mouseleave', () => {
+      btnOptB.style.transform = 'scale(1)';
+      btnOptB.style.boxShadow = '0 4px 15px rgba(212, 175, 55, 0.2)';
+    });
+    btnOptB.addEventListener('click', () => {
+      const sendaHitos = DB.hitos[gameState.activeSenda] || DB.hitos.iniciacion;
+      const hitoToDeploy = sendaHitos[gameState.currentHito - 1];
+
+      if (gameState.deployHito()) {
+        if (hitoToDeploy && hitoToDeploy.ruleDesc) {
+          showHitoRuleNotification(hitoToDeploy);
+        }
+        updateUI();
+      }
+    });
+    buttonsWrapper.appendChild(btnOptB);
+
+    choiceContainer.appendChild(buttonsWrapper);
+    goblinsContainer.appendChild(choiceContainer);
+  }
 
   // Usamos el array original de la mesa para garantizar que el orden NO cambie
   gameState.battlefield.goblins.forEach(goblin => {
@@ -1014,7 +1167,14 @@ function renderBattlefield() {
       gobEl.classList.add(goblin.gaveReward ? 'dying-reward' : 'dying');
       gobEl.innerHTML = `<div class="goblin-hp" style="background: var(--accent-red); color: white;">0</div>`;
     } else {
-      gobEl.innerHTML = `<div class="goblin-hp">${goblin.currentHp}</div>`;
+      const isInvulnerable = gameState.isGoblinInvulnerable(goblin);
+      if (isInvulnerable) {
+        gobEl.classList.add('invulnerable');
+      }
+      const badgeHTML = isInvulnerable 
+        ? `<div class="goblin-invulnerable-badge" title="Invulnerable por Regla de Hito">🛡️</div>` 
+        : '';
+      gobEl.innerHTML = `<div class="goblin-hp">${goblin.currentHp}</div>${badgeHTML}`;
 
       // Comprobar si es un goblin nuevo para aplicarle la animación correspondiente
       if (!animatedGoblinUids.has(goblin.uid)) {
@@ -1249,7 +1409,14 @@ function renderCombatOverlay() {
       }
     }
     gobCard.style.backgroundImage = `url('${gob.image}')`;
-    gobCard.innerHTML = `<div class="goblin-hp">${gob.currentHp}</div>`;
+    const isInvulnerable = gameState.isGoblinInvulnerable(gob);
+    if (isInvulnerable) {
+      gobCard.classList.add('invulnerable');
+    }
+    const badgeHTML = isInvulnerable 
+      ? `<div class="goblin-invulnerable-badge" title="Invulnerable por Regla de Hito">🛡️</div>` 
+      : '';
+    gobCard.innerHTML = `<div class="goblin-hp">${gob.currentHp}</div>${badgeHTML}`;
 
     // Drop zone logic for the goblin
     gobCard.addEventListener('dragover', (e) => e.preventDefault());
@@ -1464,8 +1631,15 @@ function renderCombatOverlay() {
           el.style.padding = '2px 6px';
           el.style.background = 'rgba(0,0,0,0.7)';
           el.style.borderRadius = '4px';
-          el.style.color = '#4CAF50';
           el.style.fontWeight = 'bold';
+          if (item.isHitoRule) {
+            el.style.color = '#ff4d4d';
+            el.style.border = '1px solid #ff4d4d';
+            el.style.boxShadow = '0 0 8px rgba(255, 77, 77, 0.4)';
+            el.title = 'Regla Hito: +1 daño por cada goblin de nivel 1 vivo';
+          } else {
+            el.style.color = '#4CAF50';
+          }
         }
         diceCont.appendChild(el);
       });

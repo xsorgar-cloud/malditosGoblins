@@ -87,6 +87,13 @@ const DB = {
       { id: 3, name: "Acero y Desgaste", goblins: [3], isBoss: false },
       { id: 4, name: "El Despertar del Rol", goblins: [4], isBoss: false },
       { id: 5, name: "Desafío Final", goblins: [5], isBoss: true, bossStats: { hpMultiplier: 25, regen: 5, dice: ['1d6', '+2', '1d6', '+2'], image: 'assets/Monstruos/Jefes/Inicicion.jpg' } }
+    ],
+    guerrero: [
+      { id: 1, name: "La Avanzadilla", goblins: [1, 1], isBoss: false, ruleDesc: "Despliégalos uno a uno. Al matar al primero, entra el segundo." },
+      { id: 2, name: "La Emboscada", goblins: [1, 2], isBoss: false, ruleDesc: "El goblin de nivel 2 obtiene +1 en Ataque por cada goblin de nivel 1." },
+      { id: 3, name: "El Capitán", goblins: [1, 3], isBoss: false, ruleDesc: "El Nivel 3 es inmune al daño mientras esté acompañado de niveles inferiores." },
+      { id: 4, name: "La Horda", goblins: [2, 2, 3], isBoss: false, ruleDesc: "Mientras algún nivel 1 siga vivo, el nivel 2 y el nivel 3 son invulnerables." },
+      { id: 5, name: "Zeñor de la Guerra", goblins: [5], isBoss: true, bossStats: { hpMultiplier: 35, regen: 5, dice: ['2d6', '+2', '1d4'], image: 'assets/Monstruos/Jefes/Señor-de-la-Guerra.jpg', attacks: { 1: ['Daño Directo', 'Rotura no esquivable'], 2: ['1 calambre', 'Rotura no esquivable'], 3: ['1 escozor', 'Rotura no esquivable'], 4: ['1 tembleque'], 5: ['Rotura no esquivable', 'daño+2'], 6: ['Golpe Brutal'] } }, ruleDesc: "Jefe Final. Golpe Brutal: Si el Jefe saca un '6' en cualquiera de sus dados d6, te rompe una pieza de armadura antes de asignar tus dados." }
     ]
   },
 

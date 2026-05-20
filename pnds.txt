@@ -39,3 +39,10 @@
 [ ] implemenetar mazo de mejoras.
 [x] cambiar icono de mochila i monedes.
 [x] el alert del combat ha de canviar-se per un alert integrat al joc.
+[x] boss. Revisar regeneració, vida multiplayer, dados atac, etc
+[ ] aplica dado de 3.
+[ ] aplicar noves sendes.
+[ ]		regles generals per a la senda.
+[ ]		eventos de la senda
+[x] resaltar cuando una carta puede ser reparada
+[x] el tutorial no responde al xec - el btn-tutorial sigue sin reaccionar al camio de toggle-tutorial
