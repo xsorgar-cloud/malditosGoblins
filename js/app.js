@@ -17,22 +17,29 @@ const showInterceptionError = (val) => {
     if (!splash) return;
 
     let isRemoving = false;
-    const removeSplash = () => {
+    const removeSplash = (immediate = false) => {
       if (isRemoving) return;
       isRemoving = true;
-      splash.style.opacity = '0';
-      splash.style.visibility = 'hidden';
-      setTimeout(() => splash.remove(), 500);
+      if (immediate) {
+        splash.style.transition = 'none';
+        splash.style.opacity = '0';
+        splash.style.display = 'none';
+        splash.remove();
+      } else {
+        splash.style.opacity = '0';
+        splash.style.visibility = 'hidden';
+        setTimeout(() => splash.remove(), 800);
+      }
     };
 
-    const timer = setTimeout(removeSplash, 1000);
+    const timer = setTimeout(() => removeSplash(false), 1000);
 
     // Soporte total para clic en PC y toque táctil en móviles/tablets
-    ['click', 'touchstart'].forEach(evt => {
+    ['mousedown', 'touchstart'].forEach(evt => {
       splash.addEventListener(evt, (e) => {
         e.preventDefault();
         clearTimeout(timer);
-        removeSplash();
+        removeSplash(true);
       }, { once: true });
     });
   };
@@ -1356,7 +1363,6 @@ function showElasticModal(dieId, dieValue, eqId, onConfirm) {
 
   btnConfirm.onclick = null;
   btnClose.onclick = null;
-
   const closeModal = () => {
     modal.classList.add('hidden');
   };
@@ -1380,42 +1386,57 @@ function showCorrosionModal(pendingChoice) {
   const messageEl = document.getElementById('corrosion-message');
   const listContainer = document.getElementById('corrosion-items-list');
 
+  const modalContent = modal.querySelector('.modal-content');
+  if (modalContent) {
+    modalContent.style.maxWidth = '1000px';
+  }
+
+  let previewImg = document.getElementById('corrosion-hover-preview');
+  if (previewImg) {
+    previewImg.remove();
+  }
+
   const player = pendingChoice.player;
   messageEl.innerHTML = `<strong>${player.name}</strong> ha recibido da\u00F1o de un goblin. Debes elegir una carta de tu equipo equipado para romperla a causa del entorno de <strong>Corrosi\u00F3n</strong>.`;
+  
   listContainer.innerHTML = '';
+  listContainer.style.display = 'flex';
+  listContainer.style.flexDirection = 'row';
+  listContainer.style.flexWrap = 'wrap';
+  listContainer.style.justifyContent = 'center';
+  listContainer.style.alignItems = 'center';
+  listContainer.style.gap = '20px';
+  listContainer.style.maxHeight = '60vh';
 
   const breakable = player.equipped.filter(eq => eq.isActive && !eq.isBroken);
   
   breakable.forEach(eq => {
-    const btn = document.createElement('button');
-    btn.className = 'btn';
-    btn.style.width = '100%';
-    btn.style.padding = '12px 16px';
-    btn.style.background = 'rgba(239, 35, 60, 0.1)';
-    btn.style.border = '1px solid rgba(239, 35, 60, 0.3)';
-    btn.style.color = '#ffccd5';
-    btn.style.borderRadius = '8px';
-    btn.style.cursor = 'pointer';
-    btn.style.fontFamily = "'Outfit', sans-serif";
-    btn.style.fontWeight = 'bold';
-    btn.style.fontSize = '1.05rem';
-    btn.style.transition = 'all 0.2s ease';
-    btn.innerText = eq.name;
+    const card = document.createElement('div');
+    card.style.width = '180px';
+    card.style.height = '252px';
+    card.style.backgroundImage = `url('${eq.image}')`;
+    card.style.backgroundSize = 'cover';
+    card.style.backgroundPosition = 'center';
+    card.style.borderRadius = '8px';
+    card.style.border = '2px solid transparent';
+    card.style.cursor = 'pointer';
+    card.style.boxShadow = '0 4px 8px rgba(0,0,0,0.5)';
+    card.style.transition = 'transform 0.2s, border-color 0.2s, box-shadow 0.2s';
+    card.title = eq.name;
 
-    btn.onmouseover = () => {
-      btn.style.background = 'rgba(239, 35, 60, 0.25)';
-      btn.style.borderColor = 'rgba(239, 35, 60, 0.7)';
-      btn.style.color = '#fff';
-      btn.style.boxShadow = '0 0 10px rgba(239, 35, 60, 0.4)';
+    card.onmouseover = () => {
+      card.style.transform = 'scale(1.05)';
+      card.style.borderColor = 'var(--accent-red)';
+      card.style.boxShadow = '0 0 15px rgba(239, 35, 60, 0.8)';
     };
-    btn.onmouseout = () => {
-      btn.style.background = 'rgba(239, 35, 60, 0.1)';
-      btn.style.borderColor = 'rgba(239, 35, 60, 0.3)';
-      btn.style.color = '#ffccd5';
-      btn.style.boxShadow = 'none';
+    
+    card.onmouseout = () => {
+      card.style.transform = 'scale(1)';
+      card.style.borderColor = 'transparent';
+      card.style.boxShadow = '0 4px 8px rgba(0,0,0,0.5)';
     };
 
-    btn.onclick = () => {
+    card.onclick = () => {
       eq.isBroken = true;
       eq.brokenAnimationPlayed = false;
       eq.brokenInCombatId = gameState.lastCombatId;
@@ -1427,10 +1448,19 @@ function showCorrosionModal(pendingChoice) {
       if (pendingChoice.callback) {
         pendingChoice.callback();
       }
+
+      if (!gameState.isRetaliationPhase && !gameState.isGameOver) {
+        document.getElementById('global-event-overlay').classList.add('hidden');
+        const evModal = document.querySelector('.event-modal');
+        if (evModal) evModal.classList.remove('retaliation-theme');
+        const evContainer = document.getElementById('event-choices-container');
+        if (evContainer) evContainer.classList.remove('retaliation-layout');
+      }
+
       updateUI();
     };
 
-    listContainer.appendChild(btn);
+    listContainer.appendChild(card);
   });
 
   modal.classList.remove('hidden');
@@ -2378,12 +2408,12 @@ function renderPlayer() {
       <div class="player-panel ${isCurrent ? 'active-turn' : ''}">
         <div class="player-hud-header">
             <h3>${p.name}</h3>
-            <div class="status-effects-container">${statusHTML}</div>
             <div class="stats">
                 <div class="stat hp ${isLowHP ? 'low-hp' : ''}" title="Puntos de Vida">❤️ <span class="${hpPulse}">${p.hp}</span>/<span>${p.maxHp}</span></div>
                 <div class="stat gold" title="Monedas">${COIN_SVG} <span class="${moPulse}">${p.mo}</span></div>
                 <div class="stat blocks" title="Carga de Equipo" style="${isOverweight ? 'color: var(--accent-red);' : ''}">${SACK_SVG} <span class="${blocksPulse}">${currentBlocks}</span>/<span>${maxBlocks}</span></div>
             </div>
+            <div class="status-effects-container">${statusHTML}</div>
         </div>
         
         <div class="player-dashboard">
@@ -2875,6 +2905,13 @@ document.addEventListener('mouseover', (e) => {
       } else {
         preview.style.transform = 'none';
       }
+
+      const combatOverlay = document.getElementById('combat-overlay');
+      if (combatOverlay && !combatOverlay.classList.contains('hidden')) {
+        preview.classList.add('in-combat');
+      } else {
+        preview.classList.remove('in-combat');
+      }
     }
   } else {
     preview.style.display = 'none';
@@ -3037,7 +3074,7 @@ function assignAllRetaliationToPlayer(pIndex) {
       const modal = document.querySelector('.event-modal');
       if (modal) modal.classList.remove('retaliation-theme');
       container.classList.remove('retaliation-layout');
-    } else {
+    } else if (gameState.retaliationQueue.length > 0) {
       renderRetaliationModal();
     }
   }
@@ -3412,3 +3449,50 @@ setTimeout(() => {
     updateSetupSendaPreview();
   }
 }, 100);
+
+// --- CHEAT MODE: MODIFICAR VALOR DE LOS DADOS ---
+document.addEventListener('click', (e) => {
+  const toggle = document.getElementById('cheat-dice-toggle');
+  if (toggle && toggle.checked) {
+    const dieEl = e.target.closest('.die');
+    if (dieEl && dieEl.id) {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const newStr = prompt("Trampas: Nuevo valor para este dado:", dieEl.innerText);
+      if (newStr !== null) {
+        const newVal = parseInt(newStr, 10);
+        if (!isNaN(newVal)) {
+          let found = false;
+          
+          if (typeof roleFillDice !== 'undefined' && Array.isArray(roleFillDice)) {
+            let d = roleFillDice.find(x => x.id === dieEl.id);
+            if (d) {
+              d.val = newVal;
+              d.value = newVal;
+              found = true;
+            }
+          }
+          
+          if (gameState.currentCombat && gameState.currentCombat.playerDice) {
+            let d = gameState.currentCombat.playerDice.find(x => x.id === dieEl.id);
+            if (d) {
+              d.val = newVal;
+              d.value = newVal;
+              found = true;
+            }
+          }
+          
+          if (found) {
+            const combatOverlay = document.getElementById('combat-overlay');
+            if (combatOverlay && !combatOverlay.classList.contains('hidden')) {
+              if (typeof renderCombatOverlay === 'function') renderCombatOverlay();
+            } else {
+              if (typeof renderRoleFillDice === 'function') renderRoleFillDice();
+            }
+          }
+        }
+      }
+    }
+  }
+}, true);
