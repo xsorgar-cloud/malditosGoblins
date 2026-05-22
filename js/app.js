@@ -373,10 +373,16 @@ function updateSetupSendaPreview() {
   const sendaHitos = DB.hitos[sendaVal] || [];
   const bossHito = sendaHitos.find(h => h.isBoss);
   if (bossHito) {
-    html += `<h4 style="margin: 25px 0 12px 0; color: var(--accent-red); font-family: 'Cinzel', serif; border-bottom: 1px solid rgba(239,35,60,0.2); padding-bottom: 6px; font-size: 1.1rem; letter-spacing: 0.5px;">Jefe Final</h4>
-    <div style="display: flex; justify-content: center; align-items: center;">`;
+    html += `<h4 style="margin: 25px 0 12px 0; color: var(--accent-red); font-family: 'Cinzel', serif; border-bottom: 1px solid rgba(239,35,60,0.2); padding-bottom: 6px; font-size: 1.1rem; letter-spacing: 0.5px;">Jefe Final y Reglas</h4>
+    <div style="display: flex; justify-content: center; align-items: center; gap: 15px;">`;
     if (bossHito.bossStats && bossHito.bossStats.image) {
       html += `<img id="setup-boss-image" src="${bossHito.bossStats.image}" style="width: 168px; height: 238px; border-radius: 8px; border: 2px solid #9d4edd; box-shadow: 0 4px 15px rgba(157,78,221,0.5); object-fit: cover; cursor: zoom-in;" alt="${bossHito.name}">`;
+      
+      const basePath = bossHito.bossStats.image.substring(0, bossHito.bossStats.image.lastIndexOf('/') + 1);
+      const fileName = bossHito.bossStats.image.substring(bossHito.bossStats.image.lastIndexOf('/') + 1);
+      const rulesImage = basePath + 'reglas_' + fileName;
+      
+      html += `<img id="setup-rules-image" src="${rulesImage}" style="width: 168px; height: 238px; border-radius: 8px; border: 2px solid var(--gold); box-shadow: 0 4px 15px rgba(212,175,55,0.5); object-fit: cover; cursor: zoom-in;" alt="Reglas de ${bossHito.name}" onerror="this.style.display='none'">`;
     }
     html += `</div>`;
   }
@@ -385,16 +391,29 @@ function updateSetupSendaPreview() {
 
   // Manejar hover de la imagen del jefe para mostrar el modal de previsualizacion grande
   const bossImgEl = document.getElementById('setup-boss-image');
+  const rulesImgEl = document.getElementById('setup-rules-image');
   const hoverModal = document.getElementById('boss-hover-modal');
   const hoverModalImg = document.getElementById('boss-hover-modal-img');
-  if (bossImgEl && hoverModal && hoverModalImg) {
-    bossImgEl.addEventListener('mouseenter', () => {
-      hoverModalImg.src = bossImgEl.src;
-      hoverModal.style.opacity = '1';
-    });
-    bossImgEl.addEventListener('mouseleave', () => {
-      hoverModal.style.opacity = '0';
-    });
+  
+  if (hoverModal && hoverModalImg) {
+    if (bossImgEl) {
+      bossImgEl.addEventListener('mouseenter', () => {
+        hoverModalImg.src = bossImgEl.src;
+        hoverModal.style.opacity = '1';
+      });
+      bossImgEl.addEventListener('mouseleave', () => {
+        hoverModal.style.opacity = '0';
+      });
+    }
+    if (rulesImgEl) {
+      rulesImgEl.addEventListener('mouseenter', () => {
+        hoverModalImg.src = rulesImgEl.src;
+        hoverModal.style.opacity = '1';
+      });
+      rulesImgEl.addEventListener('mouseleave', () => {
+        hoverModal.style.opacity = '0';
+      });
+    }
   }
 }
 
