@@ -376,7 +376,7 @@ function updateSetupSendaPreview() {
     html += `<h4 style="margin: 25px 0 12px 0; color: var(--accent-red); font-family: 'Cinzel', serif; border-bottom: 1px solid rgba(239,35,60,0.2); padding-bottom: 6px; font-size: 1.1rem; letter-spacing: 0.5px;">Jefe Final</h4>
     <div style="display: flex; justify-content: center; align-items: center;">`;
     if (bossHito.bossStats && bossHito.bossStats.image) {
-      html += `<img id="setup-boss-image" src="${bossHito.bossStats.image}" style="width: 147px; height: 207px; border-radius: 8px; border: 2px solid #9d4edd; box-shadow: 0 4px 15px rgba(157,78,221,0.5); object-fit: cover; cursor: zoom-in;" alt="${bossHito.name}">`;
+      html += `<img id="setup-boss-image" src="${bossHito.bossStats.image}" style="width: 168px; height: 238px; border-radius: 8px; border: 2px solid #9d4edd; box-shadow: 0 4px 15px rgba(157,78,221,0.5); object-fit: cover; cursor: zoom-in;" alt="${bossHito.name}">`;
     }
     html += `</div>`;
   }

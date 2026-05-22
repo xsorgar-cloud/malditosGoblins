@@ -106,14 +106,14 @@ const DB = {
 
   sendaReglasGenerales: {
     iniciacion: [
-      { name: "Sin reglas especiales", desc: "Esta senda no aplica ninguna regla de entorno adicional." }
+      { name: "Sin reglas especiales", desc: "Esta senda no aplica ninguna regla adicional." }
     ],
     guerrero: [
-      { name: "Hasta que el Cuerpo Aguante", desc: "Al inicio de tus acciones, si hay Goblins vivos, debes gastar acciones en luchar. Si la mesa está vacía, debes elegir entre sacar un Goblin de Nivel 1 o desplegar el siguiente Hito." }
+      { name: "· Hasta que el Cuerpo Aguante", desc: "Al inicio de tus acciones, si hay Goblins vivos, debes gastar acciones en luchar. <BR><BR>Si la mesa está vacía, debes elegir entre sacar un Goblin de Nivel 1 o desplegar el siguiente Hito." }
     ],
     rey_brujo: [
-      { name: "💨 Aire Viciado", desc: "Al inicio de tu acción, si tienes 2 o más cartas de equipo rotas, sufres automáticamente 1 punto de Daño Directo por cada equipo roto." },
-      { name: "🧪 Corrosión", desc: "Cuando un Goblin te inflija daño (en combate o por represalia), debes elegir una carta de tu equipo equipado activo para romperla." }
+      { name: "· Aire Viciado", desc: "Al inicio de tu acción, si tienes 2 o más cartas de equipo rotas, sufres automáticamente 1 punto de Daño Directo por cada equipo roto." },
+      { name: "· Corrosión", desc: "Cuando un Goblin te inflija daño (en combate o por represalia), debes elegir una carta de tu equipo equipado activo para romperla." }
     ]
   },
 
