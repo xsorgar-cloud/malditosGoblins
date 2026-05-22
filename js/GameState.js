@@ -449,7 +449,8 @@ class GameState {
                     uid: Date.now() + Math.random(),
                     currentHp: DB.goblins[1].hp,
                     mo: 0,
-                    isSummoned: true
+                    isInvocacion: true,
+                    image: 'assets/Monstruos/invocacion_01.jpg'
                   });
                   this.addLog(`🔮 <strong>Invocación:</strong> ¡El Rey Brujo invoca un Goblin de Nivel 1 (sin recompensa de oro)!`);
                 }
@@ -705,15 +706,22 @@ class GameState {
       this.players[this.currentPlayerIndex].goblinsFoughtThisTurn = [];
     }
 
-    this.currentPlayerIndex++;
-    if (this.currentPlayerIndex >= this.players.length) {
-      this.currentPlayerIndex = 0;
-      this.battlefield.actionCount++;
+    if (this.checkGameOver()) return;
 
-      if (this.battlefield.actionCount >= 3) {
-        this.resolveWavePhase();
+    let iterations = 0;
+    do {
+      this.currentPlayerIndex++;
+      if (this.currentPlayerIndex >= this.players.length) {
+        this.currentPlayerIndex = 0;
+        this.battlefield.actionCount++;
+
+        if (this.battlefield.actionCount >= 3) {
+          this.resolveWavePhase();
+        }
       }
-    }
+      iterations++;
+      if (iterations > this.players.length * 2) break; // Fallback
+    } while (this.players[this.currentPlayerIndex] && this.players[this.currentPlayerIndex].hp <= 0 && !this.isGameOver);
 
     // Aire Viciado: Al inicio del turno del nuevo jugador activo
     if (!this.isGameOver) {
@@ -735,6 +743,12 @@ class GameState {
 
   postActionPhase() {
     let p = this.getCurrentPlayer();
+    
+    if (p && p.hp <= 0) {
+      this.nextTurn();
+      return;
+    }
+    
     let canBuy = false;
 
     // 1. Comprobar equipos en el mercado
@@ -1028,19 +1042,18 @@ class GameState {
     this.addLog(`<span style="color:#f54281"><strong>*******************************************</strong></span>`);
     this.addLog(`<span style="color:#f54281"><strong>RESOLVIENDO FASE DE OLEADA ${this.battlefield.waveLevel} </strong></span>`);
 
-    let counts = {};
-
-    // El bucle evalúa la mesa en tiempo real
     for (let lvl = 1; lvl < 5; lvl++) {
-      // 1. Separamos los índices de los goblins del nivel actual según su tipo
       let idxNormales = [];
       let idxHitos = [];
+      let idxInvocaciones = [];
 
       this.battlefield.goblins.forEach((g, index) => {
         //reset de los PV
         g.currentHp = g.hp;
         if (g.level === lvl) {
-          if (g.isHito) {
+          if (g.isInvocacion) {
+            idxInvocaciones.push(index);
+          } else if (g.isHito) {
             idxHitos.push(index);
           } else {
             idxNormales.push(index);
@@ -1050,39 +1063,56 @@ class GameState {
 
       let paresCrearNormal = 0;
       let paresCrearHito = 0;
+      let paresCrearInvocacion = 0;
       let indicesAeliminar = [];
 
-      // 2. Prioridad 1: Fusionar Hito con Oleada -> Produce GSuperior Normal
-      while (idxHitos.length > 0 && idxNormales.length > 0) {
-        indicesAeliminar.push(idxHitos.pop());
-        indicesAeliminar.push(idxNormales.pop());
-        paresCrearNormal++;
-        this.addLog(`🔥 <span style="color:#f54281"><strong>Mutación:</strong></span> <span style="color:#a545d1">G${lvl}</span> + G${lvl} --> G${lvl + 1}`);
-      }
-
-      // 3. Prioridad 2: Fusionar Oleada con Oleada -> Produce GSuperior Normal
+      // Prioridad 1: Clases puras
       while (idxNormales.length >= 2) {
         indicesAeliminar.push(idxNormales.pop());
         indicesAeliminar.push(idxNormales.pop());
         paresCrearNormal++;
-        this.addLog(`🔥 <span style="color:#f54281"><strong>Mutación:</strong></span> G${lvl} + G${lvl} --> G${lvl + 1}`);
+        this.addLog(`&#128121; <span style="color:#f54281"><strong>Mutación:</strong></span> G${lvl} + G${lvl} --> G${lvl + 1}`);
       }
-
-      // 4. Prioridad 3: Fusionar Hito con Hito -> Produce GSuperior Hito
       while (idxHitos.length >= 2) {
         indicesAeliminar.push(idxHitos.pop());
         indicesAeliminar.push(idxHitos.pop());
         paresCrearHito++;
-        this.addLog(`🔥 <span style="color:#f54281"><strong>Mutación:</strong></span> <span style="color:#a545d1">G${lvl}</span> + <span style="color:#a545d1">G${lvl}</span> --> <span style="color:#a545d1">G${lvl + 1}</span>`);
+        this.addLog(`&#128121; <span style="color:#f54281"><strong>Mutación:</strong></span> <span style="color:#a545d1">Hito G${lvl}</span> + <span style="color:#a545d1">Hito G${lvl}</span> --> <span style="color:#a545d1">Hito G${lvl + 1}</span>`);
+      }
+      while (idxInvocaciones.length >= 2) {
+        indicesAeliminar.push(idxInvocaciones.pop());
+        indicesAeliminar.push(idxInvocaciones.pop());
+        paresCrearInvocacion++;
+        this.addLog(`&#128121; <span style="color:#f54281"><strong>Mutación:</strong></span> <span style="color:#4cc9f0">Invocación G${lvl}</span> + <span style="color:#4cc9f0">Invocación G${lvl}</span> --> <span style="color:#4cc9f0">Invocación G${lvl + 1}</span>`);
       }
 
-      // 5. Eliminar los originales consumidos en la mesa
+      // Prioridad 2: Clases mixtas
+      while (idxNormales.length >= 1 && idxInvocaciones.length >= 1) {
+        indicesAeliminar.push(idxNormales.pop());
+        indicesAeliminar.push(idxInvocaciones.pop());
+        paresCrearNormal++;
+        this.addLog(`&#128121; <span style="color:#f54281"><strong>Mutación Mixta:</strong></span> G${lvl} + <span style="color:#4cc9f0">Invocación G${lvl}</span> --> G${lvl + 1}`);
+      }
+      while (idxNormales.length >= 1 && idxHitos.length >= 1) {
+        indicesAeliminar.push(idxNormales.pop());
+        indicesAeliminar.push(idxHitos.pop());
+        paresCrearNormal++;
+        this.addLog(`&#128121; <span style="color:#f54281"><strong>Mutación Mixta:</strong></span> G${lvl} + <span style="color:#a545d1">Hito G${lvl}</span> --> G${lvl + 1}`);
+      }
+      while (idxInvocaciones.length >= 1 && idxHitos.length >= 1) {
+        indicesAeliminar.push(idxInvocaciones.pop());
+        indicesAeliminar.push(idxHitos.pop());
+        paresCrearInvocacion++;
+        this.addLog(`&#128121; <span style="color:#f54281"><strong>Mutación Mixta:</strong></span> <span style="color:#4cc9f0">Invocación G${lvl}</span> + <span style="color:#a545d1">Hito G${lvl}</span> --> <span style="color:#4cc9f0">Invocación G${lvl + 1}</span>`);
+      }
+
+      // Eliminar los originales consumidos en la mesa
       indicesAeliminar.sort((a, b) => b - a);
       indicesAeliminar.forEach(idx => {
         this.battlefield.goblins.splice(idx, 1);
       });
 
-      // 6. Añadir los evolucionados de Oleada (Normales)
+      // Añadir los evolucionados de Oleada (Normales)
       for (let i = 0; i < paresCrearNormal; i++) {
         this.battlefield.goblins.push({
           ...DB.goblins[lvl + 1],
@@ -1092,13 +1122,26 @@ class GameState {
         });
       }
 
-      // 7. Añadir los evolucionados de Hito
+      // Añadir los evolucionados de Hito
       for (let i = 0; i < paresCrearHito; i++) {
         this.battlefield.goblins.push({
           ...DB.goblins[lvl + 1],
           uid: Date.now() + Math.random(),
           currentHp: DB.goblins[lvl + 1].hp,
           isHito: true,
+          isMutated: true
+        });
+      }
+
+      // Añadir los evolucionados de Invocacion
+      for (let i = 0; i < paresCrearInvocacion; i++) {
+        this.battlefield.goblins.push({
+          ...DB.goblins[lvl + 1],
+          uid: Date.now() + Math.random(),
+          currentHp: DB.goblins[lvl + 1].hp,
+          isInvocacion: true,
+          mo: 0,
+          image: 'assets/Monstruos/invocacion_0' + (lvl + 1) + '.jpg',
           isMutated: true
         });
       }

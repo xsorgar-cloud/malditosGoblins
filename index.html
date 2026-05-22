@@ -29,6 +29,9 @@
                 <input type="checkbox" id="cheat-dice-toggle" style="accent-color: var(--accent-red); cursor: pointer;">
                 Trampas
             </label>
+            <button id="btn-save-game" class="btn secondary"
+                style="font-size: 0.85rem; padding: 6px 14px; border-radius: 20px; background: rgba(10,10,15,0.9); box-shadow: 0 2px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 6px; border: 1px solid rgba(212, 175, 55, 0.3); height: 32px;"
+                title="Guardar Partida">💾 Guardar</button>
             <button id="btn-toggle-log" class="btn secondary"
                 style="font-size: 0.85rem; padding: 6px 14px; border-radius: 20px; background: rgba(10,10,15,0.9); box-shadow: 0 2px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 6px; border: 1px solid rgba(212, 175, 55, 0.3); height: 32px;"
                 title="Ver Historial de Acciones">📜 Historial</button>
@@ -192,7 +195,7 @@
                 <!-- NUMERO DE VERSION (A LA DERECHA DEL ENGRANAJE) -->
                 <div id="game-version-badge"
                     style="position: absolute; top: 28px; left: 70px; z-index: 10; font-family: 'Cinzel', serif; font-size: 0.85rem; font-weight: bold; color: var(--gold); background: rgba(10, 10, 15, 0.8); padding: 4px 12px; border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); backdrop-filter: blur(5px); letter-spacing: 1px;">
-                    v.1.85
+                    v.1.86
                 </div>
 
                 <h2 style="margin-top: 0; margin-bottom: 10px; font-size: 2.2rem; text-align: center;">Configura tu Grupo</h2>
@@ -221,10 +224,16 @@
                 </div>
             </div>
 
-            <button id="btn-start-game" class="btn primary"
-                style="margin: 25px auto 0 auto; display: block; padding: 15px 80px; font-size: 1.2rem; min-width: 320px; font-family: 'Cinzel', serif;">
-                Comenzar Partida
-            </button>
+            <div style="display: flex; flex-direction: row; flex-wrap: wrap; gap: 15px; margin-top: 25px; justify-content: center;">
+                <button id="btn-start-game" class="btn primary"
+                    style="padding: 15px 40px; font-size: 1.2rem; min-width: 250px; font-family: 'Cinzel', serif;">
+                    Comenzar Nueva Partida
+                </button>
+                <button id="btn-load-game" class="btn primary"
+                    style="display: none; padding: 15px 40px; font-size: 1.2rem; min-width: 250px; font-family: 'Cinzel', serif; background: linear-gradient(45deg, #1f6b45, #2ecc71); box-shadow: 0 0 15px rgba(46, 204, 113, 0.5);">
+                    &#128190; Continuar Partida Guardada
+                </button>
+            </div>
         </div>
 
         <!-- PANEL DERECHO: SELECCION DE SENDA -->
@@ -668,6 +677,33 @@
     <!-- MODAL DE PREVISUALIZACIÓN DE JEFE DE SENDA AL HACER HOVER -->
     <div id="boss-hover-modal" style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.75); backdrop-filter: blur(4px); display: flex; justify-content: center; align-items: center; z-index: 9999; pointer-events: none; opacity: 0; transition: opacity 0.25s ease;">
         <img id="boss-hover-modal-img" src="" style="max-height: 80vh; max-width: 80vw; border-radius: 16px; border: 3px solid #9d4edd; box-shadow: 0 0 35px rgba(157,78,221,0.6); object-fit: contain;">
+    </div>
+
+    <!-- MODAL DE DAR VIDA -->
+    <div id="revive-modal" class="modal hidden" style="z-index: 7000;">
+        <div class="modal-content" style="max-width: 500px; text-align: center; border: 2px solid var(--accent-green); background: rgba(15, 10, 25, 0.98); box-shadow: 0 0 40px rgba(46, 204, 113, 0.4); border-radius: 15px; padding: 25px;">
+            <h2 id="revive-title" style="color: var(--accent-green); font-family: 'Cinzel', serif; margin-top: 0;">Transfusión Vital</h2>
+            <p style="color: #aaa; margin-bottom: 20px;">Desliza para seleccionar cuántos PV cederás a tu compañero. Recuerda que el coste para ti es el doble.</p>
+            
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; font-family: 'Cinzel', serif; font-weight: bold;">
+                <div style="text-align: left; width: 45%;">
+                    <div style="color: #fff; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="revive-target-name">Objetivo</div>
+                    <div style="color: var(--accent-green); font-size: 1.8rem; margin-top: 5px;">&#10084;&#65039; <span id="revive-target-hp">0</span></div>
+                </div>
+                <div style="font-size: 2rem; color: #555;">&#8594;</div>
+                <div style="text-align: right; width: 45%;">
+                    <div style="color: #fff; font-size: 1.1rem; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;" id="revive-donor-name">Tú</div>
+                    <div style="color: var(--accent-red); font-size: 1.8rem; margin-top: 5px;">&#10084;&#65039; <span id="revive-donor-hp">0</span></div>
+                </div>
+            </div>
+
+            <input type="range" id="revive-slider" min="1" max="1" value="1" style="width: 100%; margin-bottom: 25px; accent-color: var(--accent-green); cursor: pointer;">
+
+            <div style="display: flex; gap: 15px; justify-content: center;">
+                <button id="btn-cancel-revive" class="btn secondary">Cancelar</button>
+                <button id="btn-confirm-revive" class="btn primary" style="background: linear-gradient(45deg, #1f6b45, #2ecc71); border-color: #1f6b45; box-shadow: 0 0 15px rgba(46, 204, 113, 0.4);">Ceder PV</button>
+            </div>
+        </div>
     </div>
 
     <script src="js/database.js?v=1.85"></script>

@@ -1817,6 +1817,9 @@ function renderCombatOverlay() {
         let el = document.createElement('div');
         if (item.type === 'die') {
           el.className = `die green d${item.faces}`;
+          el.id = `green-die-${gob.uid}-${idx}`;
+          el.dataset.goblinUid = gob.uid;
+          el.dataset.dieIndex = idx;
           // Marcar si está interceptado
           const isIntercepted = intAsgs && intAsgs.some(asg => asg.goblinDieIndex === idx);
           if (isIntercepted) el.classList.add('intercepted');
@@ -2404,8 +2407,40 @@ function renderPlayer() {
       }
     }
 
+    const isDead = p.hp <= 0;
+    const activePlayer = gameState.getCurrentPlayer();
+    const canRevive = isDead && !isCurrent && activePlayer && activePlayer.hp >= 2 && !gameState.isMarketPhase && !gameState.currentCombat;
+    
+    let reviveBtnHTML = '';
+    if (canRevive) {
+        reviveBtnHTML = `
+        <button class="btn revive-btn" data-target-id="${p.id}" style="
+            width: 120px; 
+            height: 168px; 
+            background: linear-gradient(135deg, #1f6b45, #2ecc71); 
+            color: white; 
+            border: 2px solid var(--gold); 
+            border-radius: 8px; 
+            cursor: pointer; 
+            box-shadow: 0 0 15px rgba(46, 204, 113, 0.6); 
+            display: flex; 
+            flex-direction: column; 
+            align-items: center; 
+            justify-content: center; 
+            font-family: 'Cinzel', serif;
+            font-size: 1.2rem;
+            text-shadow: 0 2px 4px rgba(0,0,0,0.8);
+            transition: transform 0.2s;
+            flex-shrink: 0;
+            margin-right: 5px;
+        " onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">
+            <span style="font-size: 3rem; margin-bottom: 10px;">&#10084;&#65039;</span>
+            Dar Vida
+        </button>`;
+    }
+
     const panelHTML = `
-      <div class="player-panel ${isCurrent ? 'active-turn' : ''}">
+      <div class="player-panel ${isCurrent ? 'active-turn' : ''} ${isDead ? 'player-dead' : ''}">
         <div class="player-hud-header">
             <h3>${p.name}</h3>
             <div class="stats">
@@ -2425,6 +2460,7 @@ function renderPlayer() {
                 </div>
             </div>
             <div class="player-equipment">
+                ${reviveBtnHTML}
                 ${eqHTML}
             </div>
         </div>
@@ -2535,6 +2571,65 @@ function renderPlayer() {
         } else if (result === true) {
           updateUI();
         }
+      };
+    }
+
+    const reviveBtn = lastPanel.querySelector('.revive-btn');
+    if (reviveBtn) {
+      reviveBtn.onclick = () => {
+        const targetId = parseInt(reviveBtn.dataset.targetId);
+        const activePlayer = gameState.getCurrentPlayer();
+        const targetPlayer = gameState.players.find(pl => pl.id === targetId);
+        
+        if (!activePlayer || !targetPlayer || activePlayer.hp < 2) return;
+        
+        const maxGive = Math.floor(activePlayer.hp / 2);
+        
+        const modal = document.getElementById('revive-modal');
+        const slider = document.getElementById('revive-slider');
+        const targetHpEl = document.getElementById('revive-target-hp');
+        const donorHpEl = document.getElementById('revive-donor-hp');
+        const targetNameEl = document.getElementById('revive-target-name');
+        const donorNameEl = document.getElementById('revive-donor-name');
+        const btnCancel = document.getElementById('btn-cancel-revive');
+        const btnConfirm = document.getElementById('btn-confirm-revive');
+        
+        targetNameEl.innerText = targetPlayer.name;
+        donorNameEl.innerText = activePlayer.name;
+        slider.max = maxGive;
+        slider.value = 1;
+        
+        const updateHpPreview = () => {
+            const amount = parseInt(slider.value, 10);
+            targetHpEl.innerText = targetPlayer.hp + amount;
+            donorHpEl.innerText = activePlayer.hp - (amount * 2);
+        };
+        
+        slider.oninput = updateHpPreview;
+        updateHpPreview();
+        
+        btnCancel.onclick = () => {
+            modal.classList.add('hidden');
+        };
+        
+        btnConfirm.onclick = () => {
+            modal.classList.add('hidden');
+            const amount = parseInt(slider.value, 10);
+            const cost = amount * 2;
+            activePlayer.hp -= cost;
+            targetPlayer.hp += amount;
+            gameState.addLog(`&#10084;&#65039; <strong>${activePlayer.name}</strong> sacrificó ${cost} PV para darle ${amount} PV a <strong>${targetPlayer.name}</strong>.`);
+            
+            if (activePlayer.hp <= 0) {
+              gameState.addLog(`&#128128; <strong>${activePlayer.name}</strong> ha caído inconsciente por el esfuerzo.`);
+              if (!gameState.checkGameOver()) {
+                gameState.nextTurn();
+              }
+            }
+            updateUI();
+        };
+        
+        modal.classList.remove('hidden');
       };
     }
 
@@ -3482,6 +3577,24 @@ document.addEventListener('click', (e) => {
               found = true;
             }
           }
+
+          if (dieEl.classList.contains('green') && dieEl.dataset.goblinUid && dieEl.dataset.dieIndex) {
+            const uid = dieEl.dataset.goblinUid;
+            const idx = parseInt(dieEl.dataset.dieIndex, 10);
+            if (gameState.currentCombat && gameState.currentCombat.dice && gameState.currentCombat.dice.green[uid]) {
+              let greenDetails = gameState.currentCombat.dice.green[uid].details;
+              if (greenDetails[idx]) {
+                greenDetails[idx].val = newVal;
+                // recalculate total
+                let newTotal = 0;
+                greenDetails.forEach(d => {
+                  if (d.type === 'die' || d.type === 'fixed') newTotal += d.val;
+                });
+                gameState.currentCombat.dice.green[uid].total = newTotal;
+                found = true;
+              }
+            }
+          }
           
           if (found) {
             const combatOverlay = document.getElementById('combat-overlay');
@@ -3496,3 +3609,77 @@ document.addEventListener('click', (e) => {
     }
   }
 }, true);
+
+window.saveGame = function() {
+  if (gameState.players.length === 0) return;
+  const saveData = JSON.stringify(gameState);
+  localStorage.setItem('malditosGoblinsSave', saveData);
+  gameState.addLog(`&#128190; <strong>Partida guardada correctamente.</strong>`);
+  updateUI();
+};
+
+window.loadGame = function() {
+  const saveData = localStorage.getItem('malditosGoblinsSave');
+  if (saveData) {
+    const data = JSON.parse(saveData);
+    Object.assign(gameState, data);
+    gameState.addLog(`&#128190; <strong>Partida cargada correctamente.</strong>`);
+    
+    document.querySelectorAll('.modal, .overlay').forEach(el => {
+      el.classList.add('hidden');
+      el.style.display = '';
+    });
+    
+    updateUI();
+  }
+};
+
+const btnSaveGame = document.getElementById('btn-save-game');
+if (btnSaveGame) {
+  btnSaveGame.addEventListener('click', () => {
+    window.saveGame();
+  });
+}
+
+const btnLoadGame = document.getElementById('btn-load-game');
+if (btnLoadGame) {
+  btnLoadGame.addEventListener('click', () => {
+    window.loadGame();
+  });
+}
+
+setInterval(() => {
+  const btnSave = document.getElementById('btn-save-game');
+  if (!btnSave) return;
+  
+  if (gameState.players.length === 0) {
+    btnSave.style.display = 'none';
+    return;
+  }
+  
+  const blockingModals = [
+    'setup-modal',
+    'combat-overlay',
+    'role-fill-overlay',
+    'global-event-overlay',
+    'target-modal',
+    'explore-market-modal',
+    'corrosion-modal',
+    'elastic-modal'
+  ];
+  
+  let shouldHide = false;
+  for (let id of blockingModals) {
+    const el = document.getElementById(id);
+    if (el && !el.classList.contains('hidden') && el.style.display !== 'none') {
+      shouldHide = true;
+      break;
+    }
+  }
+  
+  if (shouldHide) {
+    btnSave.style.display = 'none';
+  } else {
+    btnSave.style.display = 'flex';
+  }
+}, 300);

@@ -435,6 +435,23 @@ main {
   opacity: 1;
 }
 
+.player-panel.player-dead {
+  opacity: 0.7;
+  border-color: #555;
+  background: rgba(10, 10, 15, 0.95);
+}
+
+.player-panel.player-dead .stats,
+.player-panel.player-dead .status-effects-container,
+.player-panel.player-dead .player-role,
+.player-panel.player-dead .equipment-card {
+  filter: grayscale(100%);
+}
+
+.player-panel.player-dead h3 {
+  color: #888;
+}
+
 .player-hud-header {
   display: grid;
   grid-template-columns: 1fr auto 1fr;
