@@ -3,6 +3,7 @@ let lastActionCount = 0;
 const gameState = new GameState();
 const COIN_SVG = `<svg viewBox="0 0 24 24" width="18" height="18" style="vertical-align: middle; margin-right: 3px;"><circle cx="12" cy="12" r="10" fill="#ffd700" stroke="#c79a32" stroke-width="2"/><circle cx="12" cy="12" r="7" fill="none" stroke="#e6c200" stroke-width="1" stroke-dasharray="2,2"/><path d="M12 7v10" stroke="#c79a32" stroke-width="2" stroke-linecap="round"/></svg>`;
 const SACK_SVG = `<svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align: middle; margin-right: 3px;"><path d="M9 3C8.5 3 8 4 8.5 5.5C9 7 9 7 9 7C6 8 4 12 4 18C4 20.5 6 21 12 21C18 21 20 20.5 20 18C20 12 18 8 15 7C15 7 15 7 15.5 5.5C16 4 15.5 3 15 3C13 3 11 3.5 9 3Z" fill="#ffffff" stroke="#000000" stroke-width="1.8" stroke-linejoin="round"/><rect x="8" y="6.5" width="8" height="2.5" rx="1" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"/><path d="M13 9C13 11 12 12 12 12C12 12 14 11 14 9Z" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"/><path d="M11 9C11 11 12 12 12 12C12 12 10 11 10 9Z" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"/></svg>`;
+const SHIELD_SVG = `<svg viewBox="0 0 24 24" width="18" height="18" style="vertical-align: middle;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="var(--accent-blue)" stroke="#023e8a" stroke-width="2" stroke-linejoin="round"/><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="url(#shieldGrad)" stroke="none"/><defs><linearGradient id="shieldGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="rgba(255,255,255,0.4)"/><stop offset="50%" stop-color="rgba(255,255,255,0)"/></linearGradient></defs></svg>`;
 const ROLE_NO_ENERGY_WARNING = "⚠️ No tienes energía en tu Rol.<br><br>Para conseguir energía, puedes:<br>1. Usar una de tus acciones en 'RELLENAR ROL' (en tu fase de tablero).<br>2. Asignar dados al Rol en este Panel de Combate.";
 const NO_BROKEN_EQUIP_ALERT = "No tienes equipo roto que reparar.";
 const NO_ENERGY_ALERT = "No tienes suficiente energía para usar esta habilidad.";
@@ -2385,7 +2386,7 @@ function renderPlayer() {
 
     let statusHTML = '';
     if (p.shield > 0) {
-      statusHTML += `<div class="status-icon escudo" title="Escudos: ${p.shield}">🛡️ <span>${p.shield}</span></div>`;
+      statusHTML += `<div class="status-icon escudo" title="Escudos: ${p.shield}">${SHIELD_SVG} <span>${p.shield}</span></div>`;
     }
     if (p.statusEffects.escozor > 0) {
       statusHTML += `<div class="status-icon escozor" title="Escozor: ${p.statusEffects.escozor}">&#128293; <span>${p.statusEffects.escozor}</span></div>`;
@@ -2394,10 +2395,10 @@ function renderPlayer() {
       statusHTML += `<div class="status-icon elimina-rojo" style="background: #ef233c; border-color: #d90429;" title="Dado rojo anulado: ${p.statusEffects.eliminaRojo}">&#127922;&#10060; <span>${p.statusEffects.eliminaRojo}</span></div>`;
     }
     if (p.statusEffects.calambre > 0) {
-      statusHTML += `<div class="status-icon calambre" title="Calambre: ${p.statusEffects.calambre}">⚡ <span>${p.statusEffects.calambre}</span></div>`;
+      statusHTML += `<div class="status-icon calambre" title="Calambre: ${p.statusEffects.calambre}">&#9889; <span>${p.statusEffects.calambre}</span></div>`;
     }
     if (p.statusEffects.tembleque > 0) {
-      statusHTML += `<div class="status-icon tembleque" title="Tembleque: ${p.statusEffects.tembleque}">🌀 <span>${p.statusEffects.tembleque}</span></div>`;
+      statusHTML += `<div class="status-icon tembleque" title="Tembleque: ${p.statusEffects.tembleque}">&#10052; <span>${p.statusEffects.tembleque}</span></div>`;
     }
 
     const expReq = { 1: 2, 2: 6, 3: 12, 4: 22 };
@@ -2460,14 +2461,16 @@ function renderPlayer() {
 
     const panelHTML = `
       <div class="player-panel ${isCurrent ? 'active-turn' : ''} ${isDead ? 'player-dead' : ''}">
-        <div class="player-hud-header">
-            <h3>${p.name}</h3>
+        <div class="player-hud-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 8px; margin-bottom: 8px; gap: 10px;">
+            <div style="display: flex; align-items: center; gap: 15px; overflow: hidden;">
+                <h3 style="font-size: 1.2rem; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 80px; max-width: 140px;">${p.name}</h3>
+                <div class="status-effects-container">${statusHTML}</div>
+            </div>
             <div class="stats">
-                <div class="stat hp ${isLowHP ? 'low-hp' : ''}" title="Puntos de Vida">❤️ <span class="${hpPulse}">${p.hp}</span>/<span>${p.maxHp}</span></div>
+                <div class="stat hp ${isLowHP ? 'low-hp' : ''}" title="Puntos de Vida">&#10084;&#65039; <span class="${hpPulse}">${p.hp}</span>/<span>${p.maxHp}</span></div>
                 <div class="stat gold" title="Monedas">${COIN_SVG} <span class="${moPulse}">${p.mo}</span></div>
                 <div class="stat blocks" title="Carga de Equipo" style="${isOverweight ? 'color: var(--accent-red);' : ''}">${SACK_SVG} <span class="${blocksPulse}">${currentBlocks}</span>/<span>${maxBlocks}</span></div>
             </div>
-            <div class="status-effects-container">${statusHTML}</div>
         </div>
         
         <div class="player-dashboard">
