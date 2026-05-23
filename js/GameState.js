@@ -1162,155 +1162,151 @@ class GameState {
     this.addLog(`<span style="color:#f54281"><strong>*******************************************</strong></span>`);
     this.addLog(`<span style="color:#f54281"><strong>RESOLVIENDO FASE DE OLEADA ${this.battlefield.waveLevel} </strong></span>`);
 
-    for (let lvl = 1; lvl < 5; lvl++) {
-      let idxNormales = [];
-      let idxHitos = [];
-      let idxInvocaciones = [];
+    // Iniciar máquina de estados para mutaciones visuales
+    this.isResolvingWaveSequentially = true;
+    this.wavePhaseState = {
+      active: true,
+      phase: 'mutations',
+      currentLvl: 1
+    };
+  }
 
-      this.battlefield.goblins.forEach((g, index) => {
-        //reset de los PV
-        g.currentHp = g.hp;
-        if (g.level === lvl) {
-          if (g.isInvocacion) {
-            idxInvocaciones.push(index);
-          } else if (g.isHito) {
-            idxHitos.push(index);
-          } else {
-            idxNormales.push(index);
+  // Ejecuta 1 paso visual de la fase de oleada. Devuelve un objeto detallando el evento.
+  executeNextWaveStep() {
+    if (!this.wavePhaseState.active) return null;
+
+    if (this.wavePhaseState.phase === 'mutations') {
+      while (this.wavePhaseState.currentLvl < 5) {
+        let lvl = this.wavePhaseState.currentLvl;
+        
+        // Función auxiliar para buscar y fusionar una pareja
+        const findAndMerge = (conditionFn, typeName, logHtml, extraProps = {}) => {
+          let candidates = this.battlefield.goblins.filter(g => g.level === lvl && conditionFn(g));
+          if (candidates.length >= 2) {
+            let gob1 = candidates[0];
+            let gob2 = candidates[1];
+            
+            // Eliminar ambos
+            this.battlefield.goblins = this.battlefield.goblins.filter(g => g.uid !== gob1.uid && g.uid !== gob2.uid);
+            
+            // Crear el nuevo
+            let newGoblin = {
+              ...DB.goblins[lvl + 1],
+              ...extraProps,
+              uid: Date.now() + Math.random(),
+              currentHp: DB.goblins[lvl + 1].hp,
+              isMutated: true
+            };
+            this.battlefield.goblins.push(newGoblin);
+            
+            this.addLog(`🧬 <span style="color:#f54281"><strong>Mutación:</strong></span> ${logHtml}`);
+            
+            return {
+              type: 'mutation',
+              uidsToRemove: [gob1.uid, gob2.uid],
+              newGoblin: newGoblin
+            };
           }
+          return null;
+        };
+
+        // 1. Clases Puras
+        let res = findAndMerge(g => !g.isHito && !g.isInvocacion, 'normal', `G${lvl} + G${lvl} --> G${lvl + 1}`);
+        if (res) return res;
+        
+        res = findAndMerge(g => g.isHito && !g.isInvocacion, 'hito', `<span style="color:#a545d1">Hito G${lvl}</span> + <span style="color:#a545d1">Hito G${lvl}</span> --> <span style="color:#a545d1">Hito G${lvl + 1}</span>`, { isHito: true });
+        if (res) return res;
+
+        res = findAndMerge(g => g.isInvocacion, 'invocacion', `<span style="color:#4cc9f0">Invocación G${lvl}</span> + <span style="color:#4cc9f0">Invocación G${lvl}</span> --> <span style="color:#4cc9f0">Invocación G${lvl + 1}</span>`, { isInvocacion: true, mo: 0, image: 'assets/Monstruos/invocacion_0' + (lvl + 1) + '.jpg' });
+        if (res) return res;
+
+        // 2. Clases Mixtas (si no hay puras)
+        let normales = this.battlefield.goblins.filter(g => g.level === lvl && !g.isHito && !g.isInvocacion);
+        let hitos = this.battlefield.goblins.filter(g => g.level === lvl && g.isHito && !g.isInvocacion);
+        let invocaciones = this.battlefield.goblins.filter(g => g.level === lvl && g.isInvocacion);
+
+        if (normales.length >= 1 && invocaciones.length >= 1) {
+          this.battlefield.goblins = this.battlefield.goblins.filter(g => g.uid !== normales[0].uid && g.uid !== invocaciones[0].uid);
+          let newGob = { ...DB.goblins[lvl + 1], uid: Date.now() + Math.random(), currentHp: DB.goblins[lvl + 1].hp, isMutated: true };
+          this.battlefield.goblins.push(newGob);
+          this.addLog(`🧬 <span style="color:#f54281"><strong>Mutación Mixta:</strong></span> G${lvl} + <span style="color:#4cc9f0">Invocación G${lvl}</span> --> G${lvl + 1}`);
+          return { type: 'mutation', uidsToRemove: [normales[0].uid, invocaciones[0].uid], newGoblin: newGob };
+        }
+
+        if (normales.length >= 1 && hitos.length >= 1) {
+          this.battlefield.goblins = this.battlefield.goblins.filter(g => g.uid !== normales[0].uid && g.uid !== hitos[0].uid);
+          let newGob = { ...DB.goblins[lvl + 1], uid: Date.now() + Math.random(), currentHp: DB.goblins[lvl + 1].hp, isMutated: true };
+          this.battlefield.goblins.push(newGob);
+          this.addLog(`🧬 <span style="color:#f54281"><strong>Mutación Mixta:</strong></span> G${lvl} + <span style="color:#a545d1">Hito G${lvl}</span> --> G${lvl + 1}`);
+          return { type: 'mutation', uidsToRemove: [normales[0].uid, hitos[0].uid], newGoblin: newGob };
+        }
+
+        if (invocaciones.length >= 1 && hitos.length >= 1) {
+          this.battlefield.goblins = this.battlefield.goblins.filter(g => g.uid !== invocaciones[0].uid && g.uid !== hitos[0].uid);
+          let newGob = { ...DB.goblins[lvl + 1], uid: Date.now() + Math.random(), currentHp: DB.goblins[lvl + 1].hp, isMutated: true, isInvocacion: true, mo: 0, image: 'assets/Monstruos/invocacion_0' + (lvl + 1) + '.jpg' };
+          this.battlefield.goblins.push(newGob);
+          this.addLog(`🧬 <span style="color:#f54281"><strong>Mutación Mixta:</strong></span> <span style="color:#4cc9f0">Invocación G${lvl}</span> + <span style="color:#a545d1">Hito G${lvl}</span> --> <span style="color:#4cc9f0">Invocación G${lvl + 1}</span>`);
+          return { type: 'mutation', uidsToRemove: [invocaciones[0].uid, hitos[0].uid], newGoblin: newGob };
+        }
+
+        // Si llegamos aquí, no hay más parejas en este nivel, pasamos al siguiente
+        this.wavePhaseState.currentLvl++;
+      }
+
+      // Terminamos mutaciones, pasamos a spawns
+      this.wavePhaseState.phase = 'spawns';
+      return { type: 'continue' };
+    }
+
+    if (this.wavePhaseState.phase === 'spawns') {
+      let spawns = [];
+
+      // Aparición de nuevos enemigos de nivel 1
+      for (let i = 0; i < this.players.length; i++) {
+        let gob = { ...DB.goblins[1], uid: Date.now() + Math.random(), currentHp: DB.goblins[1].hp };
+        this.battlefield.goblins.push(gob);
+        spawns.push(gob);
+      }
+      this.addLog(`🔥 <span style="color:#f54281"><strong>Aparición:</strong></span> ${this.players.length} x G1`);
+
+      // Aparición de nuevos enemigos de nivel de la oleada
+      let nivelAparecer = Math.min(this.battlefield.waveLevel, 5);
+      if (DB.goblins[nivelAparecer]) {
+        let gob = { ...DB.goblins[nivelAparecer], uid: Date.now() + Math.random(), currentHp: DB.goblins[nivelAparecer].hp };
+        this.battlefield.goblins.push(gob);
+        spawns.push(gob);
+        this.addLog(`🔥 <span style="color:#f54281"><strong>Aparición:</strong></span> 1 x G${nivelAparecer}`);
+      }
+
+      // Eclosión Tardía (Senda de La Madre)
+      if (this.activeSenda === 'la_madre') {
+        let gob = { ...DB.goblins[1], uid: Date.now() + Math.random(), currentHp: DB.goblins[1].hp };
+        this.battlefield.goblins.push(gob);
+        spawns.push(gob);
+        this.addLog(`🥚 <span style="color:#f54281"><strong>Eclosión Tardía:</strong></span> 1 x G1 extra por La Madre`);
+      }
+
+      // Regeneración de Jefes
+      this.battlefield.goblins.forEach(g => {
+        if (g.isBoss && g.currentHp > 0) {
+          let regenAmount = (g.regen || 5) * this.players.length;
+          g.currentHp = Math.min(g.maxHp, g.currentHp + regenAmount);
+          this.addLog(`💖 <span style="color:#ff477e"><strong>Regeneración de Jefe:</strong></span> ${g.name} recuperó ${regenAmount} PV (Total: ${g.currentHp}/${g.maxHp}).`);
         }
       });
 
-      let paresCrearNormal = 0;
-      let paresCrearHito = 0;
-      let paresCrearInvocacion = 0;
-      let indicesAeliminar = [];
+      this.addLog(`<span style="color:#f54281"><strong>*******************************************</strong></span>`);
+      
+      this.wavePhaseState.phase = 'done';
+      this.wavePhaseState.active = false;
+      this.isResolvingWaveSequentially = false;
 
-      // Prioridad 1: Clases puras
-      while (idxNormales.length >= 2) {
-        indicesAeliminar.push(idxNormales.pop());
-        indicesAeliminar.push(idxNormales.pop());
-        paresCrearNormal++;
-        this.addLog(`&#128121; <span style="color:#f54281"><strong>Mutación:</strong></span> G${lvl} + G${lvl} --> G${lvl + 1}`);
-      }
-      while (idxHitos.length >= 2) {
-        indicesAeliminar.push(idxHitos.pop());
-        indicesAeliminar.push(idxHitos.pop());
-        paresCrearHito++;
-        this.addLog(`&#128121; <span style="color:#f54281"><strong>Mutación:</strong></span> <span style="color:#a545d1">Hito G${lvl}</span> + <span style="color:#a545d1">Hito G${lvl}</span> --> <span style="color:#a545d1">Hito G${lvl + 1}</span>`);
-      }
-      while (idxInvocaciones.length >= 2) {
-        indicesAeliminar.push(idxInvocaciones.pop());
-        indicesAeliminar.push(idxInvocaciones.pop());
-        paresCrearInvocacion++;
-        this.addLog(`&#128121; <span style="color:#f54281"><strong>Mutación:</strong></span> <span style="color:#4cc9f0">Invocación G${lvl}</span> + <span style="color:#4cc9f0">Invocación G${lvl}</span> --> <span style="color:#4cc9f0">Invocación G${lvl + 1}</span>`);
-      }
-
-      // Prioridad 2: Clases mixtas
-      while (idxNormales.length >= 1 && idxInvocaciones.length >= 1) {
-        indicesAeliminar.push(idxNormales.pop());
-        indicesAeliminar.push(idxInvocaciones.pop());
-        paresCrearNormal++;
-        this.addLog(`&#128121; <span style="color:#f54281"><strong>Mutación Mixta:</strong></span> G${lvl} + <span style="color:#4cc9f0">Invocación G${lvl}</span> --> G${lvl + 1}`);
-      }
-      while (idxNormales.length >= 1 && idxHitos.length >= 1) {
-        indicesAeliminar.push(idxNormales.pop());
-        indicesAeliminar.push(idxHitos.pop());
-        paresCrearNormal++;
-        this.addLog(`&#128121; <span style="color:#f54281"><strong>Mutación Mixta:</strong></span> G${lvl} + <span style="color:#a545d1">Hito G${lvl}</span> --> G${lvl + 1}`);
-      }
-      while (idxInvocaciones.length >= 1 && idxHitos.length >= 1) {
-        indicesAeliminar.push(idxInvocaciones.pop());
-        indicesAeliminar.push(idxHitos.pop());
-        paresCrearInvocacion++;
-        this.addLog(`&#128121; <span style="color:#f54281"><strong>Mutación Mixta:</strong></span> <span style="color:#4cc9f0">Invocación G${lvl}</span> + <span style="color:#a545d1">Hito G${lvl}</span> --> <span style="color:#4cc9f0">Invocación G${lvl + 1}</span>`);
-      }
-
-      // Eliminar los originales consumidos en la mesa
-      indicesAeliminar.sort((a, b) => b - a);
-      indicesAeliminar.forEach(idx => {
-        this.battlefield.goblins.splice(idx, 1);
-      });
-
-      // Añadir los evolucionados de Oleada (Normales)
-      for (let i = 0; i < paresCrearNormal; i++) {
-        this.battlefield.goblins.push({
-          ...DB.goblins[lvl + 1],
-          uid: Date.now() + Math.random(),
-          currentHp: DB.goblins[lvl + 1].hp,
-          isMutated: true
-        });
-      }
-
-      // Añadir los evolucionados de Hito
-      for (let i = 0; i < paresCrearHito; i++) {
-        this.battlefield.goblins.push({
-          ...DB.goblins[lvl + 1],
-          uid: Date.now() + Math.random(),
-          currentHp: DB.goblins[lvl + 1].hp,
-          isHito: true,
-          isMutated: true
-        });
-      }
-
-      // Añadir los evolucionados de Invocacion
-      for (let i = 0; i < paresCrearInvocacion; i++) {
-        this.battlefield.goblins.push({
-          ...DB.goblins[lvl + 1],
-          uid: Date.now() + Math.random(),
-          currentHp: DB.goblins[lvl + 1].hp,
-          isInvocacion: true,
-          mo: 0,
-          image: 'assets/Monstruos/invocacion_0' + (lvl + 1) + '.jpg',
-          isMutated: true
-        });
-      }
+      return { type: 'spawn', goblins: spawns };
     }
 
-    // Aparición de nuevos enemigos de nivel 1
-    for (let i = 0; i < this.players.length; i++) {
-      this.battlefield.goblins.push({
-        ...DB.goblins[1],
-        uid: Date.now() + Math.random(),
-        currentHp: DB.goblins[1].hp
-      });
-    }
-    this.addLog(`🔥 <span style="color:#f54281"><strong>Aparición:</strong></span> ${this.players.length} x G1`);
-
-    // Aparición de nuevos enemigos de nivel de la oleada
-    let nivelMaximoBD = 5;
-    let nivelAparecer = Math.min(this.battlefield.waveLevel, nivelMaximoBD);
-
-    if (DB.goblins[nivelAparecer]) {
-      this.battlefield.goblins.push({
-        ...DB.goblins[nivelAparecer],
-        uid: Date.now() + Math.random(),
-        currentHp: DB.goblins[nivelAparecer].hp
-      });
-      this.addLog(`🔥 <span style="color:#f54281"><strong>Aparición:</strong></span> 1 x G${nivelAparecer}`);
-    }
-
-    // Regeneración de Jefes en la mesa
-    this.battlefield.goblins.forEach(g => {
-      if (g.isBoss && g.currentHp > 0) {
-        let regenAmount = (g.regen || 5) * this.players.length;
-        g.currentHp = Math.min(g.maxHp, g.currentHp + regenAmount);
-        this.addLog(`💖 <span style="color:#ff477e"><strong>Regeneración de Jefe:</strong></span> ${g.name} recuperó ${regenAmount} PV (Total: ${g.currentHp}/${g.maxHp}).`);
-      }
-    });
-
-    // Eclosión Tardía (Senda de La Madre)
-    if (this.activeSenda === 'la_madre') {
-      this.battlefield.goblins.push({
-        ...DB.goblins[1],
-        uid: Date.now() + Math.random(),
-        currentHp: DB.goblins[1].hp
-      });
-      this.addLog(`🥚 <span style="color:#f54281"><strong>Eclosión Tardía:</strong></span> 1 x G1 extra por La Madre`);
-    }
-
-    this.addLog(`<span style="color:#f54281"><strong>*******************************************</strong></span>`);
+    return null;
   }
+
 
   // MÉTODOS DE ACCIÓN BÁSICOS
 

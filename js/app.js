@@ -849,13 +849,72 @@ function showActionNotification(count) {
   }, 700);
 }
 
+async function processWaveSequence() {
+  while (gameState.isResolvingWaveSequentially) {
+    let stepResult = gameState.executeNextWaveStep();
+    if (!stepResult) break;
+
+    if (stepResult.type === 'mutation') {
+      // Aplicar clase CSS a las cartas que se van a fusionar
+      stepResult.uidsToRemove.forEach(uid => {
+        let gobel = document.querySelector(`.goblin-card[data-uid="${uid}"]`);
+        if (gobel) {
+          gobel.classList.remove('goblin-mutation-active', 'goblin-wobble-active');
+          
+          // Forzar reflujo para asegurar que el navegador reinicia las animaciones
+          void gobel.offsetWidth;
+          
+          gobel.classList.add('goblin-merging');
+        }
+      });
+      
+      // Esperar a que la animación de fusión termine
+      await new Promise(r => setTimeout(r, 600));
+      
+      // Renderizar la mesa para que aparezca el nuevo (que tendrá isMutated=true y hará goblin-mutation-active)
+      renderBattlefield();
+      
+      // Esperar a que el jugador vea el nuevo goblin antes de la siguiente fusión
+      await new Promise(r => setTimeout(r, 800));
+      
+    } else if (stepResult.type === 'spawn') {
+      // Mostrar todos los nuevos goblins a la vez
+      renderBattlefield();
+      // Esperar a que terminen su animación wobble
+      await new Promise(r => setTimeout(r, 1000));
+    } else if (stepResult.type === 'continue') {
+      // Internal step, no delay needed
+    }
+  }
+
+  window.isAnimatingWave = false;
+  // Guardado automático silencioso
+  window.saveGame(true);
+  
+  // Continuar con el ciclo normal del juego
+  updateUI();
+}
+
 // Render Functions
 function updateUI() {
   // 1. Siempre renderizamos primero para que el estado visual refleje los últimos cambios (ej: 0 HP)
   renderMarket();
   renderBattlefield();
   renderPlayer();
-  renderLogs(); // Actualizar el log si est\u00E1 abierto
+  renderLogs(); // Actualizar el log si está abierto
+
+  if (gameState.isResolvingWaveSequentially) {
+    if (!window.isAnimatingWave) {
+      window.isAnimatingWave = true;
+      processWaveSequence();
+    }
+    // Bloquear UI mientras animamos
+    document.body.style.pointerEvents = 'none';
+    return;
+  }
+  
+  // Asegurarnos de desbloquear siempre
+  document.body.style.pointerEvents = 'auto';
 
   if (gameState.pendingCorrosionChoice) {
     showCorrosionModal(gameState.pendingCorrosionChoice);
@@ -1264,6 +1323,7 @@ function renderBattlefield() {
   gameState.battlefield.goblins.forEach(goblin => {
     const gobEl = document.createElement('div');
     gobEl.className = 'goblin-card';
+    gobEl.dataset.uid = goblin.uid;
     if (goblin.isHito) {
       gobEl.classList.add('goblin-hito');
     } else {
@@ -1290,13 +1350,11 @@ function renderBattlefield() {
       // Comprobar si es un goblin nuevo para aplicarle la animación correspondiente
       if (!animatedGoblinUids.has(goblin.uid)) {
         animatedGoblinUids.add(goblin.uid);
-        setTimeout(() => {
-          if (goblin.isMutated) {
-            gobEl.classList.add('goblin-mutation-active');
-          } else {
-            gobEl.classList.add('goblin-wobble-active');
-          }
-        }, 150); // 150ms después de aparecer en el DOM
+        if (goblin.isMutated) {
+          gobEl.classList.add('goblin-mutation-active');
+        } else {
+          gobEl.classList.add('goblin-wobble-active');
+        }
       }
 
       if (!gameState.isMarketPhase) {
