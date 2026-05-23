@@ -3691,6 +3691,9 @@ if (btnSaveGame) {
 
 const btnLoadGame = document.getElementById('btn-load-game');
 if (btnLoadGame) {
+  if (localStorage.getItem('malditosGoblinsSave')) {
+    btnLoadGame.style.display = 'inline-block';
+  }
   btnLoadGame.addEventListener('click', () => {
     window.loadGame();
   });
