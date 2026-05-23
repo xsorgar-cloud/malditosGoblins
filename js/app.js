@@ -474,6 +474,9 @@ btnStartGame.addEventListener('click', () => {
   const versionBadge = document.getElementById('game-version-badge');
   if (versionBadge) versionBadge.style.display = 'none';
   updateUI();
+  if (typeof window !== 'undefined' && window.saveGame) {
+    window.saveGame(true);
+  }
 });
 
 document.getElementById('btn-gold').addEventListener('click', () => {
@@ -3632,12 +3635,14 @@ document.addEventListener('click', (e) => {
   }
 }, true);
 
-window.saveGame = function() {
+window.saveGame = function(silent = false) {
   if (gameState.players.length === 0) return;
   const saveData = JSON.stringify(gameState);
   localStorage.setItem('malditosGoblinsSave', saveData);
-  gameState.addLog(`&#128190; <strong>Partida guardada correctamente.</strong>`);
-  updateUI();
+  if (!silent) {
+    gameState.addLog(`&#128190; <strong>Partida guardada correctamente.</strong>`);
+    updateUI();
+  }
 };
 
 window.loadGame = function() {

@@ -735,6 +735,11 @@ class GameState {
         }
       }
     }
+    
+    // Auto-guardado silencioso al iniciar el turno
+    if (typeof window !== 'undefined' && window.saveGame) {
+      window.saveGame(true);
+    }
   }
 
   consumeAction() {
