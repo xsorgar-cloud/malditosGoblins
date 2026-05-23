@@ -1316,6 +1316,16 @@ function renderBattlefield() {
           selectedGoblins.splice(index, 1);
           gobEl.classList.remove('selected');
         } else {
+          // Escudos de Carne (Senda de La Madre)
+          if (gameState.activeSenda === 'la_madre' && !goblin.isDying) {
+            const aliveGobs = gameState.battlefield.goblins.filter(g => !g.isDying);
+            const minLevel = Math.min(...aliveGobs.map(g => g.level));
+            if (goblin.level > minLevel) {
+              alert(`🛡️ Escudos de Carne: ¡La Madre protege a sus crías!\n\nDebes eliminar primero a los Goblins de nivel inferior (Nivel ${minLevel}) antes de poder atacar a este Goblin de Nivel ${goblin.level}.`);
+              return;
+            }
+          }
+
           selectedGoblins.push(goblin);
           gobEl.classList.add('selected');
         }
@@ -1651,6 +1661,11 @@ function renderCombatOverlay() {
       if (dieData) {
         // No permitir interceptar NADA si estamos en fase de calambre (primero asignar a equipo)
         if (isCrampPhase) return;
+        
+        if (gob.name === 'La Madre') {
+          alert('🛡️ Los ataques de La Madre son Ininterceptables.');
+          return;
+        }
 
         // No permitir usar un dado con calambre después de su fase
         if (dieData.isCramped && !isCrampPhase) return;
@@ -1715,6 +1730,12 @@ function renderCombatOverlay() {
         const dieData = c.playerDice.find(d => d.id === activeSelectedDieId);
         if (dieData) {
           if (isCrampPhase) return;
+          
+          if (gob.name === 'La Madre') {
+            alert('🛡️ Los ataques de La Madre son Ininterceptables.');
+            return;
+          }
+
           if (dieData.isCramped && !isCrampPhase) return;
 
           const playerDieVal = dieData.value;

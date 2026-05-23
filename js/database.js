@@ -101,6 +101,13 @@ const DB = {
       { id: 3, name: "La Plaga", goblins: [1, 1, 1], isBoss: false, ruleDesc: "Si al iniciar una Oleada queda algún Goblin de este hito, invoca otra vez los Goblins eliminados del hito." },
       { id: 4, name: "El Asalto", goblins: [2, 2], isBoss: false, ruleDesc: "Debes superar el hito con un dado ROJO menos." },
       { id: 5, name: "Rey Brujo", goblins: [5], isBoss: true, bossStats: { hpMultiplier: 30, regen: 5, dice: ['2d6', '+1'], image: 'assets/Monstruos/Jefes/Rey-Brujo.jpg', attacks: { 1: ['Drena 4 PV Daño Directo'], 2: ['daño 3', '1 rotura'], 3: ['1 calambre', '1 escozor'], 4: ['Daño Directo', 'Elimina un d6 ROJO'], 5: ['Daño Directo', 'daño 4'], 6: ['1 Daño Directo', 'Invocación goblin Nivel 1'] }, ability: { id: 'campo_de_fuerza', name: 'Campo de Fuerza', desc: 'Cada vez que le ataques, el Jefe lanza 1d6 extra. Si saca un 5 o 6, tu ataque se anula completamente.' } }, ruleDesc: "Jefe Final. Campo de Fuerza: Cada vez que le ataques, el Jefe lanza 1d6 extra. Si saca un 5 o 6, tu ataque se anula completamente." }
+    ],
+    la_madre: [
+      { id: 1, name: "La Avanzadilla", goblins: [1, 1, 1], isBoss: false },
+      { id: 2, name: "Hermano Mayor", goblins: [1, 1, 2], isBoss: false },
+      { id: 3, name: "Eclosión Masiva", goblins: [1, 1, 1, 1, 1], isBoss: false, ruleDesc: "No ofrecen monedas." },
+      { id: 4, name: "Los Zánganos", goblins: [3, 3], isBoss: false },
+      { id: 5, name: "La Madre", goblins: [5], isBoss: true, bossStats: { hpMultiplier: 40, regen: 5, dice: ['1d6'], image: 'assets/Monstruos/Jefes/La-Madre.jpg', attacks: { 1: ['2x Invocación Nivel 1'], 2: ['Daño = Niveles del resto', 'Si no hay: 2x Invocación N1'], 3: ['Daño = Niveles del resto', 'Si no hay: 2x Invocación N1'], 4: ['2x Invocación Nivel 1'], 5: ['Sacrifica goblin más débil', 'Se cura 5 PV'], 6: ['Muta pareja de goblins', 'Si no hay: Invocación N2'] } }, ruleDesc: "Jefe Final. Defensa del Nido: Genera 1 Invocación Nivel 1 cada vez que recibe daño. Ininterceptable: Sus ataques no pueden ser interceptados." }
     ]
   },
 
@@ -112,8 +119,12 @@ const DB = {
       { name: "· Hasta que el Cuerpo Aguante", desc: "Al inicio de tus acciones, si hay Goblins vivos, debes gastar acciones en luchar. <BR><BR>Si la mesa está vacía, debes elegir entre sacar un Goblin de Nivel 1 o desplegar el siguiente Hito." }
     ],
     rey_brujo: [
-      { name: "· Aire Viciado", desc: "Al inicio de tu acción, si tienes 2 o más cartas de equipo rotas, sufres automáticamente 1 punto de Daño Directo por cada equipo roto." },
-      { name: "· Corrosión", desc: "Cuando un Goblin te inflija daño (en combate o por represalia), debes elegir una carta de tu equipo equipado activo para romperla." }
+      { name: "☢️ Aire Viciado", desc: "Al inicio de tu acción, si tienes 2 o más cartas de equipo rotas, sufres automáticamente 1 punto de Daño Directo por cada equipo roto." },
+      { name: "☠️ Corrosión", desc: "Cuando un Goblin te inflija daño (en combate o por represalia), debes elegir una carta de tu equipo equipado activo para romperla." }
+    ],
+    la_madre: [
+      { name: "🛡️ Escudos de Carne", desc: "Mientras haya al menos un Goblin de Nivel inferior en la mesa, NO puedes declarar ataques contra Goblins de Nivel superior." },
+      { name: "🥚 Eclosión Tardía", desc: "Al FINAL de resolver la Fase de Oleada aparece un Goblin Nivel 1 extra en la mesa." }
     ]
   },
 

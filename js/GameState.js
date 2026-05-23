@@ -345,6 +345,19 @@ class GameState {
           } else {
             targetGoblin.currentHp -= stats.damage;
             msgParts.push(`inflige ${stats.damage} daño`);
+            
+            // Defensa del Nido (Senda de La Madre)
+            if (targetGoblin.name === "La Madre" && stats.damage > 0) {
+              this.battlefield.goblins.push({
+                ...DB.goblins[1],
+                uid: Date.now() + Math.random(),
+                currentHp: DB.goblins[1].hp,
+                isInvocacion: true,
+                mo: 0,
+                image: 'assets/Monstruos/invocacion_01.jpg'
+              });
+              msgParts.push(`🥚 <span style="color:#f54281">Defensa del Nido: Aparece 1 Invocación Nivel 1</span>`);
+            }
           }
         }
       }
@@ -364,6 +377,103 @@ class GameState {
           else if (rollVal === 4) goblinDmg = 1;
           else if (rollVal === 5) goblinDmg = 4;
           else if (rollVal === 6) goblinDmg = 1;
+        }
+      }
+
+      // La Madre: Efectos estáticos de los dados
+      if (targetGoblin.isBoss && targetGoblin.name === "La Madre" && greenDiceResult && greenDiceResult.details) {
+        let naturalDie = greenDiceResult.details.find(d => d.type === 'die');
+        if (naturalDie) {
+          let rollVal = naturalDie.val;
+          goblinDmg = 0; // La Madre no hace daño directo numérico de base
+
+          if (rollVal === 1 || rollVal === 4) {
+            // Invoca 2x Nivel 1
+            for(let i=0; i<2; i++){
+              this.battlefield.goblins.push({
+                ...DB.goblins[1],
+                uid: Date.now() + Math.random(),
+                currentHp: DB.goblins[1].hp,
+                isInvocacion: true, mo: 0,
+                image: 'assets/Monstruos/invocacion_01.jpg'
+              });
+            }
+            this.addLog(`🥚 <span style="color:#f54281"><strong>Efecto de La Madre (Dado ${rollVal}):</strong> Aparecen 2 Invocaciones Nivel 1.</span>`);
+          } 
+          else if (rollVal === 2 || rollVal === 3) {
+            let otherGobs = this.battlefield.goblins.filter(g => g.uid !== targetGoblin.uid && !g.isDying);
+            if (otherGobs.length > 0) {
+              goblinDmg = otherGobs.reduce((sum, g) => sum + g.level, 0);
+              this.addLog(`💀 <span style="color:#ff4d4d"><strong>Efecto de La Madre (Dado ${rollVal}):</strong> Inflige Daño igual a la suma del nivel del resto de goblins (${goblinDmg} Daño).</span>`);
+            } else {
+              for(let i=0; i<2; i++){
+                this.battlefield.goblins.push({
+                  ...DB.goblins[1], uid: Date.now() + Math.random(), currentHp: DB.goblins[1].hp, isInvocacion: true, mo: 0, image: 'assets/Monstruos/invocacion_01.jpg'
+                });
+              }
+              this.addLog(`🥚 <span style="color:#f54281"><strong>Efecto de La Madre (Dado ${rollVal}):</strong> Sin Goblins en mesa, invoca 2 Goblins de Nivel 1.</span>`);
+            }
+          }
+          else if (rollVal === 5) {
+            let otherGobs = this.battlefield.goblins.filter(g => g.uid !== targetGoblin.uid && !g.isDying);
+            if (otherGobs.length > 0) {
+              // Sacrifica el de menor nivel
+              let minLvl = Math.min(...otherGobs.map(g => g.level));
+              let sacTarget = otherGobs.find(g => g.level === minLvl);
+              sacTarget.currentHp = 0;
+              sacTarget.isDying = true;
+              
+              let healAmount = 5;
+              targetGoblin.currentHp = Math.min(targetGoblin.maxHp, targetGoblin.currentHp + healAmount);
+              this.addLog(`🩸 <span style="color:#f54281"><strong>Efecto de La Madre (Dado 5):</strong> Sacrifica a ${sacTarget.name||('G'+sacTarget.level)} y se cura 5 PV (Total: ${targetGoblin.currentHp}/${targetGoblin.maxHp}).</span>`);
+            } else {
+              this.addLog(`🩸 <span style="color:#999"><strong>Efecto de La Madre (Dado 5):</strong> No hay goblins para sacrificar.</span>`);
+            }
+          }
+          else if (rollVal === 6) {
+            let otherGobs = this.battlefield.goblins.filter(g => g.uid !== targetGoblin.uid && !g.isDying);
+            let pairFound = false;
+            
+            let countsByLevel = {};
+            otherGobs.forEach(g => {
+              countsByLevel[g.level] = countsByLevel[g.level] || [];
+              countsByLevel[g.level].push(g);
+            });
+            
+            for (let lvlStr in countsByLevel) {
+              let arr = countsByLevel[lvlStr];
+              if (arr.length >= 2) {
+                let gob1 = arr[0];
+                let gob2 = arr[1];
+                let lvl = parseInt(lvlStr);
+                
+                // Mueren y mutan (no dan recompensas)
+                gob1.currentHp = 0; gob1.isDying = true; gob1.gaveReward = true; // Para que no de recompensa en render
+                gob2.currentHp = 0; gob2.isDying = true; gob2.gaveReward = true;
+                
+                this.battlefield.goblins.push({
+                  ...DB.goblins[lvl + 1],
+                  uid: Date.now() + Math.random(),
+                  currentHp: DB.goblins[lvl + 1].hp,
+                  isMutated: true
+                });
+                this.addLog(`🧬 <span style="color:#c975ff"><strong>Efecto de La Madre (Dado 6):</strong> Una pareja de Nivel ${lvl} muta a Nivel ${lvl + 1}.</span>`);
+                pairFound = true;
+                break;
+              }
+            }
+            
+            if (!pairFound) {
+              this.battlefield.goblins.push({
+                ...DB.goblins[2],
+                uid: Date.now() + Math.random(),
+                currentHp: DB.goblins[2].hp,
+                isInvocacion: true, mo: 0,
+                image: 'assets/Monstruos/invocacion_02.jpg'
+              });
+              this.addLog(`🥚 <span style="color:#f54281"><strong>Efecto de La Madre (Dado 6):</strong> Sin parejas en mesa, invoca 1 Goblin de Nivel 2.</span>`);
+            }
+          }
         }
       }
 
@@ -938,8 +1048,13 @@ class GameState {
       } else {
         for (let p = 0; p < this.players.length; p++) {
           for (let lvl of hito.goblins) {
+            let extraProps = {};
+            if (this.activeSenda === 'la_madre' && this.currentHito === 3) {
+              extraProps.mo = 0;
+            }
             this.battlefield.goblins.push({
               ...DB.goblins[lvl],
+              ...extraProps,
               uid: Date.now() + Math.random(),
               currentHp: DB.goblins[lvl].hp,
               isHito: true
@@ -1183,6 +1298,16 @@ class GameState {
         this.addLog(`💖 <span style="color:#ff477e"><strong>Regeneración de Jefe:</strong></span> ${g.name} recuperó ${regenAmount} PV (Total: ${g.currentHp}/${g.maxHp}).`);
       }
     });
+
+    // Eclosión Tardía (Senda de La Madre)
+    if (this.activeSenda === 'la_madre') {
+      this.battlefield.goblins.push({
+        ...DB.goblins[1],
+        uid: Date.now() + Math.random(),
+        currentHp: DB.goblins[1].hp
+      });
+      this.addLog(`🥚 <span style="color:#f54281"><strong>Eclosión Tardía:</strong></span> 1 x G1 extra por La Madre`);
+    }
 
     this.addLog(`<span style="color:#f54281"><strong>*******************************************</strong></span>`);
   }
