@@ -270,6 +270,29 @@ class GameState {
     let p = this.getCurrentPlayer();
     let c = this.currentCombat;
 
+    // Guardar estado del combate para depuración
+    try {
+      this.lastCombatDebugState = JSON.parse(JSON.stringify({
+        player: {
+          name: p.name,
+          hp: p.hp,
+          shield: p.shield,
+          energy: p.energy,
+          mo: p.mo,
+          pex: p.pex,
+          role: p.role.id,
+          equipped: p.equipped.map(eq => ({ id: eq.id, name: eq.name, isBroken: eq.isBroken }))
+        },
+        goblins: c.goblins.map(g => ({ uid: g.uid, name: g.name, level: g.level, hp: g.currentHp })),
+        playerDice: c.playerDice,
+        goblinDice: c.dice && c.dice.green ? c.dice.green : {},
+        assignments: assignments,
+        interceptions: interceptions
+      }));
+    } catch (e) {
+      console.error("Error saving debug state:", e);
+    }
+
     if (c && c.goblins) {
       if (!p.goblinsFoughtThisTurn) p.goblinsFoughtThisTurn = [];
       c.goblins.forEach(g => {
@@ -742,9 +765,9 @@ class GameState {
     this.pendingHito1Goblins = 0;
     let initLvl = customSettings.level !== undefined ? customSettings.level : 1;
     let basePex = 0;
-    if (initLvl === 2) basePex = 2 * numPlayers;
-    if (initLvl === 3) basePex = 6 * numPlayers;
-    if (initLvl === 4) basePex = 12 * numPlayers;
+    if (initLvl === 2) basePex = 0;
+    if (initLvl === 3) basePex = 0;
+    if (initLvl === 4) basePex = 0;
     let pendingChoices = initLvl > 1 ? initLvl - 1 : 0;
 
     this.players = [];
@@ -1464,9 +1487,9 @@ class GameState {
     // La clave es el nivel actual, el valor son los PEX necesarios.
     const expRequerida = {
       1: 2 * this.players.length,
-      2: 6 * this.players.length,
-      3: 12 * this.players.length,
-      4: 22 * this.players.length
+      2: 4 * this.players.length,
+      3: 6 * this.players.length,
+      4: 10 * this.players.length
     };
 
     // El bucle comprueba dos cosas:
@@ -1698,9 +1721,32 @@ class GameState {
       itemToBreak.isBroken = true;
       itemToBreak.brokenAnimationPlayed = false;
       itemToBreak.brokenInCombatId = this.lastCombatId;
-      this.addLog(`🛠️ ¡CRACK! El equipo <strong>${itemToBreak.name}</strong> de <strong>${player.name}</strong> se ha <span style="color:var(--accent-red)">ROTO</span>.`);
+      this.addLog(`💔 ¡CRACK! El equipo <strong>${itemToBreak.name}</strong> de <strong>${player.name}</strong> se ha <span style="color:var(--accent-red)">ROTO</span>.`);
       return true;
     }
     return false;
+  }
+
+  assignGoblinLetters() {
+    if (this.goblinLetterCounter === undefined) this.goblinLetterCounter = 0;
+    if (!this.battlefield || !this.battlefield.goblins) return;
+    
+    this.battlefield.goblins.forEach(g => {
+      if (!g.letterAssigned) {
+        let letters = "";
+        let temp = this.goblinLetterCounter;
+        let first = true;
+        do {
+          if (!first) temp--;
+          letters = String.fromCharCode(65 + (temp % 26)) + letters;
+          temp = Math.floor(temp / 26);
+          first = false;
+        } while (temp > 0);
+        
+        g.letterAssigned = letters;
+        g.name = (g.name || "Goblin") + " " + letters;
+        this.goblinLetterCounter++;
+      }
+    });
   }
 }

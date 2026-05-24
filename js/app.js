@@ -897,6 +897,7 @@ async function processWaveSequence() {
 
 // Render Functions
 function updateUI() {
+  if (gameState && gameState.assignGoblinLetters) gameState.assignGoblinLetters();
   // 1. Siempre renderizamos primero para que el estado visual refleje los últimos cambios (ej: 0 HP)
   renderMarket();
   renderBattlefield();
@@ -1204,9 +1205,9 @@ function renderBattlefield() {
   if (pLeader) {
     const expReq = {
       1: 2 * gameState.players.length,
-      2: 6 * gameState.players.length,
-      3: 12 * gameState.players.length,
-      4: 22 * gameState.players.length
+      2: 4 * gameState.players.length,
+      3: 6 * gameState.players.length,
+      4: 10 * gameState.players.length
     };
     const nextExpLeader = expReq[pLeader.level] || 'MAX';
     const groupLevelSpan = document.getElementById('group-level');
@@ -1574,7 +1575,7 @@ function renderCombatOverlay() {
 
   // Render Player Stats Header
   const statsContainer = document.getElementById('combat-player-stats');
-  const expReq = { 1: 2, 2: 6, 3: 12, 4: 22 };
+  const expReq = { 1: 2, 2: 4, 3: 6, 4: 10 };
   const nextExp = expReq[p.level] || '-';
   if (statsContainer) {
     const isLowHP = p.hp <= (p.maxHp * 0.25);
@@ -2483,7 +2484,7 @@ function renderPlayer() {
       statusHTML += `<div class="status-icon tembleque" title="Tembleque: ${p.statusEffects.tembleque}">&#10052; <span>${p.statusEffects.tembleque}</span></div>`;
     }
 
-    const expReq = { 1: 2, 2: 6, 3: 12, 4: 22 };
+    const expReq = { 1: 2, 2: 4, 3: 6, 4: 10 };
     const nextExp = expReq[p.level] || '-';
     const isLowHP = p.hp <= (p.maxHp * 0.25);
 
@@ -3792,3 +3793,165 @@ setInterval(() => {
     btnSave.style.display = 'flex';
   }
 }, 300);
+// --- DEBUG COMBAT ---
+const btnDebugCombat = document.getElementById('btn-debug-combat');
+
+if (btnDebugCombat) {
+  btnDebugCombat.addEventListener('click', () => {
+    const debugCombatModal = document.getElementById('debug-combat-modal');
+    const debugCombatData = document.getElementById('debug-combat-data');
+    if (!debugCombatModal || !debugCombatData) return;
+    
+    if (!gameState || !gameState.lastCombatDebugState) {
+      debugCombatData.innerHTML = "<em>No hay datos del último combate aún.</em>";
+    } else {
+      const state = gameState.lastCombatDebugState;
+      let html = `<div style="font-family: sans-serif; color: #ddd;">`;
+      
+      html += `<h3 style="color: var(--gold); border-bottom: 1px solid var(--gold); padding-bottom: 5px;">Héroe: ${state.player.name}</h3>`;
+      html += `<ul>`;
+      html += `<li><strong>Salud:</strong> ${state.player.hp} | <strong>Escudos:</strong> ${state.player.shield} | <strong>Energía:</strong> ${state.player.energy}</li>`;
+      html += `<li><strong>Oro:</strong> ${state.player.mo} | <strong>Experiencia:</strong> ${state.player.pex}</li>`;
+      
+      let equipList = state.player.equipped.map(eq => eq.isBroken ? `<s>${eq.name}</s> (Roto)` : eq.name).join(', ');
+      html += `<li><strong>Equipo:</strong> ${equipList || 'Ninguno'}</li>`;
+      html += `</ul>`;
+
+      html += `<h3 style="color: var(--accent-red); border-bottom: 1px solid var(--accent-red); padding-bottom: 5px;">Goblins en combate</h3>`;
+      html += `<ul>`;
+      if (state.goblins && state.goblins.length > 0) {
+        state.goblins.forEach(g => {
+          let gobName = g.name && g.name !== 'undefined' ? g.name : "Goblin";
+          html += `<li><strong>${gobName}</strong> (Nivel ${g.level}) - PV Restantes: ${g.hp}</li>`;
+        });
+      } else {
+        html += `<li>Ninguno</li>`;
+      }
+      html += `</ul>`;
+
+      html += `<h3 style="color: #f1c40f; border-bottom: 1px solid #f1c40f; padding-bottom: 5px;">Tus Dados (Héroe)</h3>`;
+      if (state.playerDice && state.playerDice.length > 0) {
+        html += `<p>${state.playerDice.map(d => {
+          let bg = d.type === 'yellow' ? '#f1c40f' : (d.type === 'black' ? '#333' : (d.type === 'red' ? '#e74c3c' : '#3498db'));
+          let col = d.type === 'yellow' ? '#000' : '#fff';
+          let val = d.value !== undefined ? d.value : d.val;
+          return `<span style="display:inline-block; background:${bg}; color:${col}; padding:2px 8px; border-radius:4px; margin-right:5px; font-weight:bold; border: 1px solid #fff;">${val}</span>`;
+        }).join('')}</p>`;
+      } else {
+        html += `<p>Sin dados</p>`;
+      }
+
+      html += `<h3 style="color: #2ecc71; border-bottom: 1px solid #2ecc71; padding-bottom: 5px;">Dados de Goblins (Verdes)</h3>`;
+      if (state.goblinDice && Object.keys(state.goblinDice).length > 0) {
+        html += `<ul>`;
+        for (let gId in state.goblinDice) {
+          let gob = state.goblins.find(g => g.uid == gId);
+          let gName = gob && gob.name && gob.name !== 'undefined' ? gob.name : "Goblin";
+          let res = state.goblinDice[gId];
+          let diceStr = (res.details || []).filter(d => d.type === 'die').map(d => d.val || d.value).join(', ');
+          html += `<li><strong>${gName}</strong> sacó: <span style="display:inline-block; background:#2ecc71; color:#000; padding:2px 8px; border-radius:4px; margin-right:5px; font-weight:bold;">${diceStr || res.total}</span> (Daño total: ${res.total})</li>`;
+        }
+        html += `</ul>`;
+      } else {
+        html += `<p>Los goblins no tiraron dados.</p>`;
+      }
+
+      html += `<h3 style="color: #40bae9; border-bottom: 1px solid #40bae9; padding-bottom: 5px;">Asignaciones de Dados</h3>`;
+      if (state.assignments && Object.keys(state.assignments).length > 0) {
+        html += `<ul>`;
+        for (let eqId in state.assignments) {
+          let asgs = state.assignments[eqId];
+          if (!Array.isArray(asgs)) asgs = [asgs];
+          
+          let eqName = eqId;
+          if (eqId === 'rol' || eqId === 'role') eqName = 'Habilidad de Rol';
+          else {
+            let foundEq = state.player.equipped.find(e => e.id === eqId);
+            if (foundEq) eqName = foundEq.name;
+          }
+
+          asgs.forEach(a => {
+            let targetName = "Sin objetivo";
+            if (a.targetUid) {
+               let foundGob = state.goblins.find(g => g.uid == a.targetUid);
+               if (foundGob) targetName = foundGob.name && foundGob.name !== 'undefined' ? foundGob.name : "Goblin";
+               else targetName = "Goblin";
+            }
+            html += `<li>Dado <strong>${a.value}</strong> -> asignado a <strong>${eqName}</strong> (Objetivo: ${targetName})</li>`;
+          });
+        }
+        html += `</ul>`;
+      } else {
+        html += `<p>No se asignaron dados a equipo o rol.</p>`;
+      }
+
+      html += `<h3 style="color: #f15bb5; border-bottom: 1px solid #f15bb5; padding-bottom: 5px;">Intercepciones (Defensa)</h3>`;
+      if (state.interceptions && Object.keys(state.interceptions).length > 0) {
+        html += `<ul>`;
+        for (let gobId in state.interceptions) {
+          let diceIds = state.interceptions[gobId];
+          let foundGob = state.goblins.find(g => g.uid == gobId);
+          let targetName = foundGob && foundGob.name && foundGob.name !== 'undefined' ? foundGob.name : "Goblin";
+          
+          // Buscar valores de esos dados
+          let diceVals = diceIds.map(asg => {
+            let id = typeof asg === 'string' ? asg : asg.dieId;
+            let d = state.playerDice.find(pd => pd.id === id);
+            return d ? (d.value !== undefined ? d.value : d.val) : (asg.value || "?");
+          });
+
+          html += `<li>Ataque de <strong>${targetName}</strong> ➔ Interceptado con dado(s): <strong>${diceVals.join(', ')}</strong></li>`;
+        }
+        html += `</ul>`;
+      } else {
+        html += `<p>No se interceptó ningún ataque.</p>`;
+      }
+
+      html += `</div>`;
+      debugCombatData.innerHTML = html;
+    }
+    debugCombatModal.classList.remove('hidden');
+    
+    const btnCloseDebugModal = document.getElementById('btn-close-debug-modal');
+    if (btnCloseDebugModal) {
+      btnCloseDebugModal.onclick = () => {
+        debugCombatModal.classList.add('hidden');
+      };
+    }
+  });
+}
+// Make debug modal draggable
+document.addEventListener('DOMContentLoaded', () => {
+  const debugHeader = document.getElementById('debug-combat-header');
+  if (debugHeader) {
+    const modal = document.getElementById('debug-combat-modal');
+    let isDragging = false;
+    let offsetX = 0;
+    let offsetY = 0;
+
+    debugHeader.addEventListener('mousedown', (e) => {
+      isDragging = true;
+      const rect = modal.getBoundingClientRect();
+      offsetX = e.clientX - rect.left;
+      offsetY = e.clientY - rect.top;
+      debugHeader.style.cursor = 'grabbing';
+    });
+
+    document.addEventListener('mousemove', (e) => {
+      if (!isDragging) return;
+      const newX = e.clientX - offsetX;
+      const newY = e.clientY - offsetY;
+      modal.style.left = newX + 'px';
+      modal.style.top = newY + 'px';
+      modal.style.right = 'auto'; // Disable initial right alignment
+      modal.style.bottom = 'auto';
+    });
+
+    document.addEventListener('mouseup', () => {
+      if (isDragging) {
+        isDragging = false;
+        debugHeader.style.cursor = 'grab';
+      }
+    });
+  }
+});

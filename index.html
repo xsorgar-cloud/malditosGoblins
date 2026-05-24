@@ -37,6 +37,11 @@
                 title="Ver Historial de Acciones">📜 Historial</button>
         </div>
 
+                <button id="btn-debug-combat" class="btn secondary"
+            style="border-radius: 20px; padding: 6px 14px; font-size: 0.85rem; box-shadow: 0 4px 15px rgba(0,0,0,0.8); display: flex; align-items: center; gap: 6px; background: rgba(10,10,15,0.9); border: 1px solid #ff3366; color: #ff3366; height: 32px; margin-right: 5px;"
+            title="Ver último combate">
+            <span style="font-size: 1rem;"></span>Debug
+        </button>
         <button id="btn-tutorial" class="btn primary hidden"
             style="border-radius: 20px; padding: 6px 14px; font-size: 0.85rem; box-shadow: 0 4px 15px rgba(0,0,0,0.8); display: flex; align-items: center; gap: 6px; background: linear-gradient(45deg, #235f8a, #40bae9, #21f2df); border: none; height: 32px;">
             <span style="font-size: 1rem;">❔</span> Ayuda
@@ -711,6 +716,14 @@
     <script src="js/database.js?v=1.85"></script>
     <script src="js/GameState.js?v=1.85"></script>
     <script src="js/app.js?v=1.85"></script>
+    <!-- DEBUG COMBAT MODAL -->
+    <div id="debug-combat-modal" class="hidden" style="position: fixed; top: 60px; right: 20px; width: 510px; max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; text-align: left; border: 2px solid #ff3366; background: rgba(15, 10, 25, 0.95); box-shadow: 0 0 40px rgba(255, 51, 102, 0.4); border-radius: 15px; padding: 20px; z-index: 99999; backdrop-filter: blur(5px);">
+        <div id="debug-combat-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; cursor: grab; padding-bottom: 5px; border-bottom: 1px solid rgba(255, 51, 102, 0.3);">
+            <h2 style="font-family: 'Cinzel', serif; color: #ff3366; margin: 0; font-size: 1.2rem; pointer-events: none;">Último Combate</h2>
+            <button id="btn-close-debug-modal" class="btn" style="background: none; border: none; color: #fff; font-size: 1.5rem; cursor: pointer;">&times;</button>
+        </div>
+        <div id="debug-combat-data" style="background: rgba(0,0,0,0.5); padding: 10px; border-radius: 8px; overflow-y: auto; flex-grow: 1; margin: 0;"></div>
+    </div>
 </body>
 
 </html>
