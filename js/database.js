@@ -3,8 +3,9 @@ const DB = {
   playerLevels: [
     { level: 1, maxHp: 10, pexNeeded: 2, blocks: 6, extraDice: null },
     { level: 2, maxHp: 15, pexNeeded: 6, blocks: 8, extraDice: 'choice' }, // 6 * num_players
-    { level: 3, maxHp: 20, pexNeeded: 12, blocks: 10, extraDice: 'choice' }, // 12 * num_players
-    { level: 4, maxHp: 25, pexNeeded: 22, blocks: 12, extraDice: 'choice_and_d3' } // 22 * num_players
+    { level: 3, maxHp: 20, pexNeeded: 12, blocks: 10, extraDice: 'choice' },
+    { level: 4, maxHp: 25, pexNeeded: 22, blocks: 12, extraDice: 'choice_and_d3' },
+    { level: 5, maxHp: 30, pexNeeded: 32, blocks: 14, extraDice: 'choice' }
   ],
 
   // ROLES

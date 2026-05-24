@@ -223,7 +223,6 @@ if (document.readyState === 'loading') {
 } else {
   TutorialManager.init();
 }
-
 // Variables Globales para Sistema de Respaldo Táctil (Tap-to-Select)
 let activeSelectedDieId = null;
 let activeSelectedEquipId = null;
@@ -927,6 +926,10 @@ function updateUI() {
   }
 
   // 2. Comprobamos estados de fin de partida o fases especiales
+  if (gameState.isGameWon) {
+    renderGameWon();
+    return;
+  }
   if (gameState.isGameOver) {
     renderGameOver();
     return;
@@ -983,7 +986,7 @@ function updateUI() {
     btnGoldDmg.disabled = true;
     btnRole.disabled = true;
   } else {
-    btnConfirmAttack.disabled = false;
+    btnConfirmAttack.disabled = !hasGoblinsAlive;
     btnConfirmAttack.innerText = `Atacar Goblins (${selectedGoblins.length})`;
 
     if (gameState.activeSenda === 'guerrero' && hasGoblinsAlive) {
@@ -1226,6 +1229,7 @@ function renderBattlefield() {
     let hito = sendaHitos[gameState.currentHito - 1];
     btnDeployHito.innerText = `Enfrentar Hito ${gameState.currentHito}`;
     if (hitoActionsDiv) hitoActionsDiv.style.display = 'flex';
+    btnDeployHito.style.display = 'inline-block';
 
     // Desactivar si ya hay goblins de hito vivos
     let hasHitoGoblins = gameState.battlefield.goblins.some(g => g.isHito);
@@ -1236,7 +1240,9 @@ function renderBattlefield() {
       btnDeployHito.title = "Desplegar el siguiente Hito.";
     }
   } else {
-    if (hitoActionsDiv) hitoActionsDiv.style.display = 'none';
+    if (hitoActionsDiv) hitoActionsDiv.style.display = 'flex';
+    btnDeployHito.innerText = "Senda Completada";
+    btnDeployHito.disabled = true;
   }
 
   goblinsContainer.innerHTML = '';
@@ -1325,15 +1331,17 @@ function renderBattlefield() {
     const gobEl = document.createElement('div');
     gobEl.className = 'goblin-card';
     gobEl.dataset.uid = goblin.uid;
+    let imageUrl = goblin.image;
     if (goblin.isHito) {
       gobEl.classList.add('goblin-hito');
     } else {
       const pLeader = gameState.players[gameState.currentPlayerIndex] || gameState.players[0];
       if (goblin.level < pLeader.level) {
         gobEl.classList.add('goblin-no-reward');
+        imageUrl = imageUrl.replace(/([^\/]+)$/, 'nomo_$1');
       }
     }
-    gobEl.style.backgroundImage = `url('${goblin.image}')`;
+    gobEl.style.backgroundImage = `url('${imageUrl}')`;
 
     if (goblin.isDying) {
       gobEl.classList.add(goblin.gaveReward ? 'dying-reward' : 'dying');
@@ -1582,10 +1590,108 @@ function renderCombatOverlay() {
     const combatRoles = ['guerrero', 'mago', 'protector'];
     const canUseRole = combatRoles.includes(p.role.id) && p.energy > 0;
 
+    // --- PROYECCIÓN DE DAÑO ---
+    let projDamageObj = { direct: 0, normal: 0 };
+    let projShield = p.shield || 0;
+    let projHeal = 0;
+    let projDamagePerTarget = {};
+    
+    if (!isCrampPhase) {
+      c.goblins.forEach(g => { projDamagePerTarget[g.uid] = { damage: 0, shield: 0 }; });
+
+      for (let eqId in currentAssignments) {
+        let asgData = currentAssignments[eqId];
+        let asgList = Array.isArray(asgData) ? asgData : [asgData];
+        asgList.forEach(asg => {
+          if (asg.isRole) return;
+          let eq = p.equipped.find(e => e.id === eqId);
+          if (!eq) return;
+          let healObj = { heal: 0 };
+          let shieldObj = { shield: 0 };
+          gameState.applyEquipmentEffect(p, eq, asg, projDamagePerTarget, healObj, shieldObj);
+          projHeal += healObj.heal;
+          projShield += shieldObj.shield;
+        });
+      }
+
+      c.goblins.forEach(gob => {
+        if (gob.isDying) return;
+        let greenDiceResult = c.dice.green[gob.uid];
+        let goblinDmg = greenDiceResult ? greenDiceResult.total : 1;
+        let isDirect = false;
+
+        if (gob.isBoss && gob.name === "La Madre") {
+           goblinDmg = 0;
+        } else if (gob.isBoss && gob.name === "Rey Brujo" && greenDiceResult && greenDiceResult.details) {
+           let naturalDie = greenDiceResult.details.find(d => d.type === 'die');
+           if (naturalDie) {
+              let rollVal = naturalDie.val;
+              if (rollVal === 1 || rollVal === 5) goblinDmg = 4;
+              else if (rollVal === 2) goblinDmg = 3;
+              else if (rollVal === 4 || rollVal === 6) goblinDmg = 1;
+              else if (rollVal === 3) goblinDmg = 0;
+           }
+        }
+        
+        let goblinInterceptions = interceptionAssignments[gob.uid] || [];
+        if (greenDiceResult && greenDiceResult.details) {
+          let naturalDieIdx = 0;
+          greenDiceResult.details.forEach((detail, rawIdx) => {
+            if (detail.type === 'die') {
+              const isIntercepted = goblinInterceptions.some(asg => asg.goblinDieIndex === naturalDieIdx);
+              if (isIntercepted) {
+                goblinDmg -= detail.val;
+                const nextDetail = greenDiceResult.details[rawIdx + 1];
+                if (nextDetail && nextDetail.type === 'mod') {
+                  goblinDmg -= nextDetail.val;
+                }
+              }
+              naturalDieIdx++;
+              if (!isIntercepted) {
+                 let gobDB = gob.attacks ? gob : DB.goblins[gob.level];
+                 let attacks = (gobDB && gobDB.attacks) ? (gobDB.attacks[detail.val] || []) : [];
+                 if (attacks.some(a => a.toLowerCase().includes('daño directo'))) {
+                    isDirect = true;
+                 }
+              }
+            }
+          });
+        }
+
+        if (gameState.activeSenda === 'guerrero' && gob.level === 2) {
+           let lvl1Count = gameState.battlefield.goblins.filter(g => g.level === 1 && g.currentHp > 0).length;
+           if (lvl1Count > 0) goblinDmg += lvl1Count;
+        }
+        
+        goblinDmg = Math.max(0, goblinDmg);
+        if (isDirect) {
+          projDamageObj.direct += goblinDmg;
+        } else {
+          projDamageObj.normal += goblinDmg;
+        }
+      });
+    }
+
+    let projNetDamage = isCrampPhase ? 0 : Math.max(0, projDamageObj.normal - projShield) + projDamageObj.direct;
+    let finalProjectedHp = Math.min(p.maxHp, Math.max(0, p.hp - projNetDamage + projHeal));
+    
+    let projectedHtml = '';
+    if (!isCrampPhase) {
+       if (finalProjectedHp < p.hp) {
+           projectedHtml = `<div style="color: #ff4d4d; font-size: 0.9rem; margin-top: -10px; margin-left: 34px;">Daño Previsto: -${p.hp - finalProjectedHp} PV</div>`;
+       } else if (finalProjectedHp > p.hp) {
+           projectedHtml = `<div style="color: #33cc33; font-size: 0.9rem; margin-top: -10px; margin-left: 34px;">Cura Prevista: +${finalProjectedHp - p.hp} PV</div>`;
+       } else {
+           projectedHtml = `<div style="color: #888; font-size: 0.9rem; margin-top: -10px; margin-left: 34px;">Sin daños previstos</div>`;
+       }
+    }
+    // --- FIN PROYECCION ---
+
     statsContainer.innerHTML = `
       <div style="font-size: 1.4rem; font-weight: bold; color: var(--gold); margin-bottom: 15px;">${p.name}</div>
       <div class="stats" style="display: flex; flex-direction: column; gap: 15px; font-size: 1.2rem;">
-        <div class="stat hp ${isLowHP ? 'low-hp' : ''}" style="display: flex; align-items: center; gap: 10px; height: 24px;"><span style="display: flex; align-items: center; width: 24px; justify-content: center;">❤️</span> <span>Vida: <span>${p.hp}</span>/<span>${p.maxHp}</span></span></div>
+        <div class="stat hp ${isLowHP ? 'low-hp' : ''}" style="display: flex; align-items: center; gap: 10px; height: 24px;"><span style="display: flex; align-items: center; width: 24px; justify-content: center;">❤️</span> <span>Vida: <span>${p.hp}</span>/<span>${p.maxHp}</span> ${finalProjectedHp !== p.hp && !isCrampPhase ? `<span style="color:${finalProjectedHp < p.hp ? '#ff4d4d' : '#33cc33'}; font-size: 0.9em; margin-left: 8px;">(➔ ${finalProjectedHp})</span>` : ''}</span></div>
+        ${projectedHtml}
         ${p.shield > 0 ? `<div class="stat shield" style="display: flex; align-items: center; gap: 10px; height: 24px; color: #33cc33;" title="Escudos del Protector"><span style="display: flex; align-items: center; width: 24px; justify-content: center;">🛡️</span> <span>Escudos: <span>${p.shield}</span></span></div>` : ''}
         <div class="stat gold" style="display: flex; align-items: center; gap: 10px; height: 24px;"><span style="display: flex; align-items: center; width: 24px; justify-content: center;">${COIN_SVG}</span> <span>Oro: <span>${p.mo}</span></span></div>
         <div class="stat energy" style="display: flex; align-items: center; gap: 10px; height: 24px; color: #00d2ff;" title="Energía del Rol"><span style="display: flex; align-items: center; width: 24px; justify-content: center;">⚡</span> <span>Energía: <span>${p.energy}</span></span></div>
@@ -1593,7 +1699,6 @@ function renderCombatOverlay() {
     `;
   }
 
-  // Actualizar Botones del Sidebar para Fase de Calambre
   const btnResolve = document.getElementById('btn-resolve-combat');
   const btnCancel = document.getElementById('btn-cancel-combat');
 
@@ -1670,6 +1775,7 @@ function renderCombatOverlay() {
       document.querySelectorAll('.goblin-card').forEach(el => el.classList.remove('selectable', 'selected'));
       document.getElementById('btn-confirm-attack').innerText = `Atacar Goblins (0)`;
       updateUI();
+      window.saveGame(true);
     };
   }
 
@@ -1691,15 +1797,17 @@ function renderCombatOverlay() {
     // Goblin card
     let gobCard = document.createElement('div');
     gobCard.className = 'goblin-card';
+    let imageUrl = gob.image;
     if (gob.isHito) {
       gobCard.classList.add('goblin-hito');
     } else {
       const pActive = gameState.players[gameState.currentPlayerIndex] || gameState.players[0];
       if (gob.level < pActive.level) {
         gobCard.classList.add('goblin-no-reward');
+        imageUrl = imageUrl.replace(/([^\/]+)$/, 'nomo_$1');
       }
     }
-    gobCard.style.backgroundImage = `url('${gob.image}')`;
+    gobCard.style.backgroundImage = `url('${imageUrl}')`;
     const isInvulnerable = gameState.isGoblinInvulnerable(gob);
     if (isInvulnerable) {
       gobCard.classList.add('invulnerable');
@@ -1916,6 +2024,7 @@ function renderCombatOverlay() {
     diceCont.style.alignItems = 'center';
 
     if (!isCrampPhase && c.dice.green[gob.uid]) {
+      let naturalDieIdx = 0;
       c.dice.green[gob.uid].details.forEach((item, idx) => {
         let el = document.createElement('div');
         if (item.type === 'die') {
@@ -1924,8 +2033,10 @@ function renderCombatOverlay() {
           el.dataset.goblinUid = gob.uid;
           el.dataset.dieIndex = idx;
           // Marcar si está interceptado
-          const isIntercepted = intAsgs && intAsgs.some(asg => asg.goblinDieIndex === idx);
+          const currentNaturalIdx = naturalDieIdx;
+          const isIntercepted = intAsgs && intAsgs.some(asg => asg.goblinDieIndex === currentNaturalIdx);
           if (isIntercepted) el.classList.add('intercepted');
+          naturalDieIdx++;
 
           el.innerText = item.val;
           el.style.width = '50px';
@@ -2264,7 +2375,7 @@ function renderCombatOverlay() {
 
       clearDieAssignment(dieId);
 
-      const extra = (eq.extra || '').toLowerCase();
+      const extra = (eq.isBroken && eq.broken && eq.broken.extra !== undefined ? eq.broken.extra : (eq.extra || '')).toLowerCase();
       const isReusable = extra.includes('reutilizable');
       const maxUses = extra.includes('x3') ? 3 : (isReusable ? 6 : 1);
 
@@ -2303,7 +2414,7 @@ function renderCombatOverlay() {
 
         clearDieAssignment(activeSelectedDieId);
 
-        const extra = (eq.extra || '').toLowerCase();
+        const extra = (eq.isBroken && eq.broken && eq.broken.extra !== undefined ? eq.broken.extra : (eq.extra || '')).toLowerCase();
         const isReusable = extra.includes('reutilizable');
         const maxUses = extra.includes('x3') ? 3 : (isReusable ? 6 : 1);
 
@@ -2867,15 +2978,41 @@ window.showTargetSelectionModal = function (playerIndex) {
       activeGoblins.forEach(gob => {
         const isInCombat = gameState.currentCombat && gameState.currentCombat.goblins.some(cg => cg.uid === gob.uid);
         const isMagoRestricted = (roleId === 'mago' && gob.currentHp === 1);
+        
+        let borderColor = 'var(--accent-red)';
+        let displayImg = gob.image;
+        if (gob.isHito) {
+          borderColor = '#9d4edd';
+        } else if (gob.level < p.level) {
+          borderColor = '#000000';
+          displayImg = displayImg.replace(/([^\/]+)$/, 'nomo_$1');
+        }
+
         const gbtn = document.createElement('button');
         gbtn.className = 'target-btn other-btn';
         if (p.energy < 1 || isMagoRestricted) gbtn.classList.add('disabled');
+        
+        gbtn.style.width = '200px';
+        gbtn.style.height = '280px';
+        gbtn.style.minWidth = '200px';
+        gbtn.style.maxWidth = '200px';
+        gbtn.style.padding = '0';
+        gbtn.style.overflow = 'hidden';
+        gbtn.style.position = 'relative';
+        gbtn.style.border = `4px solid ${borderColor}`;
+        if (gob.level < p.level) {
+          gbtn.style.boxShadow = '0 0 25px rgba(0,0,0,0.9)';
+        }
+        gbtn.style.borderRadius = '12px';
+        gbtn.style.backgroundImage = `url('${displayImg}')`;
+        gbtn.style.backgroundSize = '100% 100%';
+        gbtn.style.display = 'block';
 
         gbtn.innerHTML = `
-          <div class="target-name">⚔️ ${gob.name || ('Goblin L' + gob.level)}</div>
-          <div class="target-stats">❤️ Vida: ${gob.currentHp}</div>
-          <div class="target-desc">${isMagoRestricted ? '<span style="color:#ff4d4d">El Mago no puede rematar a un goblin</span>' : 'Infligir 1 daño directo'}</div>
-          <div class="target-cost ${p.energy < 1 ? 'insufficient' : ''}">COSTE: 1⚡</div>
+          <div style="position: absolute; top: -16px; right: -16px; background: var(--accent-red); color: white; border-radius: 50%; width: 56px; height: 56px; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.9rem; box-shadow: 0 0 10px rgba(0,0,0,0.8); z-index: 10; border: 2px solid white;">${gob.currentHp}</div>
+          <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.8); color: ${p.energy < 1 ? '#ff4d4d' : 'var(--gold)'}; text-align: center; font-size: 1.0rem; padding: 8px 0; font-weight: bold; text-shadow: 0 0 4px black;">COSTE: 1&#9889;</div>
+          ${isMagoRestricted ? '<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,0,0,0.5); display: flex; justify-content: center; align-items: center; font-size: 5rem; text-shadow: 0 0 15px black; z-index: 5;">&#10060;</div>' : ''}
+          ${isInCombat ? '<div style="position: absolute; top: 10px; left: 10px; font-size: 1.8rem; filter: drop-shadow(0 0 5px black); z-index: 5;">&#9876;&#65039;</div>' : ''}
         `;
 
         gbtn.onclick = () => {
@@ -3307,6 +3444,41 @@ function handleRetaliationChoice(gobUids, playerIdx) {
   }
 }
 
+function renderGameWon() {
+  const overlay = document.getElementById('global-event-overlay');
+  const title = document.getElementById('event-modal-title');
+  const desc = document.getElementById('event-modal-desc');
+  const container = document.getElementById('event-choices-container');
+  const modal = document.querySelector('.event-modal');
+
+  if (modal) {
+    modal.classList.remove('retaliation-theme');
+    modal.classList.add('victory-theme');
+    modal.style.border = '';
+    modal.style.boxShadow = '';
+  }
+
+  title.innerHTML = `🌟 ¡VICTORIA! 🌟`;
+  title.style.color = 'var(--gold)';
+
+  const phrase = "¡Habéis limpiado la senda y la gloria es vuestra!";
+
+  desc.innerHTML = `
+    <img src="assets/victoria.jpg" style="width: 100%; max-height: 300px; object-fit: cover; border-radius: 8px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.5);" onerror="this.src='assets/final.jpg'">
+    <div style="font-size: 1.5rem; margin-bottom: 20px; color: #fff;">¡El Jefe ha caído!</div>
+    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.3);">
+      <p style="margin-bottom: 10px;">Completasteis la <strong>${gameState.activeSenda.replace('_', ' ').toUpperCase()}</strong></p>
+      <p style="font-size: 0.9rem; color: var(--text-cita); font-style: italic;">"${phrase}"</p>
+    </div>
+  `;
+
+  container.innerHTML = `
+    <button class="choice-btn" style="background: var(--gold); color: #000; border: none; font-weight: bold; font-size: 1.2rem; padding: 15px 30px; border-radius: 8px; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);" onclick="location.reload()" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">Jugar de Nuevo</button>
+  `;
+
+  overlay.classList.remove('hidden');
+}
+
 function renderGameOver() {
   const overlay = document.getElementById('global-event-overlay');
   const title = document.getElementById('event-modal-title');
@@ -3329,6 +3501,7 @@ function renderGameOver() {
       <p style="font-size: 0.9rem; color: var(--text-cita); font-style: italic;">"${phrase}"</p>
     </div>
   `;
+
 
   container.innerHTML = `
     <button class="btn primary" onclick="location.reload()" style="padding: 15px 40px; font-size: 1.2rem;">
@@ -3378,7 +3551,7 @@ function openPotionsModal() {
   desc.innerHTML = `Elige una pócima para ayudarte en tu aventura. No ocupan espacio de equipo.<br><br>
     <div style="display: flex; gap: 20px; justify-content: center; align-items: center; flex-wrap: wrap;">
       <div style="background: rgba(255, 0, 0, 0.15); border: 1px solid var(--accent-red); padding: 6px 18px; border-radius: 20px; font-weight: bold; font-size: 1.1rem; color: white; box-shadow: 0 0 12px rgba(255,0,0,0.4);">
-        Salud: <span id="potion-modal-current-hp">${p.hp}</span> / ${p.maxHp} ❤️
+        Salud: <span id="potion-modal-current-hp">${p.hp}</span> / ${p.maxHp}
       </div>
       <div style="background: rgba(212, 175, 55, 0.15); border: 1px solid var(--gold); padding: 6px 18px; border-radius: 20px; font-weight: bold; font-size: 1.1rem; color: white; box-shadow: 0 0 12px rgba(212, 175, 55, 0.4); display: flex; align-items: center; gap: 6px;">
         Monedas: <span id="potion-modal-current-gold">${p.mo}</span> ${COIN_SVG}
@@ -3496,7 +3669,7 @@ function openDuplicateWarningModal(type, card) {
 
   title.innerText = "¡OBJETO DUPLICADO!";
   title.style.color = "var(--accent-red)";
-  desc.innerHTML = `Ya tienes un <strong>${card.name}</strong> equipado.<br><br>¿Deseas comprar otra copia para guardarla en el almacén de tu mochila?<br><br><em>(Podrás intercambiarlos cuando quieras si alguno se rompe o para gestionar tu peso)</em>`;
+  desc.innerHTML = `Ya tienes un <strong>${card.name}</strong> equipado.<br><br>-+Deseas comprar otra copia para guardarla en el almacén de tu mochila?<br><br><em>(Podras intercambiarlos cuando quieras si alguno se rompe o para gestionar tu peso)</em>`;
 
   container.innerHTML = '';
   // Añadimos un marcador para que checkLevelUpChoice no cierre el modal
@@ -3534,7 +3707,7 @@ function openActionLossWarningModal(onConfirm) {
 
   title.innerText = "¡ACCIÓN PENDIENTE!";
   title.style.color = "var(--gold)";
-  desc.innerHTML = `Aún tienes la oportunidad de realizar tu acción básica de este turno (Atacar, Cobrar o Rellenar Rol).<br><br>Si continúas con la compra, <strong>perderás la oportunidad</strong> de realizar tu acción de este turno.<br><br>¿Deseas continuar con la compra de todos modos?`;
+  desc.innerHTML = `Aún tienes la oportunidad de realizar tu acción básica de este turno (Atacar, Cobrar o Rellenar Rol).<br><br>Si continúas con la compra, <strong>perderás la oportunidad</strong> de realizar tu acción de este turno.<br><br>-+Deseas continuar con la compra de todos modos?`;
 
   container.innerHTML = '';
   // Añadimos un marcador para evitar cierres accidentales
@@ -3725,6 +3898,22 @@ window.saveGame = function(silent = false) {
   }
 };
 
+const btnSaveGame = document.getElementById('btn-save-game');
+if (btnSaveGame) {
+  btnSaveGame.addEventListener('click', () => {
+    window.saveGame();
+    const originalText = btnSaveGame.innerHTML;
+    btnSaveGame.innerHTML = '&#128190; ¡Guardado!';
+    btnSaveGame.style.color = '#4caf50';
+    btnSaveGame.style.borderColor = '#4caf50';
+    setTimeout(() => {
+      btnSaveGame.innerHTML = originalText;
+      btnSaveGame.style.color = '';
+      btnSaveGame.style.borderColor = '';
+    }, 2000);
+  });
+};
+
 window.loadGame = function() {
   const saveData = localStorage.getItem('malditosGoblinsSave');
   if (saveData) {
@@ -3741,12 +3930,7 @@ window.loadGame = function() {
   }
 };
 
-const btnSaveGame = document.getElementById('btn-save-game');
-if (btnSaveGame) {
-  btnSaveGame.addEventListener('click', () => {
-    window.saveGame();
-  });
-}
+
 
 const btnLoadGame = document.getElementById('btn-load-game');
 if (btnLoadGame) {
@@ -3877,7 +4061,7 @@ if (btnDebugCombat) {
                if (foundGob) targetName = foundGob.name && foundGob.name !== 'undefined' ? foundGob.name : "Goblin";
                else targetName = "Goblin";
             }
-            html += `<li>Dado <strong>${a.value}</strong> -> asignado a <strong>${eqName}</strong> (Objetivo: ${targetName})</li>`;
+            html += `<li>Dado <strong>${a.value}</strong> ··> asignado a <strong>${eqName}</strong> (Objetivo: ${targetName})</li>`;
           });
         }
         html += `</ul>`;
@@ -3900,7 +4084,7 @@ if (btnDebugCombat) {
             return d ? (d.value !== undefined ? d.value : d.val) : (asg.value || "?");
           });
 
-          html += `<li>Ataque de <strong>${targetName}</strong> ➔ Interceptado con dado(s): <strong>${diceVals.join(', ')}</strong></li>`;
+          html += `<li>Ataque de <strong>${targetName}</strong> Interceptado con dado(s): <strong>${diceVals.join(', ')}</strong></li>`;
         }
         html += `</ul>`;
       } else {
@@ -3955,3 +4139,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 });
+
+
+
+

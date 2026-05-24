@@ -1910,6 +1910,21 @@ main {
   padding-bottom: 50px !important;
 }
 
+/* TEMA DORADO PARA EL MODAL DE VICTORIA */
+.event-modal.victory-theme {
+  background: linear-gradient(135deg, #2a200a 0%, #0a0a00 100%) !important;
+  border-color: var(--gold) !important;
+  box-shadow: 0 0 60px rgba(212, 175, 55, 0.4) !important;
+  max-width: 1200px !important;
+}
+
+.event-modal.victory-theme h1,
+.event-modal.victory-theme h2,
+.event-modal.victory-theme h3 {
+  color: var(--gold) !important;
+  text-shadow: 0 0 10px rgba(212, 175, 55, 0.5) !important;
+}
+
 /* POCIONES */
 .potions-layout {
   display: flex;

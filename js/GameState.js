@@ -21,6 +21,7 @@ class GameState {
     this.isRetaliationPhase = false;
     this.retaliationQueue = [];
     this.isGameOver = false;
+    this.isGameWon = false;
     this.activeSenda = 'iniciacion';
     this.pendingHito1Goblins = 0;
     this.pendingCorrosionChoice = null;
@@ -657,6 +658,9 @@ class GameState {
       if (targetGoblin.currentHp <= 0) {
         // Goblin derrotado
         goblinsDefeated++;
+        if (targetGoblin.isBoss) {
+          this.isGameWon = true;
+        }
         this.checkSpawnNextHito1Goblin(targetGoblin);
         if (targetGoblin.isHito || targetGoblin.level >= p.level) {
           p.mo += targetGoblin.mo;
@@ -1427,6 +1431,9 @@ class GameState {
         if (gob.currentHp <= 0) {
           // Goblin derrotado - Marcar para animación
           gob.isDying = true;
+          if (gob.isBoss) {
+            this.isGameWon = true;
+          }
           this.checkSpawnNextHito1Goblin(gob);
           if (gob.isHito || gob.level >= p.level) {
             p.mo += gob.mo;
