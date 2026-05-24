@@ -2472,7 +2472,7 @@ main {
   }
 
   /* Mantenemos las 2 columnas horizontales intactas */
-  #setup-content>div {
+  #setup-columns-container {
     display: flex !important;
     flex-direction: row !important;
     /* COLUMNAS IZQ Y DCHA MANTENIDAS */
