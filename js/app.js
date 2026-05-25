@@ -1749,9 +1749,14 @@ function renderCombatOverlay() {
           if (asg.isRole) return;
           let eq = p.equipped.find(e => e.id === eqId);
           if (!eq) return;
+          let simulatedAsg = { ...asg };
+          if (!simulatedAsg.targetUid && c.goblins.length === 1 && doesEquipmentDealDamage(eq, simulatedAsg.value, simulatedAsg)) {
+            simulatedAsg.targetUid = c.goblins[0].uid;
+          }
+
           let healObj = { heal: 0 };
           let shieldObj = { shield: 0 };
-          gameState.applyEquipmentEffect(p, eq, asg, projDamagePerTarget, healObj, shieldObj);
+          gameState.applyEquipmentEffect(p, eq, simulatedAsg, projDamagePerTarget, healObj, shieldObj);
           projHeal += healObj.heal;
           projShield += shieldObj.shield;
         });
@@ -1819,6 +1824,7 @@ function renderCombatOverlay() {
     let finalProjectedHp = Math.min(p.maxHp, Math.max(0, p.hp - projNetDamage + projHeal));
     
     let projectedHtml = '';
+    let goblinsProjHtml = '';
     if (!isCrampPhase) {
        if (finalProjectedHp < p.hp) {
            projectedHtml = `<div style="color: #ff4d4d; font-size: 0.9rem; margin-top: -10px; margin-left: 34px;">Daño Previsto: -${p.hp - finalProjectedHp} PV</div>`;
@@ -1827,7 +1833,25 @@ function renderCombatOverlay() {
        } else {
            projectedHtml = `<div style="color: #888; font-size: 0.9rem; margin-top: -10px; margin-left: 34px;">Sin daños previstos</div>`;
        }
+
+       c.goblins.forEach(gob => {
+         let stats = projDamagePerTarget[gob.uid] || { damage: 0, shield: 0 };
+         let finalGobHp = gob.currentHp - stats.damage;
+         let isDamaged = finalGobHp < gob.currentHp;
+         let finalColor = isDamaged ? '#ff4d4d' : '#888';
+         let displayName = gob.isBoss ? gob.name : `Goblin ${gob.level}`;
+         goblinsProjHtml += `<div style="font-size: 0.95rem; margin-top: 5px; color: #888;">
+             <span style="color: #33cc33;">${displayName}</span>: ${gob.currentHp} &rarr; <span style="color: ${finalColor}; font-weight: bold;">${finalGobHp}</span>
+         </div>`;
+       });
     }
+
+    let goblinSection = goblinsProjHtml ? `
+      <div style="margin-top: 25px; padding-top: 15px; border-top: 1px solid rgba(212, 175, 55, 0.3);">
+        <div style="font-size: 1rem; font-weight: bold; color: var(--gold); margin-bottom: 8px;">Proyección Goblins</div>
+        ${goblinsProjHtml}
+      </div>
+    ` : '';
     // --- FIN PROYECCION ---
 
     statsContainer.innerHTML = `
@@ -1839,6 +1863,7 @@ function renderCombatOverlay() {
         <div class="stat gold" style="display: flex; align-items: center; gap: 10px; height: 24px;"><span style="display: flex; align-items: center; width: 24px; justify-content: center;">${COIN_SVG}</span> <span>Oro: <span>${p.mo}</span></span></div>
         <div class="stat energy" style="display: flex; align-items: center; gap: 10px; height: 24px; color: #00d2ff;" title="Energía del Rol"><span style="display: flex; align-items: center; width: 24px; justify-content: center;">⚡</span> <span>Energía: <span>${p.energy}</span></span></div>
       </div>
+      ${goblinSection}
     `;
   }
 
@@ -2447,12 +2472,13 @@ function renderCombatOverlay() {
   const equipSlots = document.getElementById('combat-equipment-slots');
   equipSlots.innerHTML = '';
 
-  // Contenedor para la carta de Rol y su botón (con dimensiones fijas para no empujar el layout)
+  // Contenedor para la carta de Rol y su botón
   const roleContainer = document.createElement('div');
   roleContainer.className = 'equip-slot-container';
-  roleContainer.style.position = 'relative';
-  roleContainer.style.width = '180px';
-  roleContainer.style.height = '250px';
+  roleContainer.style.display = 'flex';
+  roleContainer.style.flexDirection = 'column';
+  roleContainer.style.alignItems = 'center';
+  roleContainer.style.gap = '8px';
 
   const combatRoles = ['guerrero', 'mago', 'protector'];
   const hasCombatRole = combatRoles.includes(p.role.id);
@@ -2539,10 +2565,6 @@ function renderCombatOverlay() {
     const btnRole = document.createElement('button');
     btnRole.id = 'btn-combat-role';
     btnRole.className = 'btn primary';
-    btnRole.style.position = 'absolute';
-    btnRole.style.bottom = '-40px';
-    btnRole.style.left = '50%';
-    btnRole.style.transform = 'translateX(-50%)';
     btnRole.style.fontSize = '0.85rem';
     btnRole.style.padding = '6px 16px';
     btnRole.style.whiteSpace = 'nowrap';
@@ -2788,8 +2810,10 @@ function renderPlayer() {
         eq.usedInCombatId === currentCombatId;
       const repairBtnHTML = canRepair ? `<button class="btn primary repair-btn" style="position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%) rotate(180deg); font-size: 0.75rem; padding: 4px 8px; z-index: 20;">Reparar</button>` : '';
       let repairableClass = canRepair ? 'can-repair-glow' : '';
+      
+      let justBoughtClass = eq._justBoughtId ? 'just-bought-hidden' : '';
 
-      eqHTML += `<div class="equipment-card ${activeClass} ${justBrokenClass} ${repairableClass}" 
+      eqHTML += `<div class="equipment-card ${activeClass} ${justBrokenClass} ${repairableClass} ${justBoughtClass}" 
                       data-player-index="${index}" 
                       data-eq-index="${eqIdx}" 
                       style="background-image: url('${eq.image}'); ${extraStyle}">
@@ -3694,7 +3718,7 @@ function renderGameWon() {
   const phrase = DB.victoryPhrases ? DB.victoryPhrases[Math.floor(Math.random() * DB.victoryPhrases.length)] : "¡Habéis limpiado la senda y la gloria es vuestra!";
 
   desc.innerHTML = `
-    <img src="assets/victoria.jpg" style="width: 100%; max-height: 300px; object-fit: cover; border-radius: 8px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.5);" onerror="this.src='assets/final.jpg'">
+    <img src="assets/victoria.jpg" style="width: 100%; max-height: 500px; object-fit: cover; border-radius: 8px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.5);" onerror="this.src='assets/final.jpg'">
     <div style="font-size: 1.5rem; margin-bottom: 20px; color: #fff;">¡El Jefe ha caído!</div>
     <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.3);">
       <p style="margin-bottom: 10px;">Completasteis la <strong>${gameState.activeSenda.replace('_', ' ').toUpperCase()}</strong></p>

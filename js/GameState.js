@@ -952,7 +952,14 @@ class GameState {
       // Solo entra activo si hay espacio Y no es un duplicado de uno ya activo
       const canFit = (currentBlocks + card.blocks <= maxBlocks) && !hasDuplicate;
 
-      p.equipped.push({ ...card, isBroken: false, isActive: canFit });
+      const justBoughtId = Date.now() + Math.random();
+      p.equipped.push({ ...card, isBroken: false, isActive: canFit, _justBoughtId: justBoughtId });
+
+      // Limpiar la flag después de 500ms para evitar problemas si se guarda la partida
+      setTimeout(() => {
+        let eq = p.equipped.find(e => e._justBoughtId === justBoughtId);
+        if (eq) delete eq._justBoughtId;
+      }, 500);
 
       if (canFit) {
         this.addLog(`<strong>${p.name}</strong> compró y EQUIPÓ <em>${card.name}</em> por ${card.cost} mo.`);

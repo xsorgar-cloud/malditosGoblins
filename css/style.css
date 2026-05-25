@@ -2904,3 +2904,13 @@ main {
 #global-event-overlay.victory-theme {
   background: rgb(121 118 0 / 41%) !important;
 }
+
+/* ====== ANIMACION DE COMPRA (RETARDO) ====== */
+@keyframes hideThenShow {
+  0% { opacity: 0; }
+  99% { opacity: 0; }
+  100% { opacity: 1; }
+}
+.just-bought-hidden {
+  animation: hideThenShow 0.4s forwards !important;
+}
