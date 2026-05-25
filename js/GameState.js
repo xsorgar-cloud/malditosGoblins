@@ -85,13 +85,13 @@ class GameState {
     if (!goblin.isHito) return false;
 
     // Hito 3: El Nivel 3 es inmune al daño mientras esté acompañado de niveles inferiores (nivel 1 o 2)
-    if (goblin.level === 3) {
+    if (this.currentHito === 4 && goblin.level === 3) {
       let lowerExists = this.battlefield.goblins.some(g => (g.level === 1 || g.level === 2) && g.currentHp > 0 && g.uid !== goblin.uid);
       if (lowerExists) return true;
     }
 
     // Hito 4: Mientras algún nivel 1 siga vivo, el nivel 2 y el nivel 3 son invulnerables
-    if (goblin.level === 2 || goblin.level === 3) {
+    if (this.currentHito === 5 && (goblin.level === 2 || goblin.level === 3)) {
       let lvl1Exists = this.battlefield.goblins.some(g => g.level === 1 && g.currentHp > 0 && g.uid !== goblin.uid);
       if (lvl1Exists) return true;
     }

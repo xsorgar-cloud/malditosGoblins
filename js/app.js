@@ -3811,10 +3811,35 @@ function openPotionsModal() {
       transition: all 0.2s;
     `;
 
+    let minHeal = 0;
+    let maxHeal = 0;
+    let formula = poc.effect.toLowerCase().replace(/cura|pv|\s/g, '');
+    let parts = formula.split('+');
+    parts.forEach(part => {
+      let diceMatch = part.match(/(\d+)d(\d+)/);
+      if (diceMatch) {
+        let numDice = parseInt(diceMatch[1]);
+        let faces = parseInt(diceMatch[2]);
+        minHeal += numDice;
+        maxHeal += numDice * faces;
+      } else {
+        let val = parseInt(part);
+        if (!isNaN(val)) {
+          minHeal += val;
+          maxHeal += val;
+        }
+      }
+    });
+    
+    let rangeHtml = '';
+    if (minHeal > 0) {
+      rangeHtml = `<br><span style="color: #888; font-size: 0.8rem;">(${minHeal} - ${maxHeal})</span>`;
+    }
+
     card.innerHTML = `
       <div style="width: 80px; height: 80px; background-image: url('${poc.image}'); background-size: cover; border-radius: 50%; border: 2px solid var(--gold);"></div>
       <div style="font-weight: bold; color: var(--gold);">${poc.name}</div>
-      <div style="font-size: 0.85rem; text-align: center; color: #ccc; min-height: 40px;">${poc.effect}</div>
+      <div style="font-size: 0.85rem; text-align: center; color: #ccc; min-height: 40px;">${poc.effect}${rangeHtml}</div>
       <button class="btn secondary" style="width: 100%;" ${p.mo < poc.cost ? 'disabled' : ''}>
         Comprar <BR> ${poc.cost} mo
       </button>

@@ -963,6 +963,11 @@ main {
   transform: rotate(180deg);
 }
 
+/* Evitar que el dado se vea del revés cuando el equipo está roto */
+.equip-slot.broken .die-placeholder {
+  transform: translateX(-50%) rotate(180deg) !important;
+}
+
 .equip-slot .die-placeholder {
   width: 50px;
   height: 50px;
