@@ -123,6 +123,11 @@ class GameState {
     let p = this.players[this.currentPlayerIndex];
     let originalStatusSnapshot = { ...p.statusEffects };
 
+    // RETROFIT: Ensure level 4+ players have their silver die if they didn't get it
+    if (p.level >= 4 && !p.dicePool.some(d => d.type === 'silver')) {
+      p.dicePool.push({ type: 'silver', faces: 3 });
+    }
+
     // Generar la reserva de dados para este combate
     let dicePoolToRoll = [...p.dicePool];
     
@@ -1519,6 +1524,12 @@ class GameState {
       this.players.forEach(pl => {
         pl.pendingLevelUpChoices = (pl.pendingLevelUpChoices || 0) + 1;
         pl.pendingLevelUpChoice = true;
+        
+        // --- REGLA DADO PLATEADO ---
+        if (pl.level === 4) {
+          pl.dicePool.push({ type: 'silver', faces: 3 });
+          this.addLog(`🎁 <span style="color:#c0c0c0">¡<strong>${pl.name}</strong> ha recibido un <strong>Dado Plateado d3</strong> por alcanzar el Nivel 4!</span>`);
+        }
       });
     }
   }

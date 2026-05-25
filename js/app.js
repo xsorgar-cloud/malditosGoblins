@@ -239,6 +239,8 @@ window.alert = function (messageText) {
     return;
   }
 
+  overlay.classList.remove('victory-theme');
+
   title.innerText = "¡ATENCIÓN!";
   title.style.color = "var(--gold)";
   desc.innerHTML = String(messageText).replace(/\n/g, '<br>');
@@ -624,11 +626,17 @@ function showHitoRuleNotification(hitoObj) {
 let roleFillDice = { red1: 0, red2: 0, black: 0 };
 let roleFillAssigned = null;
 let roleFillBlackRerolled = false;
+let roleFillSilverSelected = null;
 
 document.getElementById('btn-role').addEventListener('click', () => {
   if (gameState.isMarketPhase) return;
 
   const p = gameState.players[gameState.currentPlayerIndex];
+
+  // RETROFIT: Ensure level 4+ players have their silver die if they didn't get it
+  if (p.level >= 4 && !p.dicePool.some(d => d.type === 'silver')) {
+    p.dicePool.push({ type: 'silver', faces: 3 });
+  }
 
   // Tirar dados de la colección del jugador
   roleFillDice = p.dicePool.map((d, index) => ({
@@ -660,6 +668,13 @@ function renderRoleFillDice() {
   container.innerHTML = '';
 
   roleFillDice.forEach(die => {
+    // Si es un dado plateado y ya está fusionado, no lo renderizamos
+    if (die.type === 'silver' && die.assignedTo && die.assignedTo.startsWith('role-die-')) return;
+
+    let dieWrapper = document.createElement('div');
+    dieWrapper.className = 'die-wrapper';
+    dieWrapper.style.position = 'relative';
+
     let dieEl = document.createElement('div');
     dieEl.className = `die ${die.type}`;
     if (die.faces === 4) dieEl.classList.add('d4');
@@ -685,8 +700,34 @@ function renderRoleFillDice() {
     } else if (roleFillAssigned !== die.id) {
       // SISTEMA DE RESPALDO: Permitir asignar el dado al rol haciendo clic en él (incluso negros)
       dieEl.style.cursor = 'pointer';
-      dieEl.title = 'Click para asignar al rol';
+      dieEl.title = 'Click para interactuar';
+      if (roleFillSilverSelected === die.id) {
+         dieEl.classList.add('die-selected');
+      }
       dieEl.onclick = () => {
+        if (die.type === 'silver') {
+           if (roleFillSilverSelected === die.id) {
+               roleFillSilverSelected = null;
+           } else {
+               roleFillSilverSelected = die.id;
+           }
+           renderRoleFillDice();
+           return;
+        }
+
+        if (roleFillSilverSelected && (die.type === 'red' || die.type === 'black')) {
+           let droppedDie = roleFillDice.find(d => d.id === roleFillSilverSelected);
+           if (droppedDie && !droppedDie.assignedTo) {
+             droppedDie.assignedTo = die.id;
+             die.silverDieId = droppedDie.id;
+             die.originalValue = die.val;
+             die.val += droppedDie.val;
+             roleFillSilverSelected = null;
+             renderRoleFillDice();
+             return;
+           }
+        }
+
         roleFillAssigned = die.id;
         const placeholder = document.getElementById('role-fill-placeholder');
         placeholder.innerText = die.val;
@@ -697,9 +738,51 @@ function renderRoleFillDice() {
       };
     }
 
-    let dieWrapper = document.createElement('div');
-    dieWrapper.className = 'die-wrapper';
-    dieWrapper.style.position = 'relative';
+    // --- LÓGICA DE FUSIÓN DE DADO PLATEADO EN ROLE FILL ---
+    if (die.type === 'red' || die.type === 'black') {
+      dieEl.addEventListener('dragover', (e) => {
+        if (!die.silverDieId && roleFillAssigned !== die.id) {
+          e.preventDefault();
+        }
+      });
+      dieEl.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        let droppedDieId = e.dataTransfer.getData('text/plain');
+        let droppedDie = roleFillDice.find(d => d.id === droppedDieId);
+        if (droppedDie && droppedDie.type === 'silver' && !droppedDie.assignedTo) {
+          droppedDie.assignedTo = die.id;
+          die.silverDieId = droppedDie.id;
+          die.originalValue = die.val;
+          die.val += droppedDie.val;
+          renderRoleFillDice();
+        }
+      });
+    }
+
+    if (die.silverDieId) {
+      let badge = document.createElement('div');
+      badge.className = 'silver-badge';
+      badge.innerText = '+';
+      badge.style.pointerEvents = 'auto';
+      if (roleFillAssigned !== die.id) {
+        badge.style.cursor = 'pointer';
+        badge.title = `Valor original: ${die.originalValue}. Click para separar el dado plateado.`;
+        badge.onclick = (e) => {
+           e.stopPropagation();
+           let sDie = roleFillDice.find(d => d.id === die.silverDieId);
+           if (sDie) sDie.assignedTo = null;
+           die.val = die.originalValue;
+           delete die.silverDieId;
+           delete die.originalValue;
+           renderRoleFillDice();
+        };
+      } else {
+        badge.title = "Dado potenciado (No se puede separar mientras esté asignado)";
+      }
+      dieWrapper.appendChild(badge);
+    }
+    // --- FIN LÓGICA PLATEADO ---
 
     if (die.type === 'black' && !die.rerolled && roleFillAssigned !== die.id) {
       const rerollBtn = document.createElement('button');
@@ -708,6 +791,13 @@ function renderRoleFillDice() {
       rerollBtn.title = 'Relanzar dado negro';
       rerollBtn.onclick = (e) => {
         e.stopPropagation();
+        if (die.silverDieId) {
+           let sDie = roleFillDice.find(d => d.id === die.silverDieId);
+           if (sDie) sDie.assignedTo = null;
+           die.val = die.originalValue;
+           delete die.silverDieId;
+           delete die.originalValue;
+        }
         dieEl.classList.add('die-spin');
         const newVal = Math.floor(Math.random() * die.faces) + 1;
         setTimeout(() => {
@@ -741,6 +831,7 @@ document.getElementById('role-fill-slot').addEventListener('drop', (e) => {
   const dieId = e.dataTransfer.getData('text/plain');
   const die = roleFillDice.find(d => d.id === dieId);
   if (!die) return;
+  if (die.type === 'silver') { alert("Los dados plateados solo pueden fusionarse con otros dados de la reserva."); return; }
 
   roleFillAssigned = dieId;
   const val = die.val;
@@ -1033,6 +1124,57 @@ btnConfirmAttack.addEventListener('click', () => {
   }
 });
 
+function animateCardPurchase(sourceEl, onComplete) {
+  const rect = sourceEl.getBoundingClientRect();
+  const clone = sourceEl.cloneNode(true);
+  
+  clone.style.position = 'fixed';
+  clone.style.left = rect.left + 'px';
+  clone.style.top = rect.top + 'px';
+  clone.style.width = rect.width + 'px';
+  clone.style.height = rect.height + 'px';
+  clone.style.margin = '0';
+  clone.style.zIndex = '9999';
+  clone.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
+  clone.style.pointerEvents = 'none';
+  clone.style.boxShadow = '0 0 30px var(--gold)';
+  
+  document.body.appendChild(clone);
+  
+  const equipmentContainer = document.querySelector('.player-panel.active-turn .player-equipment');
+  let targetRect = { left: window.innerWidth / 2, top: window.innerHeight / 2, width: rect.width * 0.5, height: rect.height * 0.5 };
+  
+  if (equipmentContainer) {
+    // Generar un elemento falso para medir dónde caerá la carta
+    const dummy = document.createElement('div');
+    dummy.className = 'equipment-card';
+    dummy.style.visibility = 'hidden';
+    dummy.style.margin = '0';
+    equipmentContainer.appendChild(dummy);
+    targetRect = dummy.getBoundingClientRect();
+    dummy.remove();
+  }
+  
+  // Force reflow
+  clone.getBoundingClientRect();
+
+  // Calcular la posición exacta de destino
+  clone.style.left = targetRect.left + 'px';
+  clone.style.top = targetRect.top + 'px';
+  
+  // Escalar para que encaje en el hueco de equipment-card
+  const scaleX = targetRect.width / rect.width;
+  const scaleY = targetRect.height / rect.height;
+  clone.style.transform = `scale(${Math.min(scaleX, scaleY)})`;
+  clone.style.transformOrigin = 'top left';
+  clone.style.opacity = '1'; // No desvanecer
+  
+  setTimeout(() => {
+    clone.remove();
+    if (onComplete) onComplete();
+  }, 400);
+}
+
 function renderMarket() {
   marketDecks.innerHTML = '';
   const types = ['ataque', 'escudos', 'curacion'];
@@ -1068,6 +1210,7 @@ function renderMarket() {
             if (result === "OVERWEIGHT") {
               alert(`¡DEMASIADO PESO! No puedes llevar más de ${DB.playerLevels[player.level - 1].blocks} bloques de equipo. Sube de nivel para aumentar tu capacidad.`);
             } else if (result) {
+              animateCardPurchase(deckEl);
               updateUI();
             }
           }
@@ -1826,6 +1969,7 @@ function renderCombatOverlay() {
       let dieId = e.dataTransfer.getData('text/plain');
       const dieData = c.playerDice.find(d => d.id === dieId);
       if (dieData) {
+        if (dieData.type === 'silver') { alert("Los dados plateados solo pueden fusionarse con otros dados de la reserva."); return; }
         // No permitir interceptar NADA si estamos en fase de calambre (primero asignar a equipo)
         if (isCrampPhase) return;
         
@@ -1896,6 +2040,7 @@ function renderCombatOverlay() {
       if (activeSelectedDieId) {
         const dieData = c.playerDice.find(d => d.id === activeSelectedDieId);
         if (dieData) {
+          if (dieData.type === 'silver') { alert("Los dados plateados solo pueden fusionarse con otros dados de la reserva."); return; }
           if (isCrampPhase) return;
           
           if (gob.name === 'La Madre') {
@@ -2096,11 +2241,18 @@ function renderCombatOverlay() {
   const dicePoolContainer = document.getElementById('combat-dice-pool');
   dicePoolContainer.innerHTML = '';
   c.playerDice.forEach(die => {
+    // Si es un dado plateado y ya está fusionado, no lo renderizamos en la reserva
+    if (die.type === 'silver' && die.assignedTo && die.assignedTo.startsWith('die-')) return;
+
     // En fase de calambre, ocultar dados rojos y dados negros que no tengan calambre
     if (isCrampPhase && (die.type === 'red' || (die.type === 'black' && !die.isCramped))) return;
 
     // Fuera de la fase de calambre, ocultar dados con calambre no asignados (dados perdidos)
     if (!isCrampPhase && die.isCramped && !die.assignedTo) return;
+
+    let dieWrapper = document.createElement('div');
+    dieWrapper.className = 'die-wrapper';
+    dieWrapper.style.position = 'relative';
 
     let dieEl = document.createElement('div');
     dieEl.className = `die ${die.type}`;
@@ -2124,6 +2276,54 @@ function renderCombatOverlay() {
     dieEl.addEventListener('dragstart', (e) => {
       e.dataTransfer.setData('text/plain', die.id);
     });
+
+    // --- LÓGICA DE FUSIÓN DE DADO PLATEADO ---
+    if (die.type === 'red' || die.type === 'black') {
+      dieEl.addEventListener('dragover', (e) => {
+        if (!die.assignedTo && !die.silverDieId && !isCrampPhase) {
+          e.preventDefault(); // Permitir drop
+        }
+      });
+      dieEl.addEventListener('drop', (e) => {
+        e.preventDefault();
+        e.stopPropagation();
+        let droppedDieId = e.dataTransfer.getData('text/plain');
+        let droppedDie = c.playerDice.find(d => d.id === droppedDieId);
+        if (droppedDie && droppedDie.type === 'silver' && !droppedDie.assignedTo) {
+          // Fusionar
+          droppedDie.assignedTo = die.id;
+          die.silverDieId = droppedDie.id;
+          die.originalValue = die.value;
+          die.value += droppedDie.value;
+          gameState.addLog(`🎁 <strong>Dado Plateado</strong> fusionado. ¡Nuevo valor de dado: <span style="color:#c0c0c0; font-weight:bold">${die.value}</span>!`);
+          renderCombatOverlay();
+        }
+      });
+    }
+
+    if (die.silverDieId) {
+      let badge = document.createElement('div');
+      badge.className = 'silver-badge';
+      badge.innerText = '+';
+      badge.style.pointerEvents = 'auto';
+      if (!die.assignedTo) {
+        badge.style.cursor = 'pointer';
+        badge.title = `Valor original: ${die.originalValue}. Click para separar el dado plateado.`;
+        badge.onclick = (e) => {
+           e.stopPropagation();
+           let sDie = c.playerDice.find(d => d.id === die.silverDieId);
+           if (sDie) sDie.assignedTo = null;
+           die.value = die.originalValue;
+           delete die.silverDieId;
+           delete die.originalValue;
+           renderCombatOverlay();
+        };
+      } else {
+        badge.title = "Dado potenciado (No se puede separar mientras esté asignado)";
+      }
+      dieWrapper.appendChild(badge);
+    }
+    // --- FIN LÓGICA PLATEADO ---
 
     if (die.assignedTo) {
       // No permitir desasignar calambre si ya pasó su fase
@@ -2149,15 +2349,25 @@ function renderCombatOverlay() {
           activeSelectedDieId = null;
           renderCombatOverlay();
         } else {
+          if (activeSelectedDieId) {
+             let selectedDie = c.playerDice.find(d => d.id === activeSelectedDieId);
+             if (selectedDie && selectedDie.type === 'silver' && !selectedDie.assignedTo && (die.type === 'red' || die.type === 'black') && !die.assignedTo && !die.silverDieId) {
+                selectedDie.assignedTo = die.id;
+                die.silverDieId = selectedDie.id;
+                die.originalValue = die.value;
+                die.value += selectedDie.value;
+                gameState.addLog(`🎁 <strong>Dado Plateado</strong> fusionado vía clic. ¡Nuevo valor de dado: <span style="color:#c0c0c0; font-weight:bold">${die.value}</span>!`);
+                activeSelectedDieId = null;
+                renderCombatOverlay();
+                return;
+             }
+          }
           activeSelectedDieId = die.id;
           activeSelectedEquipId = null; // Limpiar selección de equipo
           renderCombatOverlay();
         }
       };
     }
-    let dieWrapper = document.createElement('div');
-    dieWrapper.className = 'die-wrapper';
-    dieWrapper.style.position = 'relative';
 
     if (die.type === 'black' && !die.rerolled && !die.assignedTo && (!die.isCramped || isCrampPhase)) {
       const rerollBtn = document.createElement('button');
@@ -2166,6 +2376,12 @@ function renderCombatOverlay() {
       rerollBtn.title = 'Relanzar dado negro';
       rerollBtn.onclick = (e) => {
         e.stopPropagation(); // Evitar seleccionar el dado
+        if (die.silverDieId) {
+           let sDie = c.playerDice.find(d => d.id === die.silverDieId);
+           if (sDie) sDie.assignedTo = null;
+           delete die.silverDieId;
+           delete die.originalValue;
+        }
         dieEl.classList.add('die-spin');
         setTimeout(() => {
           let newVal = gameState.rerollDie(die.id);
@@ -2255,6 +2471,7 @@ function renderCombatOverlay() {
     const dieId = e.dataTransfer.getData('text/plain');
     const dieData = c.playerDice.find(d => d.id === dieId);
     if (!dieData) return;
+    if (dieData.type === 'silver') { alert("Los dados plateados solo pueden fusionarse con otros dados de la reserva."); return; }
 
     clearDieAssignment(dieId);
 
@@ -2270,6 +2487,7 @@ function renderCombatOverlay() {
     if (activeSelectedDieId) {
       const dieData = c.playerDice.find(d => d.id === activeSelectedDieId);
       if (!dieData) return;
+      if (dieData.type === 'silver') { alert("Los dados plateados solo pueden fusionarse con otros dados de la reserva."); return; }
 
       clearDieAssignment(activeSelectedDieId);
 
@@ -2368,6 +2586,7 @@ function renderCombatOverlay() {
       const dieId = e.dataTransfer.getData('text/plain');
       const dieData = c.playerDice.find(d => d.id === dieId);
       if (!dieData) return;
+      if (dieData.type === 'silver') { alert("Los dados plateados solo pueden fusionarse con otros dados de la reserva."); return; }
 
       if (!gameState.isValidDieForEquipment(dieData.value, eq)) {
         return;
@@ -2409,6 +2628,7 @@ function renderCombatOverlay() {
       if (activeSelectedDieId) {
         const dieData = c.playerDice.find(d => d.id === activeSelectedDieId);
         if (!dieData) return;
+        if (dieData.type === 'silver') { alert("Los dados plateados solo pueden fusionarse con otros dados de la reserva."); return; }
 
         if (!gameState.isValidDieForEquipment(dieData.value, eq)) return;
 
@@ -2884,9 +3104,15 @@ window.showTargetSelectionModal = function (playerIndex) {
   if (roleId === 'curandero') {
     options.classList.add('curandero-layout');
     modalContent.classList.add('wide-modal');
+    modalContent.style.maxWidth = '';
+  } else if (roleId === 'guerrero' || roleId === 'mago') {
+    options.classList.remove('curandero-layout');
+    modalContent.classList.remove('wide-modal');
+    modalContent.style.maxWidth = '1800px';
   } else {
     options.classList.remove('curandero-layout');
     modalContent.classList.remove('wide-modal');
+    modalContent.style.maxWidth = '';
   }
 
   // Visor de Energía Actual del Jugador (Visible para todos)
@@ -2992,10 +3218,10 @@ window.showTargetSelectionModal = function (playerIndex) {
         gbtn.className = 'target-btn other-btn';
         if (p.energy < 1 || isMagoRestricted) gbtn.classList.add('disabled');
         
-        gbtn.style.width = '200px';
-        gbtn.style.height = '280px';
-        gbtn.style.minWidth = '200px';
-        gbtn.style.maxWidth = '200px';
+        gbtn.style.width = '220px';
+        gbtn.style.height = '308px';
+        gbtn.style.minWidth = '220px';
+        gbtn.style.maxWidth = '220px';
         gbtn.style.padding = '0';
         gbtn.style.overflow = 'hidden';
         gbtn.style.position = 'relative';
@@ -3451,6 +3677,10 @@ function renderGameWon() {
   const container = document.getElementById('event-choices-container');
   const modal = document.querySelector('.event-modal');
 
+  if (overlay) {
+    overlay.classList.add('victory-theme');
+  }
+
   if (modal) {
     modal.classList.remove('retaliation-theme');
     modal.classList.add('victory-theme');
@@ -3461,7 +3691,7 @@ function renderGameWon() {
   title.innerHTML = `🌟 ¡VICTORIA! 🌟`;
   title.style.color = 'var(--gold)';
 
-  const phrase = "¡Habéis limpiado la senda y la gloria es vuestra!";
+  const phrase = DB.victoryPhrases ? DB.victoryPhrases[Math.floor(Math.random() * DB.victoryPhrases.length)] : "¡Habéis limpiado la senda y la gloria es vuestra!";
 
   desc.innerHTML = `
     <img src="assets/victoria.jpg" style="width: 100%; max-height: 300px; object-fit: cover; border-radius: 8px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.5);" onerror="this.src='assets/final.jpg'">
@@ -3919,6 +4149,15 @@ window.loadGame = function() {
   if (saveData) {
     const data = JSON.parse(saveData);
     Object.assign(gameState, data);
+
+    // RETROFIT: Ensure level 4+ players have their silver die
+    if (gameState.players) {
+       gameState.players.forEach(p => {
+          if (p.level >= 4 && !p.dicePool.some(d => d.type === 'silver')) {
+             p.dicePool.push({ type: 'silver', faces: 3 });
+          }
+       });
+    }
     gameState.addLog(`&#128190; <strong>Partida cargada correctamente.</strong>`);
     
     document.querySelectorAll('.modal, .overlay').forEach(el => {

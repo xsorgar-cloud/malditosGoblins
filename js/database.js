@@ -129,6 +129,38 @@ const DB = {
     ]
   },
 
+  // FRASES ALEATORIAS PARA LA VICTORIA
+  victoryPhrases: [
+    "¡Habéis limpiado la senda y la gloria es vuestra!",
+    "La oscuridad retrocede; habéis asegurado la paz un día más.",
+    "El eco de vuestra victoria resonará en las tabernas durante generaciones.",
+    "Tus armas están melladas y tus escudos abollados, pero el enemigo yace a tus pies.",
+    "¡La leyenda crece! Los bardos ya están afinando sus laúdes para cantar vuestras hazañas.",
+    "Incluso los dioses sonríen al ver vuestra implacable valentía en el campo de batalla.",
+    "Contra todo pronóstico, habéis prevalecido. El botín es solo la guinda del pastel.",
+    "El hedor a goblin quemado es el dulce perfume de vuestro triunfo definitivo.",
+	"Vuestros nombres resonarán en las tabernas por toda la eternidad; hoy habéis forjado una leyenda al sobrevivir a la plaga de los Malditos Goblins.",
+	"La horda ha sido silenciada y la Senda despejada: alzad vuestras armas, pues sois verdaderos héroes del reino.",
+	"Contra todo pronóstico, vuestros escudos resistieron el embate y vuestro coraje no flaqueó. ¡La victoria absoluta es vuestra, campeones!",
+	"Las sombras retroceden. Habéis limpiado los rincones más oscuros del abismo y reclamado un triunfo que será recordado por generaciones.",
+	"Que los bardos canten sobre esta gesta: la noche en que un puñado de valientes se mantuvo firme y aniquiló a la implacable marea verde.",
+	"El polvo se asienta en el campo de batalla y solo vosotros quedáis en pie. Vuestra inquebrantable voluntad ha doblegado al destino.",
+	"Cada herida sufrida y cada pieza de armadura destrozada son ahora medallas de honor en vuestra gloriosa victoria.",
+	"Frente a la abrumadora oscuridad de los últimos hitos, os mantuvisteis unidos como un bastión inexpugnable. ¡Gloria a los vencedores!",
+	"Habéis caminado por el valle de la muerte y habéis regresado triunfantes. Hoy no sois simples aventureros, sois leyenda.",
+	"Que vuestras espadas descansen y vuestros espíritus se eleven: la gran amenaza de los Goblins es ya solo un eco del pasado.",
+	"El temible Zeñor de la Guerra ha caído finalmente, y su fiera horda se ha dispersado ante la majestuosidad de vuestro poderío." ,
+	"Habéis purgado el mal oscuro del Rey Brujo; su magia corrupta y su aire viciado nunca más envenenarán estas tierras." ,
+	"La infinita codicia del Gran Recaudador ha encontrado su fin frente a vuestro inquebrantable sentido del deber y la justicia." ,
+	"Aquel que acechaba en las sombras ha sido superado; el Cazador se convirtió en la presa y vosotros en los amos absolutos de la espesura." ,
+	"El nido ha sido purificado con fuego y acero. La Madre y su interminable enjambre de mutaciones han sido erradicados para siempre." ,
+	"Las devastadoras llamas del Piromante se han extinguido bajo la fuerza incesante de vuestros golpes. ¡Sois los portadores de la luz!",
+	"Ni siquiera el abrazo de la muerte pudo detener vuestra marcha; la esencia y el honor de los caídos impulsaron el golpe de gracia." ,
+	"Vuestra hermandad ha forjado un muro irrompible. Habéis luchado como uno solo y juntos habéis desterrado a la oscuridad." ,
+	"Superasteis cada emboscada, cada trampa y cada oleada fatídica, demostrando que no hay maldición que el valor no pueda quebrar." ,
+	"Alcanzasteis la cúspide de la gloria; que este épico triunfo corone vuestro legado como los guerreros definitivos de nuestro tiempo."
+  ],
+
   // FRASES ALEATORIAS PARA EL GAMEOVER
   gameOverPhrases: [
     "Los goblins han reclamado el reino. Vuestras hazañas serán recordadas (o no).",
