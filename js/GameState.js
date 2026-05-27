@@ -120,6 +120,13 @@ class GameState {
     let validGoblins = selectedGoblins.map(g => this.battlefield.goblins.find(bg => bg.uid === g.uid)).filter(g => g);
     if (validGoblins.length === 0) return false;
 
+    // Ordenar los goblins en combate de izquierda a derecha según su orden en el campo de batalla (A, B, C...)
+    validGoblins.sort((a, b) => {
+      let idxA = this.battlefield.goblins.indexOf(a);
+      let idxB = this.battlefield.goblins.indexOf(b);
+      return idxA - idxB;
+    });
+
     let p = this.players[this.currentPlayerIndex];
     let originalStatusSnapshot = { ...p.statusEffects };
 
@@ -276,7 +283,18 @@ class GameState {
     let p = this.getCurrentPlayer();
     let c = this.currentCombat;
 
-    // Guardar estado del combate para depuración
+    let hpBefore = p.hp;
+    let shieldBefore = p.shield;
+    let energyBefore = p.energy;
+    let moBefore = p.mo;
+    let pexBefore = p.pex;
+    let equippedBefore = p.equipped.map(eq => ({ id: eq.id, name: eq.name, isBroken: eq.isBroken }));
+
+    let playerDiceDetails = [];
+    let goblinDiceDetails = [];
+    let escozorDamageDealt = 0;
+
+    // Guardar estado inicial del combate para depuración (se actualizará al final)
     try {
       this.lastCombatDebugState = JSON.parse(JSON.stringify({
         player: {
@@ -327,6 +345,18 @@ class GameState {
           let dieVal = asg.value;
           let gainedEnergy = p.role.energyRates[dieVal - 1] || 0;
           p.energy += gainedEnergy;
+
+          playerDiceDetails.push({
+            dieId: asg.dieId,
+            value: asg.value,
+            assignedTo: "Rol (" + p.role.name + ")",
+            isRole: true,
+            damage: 0,
+            shield: 0,
+            heal: 0,
+            energyGained: gainedEnergy,
+            target: "Rol"
+          });
           return; // equivale a continue en forEach
         }
 
@@ -334,12 +364,42 @@ class GameState {
         if (!eq) return;
         eq.usedInCombatId = this.lastCombatId;
 
-        // Aplicar el efecto usando la lógica específica (pasamos shieldObj de forma global)
+        // Calcular de manera aislada el efecto de este dado específico
         let healObj = { heal: 0 };
         let shieldObj = { shield: 0 };
-        this.applyEquipmentEffect(p, eq, asg, damagePerTarget, healObj, shieldObj);
+        let tempDamagePerTarget = {};
+        c.goblins.forEach(g => {
+          tempDamagePerTarget[g.uid] = { damage: 0, shield: 0 };
+        });
+
+        this.applyEquipmentEffect(p, eq, asg, tempDamagePerTarget, healObj, shieldObj);
+
+        let damageDealt = 0;
+        let targetGoblinName = "Sin objetivo";
+        if (asg.targetUid) {
+          damageDealt = tempDamagePerTarget[asg.targetUid] ? tempDamagePerTarget[asg.targetUid].damage : 0;
+          let targetG = c.goblins.find(g => g.uid === asg.targetUid);
+          if (targetG) targetGoblinName = targetG.name;
+        }
+
+        playerDiceDetails.push({
+          dieId: asg.dieId,
+          value: asg.value,
+          assignedTo: eq.name,
+          isRole: false,
+          damage: damageDealt,
+          shield: shieldObj.shield,
+          heal: healObj.heal,
+          target: targetGoblinName
+        });
+
         playerHeal += healObj.heal;
         totalPlayerShield += shieldObj.shield;
+        for (let uid in tempDamagePerTarget) {
+          if (damagePerTarget[uid]) {
+            damagePerTarget[uid].damage += tempDamagePerTarget[uid].damage;
+          }
+        }
       });
     }
 
@@ -516,36 +576,59 @@ class GameState {
 
       // Buscar efectos especiales y procesar intercepciones por dado
       let gobDB = targetGoblin.attacks ? targetGoblin : DB.goblins[targetGoblin.level];
-      let goblinInterceptions = interceptions[targetUid] || []; // Ahora es un array
+      let goblinInterceptions = [];
+      if (interceptions) {
+        if (interceptions[targetUid]) {
+          goblinInterceptions = interceptions[targetUid];
+        } else {
+          const targetUidStr = String(targetUid);
+          const foundKey = Object.keys(interceptions).find(k => String(k) === targetUidStr);
+          if (foundKey) {
+            goblinInterceptions = interceptions[foundKey];
+          }
+        }
+      }
+
       let allSpecialAttacks = [];
+      let directDmg = 0;
+      let normalDmg = 0;
+      let isSpecialBoss = (targetGoblin.isBoss && (targetGoblin.name === "Rey Brujo" || targetGoblin.name === "La Madre"));
 
       if (greenDiceResult && greenDiceResult.details) {
         let naturalDieIdx = 0;
         greenDiceResult.details.forEach((detail, rawIdx) => {
           if (detail.type === 'die') {
-            const isIntercepted = goblinInterceptions.some(asg => asg.goblinDieIndex === naturalDieIdx);
+            const isIntercepted = goblinInterceptions.some(asg => Number(asg.goblinDieIndex) === Number(naturalDieIdx));
+            let interceptInfo = goblinInterceptions.find(asg => Number(asg.goblinDieIndex) === Number(naturalDieIdx));
+            let interceptedByVal = interceptInfo ? interceptInfo.value : null;
+            let interceptedByDieId = interceptInfo ? interceptInfo.dieId : null;
+            let dieEffects = [];
+
+            // Calcular daño de este dado
+            let dieDmg = detail.val;
+            let modMsg = "";
+
+            const nextDetail = greenDiceResult.details[rawIdx + 1];
+            if (nextDetail && nextDetail.type === 'mod') {
+              dieDmg += nextDetail.val;
+              modMsg = ` y su modificador de +${nextDetail.val}`;
+            }
 
             if (isIntercepted) {
               goblinDmg -= detail.val;
-              let modMsg = "";
-
-              // OPCIÓN B: Anular modificador adyacente si existe
-              const nextDetail = greenDiceResult.details[rawIdx + 1];
               if (nextDetail && nextDetail.type === 'mod') {
                 goblinDmg -= nextDetail.val;
-                modMsg = ` y su modificador de +${nextDetail.val}`;
               }
-
               this.addLog(`🛡️ Un dado natural de <strong>${detail.val}</strong>${modMsg} de G${targetGoblin.level} fue interceptado.`);
             }
 
-            // Incrementar contador de dados naturales para la siguiente iteración
             let currentNaturalIdx = naturalDieIdx;
             naturalDieIdx++;
 
             // Procesar ataques especiales del dado
             let rollVal = detail.val;
             let attacksForThisDie = (gobDB && gobDB.attacks) ? (gobDB.attacks[rollVal] || []) : [];
+            let isDieDirect = attacksForThisDie.some(eff => eff.toLowerCase().includes('daño directo'));
 
             attacksForThisDie.forEach(eff => {
               const effLow = eff.toLowerCase();
@@ -553,11 +636,12 @@ class GameState {
               const isNormalBreak = !isUnskippable && (effLow === 'rotura' || effLow.includes('rotura'));
               const isStatus = effLow.includes('escozor') || effLow.includes('tembleque') || effLow.includes('calambre');
 
-              // La Rotura no esquivable se aplica SIEMPRE.
-              // El resto solo si NO está interceptado ese dado específico.
+              let applied = false;
+              let brokenItem = null;
               if (isUnskippable || (!isIntercepted && (isNormalBreak || isStatus))) {
+                applied = true;
                 if (isUnskippable || isNormalBreak) {
-                  this.breakRandomEquipment(p);
+                  brokenItem = this.breakRandomEquipment(p);
                 } else if (effLow.includes('escozor')) {
                   p.statusEffects.escozor = (p.statusEffects.escozor || 0) + 1;
                   this.addLog(`🔥 <strong>${p.name}</strong> ha recibido <span style="color:#ff6600">ESCOZOR</span>.`);
@@ -570,19 +654,26 @@ class GameState {
                 }
               } else if (effLow.includes('drena')) {
                 if (!isIntercepted) {
+                  applied = true;
                   let amount = 4;
                   let match = effLow.match(/drena\s+(\d+)/);
                   if (match) amount = parseInt(match[1]);
                   targetGoblin.currentHp = Math.min(targetGoblin.maxHp, targetGoblin.currentHp + amount);
                   this.addLog(`🔮 <strong>Drenaje:</strong> El Rey Brujo recupera <span style="color:#ff477e">${amount} PV</span> (Total: ${targetGoblin.currentHp}/${targetGoblin.maxHp}).`);
                 }
+              } else if (effLow.includes('daño directo')) {
+                if (!isIntercepted) {
+                  applied = true;
+                }
               } else if (effLow.includes('elimina un d6 rojo')) {
                 if (!isIntercepted) {
+                  applied = true;
                   p.statusEffects.eliminaRojo = (p.statusEffects.eliminaRojo || 0) + 1;
                   this.addLog(`🔮 <strong>Maldición:</strong> <strong>${p.name}</strong> tendrá 1 dado <span style="color:#ef233c">ROJO</span> menos en su próximo ataque.`);
                 }
               } else if (effLow.includes('invocación') || effLow.includes('invocacion')) {
                 if (!isIntercepted) {
+                  applied = true;
                   this.battlefield.goblins.push({
                     ...DB.goblins[1],
                     uid: Date.now() + Math.random(),
@@ -594,27 +685,62 @@ class GameState {
                   this.addLog(`🔮 <strong>Invocación:</strong> ¡El Rey Brujo invoca un Goblin de Nivel 1 (sin recompensa de oro)!`);
                 }
               } else if (effLow.includes('lanza +')) {
-                // El daño extra de un dado NO interceptado se suma
                 if (!isIntercepted) {
+                  applied = true;
                   const dieMatch = effLow.match(/(\d*)d(\d+)/);
                   if (dieMatch) {
                     const num = parseInt(dieMatch[1]) || 1;
                     const faces = parseInt(dieMatch[2]);
                     let extraDmg = 0;
                     for (let i = 0; i < num; i++) extraDmg += this.rollDice(faces);
-                    goblinDmg += extraDmg;
+                    if (!isSpecialBoss) {
+                      if (isDieDirect) directDmg += extraDmg;
+                      else normalDmg += extraDmg;
+                    } else {
+                      goblinDmg += extraDmg;
+                    }
                     this.addLog(`🎲 ¡G${targetGoblin.level} lanza un dado extra y suma <span style="color:#ff4d4d">${extraDmg} de daño</span>!`);
                   }
                 }
               } else if (effLow === 'daño+2') {
                 if (!isIntercepted) {
-                  goblinDmg += 2;
+                  applied = true;
+                  if (!isSpecialBoss) {
+                    if (isDieDirect) directDmg += 2;
+                    else normalDmg += 2;
+                  } else {
+                    goblinDmg += 2;
+                  }
                   this.addLog(`💥 ¡El ataque del Jefe inflige +2 de daño extra!`);
                 }
               }
 
-              // Recoger todos los efectos para saber si es daño directo al final
-              allSpecialAttacks.push(eff);
+              let effectText = eff;
+              if (applied && brokenItem) {
+                effectText = `${eff} [Se rompió: ${brokenItem.name}]`;
+              }
+              dieEffects.push({ text: effectText, status: applied ? 'aplicado' : 'mitigado' });
+
+              if (isUnskippable || !isIntercepted) {
+                allSpecialAttacks.push(eff);
+              }
+            });
+
+            if (!isIntercepted && !isSpecialBoss) {
+              if (isDieDirect) {
+                directDmg += dieDmg;
+              } else {
+                normalDmg += dieDmg;
+              }
+            }
+
+            goblinDiceDetails.push({
+              goblinName: targetGoblin.name,
+              val: detail.val,
+              isIntercepted: isIntercepted,
+              interceptedBy: interceptedByVal,
+              interceptedByDieId: interceptedByDieId,
+              effects: dieEffects
             });
           }
         });
@@ -630,6 +756,7 @@ class GameState {
             let dieData = c.playerDice.find(d => d.id === asg.dieId);
             if (dieData && dieData.isStung && !dieData.stungDamageApplied) {
               p.hp = Math.max(0, p.hp - 2);
+              escozorDamageDealt += 2;
               dieData.stungDamageApplied = true; // Evitar daño doble si el dado se procesa varias veces
               this.addLog(`🔥 <strong>${p.name}</strong> usó un dado con escozor contra G${targetGoblin.level} y <span style="color:#ff4d4d">sufrió 2 daño</span>!`);
             }
@@ -637,19 +764,26 @@ class GameState {
         });
       }
 
-      let isDirect = allSpecialAttacks.some(a => a.toLowerCase().includes('daño directo'));
-      goblinDmg = Math.max(0, goblinDmg);
-
-      if (isDirect) {
-        if (goblinDmg > 0) {
-          totalDirectGoblinDamage += goblinDmg;
-          msgParts.push(`<span style="color:#ff4d4d">contraataca con ${goblinDmg} Daño Directo</span>`);
+      if (isSpecialBoss) {
+        let isDirect = allSpecialAttacks.some(a => a.toLowerCase().includes('daño directo'));
+        goblinDmg = Math.max(0, goblinDmg);
+        if (isDirect) {
+          directDmg = goblinDmg;
+        } else {
+          normalDmg = goblinDmg;
         }
-      } else {
-        if (goblinDmg > 0) {
-          totalNormalGoblinDamage += goblinDmg;
-          msgParts.push(`contraataca con ${goblinDmg} daño`);
-        } else if (goblinInterceptions.length > 0) {
+      }
+
+      if (directDmg > 0) {
+        totalDirectGoblinDamage += directDmg;
+        msgParts.push(`<span style="color:#ff4d4d">contraataca con ${directDmg} Daño Directo</span>`);
+      }
+      if (normalDmg > 0) {
+        totalNormalGoblinDamage += normalDmg;
+        msgParts.push(`contraataca con ${normalDmg} daño`);
+      }
+      if (directDmg === 0 && normalDmg === 0) {
+        if (goblinInterceptions.length > 0) {
           msgParts.push(`ataque anulado por intercepción`);
         } else {
           msgParts.push(`ataque anulado`);
@@ -657,7 +791,7 @@ class GameState {
       }
 
       if (msgParts.length > 0) {
-        this.addLog(`Frente a G${targetGoblin.level}: <strong>${p.name}</strong> ${msgParts.join(' y ')}.`);
+        this.addLog(`Frente a <strong>${p.name}</strong>, el G${targetGoblin.level} ${msgParts.join(' y ')}.`);
       }
 
       if (targetGoblin.currentHp <= 0) {
@@ -687,9 +821,11 @@ class GameState {
     }
 
     // 2. Aplicar daño normal contra el escudo global
+    let blockedDamage = 0;
+    let netDamage = 0;
     if (totalNormalGoblinDamage > 0) {
-      let netDamage = Math.max(0, totalNormalGoblinDamage - globalShield);
-      let blockedDamage = Math.min(totalNormalGoblinDamage, globalShield);
+      netDamage = Math.max(0, totalNormalGoblinDamage - globalShield);
+      blockedDamage = Math.min(totalNormalGoblinDamage, globalShield);
 
       if (blockedDamage > 0) {
         this.addLog(`🛡️ <strong>${p.name}</strong> bloquea <span style="color:#3a7bd5"><strong>${blockedDamage} daño</strong></span> con sus escudos (Defensa total: ${globalShield}).`);
@@ -727,11 +863,13 @@ class GameState {
 
     // Habilidad del Zeñor de la Guerra: Golpe Certero
     let warlordInCombat = c.goblins.some(g => g.isBoss && g.name === "Zeñor de la Guerra");
+    let warlordExtraDmg = 0;
     if (warlordInCombat) {
       let playerTookDamage = (totalDirectGoblinDamage > 0) || (totalNormalGoblinDamage > globalShield);
       if (playerTookDamage) {
         let extraD4 = this.rollDice(4);
         p.hp = Math.max(0, p.hp - extraD4);
+        warlordExtraDmg = extraD4;
         this.addLog(`⚔️ <strong>Golpe Certero:</strong> ¡El Zeñor de la Guerra infligió daño y sumó <span style="color:#ff4d4d"><strong>${extraD4} (1d4) de daño extra</strong></span>!`);
       }
     }
@@ -743,6 +881,68 @@ class GameState {
       if (playerTookDamage && p.hp > 0 && p.equipped.some(eq => eq.isActive && !eq.isBroken)) {
         hasCorrosion = true;
       }
+    }
+
+    // Registrar intercepciones en playerDiceDetails para que salgan en el debug final
+    if (interceptions) {
+      for (let gobId in interceptions) {
+        let intAsgs = interceptions[gobId] || [];
+        let foundGob = c.goblins.find(g => String(g.uid) === String(gobId));
+        let gobName = foundGob ? (foundGob.name && foundGob.name !== 'undefined' ? foundGob.name : `Goblin (Nvl ${foundGob.level})`) : "Goblin";
+        intAsgs.forEach(asg => {
+          playerDiceDetails.push({
+            dieId: asg.dieId,
+            value: asg.value,
+            assignedTo: `Intercepción contra ${gobName}`,
+            isRole: false,
+            isIntercept: true,
+            damage: 0,
+            shield: 0,
+            heal: 0,
+            energyGained: 0,
+            target: gobName
+          });
+        });
+      }
+    }
+
+    // Guardar estado final detallado de depuración
+    try {
+      this.lastCombatDebugState = {
+        player: {
+          name: p.name,
+          hp: hpBefore, // HP al inicio
+          shield: shieldBefore, // Escudo al inicio
+          energy: energyBefore, // Energía al inicio
+          mo: moBefore, // Oro al inicio
+          pex: pexBefore, // Experiencia al inicio
+          role: p.role.id,
+          equipped: equippedBefore // Equipamiento al inicio
+        },
+        goblins: c.goblins.map(g => ({ uid: g.uid, name: g.name, level: g.level, hp: g.currentHp })),
+        playerDice: c.playerDice,
+        goblinDice: c.dice && c.dice.green ? c.dice.green : {},
+        assignments: assignments,
+        interceptions: interceptions,
+        resolvedDetails: {
+          playerDiceDetails: playerDiceDetails,
+          goblinDiceDetails: goblinDiceDetails,
+          finalPlayerOutcome: {
+            hpBefore: hpBefore,
+            hpAfter: p.hp,
+            directDamageReceived: totalDirectGoblinDamage,
+            normalDamageIncoming: totalNormalGoblinDamage,
+            damageBlocked: blockedDamage,
+            netNormalDamageReceived: netDamage,
+            escozorDamageDealt: escozorDamageDealt,
+            warlordExtraDmg: warlordExtraDmg,
+            healed: playerHeal,
+            finalDamageHpChange: Math.max(0, hpBefore - p.hp)
+          }
+        }
+      };
+    } catch (e) {
+      console.error("Error saving debug state:", e);
     }
 
     p.shield = 0; // Limpiar escudo tras el combate
@@ -1654,7 +1854,7 @@ class GameState {
         if (val % 2 === 0) {
           if (targetUid) damagePerTarget[targetUid].damage += val;
         } else {
-          p.shield += val;
+          shieldObj.shield += val;
         }
         return;
     }
@@ -1747,9 +1947,9 @@ class GameState {
       itemToBreak.brokenAnimationPlayed = false;
       itemToBreak.brokenInCombatId = this.lastCombatId;
       this.addLog(`💔 ¡CRACK! El equipo <strong>${itemToBreak.name}</strong> de <strong>${player.name}</strong> se ha <span style="color:var(--accent-red)">ROTO</span>.`);
-      return true;
+      return itemToBreak;
     }
-    return false;
+    return null;
   }
 
   assignGoblinLetters() {

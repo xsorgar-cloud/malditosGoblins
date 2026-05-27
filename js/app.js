@@ -1766,7 +1766,9 @@ function renderCombatOverlay() {
         if (gob.isDying) return;
         let greenDiceResult = c.dice.green[gob.uid];
         let goblinDmg = greenDiceResult ? greenDiceResult.total : 1;
-        let isDirect = false;
+        let directDmg = 0;
+        let normalDmg = 0;
+        let isSpecialBoss = (gob.isBoss && (gob.name === "Rey Brujo" || gob.name === "La Madre"));
 
         if (gob.isBoss && gob.name === "La Madre") {
            goblinDmg = 0;
@@ -1781,26 +1783,50 @@ function renderCombatOverlay() {
            }
         }
         
-        let goblinInterceptions = interceptionAssignments[gob.uid] || [];
+        let goblinInterceptions = [];
+        if (interceptionAssignments) {
+          if (interceptionAssignments[gob.uid]) {
+            goblinInterceptions = interceptionAssignments[gob.uid];
+          } else {
+            const uidStr = String(gob.uid);
+            const foundKey = Object.keys(interceptionAssignments).find(k => String(k) === uidStr);
+            if (foundKey) goblinInterceptions = interceptionAssignments[foundKey];
+          }
+        }
+
+        let allSpecialAttacks = [];
         if (greenDiceResult && greenDiceResult.details) {
           let naturalDieIdx = 0;
           greenDiceResult.details.forEach((detail, rawIdx) => {
             if (detail.type === 'die') {
-              const isIntercepted = goblinInterceptions.some(asg => asg.goblinDieIndex === naturalDieIdx);
+              const isIntercepted = goblinInterceptions.some(asg => Number(asg.goblinDieIndex) === Number(naturalDieIdx));
+              
+              let dieDmg = detail.val;
+              const nextDetail = greenDiceResult.details[rawIdx + 1];
+              if (nextDetail && nextDetail.type === 'mod') {
+                dieDmg += nextDetail.val;
+              }
+
               if (isIntercepted) {
                 goblinDmg -= detail.val;
-                const nextDetail = greenDiceResult.details[rawIdx + 1];
                 if (nextDetail && nextDetail.type === 'mod') {
                   goblinDmg -= nextDetail.val;
                 }
               }
+              
               naturalDieIdx++;
+              
+              let gobDB = gob.attacks ? gob : DB.goblins[gob.level];
+              let attacks = (gobDB && gobDB.attacks) ? (gobDB.attacks[detail.val] || []) : [];
+              let isDieDirect = attacks.some(a => a.toLowerCase().includes('daño directo'));
+
               if (!isIntercepted) {
-                 let gobDB = gob.attacks ? gob : DB.goblins[gob.level];
-                 let attacks = (gobDB && gobDB.attacks) ? (gobDB.attacks[detail.val] || []) : [];
-                 if (attacks.some(a => a.toLowerCase().includes('daño directo'))) {
-                    isDirect = true;
-                 }
+                if (isDieDirect) {
+                  directDmg += dieDmg;
+                } else {
+                  normalDmg += dieDmg;
+                }
+                attacks.forEach(eff => allSpecialAttacks.push(eff));
               }
             }
           });
@@ -1808,15 +1834,24 @@ function renderCombatOverlay() {
 
         if (gameState.activeSenda === 'guerrero' && gob.level === 2) {
            let lvl1Count = gameState.battlefield.goblins.filter(g => g.level === 1 && g.currentHp > 0).length;
-           if (lvl1Count > 0) goblinDmg += lvl1Count;
+           if (lvl1Count > 0) {
+              if (isSpecialBoss) goblinDmg += lvl1Count;
+              else normalDmg += lvl1Count;
+           }
         }
         
-        goblinDmg = Math.max(0, goblinDmg);
-        if (isDirect) {
-          projDamageObj.direct += goblinDmg;
-        } else {
-          projDamageObj.normal += goblinDmg;
+        if (isSpecialBoss) {
+          let isDirect = allSpecialAttacks.some(a => a.toLowerCase().includes('daño directo'));
+          goblinDmg = Math.max(0, goblinDmg);
+          if (isDirect) {
+            directDmg = goblinDmg;
+          } else {
+            normalDmg = goblinDmg;
+          }
         }
+
+        projDamageObj.direct += directDmg;
+        projDamageObj.normal += normalDmg;
       });
     }
 
@@ -2015,7 +2050,7 @@ function renderCombatOverlay() {
         // Buscar un dado del goblin que coincida y no esté interceptado
         let targetDieIndex = -1;
         for (let i = 0; i < goblinDice.length; i++) {
-          const alreadyIntercepted = interceptionAssignments[gob.uid].some(asg => asg.goblinDieIndex === i);
+          const alreadyIntercepted = interceptionAssignments[gob.uid].some(asg => Number(asg.goblinDieIndex) === Number(i));
           if (!alreadyIntercepted && goblinDice[i].val === playerDieVal) {
             targetDieIndex = i;
             break;
@@ -2082,7 +2117,7 @@ function renderCombatOverlay() {
 
           let targetDieIndex = -1;
           for (let i = 0; i < goblinDice.length; i++) {
-            const alreadyIntercepted = interceptionAssignments[gob.uid].some(asg => asg.goblinDieIndex === i);
+            const alreadyIntercepted = interceptionAssignments[gob.uid].some(asg => Number(asg.goblinDieIndex) === Number(i));
             if (!alreadyIntercepted && goblinDice[i].val === playerDieVal) {
               targetDieIndex = i;
               break;
@@ -2204,7 +2239,7 @@ function renderCombatOverlay() {
           el.dataset.dieIndex = idx;
           // Marcar si está interceptado
           const currentNaturalIdx = naturalDieIdx;
-          const isIntercepted = intAsgs && intAsgs.some(asg => asg.goblinDieIndex === currentNaturalIdx);
+          const isIntercepted = intAsgs && intAsgs.some(asg => Number(asg.goblinDieIndex) === Number(currentNaturalIdx));
           if (isIntercepted) el.classList.add('intercepted');
           naturalDieIdx++;
 
@@ -4145,7 +4180,7 @@ document.addEventListener('click', (e) => {
                 // recalculate total
                 let newTotal = 0;
                 greenDetails.forEach(d => {
-                  if (d.type === 'die' || d.type === 'fixed') newTotal += d.val;
+                  if (d.type === 'die' || d.type === 'fixed' || d.type === 'mod') newTotal += d.val;
                 });
                 gameState.currentCombat.dice.green[uid].total = newTotal;
                 found = true;
@@ -4278,9 +4313,9 @@ if (btnDebugCombat) {
       debugCombatData.innerHTML = "<em>No hay datos del último combate aún.</em>";
     } else {
       const state = gameState.lastCombatDebugState;
-      let html = `<div style="font-family: sans-serif; color: #ddd;">`;
+      let html = `<div style="font-family: sans-serif; color: #ddd; line-height: 1.4;">`;
       
-      html += `<h3 style="color: var(--gold); border-bottom: 1px solid var(--gold); padding-bottom: 5px;">Héroe: ${state.player.name}</h3>`;
+      html += `<h3 style="color: var(--gold); border-bottom: 1px solid var(--gold); padding-bottom: 5px; margin-top: 5px;">Héroe al Inicio: ${state.player.name}</h3>`;
       html += `<ul>`;
       html += `<li><strong>Salud:</strong> ${state.player.hp} | <strong>Escudos:</strong> ${state.player.shield} | <strong>Energía:</strong> ${state.player.energy}</li>`;
       html += `<li><strong>Oro:</strong> ${state.player.mo} | <strong>Experiencia:</strong> ${state.player.pex}</li>`;
@@ -4301,82 +4336,229 @@ if (btnDebugCombat) {
       }
       html += `</ul>`;
 
-      html += `<h3 style="color: #f1c40f; border-bottom: 1px solid #f1c40f; padding-bottom: 5px;">Tus Dados (Héroe)</h3>`;
-      if (state.playerDice && state.playerDice.length > 0) {
-        html += `<p>${state.playerDice.map(d => {
-          let bg = d.type === 'yellow' ? '#f1c40f' : (d.type === 'black' ? '#333' : (d.type === 'red' ? '#e74c3c' : '#3498db'));
-          let col = d.type === 'yellow' ? '#000' : '#fff';
-          let val = d.value !== undefined ? d.value : d.val;
-          return `<span style="display:inline-block; background:${bg}; color:${col}; padding:2px 8px; border-radius:4px; margin-right:5px; font-weight:bold; border: 1px solid #fff;">${val}</span>`;
-        }).join('')}</p>`;
-      } else {
-        html += `<p>Sin dados</p>`;
-      }
-
-      html += `<h3 style="color: #2ecc71; border-bottom: 1px solid #2ecc71; padding-bottom: 5px;">Dados de Goblins (Verdes)</h3>`;
-      if (state.goblinDice && Object.keys(state.goblinDice).length > 0) {
-        html += `<ul>`;
-        for (let gId in state.goblinDice) {
-          let gob = state.goblins.find(g => g.uid == gId);
-          let gName = gob && gob.name && gob.name !== 'undefined' ? gob.name : "Goblin";
-          let res = state.goblinDice[gId];
-          let diceStr = (res.details || []).filter(d => d.type === 'die').map(d => d.val || d.value).join(', ');
-          html += `<li><strong>${gName}</strong> sacó: <span style="display:inline-block; background:#2ecc71; color:#000; padding:2px 8px; border-radius:4px; margin-right:5px; font-weight:bold;">${diceStr || res.total}</span> (Daño total: ${res.total})</li>`;
+      if (state.resolvedDetails) {
+        const details = state.resolvedDetails;
+        
+        // 1. Tus Dados (Héroe)
+        html += `<h3 style="color: #f1c40f; border-bottom: 1px solid #f1c40f; padding-bottom: 5px;">Tus Dados (Héroe)</h3>`;
+        if (state.playerDice && state.playerDice.length > 0) {
+          html += `<div style="margin-bottom: 12px; display: flex; gap: 6px; flex-wrap: wrap;">`;
+          state.playerDice.forEach(d => {
+            let bg = d.type === 'yellow' ? '#f1c40f' : (d.type === 'black' ? '#333' : (d.type === 'red' ? '#e74c3c' : (d.type === 'silver' ? 'linear-gradient(135deg, #e0e0e0, #999999)' : '#3498db')));
+            let col = d.type === 'yellow' ? '#000' : (d.type === 'silver' ? '#111' : '#fff');
+            let border = d.type === 'silver' ? '1px solid #666' : '1px solid #fff';
+            let val = d.value !== undefined ? d.value : d.val;
+            html += `<span style="display:inline-block; background:${bg}; color:${col}; padding:3px 10px; border-radius:4px; font-weight:bold; border:${border}; box-shadow: 0 2px 4px rgba(0,0,0,0.4);">${val}</span>`;
+          });
+          html += `</div>`;
         }
-        html += `</ul>`;
-      } else {
-        html += `<p>Los goblins no tiraron dados.</p>`;
-      }
 
-      html += `<h3 style="color: #40bae9; border-bottom: 1px solid #40bae9; padding-bottom: 5px;">Asignaciones de Dados</h3>`;
-      if (state.assignments && Object.keys(state.assignments).length > 0) {
-        html += `<ul>`;
-        for (let eqId in state.assignments) {
-          let asgs = state.assignments[eqId];
-          if (!Array.isArray(asgs)) asgs = [asgs];
-          
-          let eqName = eqId;
-          if (eqId === 'rol' || eqId === 'role') eqName = 'Habilidad de Rol';
-          else {
-            let foundEq = state.player.equipped.find(e => e.id === eqId);
-            if (foundEq) eqName = foundEq.name;
-          }
-
-          asgs.forEach(a => {
-            let targetName = "Sin objetivo";
-            if (a.targetUid) {
-               let foundGob = state.goblins.find(g => g.uid == a.targetUid);
-               if (foundGob) targetName = foundGob.name && foundGob.name !== 'undefined' ? foundGob.name : "Goblin";
-               else targetName = "Goblin";
+        if (details.playerDiceDetails && details.playerDiceDetails.length > 0) {
+          html += `<ul style="padding-left: 20px; margin-top: 8px;">`;
+          details.playerDiceDetails.forEach(d => {
+            let actions = [];
+            if (d.damage > 0) actions.push(`infligió <span style="color:#ff4d4d; font-weight:bold;">${d.damage} daño</span> a <strong>${d.target}</strong>`);
+            if (d.shield > 0) actions.push(`otorgó <span style="color:#3498db; font-weight:bold;">${d.shield} escudo</span>`);
+            if (d.heal > 0) actions.push(`curó <span style="color:#2ecc71; font-weight:bold;">${d.heal} PV</span>`);
+            if (d.energyGained > 0) actions.push(`generó <span style="color:#00d2ff; font-weight:bold;">${d.energyGained} energía de rol</span>`);
+            
+            let actionStr = actions.length > 0 ? actions.join(' y ') : "no aportó efectos numéricos (carta rota o no coincidente)";
+            if (d.isIntercept) {
+              actionStr = `anuló el dado del goblin de valor <span style="color:#2ecc71; font-weight:bold;">${d.value}</span>`;
             }
-            html += `<li>Dado <strong>${a.value}</strong> ··> asignado a <strong>${eqName}</strong> (Objetivo: ${targetName})</li>`;
-          });
-        }
-        html += `</ul>`;
-      } else {
-        html += `<p>No se asignaron dados a equipo o rol.</p>`;
-      }
+            
+            // Buscar tipo del dado para renderizarlo con su color
+            let dieType = 'red';
+            if (state.playerDice) {
+              const found = state.playerDice.find(pd => pd.id === d.dieId);
+              if (found) dieType = found.type;
+            }
+            let bg = dieType === 'yellow' ? '#f1c40f' : (dieType === 'black' ? '#333' : (dieType === 'red' ? '#e74c3c' : (dieType === 'silver' ? 'linear-gradient(135deg, #e0e0e0, #999999)' : '#3498db')));
+            let col = dieType === 'yellow' ? '#000' : (dieType === 'silver' ? '#111' : '#fff');
+            let border = dieType === 'silver' ? '1px solid #666' : '1px solid #fff';
+            let dieBadge = `<span style="display:inline-block; background:${bg}; color:${col}; padding:1px 6px; border-radius:4px; font-weight:bold; border:${border}; font-size:0.9rem; margin: 0 2px;">${d.value}</span>`;
 
-      html += `<h3 style="color: #f15bb5; border-bottom: 1px solid #f15bb5; padding-bottom: 5px;">Intercepciones (Defensa)</h3>`;
-      if (state.interceptions && Object.keys(state.interceptions).length > 0) {
-        html += `<ul>`;
-        for (let gobId in state.interceptions) {
-          let diceIds = state.interceptions[gobId];
-          let foundGob = state.goblins.find(g => g.uid == gobId);
-          let targetName = foundGob && foundGob.name && foundGob.name !== 'undefined' ? foundGob.name : "Goblin";
-          
-          // Buscar valores de esos dados
-          let diceVals = diceIds.map(asg => {
-            let id = typeof asg === 'string' ? asg : asg.dieId;
-            let d = state.playerDice.find(pd => pd.id === id);
-            return d ? (d.value !== undefined ? d.value : d.val) : (asg.value || "?");
+            html += `<li style="margin-bottom:6px;">Dado ${dieBadge} asignado a <strong>${d.assignedTo}</strong>: ${actionStr}.</li>`;
           });
-
-          html += `<li>Ataque de <strong>${targetName}</strong> Interceptado con dado(s): <strong>${diceVals.join(', ')}</strong></li>`;
+          html += `</ul>`;
+        } else {
+          html += `<p>No se asignaron dados a equipo o rol.</p>`;
         }
+
+        // 2. Dados de Goblins (Verdes)
+        html += `<h3 style="color: #2ecc71; border-bottom: 1px solid #2ecc71; padding-bottom: 5px;">Dados de Goblins (Verdes)</h3>`;
+        if (details.goblinDiceDetails && details.goblinDiceDetails.length > 0) {
+          html += `<ul style="padding-left: 20px;">`;
+          details.goblinDiceDetails.forEach(d => {
+            let statusStr = '';
+            if (d.isIntercepted) {
+              // Buscar tipo del dado interceptor para colorearlo
+              let interceptDieType = 'red';
+              if (state.playerDice && d.interceptedByDieId) {
+                const found = state.playerDice.find(pd => pd.id === d.interceptedByDieId);
+                if (found) interceptDieType = found.type;
+              }
+              let ibg = interceptDieType === 'yellow' ? '#f1c40f' : (interceptDieType === 'black' ? '#333' : (interceptDieType === 'red' ? '#e74c3c' : (interceptDieType === 'silver' ? 'linear-gradient(135deg, #e0e0e0, #999999)' : '#3498db')));
+              let icol = interceptDieType === 'yellow' ? '#000' : (interceptDieType === 'silver' ? '#111' : '#fff');
+              let iborder = interceptDieType === 'silver' ? '1px solid #666' : '1px solid #fff';
+              let interceptBadge = `<span style="display:inline-block; background:${ibg}; color:${icol}; padding:1px 6px; border-radius:4px; font-weight:bold; border:${iborder}; font-size:0.9rem; margin: 0 2px;">${d.interceptedBy}</span>`;
+              
+              statusStr = ` <span style="color:#2ecc71; font-size:0.9rem;">(Interceptado por dado ${interceptBadge})</span>`;
+            }
+            
+            let dieBadge = `<span style="display:inline-block; background:#2ecc71; color:#000; padding:2px 8px; border-radius:4px; font-weight:bold; margin-right:4px; box-shadow: 0 2px 4px rgba(0,0,0,0.4);">${d.val}</span>`;
+            let gName = d.goblinName && d.goblinName !== 'undefined' ? d.goblinName : "Goblin";
+            
+            html += `<li style="margin-bottom:10px;"><strong>${gName}</strong> sacó: ${dieBadge}${statusStr}`;
+            if (d.effects && d.effects.length > 0) {
+              html += `<ul style="padding-left: 15px; margin-top: 4px; font-size:0.95rem;">`;
+              d.effects.forEach(eff => {
+                const effTextLow = eff.text.toLowerCase();
+                let color = '#888';
+                
+                if (eff.status === 'aplicado') {
+                  if (effTextLow.includes('rotura no esquivable')) {
+                    color = '#c975ff'; // Morado
+                  } else if (effTextLow.includes('calambre')) {
+                    color = '#f1c40f'; // Amarillo
+                  } else if (effTextLow.includes('tembleque')) {
+                    color = '#00d2ff'; // Azul cielo
+                  } else if (effTextLow.includes('escozor')) {
+                    color = '#ff8c00'; // Naranja
+                  } else {
+                    color = '#ff6b6b'; // Rojo standard
+                  }
+                }
+                
+                let decoration = eff.status === 'aplicado' ? 'font-weight:bold;' : 'text-decoration:line-through;';
+                let icon = eff.status === 'aplicado' ? '💥' : '🛡️';
+                
+                let textToShow = eff.text;
+                if (eff.status === 'mitigado') {
+                  textToShow = `${eff.text} (Mitigado)`;
+                }
+                
+                html += `<li style="color:${color}; ${decoration}">${icon} ${textToShow}</li>`;
+              });
+              html += `</ul>`;
+            } else {
+              html += `<div style="font-size:0.9rem; color:#aaa; margin-left: 15px; font-style:italic;">(Sin efectos especiales de ataque para este dado)</div>`;
+            }
+            html += `</li>`;
+          });
+          html += `</ul>`;
+        } else {
+          html += `<p>Los goblins no tiraron dados de ataque.</p>`;
+        }
+
+        // 3. Resultado Final del Héroe
+        const outcome = details.finalPlayerOutcome;
+        html += `<h3 style="color: #e74c3c; border-bottom: 1px solid #e74c3c; padding-bottom: 5px;">Daño e Impacto Final en Héroe</h3>`;
+        html += `<ul style="padding-left: 20px; font-size: 1.05rem;">`;
+        html += `<li><strong>Daño Directo Recibido:</strong> <span style="color:#ff4d4d; font-weight:bold;">${outcome.directDamageReceived}</span></li>`;
+        html += `<li><strong>Daño Normal Recibido (antes de escudo):</strong> <span style="color:#e67e22; font-weight:bold;">${outcome.normalDamageIncoming}</span></li>`;
+        html += `<li><strong>Daño Bloqueado por Escudos:</strong> <span style="color:#3498db; font-weight:bold;">${outcome.damageBlocked}</span></li>`;
+        html += `<li><strong>Daño Normal Neto Recibido:</strong> <span style="color:#ff4d4d; font-weight:bold;">${outcome.netNormalDamageReceived}</span></li>`;
+        if (outcome.escozorDamageDealt > 0) {
+          html += `<li><strong>Daño por usar dados con Escozor:</strong> <span style="color:#ff8c00; font-weight:bold;">${outcome.escozorDamageDealt}</span></li>`;
+        }
+        if (outcome.warlordExtraDmg > 0) {
+          html += `<li><strong>Daño Extra por Golpe Certero (Jefe):</strong> <span style="color:#ff4d4d; font-weight:bold;">${outcome.warlordExtraDmg}</span></li>`;
+        }
+        if (outcome.healed > 0) {
+          html += `<li><strong>Curación Recibida:</strong> <span style="color:#2ecc71; font-weight:bold;">+${outcome.healed}</span></li>`;
+        }
+        
+        let hpChangeStr = '';
+        if (outcome.finalDamageHpChange > 0) {
+          hpChangeStr = `<span style="color:#ff4d4d; font-weight:bold;">-${outcome.finalDamageHpChange} PV</span>`;
+        } else if (outcome.hpAfter > outcome.hpBefore) {
+          hpChangeStr = `<span style="color:#2ecc71; font-weight:bold;">+${outcome.hpAfter - outcome.hpBefore} PV</span>`;
+        } else {
+          hpChangeStr = `<span style="color:#888; font-weight:bold;">Sin cambio neto</span>`;
+        }
+        
+        html += `<li style="margin-top:10px; border-top:1px solid #444; padding-top:8px;"><strong>Salud del Héroe:</strong> ${outcome.hpBefore} ➔ <strong>${outcome.hpAfter}</strong> (${hpChangeStr})</li>`;
         html += `</ul>`;
+        
       } else {
-        html += `<p>No se interceptó ningún ataque.</p>`;
+        // Fallback para combates antiguos
+        html += `<h3 style="color: #f1c40f; border-bottom: 1px solid #f1c40f; padding-bottom: 5px;">Tus Dados (Héroe)</h3>`;
+        if (state.playerDice && state.playerDice.length > 0) {
+          html += `<p>${state.playerDice.map(d => {
+            let bg = d.type === 'yellow' ? '#f1c40f' : (d.type === 'black' ? '#333' : (d.type === 'red' ? '#e74c3c' : '#3498db'));
+            let col = d.type === 'yellow' ? '#000' : '#fff';
+            let val = d.value !== undefined ? d.value : d.val;
+            return `<span style="display:inline-block; background:${bg}; color:${col}; padding:2px 8px; border-radius:4px; margin-right:5px; font-weight:bold; border: 1px solid #fff;">${val}</span>`;
+          }).join('')}</p>`;
+        } else {
+          html += `<p>Sin dados</p>`;
+        }
+
+        html += `<h3 style="color: #2ecc71; border-bottom: 1px solid #2ecc71; padding-bottom: 5px;">Dados de Goblins (Verdes)</h3>`;
+        if (state.goblinDice && Object.keys(state.goblinDice).length > 0) {
+          html += `<ul>`;
+          for (let gId in state.goblinDice) {
+            let gob = state.goblins.find(g => g.uid == gId);
+            let gName = gob && gob.name && gob.name !== 'undefined' ? gob.name : "Goblin";
+            let res = state.goblinDice[gId];
+            let diceStr = (res.details || []).filter(d => d.type === 'die').map(d => d.val || d.value).join(', ');
+            html += `<li><strong>${gName}</strong> sacó: <span style="display:inline-block; background:#2ecc71; color:#000; padding:2px 8px; border-radius:4px; margin-right:5px; font-weight:bold;">${diceStr || res.total}</span> (Daño total: ${res.total})</li>`;
+          }
+          html += `</ul>`;
+        } else {
+          html += `<p>Los goblins no tiraron dados.</p>`;
+        }
+
+        html += `<h3 style="color: #40bae9; border-bottom: 1px solid #40bae9; padding-bottom: 5px;">Asignaciones de Dados</h3>`;
+        if (state.assignments && Object.keys(state.assignments).length > 0) {
+          html += `<ul>`;
+          for (let eqId in state.assignments) {
+            let asgs = state.assignments[eqId];
+            if (!Array.isArray(asgs)) asgs = [asgs];
+            
+            let eqName = eqId;
+            if (eqId === 'rol' || eqId === 'role') eqName = 'Habilidad de Rol';
+            else {
+              let foundEq = state.player.equipped.find(e => e.id === eqId);
+              if (foundEq) eqName = foundEq.name;
+            }
+
+            asgs.forEach(a => {
+              let targetName = "Sin objetivo";
+              if (a.targetUid) {
+                 let foundGob = state.goblins.find(g => g.uid == a.targetUid);
+                 if (foundGob) targetName = foundGob.name && foundGob.name !== 'undefined' ? foundGob.name : "Goblin";
+                 else targetName = "Goblin";
+              }
+              html += `<li>Dado <strong>${a.value}</strong> ··> asignado a <strong>${eqName}</strong> (Objetivo: ${targetName})</li>`;
+            });
+          }
+          html += `</ul>`;
+        } else {
+          html += `<p>No se asignaron dados a equipo o rol.</p>`;
+        }
+
+        html += `<h3 style="color: #f15bb5; border-bottom: 1px solid #f15bb5; padding-bottom: 5px;">Intercepciones (Defensa)</h3>`;
+        if (state.interceptions && Object.keys(state.interceptions).length > 0) {
+          html += `<ul>`;
+          for (let gobId in state.interceptions) {
+            let diceIds = state.interceptions[gobId];
+            let foundGob = state.goblins.find(g => g.uid == gobId);
+            let targetName = foundGob && foundGob.name && foundGob.name !== 'undefined' ? foundGob.name : "Goblin";
+            
+            let diceVals = diceIds.map(asg => {
+              let id = typeof asg === 'string' ? asg : asg.dieId;
+              let d = state.playerDice.find(pd => pd.id === id);
+              return d ? (d.value !== undefined ? d.value : d.val) : (asg.value || "?");
+            });
+
+            html += `<li>Ataque de <strong>${targetName}</strong> Interceptado con dado(s): <strong>${diceVals.join(', ')}</strong></li>`;
+          }
+          html += `</ul>`;
+        } else {
+          html += `<p>No se interceptó ningún ataque.</p>`;
+        }
       }
 
       html += `</div>`;
