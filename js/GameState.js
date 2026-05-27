@@ -253,7 +253,7 @@ class GameState {
     this.isCombat = true;
     p = this.players[this.currentPlayerIndex];
     let targetNames = validGoblins.map(t => 'G' + t.level).join(' + ');
-    this.addLog(`<strong>${p.name}</strong> inició un combate contra: ${targetNames}.`);
+    this.addLog(`<span style="color:#B81D1D">*****<strong>${p.name}</strong> inició un combate contra: ${targetNames}.*****</span>`);
     return true;
   }
 
@@ -1013,6 +1013,7 @@ class GameState {
     this.currentPlayerIndex = 0;
     this.spawnInitialGoblins();
     this.addLog(`¡La aventura comienza en la Oleada ${this.battlefield.waveLevel}! Fase de Mercado.`);
+    this.startPlayerTurn(this.getCurrentPlayer());
   }
 
   spawnInitialGoblins() {
@@ -1041,9 +1042,23 @@ class GameState {
     return this.players[this.currentPlayerIndex];
   }
 
+  getPlayerColor(player) {
+    if (!player) return '#ffffff';
+    // Colores de jugadores: Jugador 1 (Celeste), Jugador 2 (Púrpura/Rosa), Jugador 3 (Naranja/Ámbar), Jugador 4 (Verde vibrante)
+    const colors = ["#4cc9f0", "#b5179e", "#ffb703", "#2ecc71"];
+    return colors[(player.id - 1) % colors.length];
+  }
+
   nextTurn() {
     this.isMarketPhase = false;
-    this.lastActionWasCombat = false;
+    this.lastActionWasCombat = false;  
+
+    let previousPlayer = this.getCurrentPlayer();
+    if (previousPlayer) {
+      const color = this.getPlayerColor(previousPlayer);
+      this.addLog(`<span style="color: ${color};">🔄<<< <strong>${previousPlayer.name}</strong> ha finalizado su turno.</span>`);
+    }
+
     if (this.players[this.currentPlayerIndex]) {
       this.players[this.currentPlayerIndex].goblinsFoughtThisTurn = [];
     }
@@ -1065,22 +1080,32 @@ class GameState {
       if (iterations > this.players.length * 2) break; // Fallback
     } while (this.players[this.currentPlayerIndex] && this.players[this.currentPlayerIndex].hp <= 0 && !this.isGameOver);
 
-    // Aire Viciado: Al inicio del turno del nuevo jugador activo
-    if (!this.isGameOver) {
-      let nextPlayer = this.getCurrentPlayer();
-      if (nextPlayer && this.activeSenda === 'rey_brujo') {
-        const brokenCount = nextPlayer.equipped.filter(eq => eq.isActive && eq.isBroken).length;
-        if (brokenCount >= 2) {
-          nextPlayer.hp = Math.max(0, nextPlayer.hp - brokenCount);
-          this.addLog(`💨 <strong>Aire Viciado:</strong> <strong>${nextPlayer.name}</strong> tiene ${brokenCount} equipos rotos y sufre <span style="color:#ff4d4d"><strong>${brokenCount} Daño Directo</strong></span>.`);
-          this.checkGameOver();
-        }
-      }
+    if (!this.isGameOver && !this.isRetaliationPhase && !this.isResolvingWaveSequentially) {
+      this.startPlayerTurn(this.getCurrentPlayer());
     }
     
     // Auto-guardado silencioso al iniciar el turno
     if (typeof window !== 'undefined' && window.saveGame) {
       window.saveGame(true);
+    }
+  }
+
+  startPlayerTurn(player) {
+    if (!player || this.isGameOver) return;
+    
+    // Evitar iniciar turno si ya se está en represalia o resolución de oleada (doble salvaguarda)
+    if (this.isRetaliationPhase || this.isResolvingWaveSequentially) return;
+
+    const color = this.getPlayerColor(player);
+    this.addLog(`<span style="color: ${color};">➡️>>> Turno de <strong>${player.name}</strong> (Vida: ${player.hp}/${player.maxHp}, Oro: ${player.mo}).</span>`);
+    
+    if (this.activeSenda === 'rey_brujo') {
+      const brokenCount = player.equipped.filter(eq => eq.isActive && eq.isBroken).length;
+      if (brokenCount >= 2) {
+        player.hp = Math.max(0, player.hp - brokenCount);
+        this.addLog(`💨 <strong>Aire Viciado:</strong> <strong>${player.name}</strong> tiene ${brokenCount} equipos rotos y sufre <span style="color:#ff4d4d"><strong>${brokenCount} Daño Directo</strong></span>.`);
+        this.checkGameOver();
+      }
     }
   }
 
@@ -1378,6 +1403,21 @@ class GameState {
   completeWaveAdvancement() {
     this.battlefield.actionCount = 0;
     
+    // Restablecer la vida de los goblins normales supervivientes (no jefes) a su valor original
+    let restoredCount = 0;
+    this.battlefield.goblins.forEach(g => {
+      if (!g.isBoss && g.currentHp > 0 && !g.isDying) {
+        let originalHp = g.hp;
+        if (originalHp !== undefined && g.currentHp < originalHp) {
+          g.currentHp = originalHp;
+          restoredCount++;
+        }
+      }
+    });
+    if (restoredCount > 0) {
+      this.addLog(`💖 La vida de los goblins supervivientes se ha restablecido al máximo.`);
+    }
+
     // Regla de Hito 3 de El Rey Brujo: La Plaga (respawn de derrotados)
     if (this.activeSenda === 'rey_brujo' && this.currentHito === 4) {
       let aliveHitoGoblins = this.battlefield.goblins.filter(g => g.isHito && g.currentHp > 0);

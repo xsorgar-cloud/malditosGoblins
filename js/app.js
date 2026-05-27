@@ -18,30 +18,36 @@ const showInterceptionError = (val) => {
     if (!splash) return;
 
     let isRemoving = false;
+    let fadeTimeout = null;
+
     const removeSplash = (immediate = false) => {
-      if (isRemoving) return;
-      isRemoving = true;
       if (immediate) {
+        if (fadeTimeout) clearTimeout(fadeTimeout);
         splash.style.transition = 'none';
         splash.style.opacity = '0';
         splash.style.display = 'none';
         splash.remove();
+        isRemoving = true;
       } else {
+        if (isRemoving) return;
+        isRemoving = true;
         splash.style.opacity = '0';
         splash.style.visibility = 'hidden';
-        setTimeout(() => splash.remove(), 800);
+        fadeTimeout = setTimeout(() => splash.remove(), 800);
       }
     };
 
     const timer = setTimeout(() => removeSplash(false), 1000);
 
-    // Soporte total para clic en PC y toque táctil en móviles/tablets
-    ['mousedown', 'touchstart'].forEach(evt => {
-      splash.addEventListener(evt, (e) => {
-        e.preventDefault();
-        clearTimeout(timer);
-        removeSplash(true);
-      }, { once: true });
+    const handleTrigger = (e) => {
+      e.preventDefault();
+      clearTimeout(timer);
+      removeSplash(true);
+    };
+
+    // Soporte total para clic en PC, toque táctil en móviles/tablets y punteros estándar
+    ['pointerdown', 'mousedown', 'touchstart', 'click'].forEach(evt => {
+      splash.addEventListener(evt, handleTrigger, { once: true });
     });
   };
 
@@ -627,6 +633,36 @@ let roleFillDice = { red1: 0, red2: 0, black: 0 };
 let roleFillAssigned = null;
 let roleFillBlackRerolled = false;
 let roleFillSilverSelected = null;
+let isRollingRoleFillDice = false;
+
+function triggerRoleFillDiceRoll() {
+  isRollingRoleFillDice = true;
+  document.getElementById('btn-cancel-role-fill').disabled = true;
+  document.getElementById('btn-confirm-role-fill').disabled = true;
+  renderRoleFillDice();
+
+  const container = document.getElementById('role-fill-dice-container');
+  const diceEls = container.querySelectorAll('.die');
+  const intervals = [];
+  
+  diceEls.forEach(el => {
+    const dieId = el.id;
+    const dieObj = roleFillDice.find(d => d.id === dieId);
+    if (!dieObj) return;
+    const faces = dieObj.faces;
+    const interval = setInterval(() => {
+      el.innerText = Math.floor(Math.random() * faces) + 1;
+    }, 60);
+    intervals.push(interval);
+  });
+
+  setTimeout(() => {
+    intervals.forEach(clearInterval);
+    isRollingRoleFillDice = false;
+    document.getElementById('btn-cancel-role-fill').disabled = false;
+    renderRoleFillDice();
+  }, 800);
+}
 
 document.getElementById('btn-role').addEventListener('click', () => {
   if (gameState.isMarketPhase) return;
@@ -648,7 +684,6 @@ document.getElementById('btn-role').addEventListener('click', () => {
 
   roleFillAssigned = null;
 
-  //p = gameState.players[gameState.currentPlayerIndex];
   document.getElementById('role-fill-player-stats').innerHTML = `<p style="font-size: 1.2rem; margin:0;">${p.name}</p><p style="color: #00d2ff; margin:0;">Energía Actual: ${p.energy}</p>`;
 
   const roleSlot = document.getElementById('role-fill-slot');
@@ -656,9 +691,8 @@ document.getElementById('btn-role').addEventListener('click', () => {
   document.getElementById('role-fill-placeholder').innerText = '';
   document.getElementById('role-fill-placeholder').style.background = 'rgba(0,0,0,0.5)';
 
-  renderRoleFillDice();
   document.getElementById('role-fill-overlay').classList.remove('hidden');
-  document.getElementById('btn-confirm-role-fill').disabled = true;
+  triggerRoleFillDiceRoll();
 });
 
 
@@ -680,8 +714,18 @@ function renderRoleFillDice() {
     if (die.faces === 4) dieEl.classList.add('d4');
     dieEl.id = die.id;
     dieEl.innerText = die.val;
-    dieEl.draggable = roleFillAssigned !== die.id;
     dieEl.style.opacity = roleFillAssigned === die.id ? '0.3' : '1';
+
+    if (isRollingRoleFillDice) {
+      dieEl.draggable = false;
+      dieEl.classList.add('die-rolling');
+      dieEl.style.cursor = 'default';
+      dieWrapper.appendChild(dieEl);
+      container.appendChild(dieWrapper);
+      return;
+    }
+
+    dieEl.draggable = roleFillAssigned !== die.id;
 
     dieEl.addEventListener('dragstart', (e) => {
       e.dataTransfer.setData('text/plain', die.id);
@@ -825,8 +869,11 @@ function renderRoleFillDice() {
   });
 }
 
-document.getElementById('role-fill-slot').addEventListener('dragover', (e) => e.preventDefault());
+document.getElementById('role-fill-slot').addEventListener('dragover', (e) => {
+  if (!isRollingRoleFillDice) e.preventDefault();
+});
 document.getElementById('role-fill-slot').addEventListener('drop', (e) => {
+  if (isRollingRoleFillDice) return;
   e.preventDefault();
   const dieId = e.dataTransfer.getData('text/plain');
   const die = roleFillDice.find(d => d.id === dieId);
@@ -846,6 +893,7 @@ document.getElementById('role-fill-slot').addEventListener('drop', (e) => {
 });
 
 document.getElementById('btn-confirm-role-fill').addEventListener('click', () => {
+  if (isRollingRoleFillDice) return;
   if (!roleFillAssigned) return;
 
   const p = gameState.players[gameState.currentPlayerIndex];
@@ -863,6 +911,7 @@ document.getElementById('btn-confirm-role-fill').addEventListener('click', () =>
 });
 
 document.getElementById('btn-cancel-role-fill').addEventListener('click', () => {
+  if (isRollingRoleFillDice) return;
   document.getElementById('role-fill-overlay').classList.add('hidden');
 });
 
@@ -978,6 +1027,11 @@ async function processWaveSequence() {
   }
 
   window.isAnimatingWave = false;
+  
+  if (!gameState.isGameOver) {
+    gameState.startPlayerTurn(gameState.getCurrentPlayer());
+  }
+
   // Guardado automático silencioso
   window.saveGame(true);
   
@@ -1120,7 +1174,11 @@ btnConfirmAttack.addEventListener('click', () => {
     interceptionAssignments = {};
     activeSelectedDieId = null;
     activeSelectedEquipId = null;
-    renderCombatOverlay();
+    if (gameState.currentCombat.needsCrampResolution) {
+      renderCombatOverlay();
+    } else {
+      triggerCombatDiceRoll();
+    }
   }
 });
 
@@ -1709,6 +1767,54 @@ function showCorrosionModal(pendingChoice) {
   modal.classList.remove('hidden');
 }
 
+let isRollingCombatDice = false;
+
+function triggerCombatDiceRoll() {
+  isRollingCombatDice = true;
+  renderCombatOverlay();
+
+  const dicePoolContainer = document.getElementById('combat-dice-pool');
+  const playerDiceEls = dicePoolContainer.querySelectorAll('.die');
+  
+  const goblinDiceEls = [];
+  const combatGoblinsContainer = document.getElementById('combat-goblins-container');
+  if (combatGoblinsContainer) {
+    const greenDice = combatGoblinsContainer.querySelectorAll('.die.green');
+    greenDice.forEach(d => goblinDiceEls.push(d));
+  }
+  
+  const intervals = [];
+  
+  playerDiceEls.forEach(el => {
+    const dieId = el.id;
+    const dieObj = gameState.currentCombat.playerDice.find(d => d.id === dieId);
+    if (!dieObj) return;
+    const faces = dieObj.faces;
+    const interval = setInterval(() => {
+      el.innerText = Math.floor(Math.random() * faces) + 1;
+    }, 60);
+    intervals.push(interval);
+  });
+  
+  goblinDiceEls.forEach(el => {
+    let faces = 6;
+    const match = el.className.match(/d(\d+)/);
+    if (match) {
+      faces = parseInt(match[1], 10);
+    }
+    const interval = setInterval(() => {
+      el.innerText = Math.floor(Math.random() * faces) + 1;
+    }, 60);
+    intervals.push(interval);
+  });
+  
+  setTimeout(() => {
+    intervals.forEach(clearInterval);
+    isRollingCombatDice = false;
+    renderCombatOverlay();
+  }, 800);
+}
+
 function renderCombatOverlay() {
   const overlay = document.getElementById('combat-overlay');
   const c = gameState.currentCombat;
@@ -1905,18 +2011,28 @@ function renderCombatOverlay() {
   const btnResolve = document.getElementById('btn-resolve-combat');
   const btnCancel = document.getElementById('btn-cancel-combat');
 
+  if (isRollingCombatDice) {
+    btnResolve.disabled = true;
+    btnCancel.disabled = true;
+  } else {
+    btnResolve.disabled = false;
+    btnCancel.disabled = false;
+  }
+
   if (isCrampPhase) {
     btnResolve.innerText = "Lanzar dados rojos";
     btnResolve.style.background = 'linear-gradient(135deg, #ffcc00, #ff9900)';
     btnResolve.onclick = () => {
+      if (isRollingCombatDice) return;
       c.needsCrampResolution = false;
       gameState.addLog(`⚡ <strong>${p.name}</strong> ha resuelto sus calambres.`);
-      renderCombatOverlay();
+      triggerCombatDiceRoll();
     };
   } else {
     btnResolve.innerText = "Resolver Ataque";
     btnResolve.style.background = '';
     btnResolve.onclick = () => {
+      if (isRollingCombatDice) return;
       // Automatización: Si solo hay un goblin, asignar automáticamente lo que falte (solo las que hacen daño)
       const combatGoblins = c.goblins;
       if (combatGoblins.length === 1) {
@@ -1983,6 +2099,7 @@ function renderCombatOverlay() {
   }
 
   btnCancel.onclick = () => {
+    if (isRollingCombatDice) return;
     gameState.cancelCombat();
     document.getElementById('combat-overlay').classList.add('hidden');
     selectedGoblins = [];
@@ -2234,6 +2351,7 @@ function renderCombatOverlay() {
         let el = document.createElement('div');
         if (item.type === 'die') {
           el.className = `die green d${item.faces}`;
+          if (isRollingCombatDice) el.classList.add('die-rolling');
           el.id = `green-die-${gob.uid}-${idx}`;
           el.dataset.goblinUid = gob.uid;
           el.dataset.dieIndex = idx;
@@ -2323,8 +2441,18 @@ function renderCombatOverlay() {
 
     dieEl.id = die.id;
     dieEl.innerText = die.value;
-    dieEl.draggable = !die.assignedTo;
     dieEl.style.opacity = die.assignedTo ? '0.3' : '1';
+
+    if (isRollingCombatDice) {
+      dieEl.draggable = false;
+      dieEl.classList.add('die-rolling');
+      dieEl.style.cursor = 'default';
+      dieWrapper.appendChild(dieEl);
+      dicePoolContainer.appendChild(dieWrapper);
+      return;
+    }
+
+    dieEl.draggable = !die.assignedTo;
 
     // Bloquear movimiento de dados con calambre si ya pasó la fase
     if (!isCrampPhase && die.isCramped) {
@@ -2526,8 +2654,11 @@ function renderCombatOverlay() {
   if (!hasCombatRole) roleSlot.style.borderColor = '#00d2ff'; // Azul para el rol
   roleSlot.innerHTML = `<div class="die-placeholder" data-id="role"></div>`;
 
-  roleSlot.addEventListener('dragover', (e) => e.preventDefault());
+  roleSlot.addEventListener('dragover', (e) => {
+    if (!isRollingCombatDice) e.preventDefault();
+  });
   roleSlot.addEventListener('drop', (e) => {
+    if (isRollingCombatDice) return;
     e.preventDefault();
     const dieId = e.dataTransfer.getData('text/plain');
     const dieData = c.playerDice.find(d => d.id === dieId);
@@ -2545,6 +2676,7 @@ function renderCombatOverlay() {
 
   // SISTEMA DE RESPALDO (TAP-TO-SELECT): Asignar dado activo al rol al hacer clic
   roleSlot.addEventListener('click', (e) => {
+    if (isRollingCombatDice) return;
     if (activeSelectedDieId) {
       const dieData = c.playerDice.find(d => d.id === activeSelectedDieId);
       if (!dieData) return;
@@ -2637,8 +2769,11 @@ function renderCombatOverlay() {
       slot.classList.add('equip-selected');
     }
 
-    slot.addEventListener('dragover', (e) => e.preventDefault());
+    slot.addEventListener('dragover', (e) => {
+      if (!isRollingCombatDice) e.preventDefault();
+    });
     slot.addEventListener('drop', (e) => {
+      if (isRollingCombatDice) return;
       e.preventDefault();
       const dieId = e.dataTransfer.getData('text/plain');
       const dieData = c.playerDice.find(d => d.id === dieId);
@@ -2682,6 +2817,7 @@ function renderCombatOverlay() {
 
     // SISTEMA DE RESPALDO (TAP-TO-SELECT): Asignar dado activo al equipo o seleccionar equipo cargado al hacer clic
     slot.addEventListener('click', (e) => {
+      if (isRollingCombatDice) return;
       if (activeSelectedDieId) {
         const dieData = c.playerDice.find(d => d.id === activeSelectedDieId);
         if (!dieData) return;
@@ -2775,8 +2911,12 @@ function renderCombatOverlay() {
         const eqObj = p.equipped.find(e => e.id === eq.id);
         const dealsDamage = doesEquipmentDealDamage(eqObj, asgs[0].value, asgs[0]);
         if (dealsDamage) {
-          slot.draggable = true;
+          slot.draggable = !isRollingCombatDice;
           slot.addEventListener('dragstart', (ev) => {
+            if (isRollingCombatDice) {
+              ev.preventDefault();
+              return;
+            }
             ev.dataTransfer.setData('text/equipId', eq.id);
           });
           if (asgs.some(a => a.targetUid)) slot.style.opacity = '0.5';
