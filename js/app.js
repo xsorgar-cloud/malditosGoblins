@@ -661,7 +661,7 @@ function triggerRoleFillDiceRoll() {
     isRollingRoleFillDice = false;
     document.getElementById('btn-cancel-role-fill').disabled = false;
     renderRoleFillDice();
-  }, 800);
+  }, 500);
 }
 
 document.getElementById('btn-role').addEventListener('click', () => {
@@ -1812,7 +1812,7 @@ function triggerCombatDiceRoll() {
     intervals.forEach(clearInterval);
     isRollingCombatDice = false;
     renderCombatOverlay();
-  }, 800);
+  }, 500);
 }
 
 function renderCombatOverlay() {
