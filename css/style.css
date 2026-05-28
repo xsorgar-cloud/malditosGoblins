@@ -546,6 +546,14 @@ main {
   border: 2px solid #00d2ff;
   box-shadow: 0 0 15px #00d2ff, inset 0 0 10px rgba(0, 210, 255, 0.5);
   animation: roleReadyPulse 2s infinite ease-in-out !important;
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s !important;
+}
+
+.player-role.role-ready:hover,
+.equip-slot.role-ready:hover {
+  transform: scale(1.04);
+  box-shadow: 0 0 25px #00d2ff, inset 0 0 15px rgba(0, 210, 255, 0.8) !important;
 }
 
 @keyframes roleReadyPulse {
@@ -2944,6 +2952,6 @@ main {
 }
 
 .die-rolling {
-  animation: die-roll 0.5s cubic-bezier(0.25, 1, 0.5, 1) !important;
+  animation: die-roll 0.3s cubic-bezier(0.25, 1, 0.3, 1) !important;
 }
 

@@ -661,7 +661,7 @@ function triggerRoleFillDiceRoll() {
     isRollingRoleFillDice = false;
     document.getElementById('btn-cancel-role-fill').disabled = false;
     renderRoleFillDice();
-  }, 500);
+  }, 300);
 }
 
 document.getElementById('btn-role').addEventListener('click', () => {
@@ -1813,7 +1813,7 @@ function triggerCombatDiceRoll() {
     intervals.forEach(clearInterval);
     isRollingCombatDice = false;
     renderCombatOverlay();
-  }, 500);
+  }, 300);
 }
 
 function renderCombatOverlay() {
@@ -1880,11 +1880,11 @@ function renderCombatOverlay() {
         let goblinDmg = greenDiceResult ? greenDiceResult.total : 1;
         let directDmg = 0;
         let normalDmg = 0;
-        let isSpecialBoss = (gob.isBoss && (gob.name === "Rey Brujo" || gob.name === "La Madre"));
+        let isSpecialBoss = (gob.isBoss && (gob.name === "Rey Brujo" || gob.name === "La Madre" || gameState.activeSenda === "rey_brujo" || gameState.activeSenda === "la_madre"));
 
-        if (gob.isBoss && gob.name === "La Madre") {
+        if (gob.isBoss && (gob.name === "La Madre" || gameState.activeSenda === "la_madre")) {
            goblinDmg = 0;
-        } else if (gob.isBoss && gob.name === "Rey Brujo" && greenDiceResult && greenDiceResult.details) {
+        } else if (gob.isBoss && (gob.name === "Rey Brujo" || gameState.activeSenda === "rey_brujo") && greenDiceResult && greenDiceResult.details) {
            let naturalDie = greenDiceResult.details.find(d => d.type === 'die');
            if (naturalDie) {
               let rollVal = naturalDie.val;
@@ -2077,6 +2077,10 @@ function renderCombatOverlay() {
 
       gameState.resolveCombat(currentAssignments, interceptionAssignments);
 
+      if (gameState.lastWarlordExtraDmg > 0) {
+        alert(`⚔️ Daño Extra por Golpe Certero: El Zeñor de la Guerra infligió +${gameState.lastWarlordExtraDmg} de daño extra.`);
+      }
+
       const hpAfter = pBefore.hp;
       if (hpAfter < hpBefore) {
         const flash = document.createElement('div');
@@ -2159,7 +2163,7 @@ function renderCombatOverlay() {
         // No permitir interceptar NADA si estamos en fase de calambre (primero asignar a equipo)
         if (isCrampPhase) return;
         
-        if (gob.name === 'La Madre') {
+        if (gob.isBoss && (gameState.activeSenda === 'la_madre' || gob.name === 'La Madre')) {
           alert('🛡️ Los ataques de La Madre son Ininterceptables.');
           return;
         }
@@ -2229,7 +2233,7 @@ function renderCombatOverlay() {
           if (dieData.type === 'silver') { alert("Los dados plateados solo pueden fusionarse con otros dados de la reserva."); return; }
           if (isCrampPhase) return;
           
-          if (gob.name === 'La Madre') {
+          if (gob.isBoss && (gameState.activeSenda === 'la_madre' || gob.name === 'La Madre')) {
             alert('🛡️ Los ataques de La Madre son Ininterceptables.');
             return;
           }
@@ -2349,7 +2353,7 @@ function renderCombatOverlay() {
     diceCont.style.width = '100%';
     diceCont.style.margin = '0';
     diceCont.style.padding = '8px 0';
-    diceCont.style.background = 'rgba(0, 0, 0, 0.85)';
+    diceCont.style.background = 'rgba(0, 0, 0, 0.75)';
     diceCont.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.9)';
     diceCont.style.gap = '2px';
     diceCont.style.alignItems = 'center';
@@ -2379,7 +2383,7 @@ function renderCombatOverlay() {
         } else {
           el.className = 'mod-green';
           el.innerText = (item.val >= 0 ? '+' : '') + item.val;
-          el.style.fontSize = '1.2rem';
+          el.style.fontSize = '1.6rem';
           el.style.padding = '2px 6px';
           el.style.background = 'rgba(0,0,0,0.7)';
           el.style.borderRadius = '4px';
@@ -2647,6 +2651,7 @@ function renderCombatOverlay() {
   // Contenedor para la carta de Rol y su botón
   const roleContainer = document.createElement('div');
   roleContainer.className = 'equip-slot-container';
+  roleContainer.style.position = 'relative';
   roleContainer.style.display = 'flex';
   roleContainer.style.flexDirection = 'column';
   roleContainer.style.alignItems = 'center';
@@ -2662,6 +2667,10 @@ function renderCombatOverlay() {
   roleSlot.style.backgroundImage = `url('${p.role.image}')`;
   if (!hasCombatRole) roleSlot.style.borderColor = '#00d2ff'; // Azul para el rol
   roleSlot.innerHTML = `<div class="die-placeholder" data-id="role"></div>`;
+  if (hasCombatRole) {
+    roleSlot.style.cursor = 'pointer';
+    roleSlot.title = `Rol: ${p.role.name} (${p.role.effect}). Haz clic en la carta para usar la habilidad.`;
+  }
 
   roleSlot.addEventListener('dragover', (e) => {
     if (!isRollingCombatDice) e.preventDefault();
@@ -2683,7 +2692,8 @@ function renderCombatOverlay() {
     renderCombatOverlay();
   });
 
-  // SISTEMA DE RESPALDO (TAP-TO-SELECT): Asignar dado activo al rol al hacer clic
+  // SISTEMA DE RESPALDO (TAP-TO-SELECT): Asignar dado activo al rol al hacer clic.
+  // Si no hay dado seleccionado, al hacer clic en el rol se activa su habilidad.
   roleSlot.addEventListener('click', (e) => {
     if (isRollingCombatDice) return;
     if (activeSelectedDieId) {
@@ -2700,6 +2710,15 @@ function renderCombatOverlay() {
       activeSelectedDieId = null;
       renderCombatOverlay();
       e.stopPropagation();
+    } else {
+      if (hasCombatRole) {
+        if (p.energy <= 0) {
+          alert(ROLE_NO_ENERGY_WARNING);
+          return;
+        }
+        showTargetSelectionModal(gameState.currentPlayerIndex);
+        e.stopPropagation();
+      }
     }
   });
 
@@ -2736,42 +2755,38 @@ function renderCombatOverlay() {
   energyBadge.innerText = `⚡ ${p.energy}`;
   roleContainer.appendChild(energyBadge);
 
-  // Añadir el botón posicionado de forma absoluta debajo de la carta de rol
-  if (hasCombatRole) {
-    const btnRole = document.createElement('button');
-    btnRole.id = 'btn-combat-role';
-    btnRole.className = 'btn primary';
-    btnRole.style.fontSize = '0.85rem';
-    btnRole.style.padding = '6px 16px';
-    btnRole.style.whiteSpace = 'nowrap';
-    btnRole.style.zIndex = '10';
-    if (p.energy <= 0) {
-      btnRole.style.background = 'linear-gradient(135deg, #555, #777)';
-    } else {
-      btnRole.style.background = 'linear-gradient(135deg, #00d2ff, #3a7bd5)';
-    }
-    btnRole.innerText = `Usar Rol`;
-    btnRole.onclick = (e) => {
-      e.preventDefault();
-      e.stopPropagation();
-      if (p.energy <= 0) {
-        alert(ROLE_NO_ENERGY_WARNING);
-        return;
-      }
-      showTargetSelectionModal(gameState.currentPlayerIndex);
-    };
-    roleContainer.appendChild(btnRole);
-  }
-
   equipSlots.appendChild(roleContainer);
 
   // 2. Render normal equipment slots
   p.equipped.filter(eq => eq.isActive).forEach((eq, index) => {
     const slot = document.createElement('div');
     slot.id = `equip-slot-${eq.id}`;
-    slot.className = 'equip-slot';
-    if (eq.isBroken) slot.classList.add('broken');
+    
+    const currentCombatId = gameState.lastCombatId || 0;
+    const isNewBreak = eq.isBroken && eq.brokenInCombatId === currentCombatId;
+    const justBroken = isNewBreak && !eq.brokenAnimationPlayed;
+
+    let extraStyle = '';
+    let justBrokenClass = '';
+    let brokenClass = '';
+
+    if (eq.isBroken) {
+      if (isNewBreak && isRollingCombatDice) {
+        // No mostrar como roto mientras giran los dados
+      } else if (justBroken) {
+        justBrokenClass = 'just-broken';
+        extraStyle = 'transform: rotate(0deg); transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);';
+      } else {
+        brokenClass = 'broken';
+        extraStyle = 'transform: rotate(180deg);';
+      }
+    }
+
+    slot.className = `equip-slot ${justBrokenClass} ${brokenClass}`.trim();
     slot.style.backgroundImage = `url('${eq.image}')`;
+    if (extraStyle) {
+      slot.style.cssText += extraStyle;
+    }
     slot.innerHTML = `<div class="die-placeholder" data-id="${eq.id}"></div>`;
 
     if (activeSelectedEquipId === eq.id) {
@@ -2940,6 +2955,19 @@ function renderCombatOverlay() {
   });
 
   TutorialManager.evaluateSituation();
+
+  setTimeout(() => {
+    document.querySelectorAll('#combat-equipment-slots .equip-slot.just-broken').forEach(slot => {
+      slot.style.transform = 'rotate(180deg)';
+      slot.classList.add('broken');
+      slot.classList.remove('just-broken');
+      const eqId = slot.id.replace('equip-slot-', '');
+      const eq = p.equipped.find(e => e.id === eqId);
+      if (eq) {
+        eq.brokenAnimationPlayed = true;
+      }
+    });
+  }, 100);
 }
 
 // El control de btn-cancel-combat y btn-resolve-combat se gestiona íntegramente

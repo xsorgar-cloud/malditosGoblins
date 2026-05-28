@@ -27,6 +27,7 @@ class GameState {
     this.pendingCorrosionChoice = null;
     this.lastCombatId = 0;
     this.lastActionWasCombat = false;
+    this.lastWarlordExtraDmg = 0;
 
     // Log de acciones
     this.logs = [];
@@ -132,6 +133,8 @@ class GameState {
 
     let validGoblins = selectedGoblins.map(g => this.battlefield.goblins.find(bg => bg.uid === g.uid)).filter(g => g);
     if (validGoblins.length === 0) return false;
+
+    this.lastCombatId++;
 
     // Ordenar los goblins en combate de izquierda a derecha según su orden en el campo de batalla (A, B, C...)
     validGoblins.sort((a, b) => {
@@ -291,7 +294,6 @@ class GameState {
   }
 
   resolveCombat(assignments, interceptions = {}) {
-    this.lastCombatId++;
     this.lastActionWasCombat = true;
     let p = this.getCurrentPlayer();
     let c = this.currentCombat;
@@ -432,7 +434,7 @@ class GameState {
           this.addLog(`🛡️ ${targetGoblin.name || ('G' + targetGoblin.level)} es invulnerable y no recibe daño.`);
         } else {
           let damageNegated = false;
-          if (targetGoblin.isBoss && targetGoblin.name === "Rey Brujo") {
+          if (targetGoblin.isBoss && (this.activeSenda === 'rey_brujo' || targetGoblin.name === "Rey Brujo")) {
             let forceFieldRoll = this.rollDice(6);
             if (forceFieldRoll >= 5) {
               damageNegated = true;
@@ -449,7 +451,7 @@ class GameState {
             msgParts.push(`inflige ${stats.damage} daño`);
             
             // Defensa del Nido (Senda de La Madre)
-            if (targetGoblin.name === "La Madre" && stats.damage > 0) {
+            if (targetGoblin.isBoss && (this.activeSenda === 'la_madre' || targetGoblin.name === "La Madre") && stats.damage > 0) {
               this.battlefield.goblins.push({
                 ...DB.goblins[1],
                 uid: Date.now() + Math.random(),
@@ -878,7 +880,8 @@ class GameState {
     });
 
     // Habilidad del Zeñor de la Guerra: Golpe Certero
-    let warlordInCombat = c.goblins.some(g => g.isBoss && g.name === "Zeñor de la Guerra");
+    this.lastWarlordExtraDmg = 0;
+    let warlordInCombat = c.goblins.some(g => g.isBoss && (this.activeSenda === 'guerrero' || g.name === "Zeñor de la Guerra" || g.name === "Zeor de la Guerra" || g.name.includes("Guerra")));
     let warlordExtraDmg = 0;
     if (warlordInCombat) {
       let playerTookDamage = (totalDirectGoblinDamage > 0) || (totalNormalGoblinDamage > globalShield);
@@ -886,6 +889,7 @@ class GameState {
         let extraD4 = this.rollDice(4);
         p.hp = Math.max(0, p.hp - extraD4);
         warlordExtraDmg = extraD4;
+        this.lastWarlordExtraDmg = extraD4;
         this.addLog(`⚔️ <strong>Golpe Certero:</strong> ¡El Zeñor de la Guerra infligió daño y sumó <span style="color:#ff4d4d"><strong>${extraD4} (1d4) de daño extra</strong></span>!`);
       }
     }
@@ -1694,24 +1698,53 @@ class GameState {
           if (!wasFought) return false;
         }
         p.energy -= energyCost;
-        gob.currentHp -= 1;
-        this.addLog(`⚡ <strong>${p.name}</strong> usó su rol para infligir 1 daño directo a ${gob.name}.`);
-        if (gob.currentHp <= 0) {
-          // Goblin derrotado - Marcar para animación
-          gob.isDying = true;
-          if (gob.isBoss) {
-            this.isGameWon = true;
-          }
-          this.checkSpawnNextHito1Goblin(gob);
-          if (gob.isHito || gob.level >= p.level) {
-            p.mo += gob.mo;
-            this.ganarPex(gob.pex);
-            gob.gaveReward = true;
-            this.addLog(`⚔️ ¡El ataque de rol eliminó a ${gob.name}! (+${gob.mo} mo, +${gob.pex} PEX).`);
+        let damageNegated = false;
+        if (gob.isBoss && (this.activeSenda === 'rey_brujo' || gob.name === "Rey Brujo")) {
+          let forceFieldRoll = this.rollDice(6);
+          if (forceFieldRoll >= 5) {
+            damageNegated = true;
+            this.addLog(`🔮 <strong>Campo de Fuerza:</strong> El Rey Brujo lanzó un <strong>${forceFieldRoll}</strong> en 1d6. ¡El ataque de rol de ${p.name} es anulado por completo!`);
           } else {
-            this.addLog(`⚔️ ¡El ataque de rol eliminó a ${gob.name}! (Sin recompensa por diferencia de nivel).`);
+            this.addLog(`🔮 <strong>Campo de Fuerza:</strong> El Rey Brujo lanzó un <strong>${forceFieldRoll}</strong> en 1d6. El ataque de rol atraviesa el escudo.`);
           }
-          this.subirNivel(p);
+        }
+
+        if (damageNegated) {
+          // No hace nada más, pero la energía se consumió
+        } else {
+          gob.currentHp -= 1;
+          this.addLog(`⚡ <strong>${p.name}</strong> usó su rol para infligir 1 daño directo a ${gob.name}.`);
+
+          // Defensa del Nido (Senda de La Madre)
+          if (gob.isBoss && (this.activeSenda === 'la_madre' || gob.name === "La Madre")) {
+            this.battlefield.goblins.push({
+              ...DB.goblins[1],
+              uid: Date.now() + Math.random(),
+              currentHp: DB.goblins[1].hp,
+              isInvocacion: true,
+              mo: 0,
+              image: 'assets/Monstruos/invocacion_01.jpg'
+            });
+            this.addLog(`🥚 <span style="color:#f54281"><strong>Defensa del Nido:</strong> ¡La Madre recibe daño y aparece 1 Invocación Nivel 1!</span>`);
+          }
+
+          if (gob.currentHp <= 0) {
+            // Goblin derrotado - Marcar para animación
+            gob.isDying = true;
+            if (gob.isBoss) {
+              this.isGameWon = true;
+            }
+            this.checkSpawnNextHito1Goblin(gob);
+            if (gob.isHito || gob.level >= p.level) {
+              p.mo += gob.mo;
+              this.ganarPex(gob.pex);
+              gob.gaveReward = true;
+              this.addLog(`⚔️ ¡El ataque de rol eliminó a ${gob.name}! (+${gob.mo} mo, +${gob.pex} PEX).`);
+            } else {
+              this.addLog(`⚔️ ¡El ataque de rol eliminó a ${gob.name}! (Sin recompensa por diferencia de nivel).`);
+            }
+            this.subirNivel(p);
+          }
         }
         return true;
       }
