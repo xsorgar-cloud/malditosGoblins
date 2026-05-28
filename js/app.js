@@ -1409,9 +1409,9 @@ function renderBattlefield() {
   if (pLeader) {
     const expReq = {
       1: 2 * gameState.players.length,
-      2: 4 * gameState.players.length,
-      3: 6 * gameState.players.length,
-      4: 10 * gameState.players.length
+      2: 6 * gameState.players.length,
+      3: 12 * gameState.players.length,
+      4: 22 * gameState.players.length
     };
     const nextExpLeader = expReq[pLeader.level] || 'MAX';
     const groupLevelSpan = document.getElementById('group-level');
@@ -1552,8 +1552,11 @@ function renderBattlefield() {
       if (isInvulnerable) {
         gobEl.classList.add('invulnerable');
       }
+      const invulnTitle = gameState.activeSenda === 'la_madre'
+        ? "Escudos de Carne: ¡La Madre protege a sus crías!"
+        : "Invulnerable por Regla de Hito";
       const badgeHTML = isInvulnerable 
-        ? `<div class="goblin-invulnerable-badge" title="Invulnerable por Regla de Hito">🛡️</div>` 
+        ? `<div class="goblin-invulnerable-badge" title="${invulnTitle}">🛡️</div>` 
         : '';
       gobEl.innerHTML = `<div class="goblin-hp">${goblin.currentHp}</div>${badgeHTML}`;
 
@@ -1585,13 +1588,11 @@ function renderBattlefield() {
           gobEl.classList.remove('selected');
         } else {
           // Escudos de Carne (Senda de La Madre)
-          if (gameState.activeSenda === 'la_madre' && !goblin.isDying) {
+          if (gameState.activeSenda === 'la_madre' && !goblin.isDying && gameState.isGoblinInvulnerable(goblin)) {
             const aliveGobs = gameState.battlefield.goblins.filter(g => !g.isDying);
             const minLevel = Math.min(...aliveGobs.map(g => g.level));
-            if (goblin.level > minLevel) {
-              alert(`🛡️ Escudos de Carne: ¡La Madre protege a sus crías!\n\nDebes eliminar primero a los Goblins de nivel inferior (Nivel ${minLevel}) antes de poder atacar a este Goblin de Nivel ${goblin.level}.`);
-              return;
-            }
+            alert(`🛡️ Escudos de Carne: ¡La Madre protege a sus crías!\n\nDebes eliminar primero a los Goblins de nivel inferior (Nivel ${minLevel}) antes de poder atacar a este Goblin de Nivel ${goblin.level}.`);
+            return;
           }
 
           selectedGoblins.push(goblin);
@@ -1832,7 +1833,12 @@ function renderCombatOverlay() {
 
   // Render Player Stats Header
   const statsContainer = document.getElementById('combat-player-stats');
-  const expReq = { 1: 2, 2: 4, 3: 6, 4: 10 };
+  const expReq = {
+    1: 2 * gameState.players.length,
+    2: 6 * gameState.players.length,
+    3: 12 * gameState.players.length,
+    4: 22 * gameState.players.length
+  };
   const nextExp = expReq[p.level] || '-';
   if (statsContainer) {
     const isLowHP = p.hp <= (p.maxHp * 0.25);
@@ -2132,8 +2138,11 @@ function renderCombatOverlay() {
     if (isInvulnerable) {
       gobCard.classList.add('invulnerable');
     }
+    const invulnTitle = gameState.activeSenda === 'la_madre' 
+      ? "Escudos de Carne: ¡La Madre protege a sus crías!" 
+      : "Invulnerable por Regla de Hito";
     const badgeHTML = isInvulnerable 
-      ? `<div class="goblin-invulnerable-badge" title="Invulnerable por Regla de Hito">🛡️</div>` 
+      ? `<div class="goblin-invulnerable-badge" title="${invulnTitle}">🛡️</div>` 
       : '';
     gobCard.innerHTML = `<div class="goblin-hp">${gob.currentHp}</div>${badgeHTML}`;
 
@@ -3014,7 +3023,12 @@ function renderPlayer() {
       statusHTML += `<div class="status-icon tembleque" title="Tembleque: ${p.statusEffects.tembleque}">&#10052; <span>${p.statusEffects.tembleque}</span></div>`;
     }
 
-    const expReq = { 1: 2, 2: 4, 3: 6, 4: 10 };
+    const expReq = {
+      1: 2 * gameState.players.length,
+      2: 6 * gameState.players.length,
+      3: 12 * gameState.players.length,
+      4: 22 * gameState.players.length
+    };
     const nextExp = expReq[p.level] || '-';
     const isLowHP = p.hp <= (p.maxHp * 0.25);
 

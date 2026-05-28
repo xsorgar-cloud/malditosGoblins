@@ -79,21 +79,34 @@ class GameState {
   }
 
   isGoblinInvulnerable(goblin) {
-    if (this.activeSenda !== 'guerrero') return false;
-    
-    // Solo los goblins del propio hito son inmunes durante la senda
-    if (!goblin.isHito) return false;
+    if (this.activeSenda === 'guerrero') {
+      // Solo los goblins del propio hito son inmunes durante la senda
+      if (!goblin.isHito) return false;
 
-    // Hito 3: El Nivel 3 es inmune al daño mientras esté acompañado de niveles inferiores (nivel 1 o 2)
-    if (this.currentHito === 4 && goblin.level === 3) {
-      let lowerExists = this.battlefield.goblins.some(g => (g.level === 1 || g.level === 2) && g.currentHp > 0 && g.uid !== goblin.uid);
-      if (lowerExists) return true;
+      // Hito 3: El Nivel 3 es inmune al daño mientras esté acompañado de niveles inferiores (nivel 1 o 2)
+      if (this.currentHito === 4 && goblin.level === 3) {
+        let lowerExists = this.battlefield.goblins.some(g => (g.level === 1 || g.level === 2) && g.currentHp > 0 && g.uid !== goblin.uid);
+        if (lowerExists) return true;
+      }
+
+      // Hito 4: Mientras algún nivel 1 siga vivo, el nivel 2 y el nivel 3 son invulnerables
+      if (this.currentHito === 5 && (goblin.level === 2 || goblin.level === 3)) {
+        let lvl1Exists = this.battlefield.goblins.some(g => g.level === 1 && g.currentHp > 0 && g.uid !== goblin.uid);
+        if (lvl1Exists) return true;
+      }
     }
 
-    // Hito 4: Mientras algún nivel 1 siga vivo, el nivel 2 y el nivel 3 son invulnerables
-    if (this.currentHito === 5 && (goblin.level === 2 || goblin.level === 3)) {
-      let lvl1Exists = this.battlefield.goblins.some(g => g.level === 1 && g.currentHp > 0 && g.uid !== goblin.uid);
-      if (lvl1Exists) return true;
+    if (this.activeSenda === 'la_madre') {
+      // Regla "Escudos de Carne": Mientras haya al menos un Goblin de Nivel inferior en la mesa, NO puedes declarar ataques contra Goblins de Nivel superior.
+      if (!goblin.isDying && goblin.currentHp > 0) {
+        const aliveGobs = this.battlefield.goblins.filter(g => g.currentHp > 0 && !g.isDying);
+        if (aliveGobs.length > 0) {
+          const minLevel = Math.min(...aliveGobs.map(g => g.level));
+          if (goblin.level > minLevel) {
+            return true;
+          }
+        }
+      }
     }
 
     return false;
@@ -801,12 +814,15 @@ class GameState {
           this.isGameWon = true;
         }
         this.checkSpawnNextHito1Goblin(targetGoblin);
-        if (targetGoblin.isHito || targetGoblin.level >= p.level) {
-          p.mo += targetGoblin.mo;
-          this.ganarPex(targetGoblin.pex);
-          this.addLog(`⚔️ <strong>${p.name}</strong> eliminó a G${targetGoblin.level}. Recompensa: ${targetGoblin.mo} mo, ${targetGoblin.pex} PEX.`); //targetGoblin.name
-        } else {
-          this.addLog(`⚔️ <strong>${p.name}</strong> eliminó a G${targetGoblin.level}. Sin Recompensa.`); //targetGoblin.name
+        if (!targetGoblin.gaveReward) {
+          targetGoblin.gaveReward = true;
+          if (targetGoblin.isHito || targetGoblin.level >= p.level) {
+            p.mo += targetGoblin.mo;
+            this.ganarPex(targetGoblin.pex);
+            this.addLog(`⚔️ <strong>${p.name}</strong> eliminó a G${targetGoblin.level}. Recompensa: ${targetGoblin.mo} mo, ${targetGoblin.pex} PEX.`); //targetGoblin.name
+          } else {
+            this.addLog(`⚔️ <strong>${p.name}</strong> eliminó a G${targetGoblin.level}. Sin Recompensa.`); //targetGoblin.name
+          }
         }
       }
     });
@@ -974,9 +990,9 @@ class GameState {
     this.pendingHito1Goblins = 0;
     let initLvl = customSettings.level !== undefined ? customSettings.level : 1;
     let basePex = 0;
-    if (initLvl === 2) basePex = 0;
-    if (initLvl === 3) basePex = 0;
-    if (initLvl === 4) basePex = 0;
+    if (initLvl === 2) basePex = 2 * numPlayers;
+    if (initLvl === 3) basePex = 6 * numPlayers;
+    if (initLvl === 4) basePex = 12 * numPlayers;
     let pendingChoices = initLvl > 1 ? initLvl - 1 : 0;
 
     this.players = [];
@@ -1746,26 +1762,26 @@ class GameState {
     // La clave es el nivel actual, el valor son los PEX necesarios.
     const expRequerida = {
       1: 2 * this.players.length,
-      2: 4 * this.players.length,
-      3: 6 * this.players.length,
-      4: 10 * this.players.length
+      2: 6 * this.players.length,
+      3: 12 * this.players.length,
+      4: 22 * this.players.length
     };
+
+    const pLeader = this.players[0];
+    if (!pLeader) return;
 
     // El bucle comprueba dos cosas:
     // 1. Que exista una configuración de experiencia para el nivel actual (evita errores si llega a nivel 5).
-    // 2. Que los PEX del jugador sean mayores o iguales a la experiencia requerida para ese nivel.
-    while (expRequerida[p.level] && p.pex >= expRequerida[p.level]) {
-      // Restamos exactamente los PEX que costó subir desde el nivel actual
+    // 2. Que los PEX del jugador líder (que representa al grupo) sean mayores o iguales a la experiencia requerida para ese nivel.
+    while (expRequerida[pLeader.level] && pLeader.pex >= expRequerida[pLeader.level]) {
+      // PEX es acumulativo, por lo que NO restamos los PEX. Solo subimos de nivel a todos los jugadores.
       for (let i = 0; i < this.players.length; i++) {
-        let p = this.players[i];
-
-        p.pex -= expRequerida[p.level];
-
-        p.level += 1;
-        p.maxHp += 5;
-        p.hp += 5;
+        let pl = this.players[i];
+        pl.level += 1;
+        pl.maxHp += 5;
+        pl.hp += 5;
       }
-      this.addLog(`🌟 <span style="color:#ecf542">¡<strong>Los jugadores subieron al Nivel ${p.level}! </span> 🌟`);
+      this.addLog(`🎉 <span style="color:#ecf542">¡<strong>Los jugadores subieron al Nivel ${pLeader.level}!</strong></span> 🎉`);
 
       // Activar flag de elección para todos los jugadores
       this.players.forEach(pl => {
