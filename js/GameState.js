@@ -200,6 +200,16 @@ class GameState {
     validGoblins.forEach(goblin => {
       const greenRoll = this.rollGreenDice(goblin);
 
+      // Senda Piromante - Ordenar dados del Piromante de mayor a menor
+      if (goblin.isBoss && goblin.name === "El Piromante") {
+        greenRoll.details.sort((a, b) => {
+          if (a.type === 'die' && b.type === 'die') {
+            return b.val - a.val;
+          }
+          return 0;
+        });
+      }
+
       // Hito 2 de El Zeñor de la Guerra: +1 al ataque del goblin Nvl 2 por cada Nvl 1 vivo
       if (this.activeSenda === 'guerrero' && goblin.level === 2) {
         let lvl1Count = this.battlefield.goblins.filter(g => g.level === 1 && g.currentHp > 0).length;
@@ -220,6 +230,22 @@ class GameState {
         }
       }
     });
+
+    // Hito 4: Los Artificieros (Senda Piromante)
+    // "Por cada '1' natural en tus dados, sufres 1 punto de Daño Directo."
+    if (this.activeSenda === 'piromante' && this.currentHito === 5) {
+      let naturalOnesCount = 0;
+      combatData.playerDice.forEach(d => {
+        if (d.value === 1) {
+          naturalOnesCount++;
+        }
+      });
+      if (naturalOnesCount > 0) {
+        p.hp = Math.max(0, p.hp - naturalOnesCount);
+        this.addLog(`💥 <strong>Los Artificieros:</strong> Sacaste ${naturalOnesCount} dado(s) con '1' natural y sufres <span style="color:#ff4d4d"><strong>${naturalOnesCount} Daño Directo</strong></span> (HP: ${p.hp}/${p.maxHp}).`);
+        this.checkGameOver();
+      }
+    }
 
     // APLICAR ESTADOS DIFERIDOS (Tembleque > Escozor)
     let redDice = combatData.playerDice.filter(d => d.type === 'red');
@@ -281,6 +307,13 @@ class GameState {
       if (die && die.type === 'black' && !die.rerolled) {
         die.value = this.rollDice(die.faces);
         die.rerolled = true;
+        // Hito 4: Los Artificieros (Senda Piromante)
+        if (this.activeSenda === 'piromante' && this.currentHito === 5 && die.value === 1) {
+          let p = this.getCurrentPlayer();
+          p.hp = Math.max(0, p.hp - 1);
+          this.addLog(`💥 <strong>Los Artificieros:</strong> ¡Sacaste un 1 natural al relanzar un dado y sufres <span style="color:#ff4d4d"><strong>1 Daño Directo</strong></span>! (HP: ${p.hp}/${p.maxHp})`);
+          this.checkGameOver();
+        }
         return die.value;
       }
     }
@@ -384,6 +417,15 @@ class GameState {
         let eq = p.equipped.find(e => e.id === eqId);
         if (!eq) return;
         eq.usedInCombatId = this.lastCombatId;
+
+        // Tormenta de Fuego (Senda Piromante - Jefe Final)
+        // "Por cada resultado de '1' o '2' natural que apliques en el equipo, recibes automáticamente una carga de Escozor."
+        if (this.activeSenda === 'piromante' && this.currentHito === 6) {
+          if (asg.value === 1 || asg.value === 2) {
+            p.statusEffects.escozor = (p.statusEffects.escozor || 0) + 1;
+            this.addLog(`🔥 <strong>Tormenta de Fuego:</strong> Asignaste un ${asg.value} en <strong>${eq.name}</strong> y recibes <span style="color:#ff6600">1 Escozor</span>.`);
+          }
+        }
 
         // Calcular de manera aislada el efecto de este dado específico
         let healObj = { heal: 0 };
@@ -614,6 +656,7 @@ class GameState {
       let directDmg = 0;
       let normalDmg = 0;
       let isSpecialBoss = (targetGoblin.isBoss && (targetGoblin.name === "Rey Brujo" || targetGoblin.name === "La Madre"));
+      let isPiromanteBoss = (targetGoblin.isBoss && targetGoblin.name === "El Piromante");
 
       if (greenDiceResult && greenDiceResult.details) {
         let naturalDieIdx = 0;
@@ -659,7 +702,30 @@ class GameState {
 
               let applied = false;
               let brokenItem = null;
-              if (isUnskippable || (!isIntercepted && (isNormalBreak || isStatus))) {
+
+              if (effLow.includes('gana+2 pv por cada carga') || effLow.includes('gana+2 pv por cada carga escozor')) {
+                if (!isIntercepted) {
+                  applied = true;
+                  let escozorCount = p.statusEffects.escozor || 0;
+                  let healAmount = escozorCount * 2;
+                  targetGoblin.currentHp = Math.min(targetGoblin.maxHp, targetGoblin.currentHp + healAmount);
+                  this.addLog(`🔥 <strong>El Piromante (Dado 3):</strong> Se cura <span style="color:#2a9d8f"><strong>${healAmount} PV</strong></span> (2 PV por cada uno de tus ${escozorCount} Escozor. Total: ${targetGoblin.currentHp}/${targetGoblin.maxHp}).`);
+                }
+              } else if (effLow.includes('1 escozor y 2 puntos de daño por cada carga') || effLow.includes('2 puntos de daño por cada carga escozor')) {
+                if (!isIntercepted) {
+                  applied = true;
+                  let escozorCount = p.statusEffects.escozor || 0;
+                  let damageDealt = escozorCount * 2;
+                  directDmg += damageDealt;
+                  p.statusEffects.escozor = (p.statusEffects.escozor || 0) + 1;
+                  this.addLog(`🔥 <strong>El Piromante (Dado 4):</strong> Sufres <span style="color:#ff4d4d"><strong>${damageDealt} Daño Directo</strong></span> (2 PV por cada uno de tus ${escozorCount} Escozor) y recibes <span style="color:#ff6600">1 Escozor</span>.`);
+                }
+              } else if (effLow.includes('daño directo') && isPiromanteBoss) {
+                if (!isIntercepted) {
+                  applied = true;
+                  directDmg += dieDmg; // deals 2 Direct Damage for roll 2
+                }
+              } else if (isUnskippable || (!isIntercepted && (isNormalBreak || isStatus))) {
                 applied = true;
                 if (isUnskippable || isNormalBreak) {
                   brokenItem = this.breakRandomEquipment(p);
@@ -703,7 +769,7 @@ class GameState {
                     isInvocacion: true,
                     image: 'assets/Monstruos/invocacion_01.jpg'
                   });
-                  this.addLog(`🔮 <strong>Invocación:</strong> ¡El Rey Brujo invoca un Goblin de Nivel 1 (sin recompensa de oro)!`);
+                  this.addLog(`🔮 <strong>Invocación:</strong> ¡${targetGoblin.name} invoca un Goblin de Nivel 1 (sin recompensa de oro)!`);
                 }
               } else if (effLow.includes('lanza +')) {
                 if (!isIntercepted) {
@@ -747,7 +813,7 @@ class GameState {
               }
             });
 
-            if (!isIntercepted && !isSpecialBoss) {
+            if (!isIntercepted && !isSpecialBoss && !isPiromanteBoss) {
               if (isDieDirect) {
                 directDmg += dieDmg;
               } else {
@@ -881,6 +947,12 @@ class GameState {
         const pObj = this.players[this.currentPlayerIndex];
         if (g.isHito || g.level >= pObj.level) {
           g.gaveReward = true;
+        }
+
+        // Goblins Bomba: Cada vez que derrotes a un Goblin recibes una carga de Escozor.
+        if (this.activeSenda === 'piromante') {
+          pObj.statusEffects.escozor = (pObj.statusEffects.escozor || 0) + 1;
+          this.addLog(`💣 <strong>Goblin Bomba:</strong> Al derrotar a G${g.level}, explota y recibes <span style="color:#ff6600">1 Escozor</span>.`);
         }
       }
     });
@@ -1364,6 +1436,17 @@ class GameState {
     this.currentHito++;
     let hitoName = sendaHitos[this.currentHito - 2].name;
     this.addLog(`🔥 <strong>HITO DESPLEGADO: ${hitoName}</strong> 🔥`);
+
+    // Hito 1: La Chispa (Senda Piromante)
+    if (this.activeSenda === 'piromante' && this.currentHito === 2) {
+      this.players.forEach(p => {
+        if (p.hp > 0) {
+          p.statusEffects.escozor = (p.statusEffects.escozor || 0) + 1;
+          this.addLog(`💥 <strong>La Chispa:</strong> <strong>${p.name}</strong> recibe inmediatamente <span style="color:#ff6600">1 Escozor</span>.`);
+        }
+      });
+    }
+
     return true;
   }
 
@@ -1669,8 +1752,23 @@ class GameState {
     if (this.isMarketPhase) return false;
     this.lastActionWasCombat = false;
     let p = this.players[this.currentPlayerIndex];
-    p.mo += 1;
-    this.addLog(`<strong>${p.name}</strong> cobró 1 mo.`);
+    
+    if (this.activeSenda === 'piromante') {
+      if (this.currentHito === 6) { // Contra el Jefe Final
+        p.mo += 1;
+        this.addLog(`<strong>${p.name}</strong> cobró 1 mo. *(Botín Humeante desactivado)*`);
+      } else {
+        p.mo += 1;
+        p.hp = Math.max(0, p.hp - 2);
+        let escozorCleared = p.statusEffects.escozor || 0;
+        p.statusEffects.escozor = 0;
+        this.addLog(`🔥 <strong>Botín Humeante:</strong> <strong>${p.name}</strong> cobró 1 mo, sufrió <span style="color:#ff4d4d">2 Daño Directo</span> y eliminó sus estados de Escozor (se limpiaron ${escozorCleared} cargas, HP: ${p.hp}/${p.maxHp}).`);
+        if (this.checkGameOver()) return true;
+      }
+    } else {
+      p.mo += 1;
+      this.addLog(`<strong>${p.name}</strong> cobró 1 mo.`);
+    }
     this.consumeAction();
     return true;
   }
@@ -1679,12 +1777,27 @@ class GameState {
     if (this.isMarketPhase) return false;
     this.lastActionWasCombat = false;
     let p = this.players[this.currentPlayerIndex];
-    p.mo += 2;
-    p.hp = Math.max(0, p.hp - 1);
-    this.addLog(`<strong>${p.name}</strong> cobró 2 mo pero sufrió 1 daño (HP: ${p.hp}/${p.maxHp}).`);
-
-    if (this.checkGameOver()) return true;
-
+    
+    if (this.activeSenda === 'piromante') {
+      if (this.currentHito === 6) { // Contra el Jefe Final
+        p.mo += 2;
+        p.hp = Math.max(0, p.hp - 1);
+        this.addLog(`<strong>${p.name}</strong> cobró 2 mo pero sufrió 1 daño (HP: ${p.hp}/${p.maxHp}). *(Botín Humeante desactivado)*`);
+        if (this.checkGameOver()) return true;
+      } else {
+        p.mo += 2;
+        p.hp = Math.max(0, p.hp - 2);
+        let escozorCleared = p.statusEffects.escozor || 0;
+        p.statusEffects.escozor = 0;
+        this.addLog(`🔥 <strong>Botín Humeante:</strong> <strong>${p.name}</strong> cobró 2 mo, sufrió <span style="color:#ff4d4d">2 Daño Directo</span> y eliminó sus estados de Escozor (se limpiaron ${escozorCleared} cargas, HP: ${p.hp}/${p.maxHp}).`);
+        if (this.checkGameOver()) return true;
+      }
+    } else {
+      p.mo += 2;
+      p.hp = Math.max(0, p.hp - 1);
+      this.addLog(`<strong>${p.name}</strong> cobró 2 mo pero sufrió 1 daño (HP: ${p.hp}/${p.maxHp}).`);
+      if (this.checkGameOver()) return true;
+    }
     this.consumeAction();
     return true;
   }
@@ -1787,6 +1900,12 @@ class GameState {
           if (gob.currentHp <= 0) {
             // Goblin derrotado - Marcar para animación
             gob.isDying = true;
+
+            // Goblins Bomba: Cada vez que derrotes a un Goblin recibes una carga de Escozor.
+            if (this.activeSenda === 'piromante') {
+              p.statusEffects.escozor = (p.statusEffects.escozor || 0) + 1;
+              this.addLog(`💣 <strong>Goblin Bomba:</strong> Al derrotar a ${gob.name} con habilidad de rol, explota y recibes <span style="color:#ff6600">1 Escozor</span>.`);
+            }
             if (gob.isBoss) {
               this.isGameWon = true;
             }
@@ -2132,6 +2251,12 @@ class GameState {
     if (extraStr.includes('cura max')) {
       let maxMatch = extraStr.match(/cura max\s+(\d+)/);
       if (maxMatch) healObj.heal += Math.min(val, parseInt(maxMatch[1]));
+    }
+
+    // Hito 2: Barriles de Pólvora (Senda Piromante)
+    // "Cualquier carta de equipo que te cure PV, recupera 1 PV menos."
+    if (this.activeSenda === 'piromante' && this.currentHito === 3 && healObj.heal > 0) {
+      healObj.heal = Math.max(0, healObj.heal - 1);
     }
   }
 

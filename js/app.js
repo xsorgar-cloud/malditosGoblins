@@ -234,7 +234,7 @@ let activeSelectedDieId = null;
 let activeSelectedEquipId = null;
 
 // Sobrescribir window.alert nativo por un modal inmersivo del juego
-window.alert = function (messageText) {
+window.alert = function (messageText, callback = null) {
   const overlay = document.getElementById('global-event-overlay');
   const title = document.getElementById('event-modal-title');
   const desc = document.getElementById('event-modal-desc');
@@ -242,6 +242,7 @@ window.alert = function (messageText) {
 
   if (!overlay || !title || !desc || !container) {
     console.warn("DOM no listo para alert custom:", messageText);
+    if (typeof callback === 'function') callback();
     return;
   }
 
@@ -261,6 +262,9 @@ window.alert = function (messageText) {
   btnOk.innerText = "ACEPTAR";
   btnOk.onclick = () => {
     overlay.classList.add('hidden');
+    if (typeof callback === 'function') {
+      callback();
+    }
   };
 
   container.appendChild(btnOk);
@@ -1147,6 +1151,20 @@ function updateUI() {
   document.body.style.pointerEvents = 'auto';
 
   if (gameState.pendingCorrosionChoice) {
+    // Retrasar si hay animaciones activas (muerte de Goblins o rotura de equipo)
+    const hasDyingGoblins = gameState.battlefield.goblins.some(g => g.isDying);
+    const hasJustBrokenEquip = gameState.players.some(p => p.equipped.some(eq => eq.isBroken && !eq.brokenAnimationPlayed));
+    
+    if (hasDyingGoblins || hasJustBrokenEquip) {
+      if (!window._corrosionDelayActive) {
+        window._corrosionDelayActive = true;
+        setTimeout(() => {
+          window._corrosionDelayActive = false;
+          updateUI();
+        }, 1000);
+      }
+      return;
+    }
     showCorrosionModal(gameState.pendingCorrosionChoice);
     return;
   }
@@ -1337,6 +1355,11 @@ function renderMarket() {
       }
 
       deckEl.addEventListener('click', () => {
+        // Hito 3: Fuego Cruzado (Senda Piromante)
+        if (gameState.activeSenda === 'piromante' && gameState.currentHito === 4) {
+          alert("🔥 Fuego Cruzado: Durante este hito no puedes comprar equipo.");
+          return;
+        }
         const topCard = deck[0];
         const player = gameState.getCurrentPlayer();
 
@@ -2170,7 +2193,7 @@ function renderCombatOverlay() {
       if (gameState.lastCombatAcquiredEffects) {
         const effects = gameState.lastCombatAcquiredEffects;
         if (effects.escozor > 0 || effects.calambre > 0 || effects.tembleque > 0) {
-          let details = ["⚠️ ¡Has adquirido efectos de estado en este combate!"];
+          let details = ["¡Adquiridos efectos de estado en este combate!<br>"];
           if (effects.escozor > 0) details.push(`🔥 Escozor: +${effects.escozor}`);
           if (effects.calambre > 0) details.push(`⚡ Calambre: +${effects.calambre}`);
           if (effects.tembleque > 0) details.push(`🌀 Tembleque: +${effects.tembleque}`);
@@ -2178,34 +2201,38 @@ function renderCombatOverlay() {
         }
       }
 
+      const runEndOfCombatUI = () => {
+        const hpAfter = pBefore.hp;
+        if (hpAfter < hpBefore) {
+          const flash = document.createElement('div');
+          flash.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(230, 57, 70, 0.55);
+            pointer-events: none;
+            z-index: 999999;
+            transition: background 0.5s ease-out;
+          `;
+          document.body.appendChild(flash);
+          flash.getBoundingClientRect(); // Forzar reflow
+          flash.style.background = 'rgba(230, 57, 70, 0)';
+          setTimeout(() => flash.remove(), 500);
+        }
+
+        document.getElementById('combat-overlay').classList.add('hidden');
+        selectedGoblins = [];
+        activeSelectedDieId = null;
+        activeSelectedEquipId = null;
+        document.querySelectorAll('.goblin-card').forEach(el => el.classList.remove('selectable', 'selected'));
+        document.getElementById('btn-confirm-attack').innerText = `Atacar Goblins (0)`;
+        updateUI();
+        window.saveGame(true);
+      };
+
       if (alertMessages.length > 0) {
-        alert(alertMessages.join('\n\n'));
+        alert(alertMessages.join('\n\n'), runEndOfCombatUI);
+      } else {
+        runEndOfCombatUI();
       }
-
-      const hpAfter = pBefore.hp;
-      if (hpAfter < hpBefore) {
-        const flash = document.createElement('div');
-        flash.style.cssText = `
-          position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-          background: rgba(230, 57, 70, 0.55);
-          pointer-events: none;
-          z-index: 999999;
-          transition: background 0.5s ease-out;
-        `;
-        document.body.appendChild(flash);
-        flash.getBoundingClientRect(); // Forzar reflow
-        flash.style.background = 'rgba(230, 57, 70, 0)';
-        setTimeout(() => flash.remove(), 500);
-      }
-
-      document.getElementById('combat-overlay').classList.add('hidden');
-      selectedGoblins = [];
-      activeSelectedDieId = null;
-      activeSelectedEquipId = null;
-      document.querySelectorAll('.goblin-card').forEach(el => el.classList.remove('selectable', 'selected'));
-      document.getElementById('btn-confirm-attack').innerText = `Atacar Goblins (0)`;
-      updateUI();
-      window.saveGame(true);
     };
   }
 
@@ -3218,7 +3245,7 @@ function renderPlayer() {
     const panelHTML = `
       <div class="player-panel ${isCurrent ? 'active-turn' : ''} ${isDead ? 'player-dead' : ''}">
         <div class="player-hud-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 8px; margin-bottom: 8px; gap: 10px;">
-            <div style="display: flex; align-items: center; gap: 15px; overflow: hidden;">
+            <div style="display: flex; align-items: center; gap: 15px;">
                 <h3 style="font-size: 1.2rem; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 80px; max-width: 140px;">${p.name}</h3>
                 <div class="status-effects-container">${statusHTML}</div>
             </div>
@@ -3719,6 +3746,21 @@ function checkLevelUpChoice() {
   const playersWithChoice = gameState.players.filter(p => p.pendingLevelUpChoice);
 
   if (playersWithChoice.length > 0) {
+    // Retrasar si hay animaciones activas (muerte de Goblins o rotura de equipo)
+    const hasDyingGoblins = gameState.battlefield.goblins.some(g => g.isDying);
+    const hasJustBrokenEquip = gameState.players.some(p => p.equipped.some(eq => eq.isBroken && !eq.brokenAnimationPlayed));
+    
+    if (hasDyingGoblins || hasJustBrokenEquip) {
+      if (!window._levelUpDelayActive) {
+        window._levelUpDelayActive = true;
+        setTimeout(() => {
+          window._levelUpDelayActive = false;
+          checkLevelUpChoice();
+        }, 1000);
+      }
+      return;
+    }
+
     title.innerText = "¡SUBIDA DE NIVEL!";
     desc.innerText = "¡Habéis ganado experiencia suficiente! Cada jugador debe elegir un nuevo dado:";
     container.innerHTML = '';
@@ -3926,7 +3968,7 @@ function renderRetaliationModal() {
       if (p.hp > 0) {
         const bulkBtn = document.createElement('button');
         bulkBtn.className = 'btn secondary bulk-retaliation-btn';
-        bulkBtn.style.cssText = 'font-size: 0.7rem; margin-top: 10px; padding: 5px;';
+        bulkBtn.style.cssText = 'font-size: 0.8rem; margin-top: 10px; padding: 12px 10px; width: 100%; box-sizing: border-box;';
         bulkBtn.innerText = "Recibir todo el daño";
         bulkBtn.onclick = (e) => {
           e.stopPropagation();
@@ -4189,6 +4231,11 @@ function openPotionsModal() {
 
     const btn = card.querySelector('button');
     btn.onclick = () => {
+      // Hito 3: Fuego Cruzado (Senda Piromante)
+      if (gameState.activeSenda === 'piromante' && gameState.currentHito === 4) {
+        alert("🔥 Fuego Cruzado: Durante este hito no puedes comprar equipo.");
+        return;
+      }
       const healed = gameState.buyPotion(poc.id);
       if (healed !== null) {
         // Feedback visual en el modal

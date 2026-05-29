@@ -109,6 +109,13 @@ const DB = {
       { id: 3, name: "Eclosión Masiva", goblins: [1, 1, 1, 1, 1], isBoss: false, ruleDesc: "No ofrecen monedas." },
       { id: 4, name: "Los Zánganos", goblins: [3, 3], isBoss: false },
       { id: 5, name: "La Madre", goblins: [5], isBoss: true, bossStats: { hpMultiplier: 40, regen: 5, dice: ['1d6'], image: 'assets/Monstruos/Jefes/La-Madre.jpg', attacks: { 1: ['2x Invocación Nivel 1'], 2: ['Daño = Niveles del resto', 'Si no hay: 2x Invocación N1'], 3: ['Daño = Niveles del resto', 'Si no hay: 2x Invocación N1'], 4: ['2x Invocación Nivel 1'], 5: ['Sacrifica goblin más débil', 'Se cura 5 PV'], 6: ['Muta pareja de goblins', 'Si no hay: Invocación N2'] } }, ruleDesc: "Jefe Final. Defensa del Nido: Genera 1 Invocación Nivel 1 cada vez que recibe daño. Ininterceptable: Sus ataques no pueden ser interceptados." }
+    ],
+    piromante: [
+      { id: 1, name: "La Chispa", goblins: [1, 1], isBoss: false, ruleDesc: "Recibes inmediatamente una carga de Escozor." },
+      { id: 2, name: "Barriles de Pólvora", goblins: [1, 2], isBoss: false, ruleDesc: "Cualquier carta que te cure PV, recupera 1 PV menos." },
+      { id: 3, name: "Fuego Cruzado", goblins: [2, 2], isBoss: false, ruleDesc: "Durante este hito no puedes comprar equipo." },
+      { id: 4, name: "Los Artificieros", goblins: [1, 1, 3], isBoss: false, ruleDesc: "Por cada '1' natural en tus dados, sufres 1 punto de Daño Directo." },
+      { id: 5, name: "El Piromante", goblins: [5], isBoss: true, bossStats: { hpMultiplier: 35, regen: 5, dice: ['3d4'], image: 'assets/Monstruos/Jefes/El-Piromante.jpg', attacks: { 1: ['Invocación goblin Nivel 1'], 2: ['Daño Directo', '1 escozor'], 3: ['gana+2 PV por cada carga Escozor del jugador'], 4: ['1 Escozor y 2 puntos de daño por cada carga Escozor del jugador'] } }, ruleDesc: "Jefe Final. Tormenta de Fuego: 1 o 2 en tu equipo te da Escozor. No se puede usar Botín Humeante." }
     ]
   },
 
@@ -126,8 +133,13 @@ const DB = {
     la_madre: [
       { name: "· Escudos de Carne", desc: "Mientras haya al menos un Goblin de Nivel inferior en la mesa, NO puedes declarar ataques contra Goblins de Nivel superior." },
       { name: "· Eclosión Tardía", desc: "Al FINAL de resolver la Fase de Oleada aparece un Goblin Nivel 1 extra en la mesa." }
+    ],
+    piromante: [
+      { name: "· Goblins Bomba", desc: "Cada vez que derrotes a un Goblin recibes una carga de Escozor." },
+      { name: "· Botín Humeante", desc: "Si usas una Acción para cobrar monedas (ya sea 1 o 2 mo), sufres 2 PV de Daño Directo y eliminas todos tus estados de Escozor. *(Desactivado contra El Piromante)*" }
     ]
   },
+
 
   // FRASES ALEATORIAS PARA LA VICTORIA
   victoryPhrases: [
