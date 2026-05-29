@@ -2162,8 +2162,24 @@ function renderCombatOverlay() {
 
       gameState.resolveCombat(currentAssignments, interceptionAssignments);
 
+      let alertMessages = [];
       if (gameState.lastWarlordExtraDmg > 0) {
-        alert(`⚔️ Daño Extra por Golpe Certero: El Zeñor de la Guerra infligió +${gameState.lastWarlordExtraDmg} de daño extra.`);
+        alertMessages.push(`⚔️ Daño Extra por Golpe Certero: El Zeñor de la Guerra infligió +${gameState.lastWarlordExtraDmg} de daño extra.`);
+      }
+
+      if (gameState.lastCombatAcquiredEffects) {
+        const effects = gameState.lastCombatAcquiredEffects;
+        if (effects.escozor > 0 || effects.calambre > 0 || effects.tembleque > 0) {
+          let details = ["⚠️ ¡Has adquirido efectos de estado en este combate!"];
+          if (effects.escozor > 0) details.push(`🔥 Escozor: +${effects.escozor}`);
+          if (effects.calambre > 0) details.push(`⚡ Calambre: +${effects.calambre}`);
+          if (effects.tembleque > 0) details.push(`🌀 Tembleque: +${effects.tembleque}`);
+          alertMessages.push(details.join('\n'));
+        }
+      }
+
+      if (alertMessages.length > 0) {
+        alert(alertMessages.join('\n\n'));
       }
 
       const hpAfter = pBefore.hp;

@@ -29,6 +29,7 @@ class GameState {
     this.lastActionWasCombat = false;
     this.lastWarlordExtraDmg = 0;
     this.difficulty = 'medio';
+    this.lastCombatAcquiredEffects = { escozor: 0, calambre: 0, tembleque: 0 };
 
     // Log de acciones
     this.logs = [];
@@ -298,6 +299,10 @@ class GameState {
     this.lastActionWasCombat = true;
     let p = this.getCurrentPlayer();
     let c = this.currentCombat;
+
+    let escozorBefore = p.statusEffects ? (p.statusEffects.escozor || 0) : 0;
+    let calambreBefore = p.statusEffects ? (p.statusEffects.calambre || 0) : 0;
+    let temblequeBefore = p.statusEffects ? (p.statusEffects.tembleque || 0) : 0;
 
     let hpBefore = p.hp;
     let shieldBefore = p.shield;
@@ -966,6 +971,12 @@ class GameState {
       console.error("Error saving debug state:", e);
     }
 
+    this.lastCombatAcquiredEffects = {
+      escozor: Math.max(0, (p.statusEffects ? (p.statusEffects.escozor || 0) : 0) - escozorBefore),
+      calambre: Math.max(0, (p.statusEffects ? (p.statusEffects.calambre || 0) : 0) - calambreBefore),
+      tembleque: Math.max(0, (p.statusEffects ? (p.statusEffects.tembleque || 0) : 0) - temblequeBefore)
+    };
+
     p.shield = 0; // Limpiar escudo tras el combate
     this.currentCombat = null;
 
@@ -1337,6 +1348,7 @@ class GameState {
             let extraProps = {};
             if (this.activeSenda === 'la_madre' && this.currentHito === 3) {
               extraProps.mo = 0;
+              extraProps.image = 'assets/Monstruos/nomo_01.jpg';
             }
             this.battlefield.goblins.push({
               ...DB.goblins[lvl],

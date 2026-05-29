@@ -2764,7 +2764,6 @@ main {
 
 .goblin-card.invulnerable {
   box-shadow: 0 0 25px rgba(0, 191, 255, 0.8) !important;
-  border: 3px solid #00bfff !important;
 }
 
 /* Pulsing blue energy shield overlay with text */
