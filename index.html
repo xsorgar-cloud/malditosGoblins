@@ -29,19 +29,19 @@
                 <input type="checkbox" id="cheat-dice-toggle" style="accent-color: var(--accent-red); cursor: pointer;">
                 Trampas
             </label>
-            <button id="btn-save-game" class="btn secondary"
-                style="font-size: 0.85rem; padding: 6px 14px; border-radius: 20px; background: rgba(10,10,15,0.9); box-shadow: 0 2px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 6px; border: 1px solid rgba(212, 175, 55, 0.3); height: 32px;"
-                title="Guardar Partida">💾 Guardar</button>
             <button id="btn-toggle-log" class="btn secondary"
                 style="font-size: 0.85rem; padding: 6px 14px; border-radius: 20px; background: rgba(10,10,15,0.9); box-shadow: 0 2px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 6px; border: 1px solid rgba(212, 175, 55, 0.3); height: 32px;"
                 title="Ver Historial de Acciones">📜 Historial</button>
+            <button id="btn-debug-combat" class="btn secondary"
+                style="border-radius: 20px; padding: 6px 14px; font-size: 0.85rem; box-shadow: 0 2px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 6px; background: rgba(10,10,15,0.9); border: 1px solid #ff3366; color: #ff3366; height: 32px;"
+                title="Ver último combate">🐞</button>
+			<button id="btn-save-game" class="btn secondary"
+                style="font-size: 0.85rem; padding: 6px 14px; border-radius: 20px; background: rgba(10,10,15,0.9); box-shadow: 0 2px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 6px; border: 1px solid rgba(212, 175, 55, 0.3); height: 32px;"
+                title="Guardar Partida">💾</button>
+			<button id="btn-open-settings" class="btn secondary"
+                style="font-size: 0.85rem; padding: 6px 14px; border-radius: 20px; background: rgba(10,10,15,0.9); box-shadow: 0 2px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 6px; border: 1px solid rgba(212, 175, 55, 0.3); height: 32px;"
+                title="Ajustes de Partida">⚙️</button>
         </div>
-
-                <button id="btn-debug-combat" class="btn secondary"
-            style="border-radius: 20px; padding: 6px 14px; font-size: 0.85rem; box-shadow: 0 4px 15px rgba(0,0,0,0.8); display: flex; align-items: center; gap: 6px; background: rgba(10,10,15,0.9); border: 1px solid #ff3366; color: #ff3366; height: 32px; margin-right: 5px;"
-            title="Ver último combate">
-            <span style="font-size: 1rem;"></span>Debug
-        </button>
         <button id="btn-tutorial" class="btn primary hidden"
             style="border-radius: 20px; padding: 6px 14px; font-size: 0.85rem; box-shadow: 0 4px 15px rgba(0,0,0,0.8); display: flex; align-items: center; gap: 6px; background: linear-gradient(45deg, #235f8a, #40bae9, #21f2df); border: none; height: 32px;">
             <span style="font-size: 1rem;">❔</span> Ayuda
@@ -190,11 +190,11 @@
             style="max-width: 1150px; width: 95%; height: 800px; max-height: 92vh; overflow-y: auto; padding: 40px; position: relative; margin: 0; box-sizing: border-box; display: flex; flex-direction: column; justify-content: space-between; border: 2px solid var(--gold); border-radius: 20px; box-shadow: 0 10px 50px rgba(0,0,0,0.9), inset 0 0 35px rgba(212, 175, 55, 0.15); background: rgba(10, 10, 10, 0.95);">
             <div>
                 <!-- BOTON DE ENGRANAJE PARA AJUSTES INICIALES -->
-                <button id="btn-open-settings"
+                <button id="btn-open-settings-setup"
                     style="position: absolute; top: 25px; left: 25px; background: transparent; border: none; font-size: 1.8rem; cursor: pointer; display: flex; align-items: center; justify-content: center; color: var(--gold); transition: transform 0.3s ease; padding: 0; box-shadow: none;"
                     title="Ajustes Iniciales de Partida" onmouseover="this.style.transform='rotate(45deg)'"
                     onmouseout="this.style.transform='rotate(0deg)'">
-                    &#9881;&#65039;
+                    ⚙️
                 </button>
 
                 <!-- NUMERO DE VERSION (A LA DERECHA DEL ENGRANAJE) -->
@@ -370,6 +370,18 @@
                     <h4
                         style="margin: 0; color: var(--gold); border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom: 6px; font-size: 1.1rem; font-family: 'Cinzel', serif; text-align: center;">
                         Senda y Entorno</h4>
+                    <!-- Senda Activa -->
+                    <div
+                        style="display: flex; flex-direction: column; gap: 6px; background: rgba(255,255,255,0.03); padding: 8px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">
+                        <label for="select-settings-senda"
+                            style="font-size: 1.05rem; color: var(--gold); font-weight: bold; margin: 0;">🗺️ Senda Activa</label>
+                        <select id="select-settings-senda" style="width: 100%; padding: 6px 10px; border-radius: 6px; border: 2px solid var(--gold); background: #0a0a0a; color: #fff; font-size: 0.95rem; font-family: 'Outfit', sans-serif; outline: none; cursor: pointer; margin: 0 !important;">
+                            <option value="iniciacion">Senda de Iniciaci&oacute;n</option>
+                            <option value="guerrero">Senda de El Ze&ntilde;or de la Guerra</option>
+                            <option value="rey_brujo">Senda de El Rey Brujo</option>
+                            <option value="la_madre">Senda de La Madre</option>
+                        </select>
+                    </div>
                     <!-- Hito Inicial -->
                     <div
                         style="display: flex; flex-direction: column; gap: 6px; background: rgba(255,255,255,0.03); padding: 8px 16px; border-radius: 12px; border: 1px solid rgba(255,255,255,0.1);">

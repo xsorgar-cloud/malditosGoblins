@@ -1818,16 +1818,71 @@ class GameState {
 
       // Activar flag de elección para todos los jugadores
       this.players.forEach(pl => {
-        pl.pendingLevelUpChoices = (pl.pendingLevelUpChoices || 0) + 1;
-        pl.pendingLevelUpChoice = true;
-        
-        // --- REGLA DADO PLATEADO ---
-        if (pl.level === 4) {
-          pl.dicePool.push({ type: 'silver', faces: 3 });
-          this.addLog(`🎁 <span style="color:#c0c0c0">¡<strong>${pl.name}</strong> ha recibido un <strong>Dado Plateado d3</strong> por alcanzar el Nivel 4!</span>`);
-        }
+        this.adjustDicePoolToLevel(pl, pl.level);
       });
     }
+  }
+
+  adjustDicePoolToLevel(pl, newLevel) {
+    // 1. Manejo del dado plateado (Nivel 4+)
+    if (newLevel < 4) {
+      pl.dicePool = pl.dicePool.filter(d => d.type !== 'silver');
+    } else {
+      const hasSilver = pl.dicePool.some(d => d.type === 'silver');
+      if (!hasSilver) {
+        pl.dicePool.push({ type: 'silver', faces: 3 });
+        this.addLog(`🎁 <span style="color:#c0c0c0">¡<strong>${pl.name}</strong> ha recibido un <strong>Dado Plateado d3</strong> por alcanzar el Nivel 4!</span>`);
+      }
+    }
+
+    // 2. Ajustar dados extra elegidos (deben ser newLevel - 1 en total, incluyendo elecciones pendientes)
+    const targetExtraCount = newLevel - 1;
+    
+    let baseRedFound = false;
+    let baseBlackFound = false;
+    
+    const baseDice = [];
+    const extraDice = [];
+    const silverDice = [];
+
+    pl.dicePool.forEach(d => {
+      if (d.type === 'silver') {
+        silverDice.push(d);
+      } else if (d.type === 'red' && d.faces === 6 && !baseRedFound) {
+        baseRedFound = true;
+        baseDice.push(d);
+      } else if (d.type === 'black' && d.faces === 6 && !baseBlackFound) {
+        baseBlackFound = true;
+        baseDice.push(d);
+      } else {
+        extraDice.push(d);
+      }
+    });
+
+    if (baseDice.length < 2) {
+      if (!baseRedFound) baseDice.push({ type: 'red', faces: 6 });
+      if (!baseBlackFound) baseDice.push({ type: 'black', faces: 6 });
+    }
+
+    let currentExtraCount = extraDice.length + (pl.pendingLevelUpChoices || 0);
+
+    if (currentExtraCount > targetExtraCount) {
+      let toReduce = currentExtraCount - targetExtraCount;
+      if (pl.pendingLevelUpChoices > 0) {
+        const reducePending = Math.min(pl.pendingLevelUpChoices, toReduce);
+        pl.pendingLevelUpChoices -= reducePending;
+        toReduce -= reducePending;
+      }
+      if (toReduce > 0 && extraDice.length > 0) {
+        extraDice.splice(-toReduce);
+      }
+    } else if (currentExtraCount < targetExtraCount) {
+      const toIncrease = targetExtraCount - currentExtraCount;
+      pl.pendingLevelUpChoices = (pl.pendingLevelUpChoices || 0) + toIncrease;
+    }
+
+    pl.dicePool = [...baseDice, ...extraDice, ...silverDice];
+    pl.pendingLevelUpChoice = (pl.pendingLevelUpChoices || 0) > 0;
   }
 
   addDieToPool(playerIndex, dieType, faces) {

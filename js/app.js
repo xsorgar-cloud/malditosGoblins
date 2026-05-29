@@ -426,13 +426,87 @@ function updateSetupSendaPreview() {
 }
 
 const settingsModal = document.getElementById('settings-modal');
-document.getElementById('btn-open-settings').addEventListener('click', () => {
+
+function openSettingsModal() {
+  if (gameState.players && gameState.players.length > 0) {
+    const p = gameState.getCurrentPlayer();
+    document.getElementById('input-init-level').value = p.level;
+    document.getElementById('range-init-level').value = p.level;
+
+    document.getElementById('input-init-hp').value = p.hp;
+    document.getElementById('range-init-hp').value = p.hp;
+
+    document.getElementById('input-init-maxhp').value = p.maxHp;
+    document.getElementById('range-init-maxhp').value = p.maxHp;
+
+    document.getElementById('input-init-energy').value = p.energy;
+    document.getElementById('range-init-energy').value = p.energy;
+
+    document.getElementById('input-init-gold').value = p.mo;
+    document.getElementById('range-init-gold').value = p.mo;
+
+    document.getElementById('input-init-hito').value = gameState.currentHito;
+    document.getElementById('range-init-hito').value = gameState.currentHito;
+
+    document.getElementById('input-init-wave').value = gameState.battlefield.waveLevel;
+    document.getElementById('range-init-wave').value = gameState.battlefield.waveLevel;
+
+    const selectSettingsSenda = document.getElementById('select-settings-senda');
+    if (selectSettingsSenda) {
+      selectSettingsSenda.value = gameState.activeSenda;
+    }
+  }
   settingsModal.classList.remove('hidden');
-});
+}
+
+// Escuchar en el botón de ajustes principal y en el de configuración inicial
+const btnOpenSettings = document.getElementById('btn-open-settings');
+if (btnOpenSettings) {
+  btnOpenSettings.addEventListener('click', openSettingsModal);
+}
+const btnOpenSettingsSetup = document.getElementById('btn-open-settings-setup');
+if (btnOpenSettingsSetup) {
+  btnOpenSettingsSetup.addEventListener('click', openSettingsModal);
+}
+
 document.getElementById('btn-close-settings-x').addEventListener('click', () => {
   settingsModal.classList.add('hidden');
 });
+
 document.getElementById('btn-save-settings').addEventListener('click', () => {
+  if (gameState.players && gameState.players.length > 0) {
+    const level = parseInt(document.getElementById('input-init-level').value, 10);
+    const hp = parseInt(document.getElementById('input-init-hp').value, 10);
+    const maxHp = parseInt(document.getElementById('input-init-maxhp').value, 10);
+    const energy = parseInt(document.getElementById('input-init-energy').value, 10);
+    const gold = parseInt(document.getElementById('input-init-gold').value, 10);
+    const hito = parseInt(document.getElementById('input-init-hito').value, 10);
+    const wave = parseInt(document.getElementById('input-init-wave').value, 10);
+    const selectSettingsSenda = document.getElementById('select-settings-senda');
+    const senda = selectSettingsSenda ? selectSettingsSenda.value : gameState.activeSenda;
+
+    // Actualizar jugadores
+    gameState.players.forEach(pl => {
+      gameState.adjustDicePoolToLevel(pl, level);
+      pl.level = level;
+      pl.hp = hp;
+      pl.maxHp = maxHp;
+      pl.energy = energy;
+      pl.mo = gold;
+    });
+
+    // Actualizar entorno
+    gameState.currentHito = hito;
+    gameState.battlefield.waveLevel = wave;
+    lastWaveLevel = wave;
+    gameState.activeSenda = senda;
+
+    // Guardar partida y refrescar UI
+    updateUI();
+    if (typeof window !== 'undefined' && window.saveGame) {
+      window.saveGame(true);
+    }
+  }
   settingsModal.classList.add('hidden');
 });
 
