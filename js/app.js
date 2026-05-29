@@ -455,6 +455,11 @@ function openSettingsModal() {
     if (selectSettingsSenda) {
       selectSettingsSenda.value = gameState.activeSenda;
     }
+
+    const selectSettingsDifficulty = document.getElementById('select-settings-difficulty');
+    if (selectSettingsDifficulty) {
+      selectSettingsDifficulty.value = gameState.difficulty || 'medio';
+    }
   }
   settingsModal.classList.remove('hidden');
 }
@@ -484,6 +489,8 @@ document.getElementById('btn-save-settings').addEventListener('click', () => {
     const wave = parseInt(document.getElementById('input-init-wave').value, 10);
     const selectSettingsSenda = document.getElementById('select-settings-senda');
     const senda = selectSettingsSenda ? selectSettingsSenda.value : gameState.activeSenda;
+    const selectSettingsDifficulty = document.getElementById('select-settings-difficulty');
+    const difficulty = selectSettingsDifficulty ? selectSettingsDifficulty.value : (gameState.difficulty || 'medio');
 
     // Actualizar jugadores
     gameState.players.forEach(pl => {
@@ -500,6 +507,7 @@ document.getElementById('btn-save-settings').addEventListener('click', () => {
     gameState.battlefield.waveLevel = wave;
     lastWaveLevel = wave;
     gameState.activeSenda = senda;
+    gameState.difficulty = difficulty;
 
     // Guardar partida y refrescar UI
     updateUI();
@@ -546,11 +554,14 @@ btnStartGame.addEventListener('click', () => {
   const selectSendaEl = document.getElementById('select-senda');
   const initSenda = selectSendaEl ? selectSendaEl.value : 'iniciacion';
 
+  const selectDifficultyEl = document.getElementById('select-settings-difficulty');
+  const initDifficulty = selectDifficultyEl ? selectDifficultyEl.value : 'medio';
+
   const rawWave = parseInt(document.getElementById('input-init-wave').value, 10);
   const initWave = isNaN(rawWave) ? 1 : rawWave;
   lastWaveLevel = initWave;
 
-  gameState.setupPlayers(numPlayers, finalRoles, { hp: initHp, maxHp: initMaxHp, energy: initEnergy, mo: initGold, hito: initHito, level: initLevel, wave: initWave, senda: initSenda });
+  gameState.setupPlayers(numPlayers, finalRoles, { hp: initHp, maxHp: initMaxHp, energy: initEnergy, mo: initGold, hito: initHito, level: initLevel, wave: initWave, senda: initSenda, difficulty: initDifficulty });
   setupModal.classList.add('hidden');
   const versionBadge = document.getElementById('game-version-badge');
   if (versionBadge) versionBadge.style.display = 'none';

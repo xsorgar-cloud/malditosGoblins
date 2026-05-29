@@ -28,6 +28,7 @@ class GameState {
     this.lastCombatId = 0;
     this.lastActionWasCombat = false;
     this.lastWarlordExtraDmg = 0;
+    this.difficulty = 'medio';
 
     // Log de acciones
     this.logs = [];
@@ -988,9 +989,10 @@ class GameState {
     }
   }
 
-  setupPlayers(numPlayers, selectedRoles = [], customSettings = { hp: 10, maxHp: 10, energy: 0, mo: 2, hito: 1, level: 1, senda: 'iniciacion' }) {
+  setupPlayers(numPlayers, selectedRoles = [], customSettings = { hp: 10, maxHp: 10, energy: 0, mo: 2, hito: 1, level: 1, senda: 'iniciacion', difficulty: 'medio' }) {
     this.currentHito = customSettings.hito !== undefined ? customSettings.hito : 1;
     this.activeSenda = customSettings.senda || 'iniciacion';
+    this.difficulty = customSettings.difficulty || 'medio';
     this.pendingHito1Goblins = 0;
     let initLvl = customSettings.level !== undefined ? customSettings.level : 1;
     let basePex = 0;
@@ -1559,22 +1561,64 @@ class GameState {
 
     if (this.wavePhaseState.phase === 'spawns') {
       let spawns = [];
+      const diff = this.difficulty || 'medio';
 
-      // Aparición de nuevos enemigos de nivel 1
-      for (let i = 0; i < this.players.length; i++) {
-        let gob = { ...DB.goblins[1], uid: Date.now() + Math.random(), currentHp: DB.goblins[1].hp };
-        this.battlefield.goblins.push(gob);
-        spawns.push(gob);
-      }
-      this.addLog(`🔥 <span style="color:#f54281"><strong>Aparición:</strong></span> ${this.players.length} x G1`);
+      if (diff === 'chupado') {
+        // Nivel Chupado: Voltea boca arriba tantos Goblins de nivel 1 como jugadores.
+        for (let i = 0; i < this.players.length; i++) {
+          let gob = { ...DB.goblins[1], uid: Date.now() + Math.random(), currentHp: DB.goblins[1].hp };
+          this.battlefield.goblins.push(gob);
+          spawns.push(gob);
+        }
+        this.addLog(`🔥 <span style="color:#f54281"><strong>Aparición (Chupado):</strong></span> ${this.players.length} x G1`);
+      } 
+      else if (diff === 'facil') {
+        // Nivel Fácil: Voltea boca arriba tantos Goblins de nivel de la Oleada actual como jugadores.
+        let nivelAparecer = Math.min(this.battlefield.waveLevel, 5);
+        if (DB.goblins[nivelAparecer]) {
+          for (let i = 0; i < this.players.length; i++) {
+            let gob = { ...DB.goblins[nivelAparecer], uid: Date.now() + Math.random(), currentHp: DB.goblins[nivelAparecer].hp };
+            this.battlefield.goblins.push(gob);
+            spawns.push(gob);
+          }
+          this.addLog(`🔥 <span style="color:#f54281"><strong>Aparición (Fácil):</strong></span> ${this.players.length} x G${nivelAparecer}`);
+        }
+      } 
+      else if (diff === 'medio') {
+        // Nivel Medio: Voltea boca arriba tantos Goblins de nivel 1 como jugadores. A continuación voltea un goblin del nivel de la oleada actual.
+        for (let i = 0; i < this.players.length; i++) {
+          let gob = { ...DB.goblins[1], uid: Date.now() + Math.random(), currentHp: DB.goblins[1].hp };
+          this.battlefield.goblins.push(gob);
+          spawns.push(gob);
+        }
+        this.addLog(`🔥 <span style="color:#f54281"><strong>Aparición (Medio):</strong></span> ${this.players.length} x G1`);
 
-      // Aparición de nuevos enemigos de nivel de la oleada
-      let nivelAparecer = Math.min(this.battlefield.waveLevel, 5);
-      if (DB.goblins[nivelAparecer]) {
-        let gob = { ...DB.goblins[nivelAparecer], uid: Date.now() + Math.random(), currentHp: DB.goblins[nivelAparecer].hp };
-        this.battlefield.goblins.push(gob);
-        spawns.push(gob);
-        this.addLog(`🔥 <span style="color:#f54281"><strong>Aparición:</strong></span> 1 x G${nivelAparecer}`);
+        let nivelAparecer = Math.min(this.battlefield.waveLevel, 5);
+        if (DB.goblins[nivelAparecer]) {
+          let gob = { ...DB.goblins[nivelAparecer], uid: Date.now() + Math.random(), currentHp: DB.goblins[nivelAparecer].hp };
+          this.battlefield.goblins.push(gob);
+          spawns.push(gob);
+          this.addLog(`🔥 <span style="color:#f54281"><strong>Aparición (Medio):</strong></span> 1 x G${nivelAparecer}`);
+        }
+      } 
+      else if (diff === 'dificil') {
+        // Nivel Difícil: Voltea boca arriba tantos Goblins de nivel 1 como jugadores. A continuación voltea un goblin de cada nivel superior hasta la oleada actual, incluida.
+        for (let i = 0; i < this.players.length; i++) {
+          let gob = { ...DB.goblins[1], uid: Date.now() + Math.random(), currentHp: DB.goblins[1].hp };
+          this.battlefield.goblins.push(gob);
+          spawns.push(gob);
+        }
+        this.addLog(`🔥 <span style="color:#f54281"><strong>Aparición (Difícil):</strong></span> ${this.players.length} x G1`);
+
+        let nivelMax = Math.min(this.battlefield.waveLevel, 5);
+        for (let lvl = 2; lvl <= nivelMax; lvl++) {
+          if (DB.goblins[lvl]) {
+            let gob = { ...DB.goblins[lvl], uid: Date.now() + Math.random(), currentHp: DB.goblins[lvl].hp };
+            this.battlefield.goblins.push(gob);
+            spawns.push(gob);
+            this.addLog(`🔥 <span style="color:#f54281"><strong>Aparición (Difícil):</strong></span> 1 x G${lvl}`);
+          }
+        }
       }
 
       // Eclosión Tardía (Senda de La Madre)
