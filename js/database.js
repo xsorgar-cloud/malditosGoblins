@@ -116,6 +116,13 @@ const DB = {
       { id: 3, name: "Fuego Cruzado", goblins: [2, 2], isBoss: false, ruleDesc: "Durante este hito no puedes comprar equipo." },
       { id: 4, name: "Los Artificieros", goblins: [1, 1, 3], isBoss: false, ruleDesc: "Por cada '1' natural en tus dados, sufres 1 punto de Daño Directo." },
       { id: 5, name: "El Piromante", goblins: [5], isBoss: true, bossStats: { hpMultiplier: 35, regen: 5, dice: ['3d4'], image: 'assets/Monstruos/Jefes/El-Piromante.jpg', attacks: { 1: ['Invocación goblin Nivel 1'], 2: ['Daño Directo', '1 escozor'], 3: ['gana+2 PV por cada carga Escozor del jugador'], 4: ['1 Escozor y 2 puntos de daño por cada carga Escozor del jugador'] } }, ruleDesc: "Jefe Final. Tormenta de Fuego: 1 o 2 en tu equipo te da Escozor. No se puede usar Botín Humeante." }
+    ],
+    recaudador: [
+      { id: 1, name: "Los Carteristas", goblins: [1, 1], isBoss: false, ruleDesc: "Si un Goblin te causa daño, te roba 1 mo extra. Si no puedes, sufres 1 Daño Directo." },
+      { id: 2, name: "El Peaje", goblins: [1, 2], isBoss: false, ruleDesc: "El Goblin de Nivel 2 es Invulnerable hasta que pagues 2mo." },
+      { id: 3, name: "El Prestamista", goblins: [1, 3], isBoss: false, ruleDesc: "Al final de cada acción, si el Nivel 3 sigue vivo, debes pagar 1mo o sufres 1 Daño Directo." },
+      { id: 4, name: "La Banda del Saco", goblins: [1, 2, 3], isBoss: false, ruleDesc: "Mientras algún Nivel 1 siga vivo, el Nivel 3 y el Nivel 2 son Invulnerables." },
+      { id: 5, name: "Gran Recaudador", goblins: [5], isBoss: true, bossStats: { hpMultiplier: 30, regen: 5, dice: ['2d6', '+2'], image: 'assets/Monstruos/Jefes/Gran-Recaudador.jpg', attacks: { 1: ['Daño Directo'], 2: ['Rotura no esquivable'], 3: ['Curación Boss 5 PV'], 4: ['1 tembleque'], 5: ['2 escozor'], 6: ['Invocación goblin Nivel 1'] } }, ruleDesc: "Jefe Final. Armadura de monedas: Resta 1 al daño en cada carta de ataque. Por cada equipo que dañe obtienes 1 mo." }
     ]
   },
 
@@ -137,6 +144,10 @@ const DB = {
     piromante: [
       { name: "· Goblins Bomba", desc: "Cada vez que derrotes a un Goblin recibes una carga de Escozor." },
       { name: "· Botín Humeante", desc: "Si usas una Acción para cobrar monedas (ya sea 1 o 2 mo), sufres 2 PV de Daño Directo y eliminas todos tus estados de Escozor. *(Desactivado contra El Piromante)*" }
+    ],
+    recaudador: [
+      { name: "· Escudo de Oro", desc: "Cuando recibes Daño, automáticamente pierdes 1 mo y evita 1 punto de daño. Si NO tienes Oro sufres el daño normal y añades +1 Daño Extra." },
+      { name: "· Saqueo Experto", desc: "Cada vez que mates a un Goblin ganas +1 mo EXTRA." }
     ]
   },
 

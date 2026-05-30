@@ -248,9 +248,134 @@ window.alert = function (messageText, callback = null) {
 
   overlay.classList.remove('victory-theme');
 
-  title.innerText = "¡ATENCIÓN!";
-  title.style.color = "var(--gold)";
-  desc.innerHTML = String(messageText).replace(/\n/g, '<br>');
+  // Cabecera grande y amarilla y coloreado de contenido
+  let headerText = "¡ATENCIÓN!";
+  let processedText = messageText;
+
+  // Intentamos extraer un título principal del mensaje si empieza por "¡...!" o si la primera línea es un título claro
+  const tempLines = messageText.split('\n');
+  const firstLineRaw = tempLines[0] ? tempLines[0].trim() : '';
+  let firstLineClean = firstLineRaw.replace(/^<br\s*\/?>|<br\s*\/?>$/gi, '').trim();
+
+  // Caso A: La primera línea empieza por ¡ y tiene ! (ej: "¡DEMASIADO PESO! No puedes llevar...")
+  const exclamationMatch = firstLineClean.match(/^¡([^!]+)!(.*)/i);
+  if (exclamationMatch) {
+    headerText = `¡${exclamationMatch[1].trim()}!`;
+    const restOfFirstLine = exclamationMatch[2].trim();
+    if (restOfFirstLine || tempLines.length > 1) {
+      if (restOfFirstLine) {
+        tempLines[0] = restOfFirstLine;
+      } else {
+        tempLines.shift();
+      }
+      processedText = tempLines.join('\n');
+    } else {
+      processedText = "";
+    }
+  }
+  // Caso B: La primera línea termina con ":" (ej: "Senda del Gran Recaudador - Resumen:")
+  else if (firstLineClean.endsWith(':')) {
+    headerText = firstLineClean.substring(0, firstLineClean.length - 1).trim();
+    tempLines.shift();
+    processedText = tempLines.join('\n');
+  }
+  // Caso C: La primera línea contiene un ":" y hay más líneas en el mensaje, o la parte antes del ":" es corta (ej: "⚠️ Fuego Cruzado: Durante este...")
+  else if (firstLineClean.includes(':') && (tempLines.length > 1 || firstLineClean.indexOf(':') < 30)) {
+    const colonIndex = firstLineClean.indexOf(':');
+    headerText = firstLineClean.substring(0, colonIndex).trim();
+    const restOfFirstLine = firstLineClean.substring(colonIndex + 1).trim();
+    if (restOfFirstLine || tempLines.length > 1) {
+      if (restOfFirstLine) {
+        tempLines[0] = restOfFirstLine;
+      } else {
+        tempLines.shift();
+      }
+      processedText = tempLines.join('\n');
+    } else {
+      processedText = "";
+    }
+  }
+
+  // Ajustar tamaño del título según la longitud para evitar desbordamientos
+  let titleFontSize = "2.2rem";
+  if (headerText.length > 30) {
+    titleFontSize = "1.8rem";
+  }
+  if (headerText.length > 50) {
+    titleFontSize = "1.5rem";
+  }
+
+  title.innerHTML = headerText;
+  title.style.cssText = `font-family: 'Cinzel', serif; font-size: ${titleFontSize}; font-weight: 800; color: #ffd700; text-shadow: 0 0 15px rgba(255, 215, 0, 0.4); text-align: center; margin-bottom: 25px; letter-spacing: 2px; text-transform: uppercase;`;
+
+  // Función de parseo interno para colorear y estructurar el mensaje
+  const parseAlertMessage = (text) => {
+    const lines = text.split('\n');
+    let html = '';
+    
+    // Todos los textos de las alertas deben estar centrados
+    const alignStyle = 'text-align: center;';
+
+    lines.forEach(line => {
+      let trimmed = line.trim();
+      if (!trimmed) {
+        html += '<div style="margin-bottom: 12px;"></div>';
+        return;
+      }
+
+      // Quitar br superfluos al inicio/fin
+      trimmed = trimmed.replace(/^<br\s*\/?>|<br\s*\/?>$/gi, '');
+      if (!trimmed) {
+        html += '<div style="margin-bottom: 12px;"></div>';
+        return;
+      }
+
+      // Detectar subcabeceras secundarias dentro del mensaje (por ejemplo, "Senda del Gran Recaudador - Resumen:")
+      if (trimmed.endsWith(':') || (trimmed.startsWith('¡') && trimmed.endsWith('!')) || trimmed.toLowerCase().includes('resumen')) {
+        let cleanText = trimmed.replace(/<br\s*\/?>/gi, '');
+        html += `<div style="font-family: 'Cinzel', serif; font-size: 1.25rem; font-weight: bold; color: #ffd700; margin-top: 18px; margin-bottom: 10px; text-shadow: 0 0 8px rgba(212, 175, 55, 0.4); text-transform: uppercase; text-align: center;">${cleanText}</div>`;
+      } 
+      // Contenido diferenciado por Título: Descripción
+      else if (trimmed.includes(':')) {
+        let colonIndex = trimmed.indexOf(':');
+        let blockTitle = trimmed.substring(0, colonIndex + 1);
+        let blockDesc = trimmed.substring(colonIndex + 1);
+
+        // Elegir color para el TÍTULO según las palabras clave
+        let titleColor = '#ffcc00'; // Color por defecto (dorado/amarillo suave)
+        
+        if (blockTitle.includes('⚔️') || blockTitle.toLowerCase().includes('daño') || blockTitle.toLowerCase().includes('golpe') || blockTitle.toLowerCase().includes('ataque') || blockTitle.toLowerCase().includes('vida')) {
+          titleColor = '#ff4d4d'; // Rojo vibrante para daño/combate/vida
+        } else if (blockTitle.includes('🪙') || blockTitle.includes('💰') || blockTitle.includes('💸') || blockTitle.toLowerCase().includes('escudo de oro') || blockTitle.toLowerCase().includes('saqueo') || blockTitle.toLowerCase().includes('carteristas') || blockTitle.toLowerCase().includes('armadura') || blockTitle.toLowerCase().includes('peaje') || blockTitle.toLowerCase().includes('prestamista') || blockTitle.toLowerCase().includes('recaudador') || blockTitle.toLowerCase().includes('mo') || blockTitle.toLowerCase().includes('monedas') || blockTitle.toLowerCase().includes('oro')) {
+          titleColor = '#ffd700'; // Dorado brillante
+        } else if (blockTitle.includes('🔥') || blockTitle.toLowerCase().includes('escozor') || blockTitle.toLowerCase().includes('fuego') || blockTitle.toLowerCase().includes('piromante')) {
+          titleColor = '#ff6600'; // Naranja para escozor
+        } else if (blockTitle.includes('⚡') || blockTitle.toLowerCase().includes('calambre') || blockTitle.toLowerCase().includes('energía') || blockTitle.toLowerCase().includes('habilidad')) {
+          titleColor = '#ffda79'; // Amarillo eléctrico para calambres/energía
+        } else if (blockTitle.includes('🌀') || blockTitle.toLowerCase().includes('tembleque')) {
+          titleColor = '#34ace0'; // Azul claro para tembleque
+        } else if (blockTitle.includes('🛡️') || blockTitle.toLowerCase().includes('escudo') || blockTitle.toLowerCase().includes('defensa') || blockTitle.toLowerCase().includes('invulnerable')) {
+          titleColor = '#33d9b2'; // Turquesa para escudos y defensas
+        } else if (blockTitle.includes('🚨') || blockTitle.includes('⚠️') || blockTitle.toLowerCase().includes('peso') || blockTitle.toLowerCase().includes('duplicado')) {
+          titleColor = '#ff5252'; // Rojo brillante para alertas críticas
+        }
+
+        // Título en negrita y coloreado distinto a la descripción
+        html += `<div style="margin-bottom: 8px; font-size: 1.05rem; line-height: 1.4; ${alignStyle}">
+          <span style="font-weight: bold; color: ${titleColor};">${blockTitle}</span>
+          <span style="color: #cbd5e1; font-weight: normal; margin-left: 4px;">${blockDesc}</span>
+        </div>`;
+      } 
+      // Líneas normales de descripción o texto plano
+      else {
+        html += `<div style="font-size: 1.05rem; color: #cbd5e1; line-height: 1.4; margin-bottom: 8px; ${alignStyle}">${trimmed}</div>`;
+      }
+    });
+
+    return html;
+  };
+
+  desc.innerHTML = parseAlertMessage(processedText);
 
   container.innerHTML = '';
   const marker = document.createElement('div');
@@ -1660,13 +1785,56 @@ function renderBattlefield() {
       if (isInvulnerable) {
         gobEl.classList.add('invulnerable');
       }
-      const invulnTitle = gameState.activeSenda === 'la_madre'
-        ? "Escudos de Carne: ¡La Madre protege a sus crías!"
-        : "Invulnerable por Regla de Hito";
+      let invulnTitle = "Invulnerable por Regla de Hito";
+      if (gameState.activeSenda === 'la_madre') {
+        invulnTitle = "Escudos de Carne: ¡La Madre protege a sus crías!";
+      } else if (gameState.activeSenda === 'recaudador') {
+        if (gameState.currentHito === 3) {
+          invulnTitle = "El Peaje: ¡Paga 2 mo de peaje para hacerlo vulnerable!";
+        } else if (gameState.currentHito === 5) {
+          invulnTitle = "La Banda del Saco: ¡Vence primero a los goblins de Nivel 1!";
+        }
+      }
       const badgeHTML = isInvulnerable 
         ? `<div class="goblin-invulnerable-badge" title="${invulnTitle}">🛡️</div>` 
         : '';
       gobEl.innerHTML = `<div class="goblin-hp">${goblin.currentHp}</div>${badgeHTML}`;
+
+      // Botón de pago del peaje (Hito 2 Senda Recaudador)
+      if (gameState.activeSenda === 'recaudador' && gameState.currentHito === 3 && goblin.level === 2 && !goblin.peajePagado) {
+        const payBtn = document.createElement('button');
+        payBtn.innerText = 'Pagar Peaje (2 mo)';
+        payBtn.style.cssText = 'position: absolute; bottom: 10px; left: 5%; width: 90%; padding: 6px 4px; font-family: "Outfit", sans-serif; font-size: 0.8rem; font-weight: bold; text-transform: uppercase; color: #fff; background: linear-gradient(135deg, #d4af37 0%, #aa7c11 100%); border: 1px solid var(--gold); border-radius: 6px; cursor: pointer; transition: all 0.2s ease; z-index: 10; box-shadow: 0 4px 8px rgba(0,0,0,0.5);';
+        
+        let activeP = gameState.getCurrentPlayer();
+        if (activeP && activeP.mo < 2) {
+          payBtn.disabled = true;
+          payBtn.style.background = '#444';
+          payBtn.style.border = '1px solid #666';
+          payBtn.style.cursor = 'not-allowed';
+          payBtn.title = "No tienes suficiente oro (se requieren 2 mo)";
+        } else {
+          payBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            if (activeP) {
+              activeP.mo -= 2;
+              goblin.peajePagado = true;
+              gameState.addLog(`🪙 <strong>Peaje Pagado:</strong> Pagas <span style="color:#ffd700">2 mo</span>. ¡El Goblin Nivel 2 ya no es Invulnerable!`);
+              updateUI();
+            }
+          });
+          payBtn.addEventListener('mouseenter', () => {
+            payBtn.style.transform = 'scale(1.05)';
+            payBtn.style.boxShadow = '0 0 10px var(--gold)';
+          });
+          payBtn.addEventListener('mouseleave', () => {
+            payBtn.style.transform = 'scale(1)';
+            payBtn.style.boxShadow = '0 4px 8px rgba(0,0,0,0.5)';
+          });
+        }
+        gobEl.appendChild(payBtn);
+      }
 
       // Comprobar si es un goblin nuevo para aplicarle la animación correspondiente
       if (!animatedGoblinUids.has(goblin.uid)) {
@@ -1700,6 +1868,16 @@ function renderBattlefield() {
             const aliveGobs = gameState.battlefield.goblins.filter(g => !g.isDying);
             const minLevel = Math.min(...aliveGobs.map(g => g.level));
             alert(`🛡️ Escudos de Carne: ¡La Madre protege a sus crías!\n\nDebes eliminar primero a los Goblins de nivel inferior (Nivel ${minLevel}) antes de poder atacar a este Goblin de Nivel ${goblin.level}.`);
+            return;
+          }
+
+          // Senda Recaudador - Goblins Invulnerables
+          if (gameState.activeSenda === 'recaudador' && !goblin.isDying && gameState.isGoblinInvulnerable(goblin)) {
+            if (gameState.currentHito === 3 && goblin.level === 2 && !goblin.peajePagado) {
+              alert(`💰 El Peaje: ¡El Goblin de Nivel 2 es Invulnerable hasta que pagues su peaje de 2 mo!\n\nUsa el botón "Pagar Peaje (2 mo)" en su carta para poder atacarlo.`);
+            } else if (gameState.currentHito === 5 && (goblin.level === 2 || goblin.level === 3)) {
+              alert(`🛍️ La Banda del Saco: ¡Los Goblins de Nivel 2 y Nivel 3 son Invulnerables mientras haya algún goblin de Nivel 1 vivo!`);
+            }
             return;
           }
 
@@ -1965,6 +2143,10 @@ function renderCombatOverlay() {
       for (let eqId in currentAssignments) {
         let asgData = currentAssignments[eqId];
         let asgList = Array.isArray(asgData) ? asgData : [asgData];
+
+        let eqDamagePerTarget = {};
+        c.goblins.forEach(g => { eqDamagePerTarget[g.uid] = 0; });
+
         asgList.forEach(asg => {
           if (asg.isRole) return;
           let eq = p.equipped.find(e => e.id === eqId);
@@ -1976,10 +2158,34 @@ function renderCombatOverlay() {
 
           let healObj = { heal: 0 };
           let shieldObj = { shield: 0 };
-          gameState.applyEquipmentEffect(p, eq, simulatedAsg, projDamagePerTarget, healObj, shieldObj);
+          let tempDamage = {};
+          c.goblins.forEach(g => { tempDamage[g.uid] = { damage: 0, shield: 0 }; });
+
+          gameState.applyEquipmentEffect(p, eq, simulatedAsg, tempDamage, healObj, shieldObj);
           projHeal += healObj.heal;
           projShield += shieldObj.shield;
+
+          for (let uid in tempDamage) {
+            eqDamagePerTarget[uid] += tempDamage[uid].damage;
+          }
         });
+
+        // Apply Armadura de Monedas to the total damage of this equipment card against the boss in projection
+        for (let uid in eqDamagePerTarget) {
+          let targetGoblin = c.goblins.find(g => g.uid === uid || String(g.uid) === String(uid));
+          let isRecaudadorBoss = (targetGoblin && targetGoblin.isBoss && targetGoblin.name === "El Gran Recaudador");
+          let dmg = eqDamagePerTarget[uid];
+          if (isRecaudadorBoss && dmg > 0) {
+            eqDamagePerTarget[uid] = Math.max(0, dmg - 1);
+          }
+        }
+
+        // Add to the global projDamagePerTarget
+        for (let uid in eqDamagePerTarget) {
+          if (projDamagePerTarget[uid]) {
+            projDamagePerTarget[uid].damage += eqDamagePerTarget[uid];
+          }
+        }
       }
 
       c.goblins.forEach(gob => {
@@ -2025,6 +2231,10 @@ function renderCombatOverlay() {
               const nextDetail = greenDiceResult.details[rawIdx + 1];
               if (nextDetail && nextDetail.type === 'mod') {
                 dieDmg += nextDetail.val;
+              }
+
+              if (gob.isBoss && gob.name === "El Gran Recaudador" && (detail.val === 3 || detail.val === 6)) {
+                dieDmg = 0;
               }
 
               if (isIntercepted) {
@@ -2201,6 +2411,40 @@ function renderCombatOverlay() {
         }
       }
 
+      if (gameState.activeSenda === 'recaudador') {
+        let recDetails = ["Senda del Gran Recaudador - Resumen:<br>"];
+        let hasRecaudadorEvent = false;
+
+        if (gameState.lastCombatGoldPrevented > 0) {
+          recDetails.push(`• Escudo de Oro: perdiste ${gameState.lastCombatGoldPrevented} mo y evitaste ${gameState.lastCombatGoldPrevented} de daño.`);
+          hasRecaudadorEvent = true;
+        }
+        if (gameState.lastCombatExtraGoldDamage > 0) {
+          recDetails.push(`• Escudo de Oro (sin oro): sufriste +${gameState.lastCombatExtraGoldDamage} de Daño Extra.`);
+          hasRecaudadorEvent = true;
+        }
+        if (gameState.lastCombatSaqueoExperto > 0) {
+          recDetails.push(`• Saqueo Experto: obtuviste +${gameState.lastCombatSaqueoExperto} mo extra.`);
+          hasRecaudadorEvent = true;
+        }
+        if (gameState.lastCombatLosCarteristasRobo > 0) {
+          recDetails.push(`• Los Carteristas: un goblin te robó ${gameState.lastCombatLosCarteristasRobo} mo extra.`);
+          hasRecaudadorEvent = true;
+        }
+        if (gameState.lastCombatLosCarteristasDmg > 0) {
+          recDetails.push(`• Los Carteristas: sufriste +${gameState.lastCombatLosCarteristasDmg} Daño Directo por no tener oro.`);
+          hasRecaudadorEvent = true;
+        }
+        if (gameState.lastCombatArmaduraMonedasGold > 0) {
+          recDetails.push(`• Armadura de monedas: obtuviste +${gameState.lastCombatArmaduraMonedasGold} mo por dañar al jefe.`);
+          hasRecaudadorEvent = true;
+        }
+
+        if (hasRecaudadorEvent) {
+          alertMessages.push(recDetails.join('\n'));
+        }
+      }
+
       const runEndOfCombatUI = () => {
         const hpAfter = pBefore.hp;
         if (hpAfter < hpBefore) {
@@ -2270,9 +2514,16 @@ function renderCombatOverlay() {
     if (isInvulnerable) {
       gobCard.classList.add('invulnerable');
     }
-    const invulnTitle = gameState.activeSenda === 'la_madre' 
-      ? "Escudos de Carne: ¡La Madre protege a sus crías!" 
-      : "Invulnerable por Regla de Hito";
+    let invulnTitle = "Invulnerable por Regla de Hito";
+    if (gameState.activeSenda === 'la_madre') {
+      invulnTitle = "Escudos de Carne: ¡La Madre protege a sus crías!";
+    } else if (gameState.activeSenda === 'recaudador') {
+      if (gameState.currentHito === 3) {
+        invulnTitle = "El Peaje: ¡Paga 2 mo de peaje para hacerlo vulnerable!";
+      } else if (gameState.currentHito === 5) {
+        invulnTitle = "La Banda del Saco: ¡Vence primero a los goblins de Nivel 1!";
+      }
+    }
     const badgeHTML = isInvulnerable 
       ? `<div class="goblin-invulnerable-badge" title="${invulnTitle}">🛡️</div>` 
       : '';

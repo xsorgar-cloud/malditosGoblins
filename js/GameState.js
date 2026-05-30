@@ -54,6 +54,40 @@ class GameState {
     return false;
   }
 
+  damagePlayer(player, damage, isDirect = false, reason = '') {
+    if (damage <= 0 || player.hp <= 0) return 0;
+
+    let finalDamage = damage;
+    let goldPrevented = false;
+    let extraGoldDamage = false;
+
+    if (this.activeSenda === 'recaudador') {
+      if (player.mo > 0) {
+        player.mo = Math.max(0, player.mo - 1);
+        finalDamage = Math.max(0, finalDamage - 1);
+        goldPrevented = true;
+      } else {
+        finalDamage += 1;
+        extraGoldDamage = true;
+      }
+    }
+
+    player.hp = Math.max(0, player.hp - finalDamage);
+
+    if (this.activeSenda === 'recaudador') {
+      if (goldPrevented) {
+        this.addLog(`🪙 <strong>Escudo de Oro:</strong> <strong>${player.name}</strong> pierde 1 mo y evita 1 daño. Daño resultante: <span style="color:#ff4d4d"><strong>${finalDamage}</strong></span> (HP: ${player.hp}/${player.maxHp}).`);
+        this.lastCombatGoldPrevented = (this.lastCombatGoldPrevented || 0) + 1;
+      } else if (extraGoldDamage) {
+        this.addLog(`💸 <strong>Escudo de Oro (Sin oro):</strong> <strong>${player.name}</strong> sufre +1 Daño Extra. Daño resultante: <span style="color:#ff4d4d"><strong>${finalDamage}</strong></span> (HP: ${player.hp}/${player.maxHp}).`);
+        this.lastCombatExtraGoldDamage = (this.lastCombatExtraGoldDamage || 0) + 1;
+      }
+    }
+
+    this.checkGameOver();
+    return finalDamage;
+  }
+
   // Utils para dados
   rollDice(faces = 6) {
     return Math.floor(Math.random() * faces) + 1;
@@ -82,6 +116,18 @@ class GameState {
   }
 
   isGoblinInvulnerable(goblin) {
+    if (this.activeSenda === 'recaudador') {
+      // Hito 2: El Goblin de Nivel 2 es Invulnerable hasta que pagues 2mo
+      if (this.currentHito === 3 && goblin.level === 2 && !goblin.peajePagado) {
+        return true;
+      }
+      // Hito 4: Mientras algún Nivel 1 siga vivo, el Nivel 3 y el Nivel 2 son Invulnerables
+      if (this.currentHito === 5 && (goblin.level === 2 || goblin.level === 3)) {
+        let lvl1Exists = this.battlefield.goblins.some(g => g.level === 1 && g.currentHp > 0 && !g.isDying);
+        if (lvl1Exists) return true;
+      }
+    }
+
     if (this.activeSenda === 'guerrero') {
       // Solo los goblins del propio hito son inmunes durante la senda
       if (!goblin.isHito) return false;
@@ -333,6 +379,13 @@ class GameState {
     let p = this.getCurrentPlayer();
     let c = this.currentCombat;
 
+    this.lastCombatGoldPrevented = 0;
+    this.lastCombatExtraGoldDamage = 0;
+    this.lastCombatSaqueoExperto = 0;
+    this.lastCombatLosCarteristasRobo = 0;
+    this.lastCombatLosCarteristasDmg = 0;
+    this.lastCombatArmaduraMonedasGold = 0;
+
     let escozorBefore = p.statusEffects ? (p.statusEffects.escozor || 0) : 0;
     let calambreBefore = p.statusEffects ? (p.statusEffects.calambre || 0) : 0;
     let temblequeBefore = p.statusEffects ? (p.statusEffects.tembleque || 0) : 0;
@@ -393,6 +446,12 @@ class GameState {
       let asgData = assignments[eqId];
       // Convertir a array si no lo es (para compatibilidad)
       let asgList = Array.isArray(asgData) ? asgData : [asgData];
+
+      // Inicializar el daño acumulado por este equipo en esta resolución
+      let eqDamagePerTarget = {};
+      c.goblins.forEach(g => {
+        eqDamagePerTarget[g.uid] = 0;
+      });
 
       asgList.forEach(asg => {
         if (asg.isRole) {
@@ -459,11 +518,38 @@ class GameState {
         playerHeal += healObj.heal;
         totalPlayerShield += shieldObj.shield;
         for (let uid in tempDamagePerTarget) {
-          if (damagePerTarget[uid]) {
-            damagePerTarget[uid].damage += tempDamagePerTarget[uid].damage;
-          }
+          eqDamagePerTarget[uid] += tempDamagePerTarget[uid].damage;
         }
       });
+
+      // Aplicar Armadura de monedas si la senda es recaudador y el objetivo es El Gran Recaudador
+      let eqObj = p.equipped.find(e => e.id === eqId);
+      if (eqObj) {
+        for (let uid in eqDamagePerTarget) {
+          let targetGoblin = c.goblins.find(g => g.uid === uid || String(g.uid) === String(uid));
+          let isRecaudadorBoss = (targetGoblin && targetGoblin.isBoss && targetGoblin.name === "El Gran Recaudador");
+          let dmg = eqDamagePerTarget[uid];
+
+          if (isRecaudadorBoss && dmg > 0) {
+            let netDmg = Math.max(0, dmg - 1);
+            if (netDmg > 0) {
+              p.mo += 1;
+              this.lastCombatArmaduraMonedasGold = (this.lastCombatArmaduraMonedasGold || 0) + 1;
+              this.addLog(`🪙 <strong>Armadura de monedas:</strong> El equipo <em>${eqObj.name}</em> daña al Gran Recaudador. ¡Obtienes <span style="color:#ffd700">1 mo</span>! (Daño: ${dmg} -> ${netDmg}).`);
+            } else {
+              this.addLog(`🪙 <strong>Armadura de monedas:</strong> El ataque de <em>${eqObj.name}</em> fue reducido a 0 por la Armadura de monedas (Daño: ${dmg} -> 0).`);
+            }
+            eqDamagePerTarget[uid] = netDmg;
+          }
+        }
+      }
+
+      // Sumar al damagePerTarget global
+      for (let uid in eqDamagePerTarget) {
+        if (damagePerTarget[uid]) {
+          damagePerTarget[uid].damage += eqDamagePerTarget[uid];
+        }
+      }
     }
 
     // Procesar cada goblin en el combate
@@ -657,6 +743,7 @@ class GameState {
       let normalDmg = 0;
       let isSpecialBoss = (targetGoblin.isBoss && (targetGoblin.name === "Rey Brujo" || targetGoblin.name === "La Madre"));
       let isPiromanteBoss = (targetGoblin.isBoss && targetGoblin.name === "El Piromante");
+      let isRecaudadorBoss = (targetGoblin.isBoss && targetGoblin.name === "El Gran Recaudador");
 
       if (greenDiceResult && greenDiceResult.details) {
         let naturalDieIdx = 0;
@@ -729,6 +816,9 @@ class GameState {
                 applied = true;
                 if (isUnskippable || isNormalBreak) {
                   brokenItem = this.breakRandomEquipment(p);
+                } else if (effLow.includes('2 escozor')) {
+                  p.statusEffects.escozor = (p.statusEffects.escozor || 0) + 2;
+                  this.addLog(`🔥 <strong>${p.name}</strong> ha recibido <span style="color:#ff6600">2 ESCOZOR</span>.`);
                 } else if (effLow.includes('escozor')) {
                   p.statusEffects.escozor = (p.statusEffects.escozor || 0) + 1;
                   this.addLog(`🔥 <strong>${p.name}</strong> ha recibido <span style="color:#ff6600">ESCOZOR</span>.`);
@@ -738,6 +828,13 @@ class GameState {
                 } else if (effLow.includes('calambre')) {
                   p.statusEffects.calambre = (p.statusEffects.calambre || 0) + 1;
                   this.addLog(`⚡ <strong>${p.name}</strong> ha recibido <span style="color:#ffcc00">CALAMBRE</span>.`);
+                }
+              } else if (effLow.includes('curación boss 5 pv') || effLow.includes('curacion boss 5 pv')) {
+                if (!isIntercepted) {
+                  applied = true;
+                  let healAmount = 5;
+                  targetGoblin.currentHp = Math.min(targetGoblin.maxHp, targetGoblin.currentHp + healAmount);
+                  this.addLog(`🪙 <strong>El Gran Recaudador (Dado 3):</strong> Se cura <span style="color:#2a9d8f"><strong>5 PV</strong></span> (Total: ${targetGoblin.currentHp}/${targetGoblin.maxHp}).`);
                 }
               } else if (effLow.includes('drena')) {
                 if (!isIntercepted) {
@@ -813,10 +910,18 @@ class GameState {
               }
             });
 
-            if (!isIntercepted && !isSpecialBoss && !isPiromanteBoss) {
+            if (!isIntercepted && !isSpecialBoss && !isPiromanteBoss && !isRecaudadorBoss) {
               if (isDieDirect) {
                 directDmg += dieDmg;
               } else {
+                normalDmg += dieDmg;
+              }
+            }
+
+            if (isRecaudadorBoss && !isIntercepted) {
+              if (rollVal === 1) {
+                directDmg += dieDmg;
+              } else if (rollVal === 2 || rollVal === 4 || rollVal === 5) {
                 normalDmg += dieDmg;
               }
             }
@@ -842,10 +947,10 @@ class GameState {
           if (asg.targetUid === targetUid) {
             let dieData = c.playerDice.find(d => d.id === asg.dieId);
             if (dieData && dieData.isStung && !dieData.stungDamageApplied) {
-              p.hp = Math.max(0, p.hp - 2);
               escozorDamageDealt += 2;
               dieData.stungDamageApplied = true; // Evitar daño doble si el dado se procesa varias veces
-              this.addLog(`🔥 <strong>${p.name}</strong> usó un dado con escozor contra G${targetGoblin.level} y <span style="color:#ff4d4d">sufrió 2 daño</span>!`);
+              this.addLog(`🔥 <strong>${p.name}</strong> usó un dado con escozor contra G${targetGoblin.level} y <span style="color:#ff4d4d">sufrió 2 daño de escozor</span>!`);
+              this.damagePlayer(p, 2, true, 'Escozor (dado con escozor)');
             }
           }
         });
@@ -890,12 +995,27 @@ class GameState {
         this.checkSpawnNextHito1Goblin(targetGoblin);
         if (!targetGoblin.gaveReward) {
           targetGoblin.gaveReward = true;
-          if (targetGoblin.isHito || targetGoblin.level >= p.level) {
-            p.mo += targetGoblin.mo;
+          let isNormalReward = (targetGoblin.isHito || targetGoblin.level >= p.level);
+          let baseMo = isNormalReward ? targetGoblin.mo : 0;
+          let extraMo = (this.activeSenda === 'recaudador') ? 1 : 0;
+          p.mo += (baseMo + extraMo);
+          if (extraMo > 0) {
+            this.lastCombatSaqueoExperto = (this.lastCombatSaqueoExperto || 0) + extraMo;
+          }
+
+          if (isNormalReward) {
             this.ganarPex(targetGoblin.pex);
-            this.addLog(`⚔️ <strong>${p.name}</strong> eliminó a G${targetGoblin.level}. Recompensa: ${targetGoblin.mo} mo, ${targetGoblin.pex} PEX.`); //targetGoblin.name
+            if (extraMo > 0) {
+              this.addLog(`⚔️ <strong>${p.name}</strong> eliminó a G${targetGoblin.level}. Recompensa: ${baseMo} mo, ${targetGoblin.pex} PEX. <span style="color:#ffd700"><strong>+${extraMo} mo (Saqueo Experto)</strong></span>.`);
+            } else {
+              this.addLog(`⚔️ <strong>${p.name}</strong> eliminó a G${targetGoblin.level}. Recompensa: ${baseMo} mo, ${targetGoblin.pex} PEX.`);
+            }
           } else {
-            this.addLog(`⚔️ <strong>${p.name}</strong> eliminó a G${targetGoblin.level}. Sin Recompensa.`); //targetGoblin.name
+            if (extraMo > 0) {
+              this.addLog(`⚔️ <strong>${p.name}</strong> eliminó a G${targetGoblin.level}. Sin recompensa por diferencia de nivel, pero obtiene <span style="color:#ffd700"><strong>+${extraMo} mo (Saqueo Experto)</strong></span>.`);
+            } else {
+              this.addLog(`⚔️ <strong>${p.name}</strong> eliminó a G${targetGoblin.level}. Sin Recompensa.`);
+            }
           }
         }
       }
@@ -905,14 +1025,18 @@ class GameState {
     let globalShield = totalPlayerShield + (p.shield || 0);
 
     // 1. Aplicar daño directo primero
+    let directDmgTaken = 0;
     if (totalDirectGoblinDamage > 0) {
-      p.hp = Math.max(0, p.hp - totalDirectGoblinDamage);
-      this.addLog(`💥 <strong>${p.name}</strong> sufre <span style="color:#ff4d4d"><strong>${totalDirectGoblinDamage} Daño Directo</strong></span> (no bloqueable).`);
+      if (this.activeSenda !== 'recaudador') {
+        this.addLog(`💥 <strong>${p.name}</strong> sufre <span style="color:#ff4d4d"><strong>${totalDirectGoblinDamage} Daño Directo</strong></span> (no bloqueable).`);
+      }
+      directDmgTaken = this.damagePlayer(p, totalDirectGoblinDamage, true, 'Daño Directo');
     }
 
     // 2. Aplicar daño normal contra el escudo global
     let blockedDamage = 0;
     let netDamage = 0;
+    let netDmgTaken = 0;
     if (totalNormalGoblinDamage > 0) {
       netDamage = Math.max(0, totalNormalGoblinDamage - globalShield);
       blockedDamage = Math.min(totalNormalGoblinDamage, globalShield);
@@ -922,10 +1046,28 @@ class GameState {
       }
 
       if (netDamage > 0) {
-        p.hp = Math.max(0, p.hp - netDamage);
-        this.addLog(`💥 <strong>${p.name}</strong> recibe <span style="color:#ff4d4d"><strong>${netDamage} daño</strong></span> sobrante.`);
+        if (this.activeSenda !== 'recaudador') {
+          this.addLog(`💥 <strong>${p.name}</strong> recibe <span style="color:#ff4d4d"><strong>${netDamage} daño</strong></span> sobrante.`);
+        }
+        netDmgTaken = this.damagePlayer(p, netDamage, false, 'Daño de Combate');
       } else {
         this.addLog(`🛡️ <strong>${p.name}</strong> bloqueó todo el daño entrante.`);
+      }
+    }
+
+    // Hito 1: Los Carteristas (Senda Recaudador)
+    if (this.activeSenda === 'recaudador' && this.currentHito === 2) {
+      let playerTookDamage = (directDmgTaken > 0) || (netDmgTaken > 0);
+      if (playerTookDamage) {
+        if (p.mo > 0) {
+          p.mo = Math.max(0, p.mo - 1);
+          this.lastCombatLosCarteristasRobo = (this.lastCombatLosCarteristasRobo || 0) + 1;
+          this.addLog(`💰 <strong>Los Carteristas:</strong> Un goblin te ha dañado y te roba <span style="color:#ffd700">1 mo extra</span>.`);
+        } else {
+          this.lastCombatLosCarteristasDmg = (this.lastCombatLosCarteristasDmg || 0) + 1;
+          this.addLog(`💸 <strong>Los Carteristas (Sin oro):</strong> Un goblin te ha dañado, no tienes oro para pagar el robo. ¡Sufres 1 Daño Directo!`);
+          this.damagePlayer(p, 1, true, 'Los Carteristas (Daño Directo)');
+        }
       }
     }
 
@@ -965,10 +1107,12 @@ class GameState {
       let playerTookDamage = (totalDirectGoblinDamage > 0) || (totalNormalGoblinDamage > globalShield);
       if (playerTookDamage) {
         let extraD4 = this.rollDice(4);
-        p.hp = Math.max(0, p.hp - extraD4);
+        if (this.activeSenda !== 'recaudador') {
+          this.addLog(`⚔️ <strong>Golpe Certero:</strong> ¡El Zeñor de la Guerra infligió daño y sumó <span style="color:#ff4d4d"><strong>${extraD4} (1d4) de daño extra</strong></span>!`);
+        }
+        this.damagePlayer(p, extraD4, false, 'Golpe Certero');
         warlordExtraDmg = extraD4;
         this.lastWarlordExtraDmg = extraD4;
-        this.addLog(`⚔️ <strong>Golpe Certero:</strong> ¡El Zeñor de la Guerra infligió daño y sumó <span style="color:#ff4d4d"><strong>${extraD4} (1d4) de daño extra</strong></span>!`);
       }
     }
 
@@ -1207,9 +1351,8 @@ class GameState {
     if (this.activeSenda === 'rey_brujo') {
       const brokenCount = player.equipped.filter(eq => eq.isActive && eq.isBroken).length;
       if (brokenCount >= 2) {
-        player.hp = Math.max(0, player.hp - brokenCount);
         this.addLog(`💨 <strong>Aire Viciado:</strong> <strong>${player.name}</strong> tiene ${brokenCount} equipos rotos y sufre <span style="color:#ff4d4d"><strong>${brokenCount} Daño Directo</strong></span>.`);
-        this.checkGameOver();
+        this.damagePlayer(player, brokenCount, true, 'Aire Viciado');
       }
     }
   }
@@ -1220,8 +1363,24 @@ class GameState {
 
   postActionPhase() {
     let p = this.getCurrentPlayer();
+    if (!p) return;
+
+    // Hito 3: El Prestamista (Senda Recaudador)
+    // "Al final de cada acción, si el Nivel 3 sigue vivo, debes pagar 1mo o sufres 1 Daño Directo."
+    if (this.activeSenda === 'recaudador' && this.currentHito === 4) {
+      let lvl3Exists = this.battlefield.goblins.some(g => g.level === 3 && g.currentHp > 0 && !g.isDying);
+      if (lvl3Exists) {
+        if (p.mo > 0) {
+          p.mo = Math.max(0, p.mo - 1);
+          this.addLog(`💰 <strong>El Prestamista:</strong> Pagas 1 mo al final de tu acción para evitar la penalización del Goblin de Nivel 3.`);
+        } else {
+          this.addLog(`💸 <strong>El Prestamista (Sin oro):</strong> No tienes oro para pagar la tasa del prestamista. ¡Sufres 1 Daño Directo!`);
+          this.damagePlayer(p, 1, true, 'El Prestamista');
+        }
+      }
+    }
     
-    if (p && p.hp <= 0) {
+    if (p.hp <= 0) {
       this.nextTurn();
       return;
     }
@@ -1482,13 +1641,15 @@ class GameState {
 
     if (player) {
       const damage = goblin.level;
-      player.hp = Math.max(0, player.hp - damage);
-      this.addLog(`💀 <strong>Represalia:</strong> Causó ${damage} daño a <strong>${player.name}</strong>.`);
+      if (this.activeSenda !== 'recaudador') {
+        this.addLog(`💀 <strong>Represalia:</strong> Causó ${damage} daño a <strong>${player.name}</strong>.`);
+      }
+      this.damagePlayer(player, damage, false, 'Represalia');
 
       // Eliminar de la cola
       this.retaliationQueue.splice(gobIdx, 1);
 
-      if (this.checkGameOver()) {
+      if (this.isGameOver) {
         this.isRetaliationPhase = false;
         return true;
       }
@@ -1794,9 +1955,12 @@ class GameState {
       }
     } else {
       p.mo += 2;
-      p.hp = Math.max(0, p.hp - 1);
-      this.addLog(`<strong>${p.name}</strong> cobró 2 mo pero sufrió 1 daño (HP: ${p.hp}/${p.maxHp}).`);
-      if (this.checkGameOver()) return true;
+      if (this.activeSenda !== 'recaudador') {
+        this.addLog(`<strong>${p.name}</strong> cobró 2 mo pero sufrió 1 daño (HP: ${p.hp}/${p.maxHp}).`);
+      } else {
+        this.addLog(`<strong>${p.name}</strong> cobró 2 mo.`);
+      }
+      this.damagePlayer(p, 1, false, 'Cobrar 2 mo');
     }
     this.consumeAction();
     return true;
@@ -1910,13 +2074,25 @@ class GameState {
               this.isGameWon = true;
             }
             this.checkSpawnNextHito1Goblin(gob);
-            if (gob.isHito || gob.level >= p.level) {
-              p.mo += gob.mo;
+            let isNormalReward = (gob.isHito || gob.level >= p.level);
+            let baseMo = isNormalReward ? gob.mo : 0;
+            let extraMo = (this.activeSenda === 'recaudador') ? 1 : 0;
+            p.mo += (baseMo + extraMo);
+            gob.gaveReward = true;
+
+            if (isNormalReward) {
               this.ganarPex(gob.pex);
-              gob.gaveReward = true;
-              this.addLog(`⚔️ ¡El ataque de rol eliminó a ${gob.name}! (+${gob.mo} mo, +${gob.pex} PEX).`);
+              if (extraMo > 0) {
+                this.addLog(`⚔️ ¡El ataque de rol eliminó a ${gob.name}! (+${baseMo} mo, +${gob.pex} PEX) <span style="color:#ffd700"><strong>+${extraMo} mo (Saqueo Experto)</strong></span>.`);
+              } else {
+                this.addLog(`⚔️ ¡El ataque de rol eliminó a ${gob.name}! (+${baseMo} mo, +${gob.pex} PEX).`);
+              }
             } else {
-              this.addLog(`⚔️ ¡El ataque de rol eliminó a ${gob.name}! (Sin recompensa por diferencia de nivel).`);
+              if (extraMo > 0) {
+                this.addLog(`⚔️ ¡El ataque de rol eliminó a ${gob.name}! (Sin recompensa por diferencia de nivel, obtiene <span style="color:#ffd700"><strong>+${extraMo} mo (Saqueo Experto)</strong></span>).`);
+              } else {
+                this.addLog(`⚔️ ¡El ataque de rol eliminó a ${gob.name}! (Sin recompensa por diferencia de nivel).`);
+              }
             }
             this.subirNivel(p);
           }
