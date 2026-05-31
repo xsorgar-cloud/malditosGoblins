@@ -707,9 +707,9 @@ main {
 }
 
 .equipment-card {
-  flex: 0 1 175px;
+  flex: 0 1 161px;
   min-width: 40px;
-  height: 250px;
+  height: 230px;
   border: 1px solid var(--text-dim);
   border-radius: 8px;
   background-size: auto 100%;
@@ -724,7 +724,7 @@ main {
 }
 
 .equipment-card:hover {
-  min-width: 175px;
+  min-width: 161px;
   transform: translateY(-5px);
   border-color: var(--gold);
   z-index: 100;
