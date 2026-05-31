@@ -3233,54 +3233,119 @@ function renderCombatOverlay() {
 
       gameState.resolveCombat(currentAssignments, interceptionAssignments);
 
-      let alertMessages = [];
-      if (gameState.lastWarlordExtraDmg > 0) {
-        alertMessages.push(`⚔️ Daño Extra por Golpe Certero: El Zeñor de la Guerra infligió +${gameState.lastWarlordExtraDmg} de daño extra.`);
+      const pAfter = gameState.getCurrentPlayer();
+      const dbg = gameState.lastCombatDebugState;
+
+      let combatSummaryLines = ["¡COMBATE COMPLETADO!\n"];
+
+      if (dbg && dbg.player) {
+        const pBeforeState = dbg.player;
+
+        // 1. ESTADÍSTICAS DEL COMBATE
+        combatSummaryLines.push("📊 ESTADÍSTICAS DE JUGADOR:");
+
+        // HP
+        const hpDiff = pAfter.hp - pBeforeState.hp;
+        let hpDiffText = hpDiff > 0 ? `+${hpDiff}` : `${hpDiff}`;
+        if (hpDiff === 0) hpDiffText = "sin cambios";
+        combatSummaryLines.push(`❤️ Vida: ${hpDiffText} PV (actual: ${pAfter.hp}/${pAfter.maxHp})`);
+
+        // Oro / Monedas
+        const moDiff = pAfter.mo - pBeforeState.mo;
+        let moDiffText = moDiff > 0 ? `+${moDiff}` : `${moDiff}`;
+        if (moDiff === 0) moDiffText = "sin cambios";
+        combatSummaryLines.push(`🪙 Monedas: ${moDiffText} mo (actual: ${pAfter.mo} mo)`);
+
+        // PEX
+        const pexDiff = pAfter.pex - pBeforeState.pex;
+        let pexDiffText = pexDiff > 0 ? `+${pexDiff}` : `${pexDiff}`;
+        if (pexDiff === 0) pexDiffText = "sin cambios";
+        combatSummaryLines.push(`⭐ PEX: ${pexDiffText} PEX (actual: ${pAfter.pex})`);
+
+        // Level Up
+        if (pAfter.level > pBeforeState.level) {
+          combatSummaryLines.push(`🎉 Nivel: ¡Subida de nivel! (Nivel ${pBeforeState.level} ➔ ${pAfter.level})`);
+        }
+
+        // Energía
+        const energyDiff = pAfter.energy - pBeforeState.energy;
+        if (energyDiff !== 0) {
+          let energyDiffText = energyDiff > 0 ? `+${energyDiff}` : `${energyDiff}`;
+          combatSummaryLines.push(`⚡ Energía: ${energyDiffText} (actual: ${pAfter.energy})`);
+        }
+
+        // 2. ENEMIGOS DERROTADOS
+        combatSummaryLines.push("\n☠️ ENEMIGOS DERROTADOS:");
+        let defeatedGoblins = [];
+        dbg.goblins.forEach(g => {
+          let currentG = gameState.battlefield.goblins.find(bg => bg.uid === g.uid);
+          if (currentG && currentG.isDying) {
+            defeatedGoblins.push(`${g.name || ('Goblin Nvl ' + g.level)}`);
+          }
+        });
+        if (defeatedGoblins.length > 0) {
+          combatSummaryLines.push(`💀 Eliminados: ${defeatedGoblins.join(', ')}`);
+        } else {
+          combatSummaryLines.push(`💀 Eliminados: ninguno`);
+        }
+
+        // 3. DAÑO A TU EQUIPO
+        combatSummaryLines.push("\n🔧 DAÑO A TU EQUIPO:");
+        let brokenItems = [];
+        pAfter.equipped.forEach(eq => {
+          let beforeEq = pBeforeState.equipped.find(e => e.id === eq.id);
+          if (beforeEq && !beforeEq.isBroken && eq.isBroken) {
+            brokenItems.push(eq.name);
+          }
+        });
+        if (brokenItems.length > 0) {
+          combatSummaryLines.push(`💥 Roto: ${brokenItems.join(', ')}`);
+        } else {
+          combatSummaryLines.push(`🔧 Roto: ningún equipo dañado`);
+        }
       }
 
+      // 4. EFECTOS DE ESTADO ADQUIRIDOS
       if (gameState.lastCombatAcquiredEffects) {
         const effects = gameState.lastCombatAcquiredEffects;
         if (effects.escozor > 0 || effects.calambre > 0 || effects.tembleque > 0) {
-          let details = ["¡Adquiridos efectos de estado en este combate!<br>"];
-          if (effects.escozor > 0) details.push(`🔥 Escozor: +${effects.escozor}`);
-          if (effects.calambre > 0) details.push(`⚡ Calambre: +${effects.calambre}`);
-          if (effects.tembleque > 0) details.push(`🌀 Tembleque: +${effects.tembleque}`);
-          alertMessages.push(details.join('\n'));
+          combatSummaryLines.push("\n🔥 EFECTOS DE ESTADO ADQUIRIDOS:");
+          if (effects.escozor > 0) combatSummaryLines.push(`🔥 Escozor: +${effects.escozor}`);
+          if (effects.calambre > 0) combatSummaryLines.push(`⚡ Calambre: +${effects.calambre}`);
+          if (effects.tembleque > 0) combatSummaryLines.push(`🌀 Tembleque: +${effects.tembleque}`);
         }
       }
 
-      if (gameState.activeSenda === 'recaudador') {
-        let recDetails = ["Senda del Gran Recaudador - Resumen:<br>"];
-        let hasRecaudadorEvent = false;
+      // 5. DETALLES DE LA SENDA Y OTROS DETALLES
+      let sendaLines = [];
+      if (gameState.lastWarlordExtraDmg > 0) {
+        sendaLines.push(`• Golpe Certero: El Zeñor de la Guerra infligió +${gameState.lastWarlordExtraDmg} de daño extra.`);
+      }
 
+      if (gameState.activeSenda === 'recaudador') {
         if (gameState.lastCombatGoldPrevented > 0) {
-          recDetails.push(`• Escudo de Oro: perdiste ${gameState.lastCombatGoldPrevented} mo y evitaste ${gameState.lastCombatGoldPrevented} de daño.`);
-          hasRecaudadorEvent = true;
+          sendaLines.push(`• Escudo de Oro: perdiste ${gameState.lastCombatGoldPrevented} mo y evitaste ${gameState.lastCombatGoldPrevented} de daño.`);
         }
         if (gameState.lastCombatExtraGoldDamage > 0) {
-          recDetails.push(`• Escudo de Oro (sin oro): sufriste +${gameState.lastCombatExtraGoldDamage} de Daño Extra.`);
-          hasRecaudadorEvent = true;
+          sendaLines.push(`• Escudo de Oro (sin oro): sufriste +${gameState.lastCombatExtraGoldDamage} de Daño Extra.`);
         }
         if (gameState.lastCombatSaqueoExperto > 0) {
-          recDetails.push(`• Saqueo Experto: obtuviste +${gameState.lastCombatSaqueoExperto} mo extra.`);
-          hasRecaudadorEvent = true;
+          sendaLines.push(`• Saqueo Experto: obtuviste +${gameState.lastCombatSaqueoExperto} mo extra.`);
         }
         if (gameState.lastCombatLosCarteristasRobo > 0) {
-          recDetails.push(`• Los Carteristas: un goblin te robó ${gameState.lastCombatLosCarteristasRobo} mo extra.`);
-          hasRecaudadorEvent = true;
+          sendaLines.push(`• Los Carteristas: un goblin te robó ${gameState.lastCombatLosCarteristasRobo} mo extra.`);
         }
         if (gameState.lastCombatLosCarteristasDmg > 0) {
-          recDetails.push(`• Los Carteristas: sufriste +${gameState.lastCombatLosCarteristasDmg} Daño Directo por no tener oro.`);
-          hasRecaudadorEvent = true;
+          sendaLines.push(`• Los Carteristas: sufriste +${gameState.lastCombatLosCarteristasDmg} Daño Directo por no tener oro.`);
         }
         if (gameState.lastCombatArmaduraMonedasGold > 0) {
-          recDetails.push(`• Armadura de monedas: obtuviste +${gameState.lastCombatArmaduraMonedasGold} mo por dañar al jefe.`);
-          hasRecaudadorEvent = true;
+          sendaLines.push(`• Armadura de monedas: obtuviste +${gameState.lastCombatArmaduraMonedasGold} mo por dañar al jefe.`);
         }
+      }
 
-        if (hasRecaudadorEvent) {
-          alertMessages.push(recDetails.join('\n'));
-        }
+      if (sendaLines.length > 0) {
+        combatSummaryLines.push("\n🗺️ DETALLES DE LA SENDA:");
+        sendaLines.forEach(line => combatSummaryLines.push(line));
       }
 
       const runEndOfCombatUI = () => {
@@ -3310,11 +3375,7 @@ function renderCombatOverlay() {
         window.saveGame(true);
       };
 
-      if (alertMessages.length > 0) {
-        alert(alertMessages.join('\n\n'), runEndOfCombatUI);
-      } else {
-        runEndOfCombatUI();
-      }
+      alert(combatSummaryLines.join('\n'), runEndOfCombatUI);
     };
   }
 
