@@ -3384,24 +3384,41 @@ function renderCombatOverlay() {
 
         // Trigger bounce animation for damaged surviving Goblins
         setTimeout(() => {
+          console.log("[BOUNCE] Starting animation check...");
           if (dbg && dbg.goblins) {
             const container = document.getElementById('goblins-container');
             if (container) {
+              console.log("[BOUNCE] goblins-container found. Children count:", container.children.length);
               dbg.goblins.forEach(g => {
                 let liveG = gameState.battlefield.goblins.find(bg => bg.uid === g.uid && !bg.isDying);
-                if (liveG && liveG.currentHp < g.hp) {
-                  const cardEl = Array.from(container.children).find(el => String(el.dataset.uid) === String(g.uid));
-                  if (cardEl) {
-                    cardEl.classList.remove('goblin-wobble-active', 'goblin-mutation-active');
-                    void cardEl.offsetWidth; // Force reflow/repaint
-                    cardEl.classList.add('goblin-damaged-bounce-active');
-                    setTimeout(() => {
-                      cardEl.classList.remove('goblin-damaged-bounce-active');
-                    }, 900);
+                if (liveG) {
+                  console.log(`[BOUNCE] Goblin UID: ${g.uid}, Name: ${g.name || g.level}, Before HP: ${g.hp}, Current HP: ${liveG.currentHp}`);
+                  if (liveG.currentHp < g.hp) {
+                    const cardEl = Array.from(container.children).find(el => String(el.dataset.uid) === String(g.uid));
+                    if (cardEl) {
+                      console.log("[BOUNCE] Match found in DOM! Adding animation class...");
+                      cardEl.classList.remove('goblin-wobble-active', 'goblin-mutation-active');
+                      void cardEl.offsetWidth; // Force reflow/repaint
+                      cardEl.classList.add('goblin-damaged-bounce-active');
+                      setTimeout(() => {
+                        cardEl.classList.remove('goblin-damaged-bounce-active');
+                        console.log("[BOUNCE] Animation class removed.");
+                      }, 900);
+                    } else {
+                      console.error(`[BOUNCE] Match NOT found in DOM for UID ${g.uid}`);
+                    }
+                  } else {
+                    console.log(`[BOUNCE] Goblin did not take damage or took 0 damage.`);
                   }
+                } else {
+                  console.log(`[BOUNCE] Goblin UID ${g.uid} is dead or not found on board.`);
                 }
               });
+            } else {
+              console.error("[BOUNCE] goblins-container NOT found!");
             }
+          } else {
+            console.error("[BOUNCE] dbg.goblins not found!");
           }
         }, 150);
 
