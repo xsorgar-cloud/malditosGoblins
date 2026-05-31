@@ -3384,11 +3384,11 @@ function renderCombatOverlay() {
         window.saveGame(true);
       };
 
-      if (combatSummaryLines.length === 1) {
-        combatSummaryLines.push("⚔️ Combate: sin cambios significativos en tus atributos.");
+      if (combatSummaryLines.length > 1) {
+        alert(combatSummaryLines.join('\n'), runEndOfCombatUI);
+      } else {
+        runEndOfCombatUI();
       }
-
-      alert(combatSummaryLines.join('\n'), runEndOfCombatUI);
     };
   }
 
