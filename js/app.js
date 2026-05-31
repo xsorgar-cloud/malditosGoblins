@@ -2457,6 +2457,7 @@ function openExploreMarketModal() {
 }
 
 let animatedGoblinUids = new Set();
+let previousGoblinHps = new Map();
 
 function renderBattlefield() {
   waveLevelSpan.innerText = gameState.battlefield.waveLevel;
@@ -2682,6 +2683,18 @@ function renderBattlefield() {
         } else {
           gobEl.classList.add('goblin-wobble-active');
         }
+      } else {
+        // Si no es nuevo, comprobar si ha sufrido daño para hacer la animación de saltito
+        const prevHp = previousGoblinHps.get(goblin.uid);
+        if (prevHp !== undefined && goblin.currentHp < prevHp && !goblin.isDying) {
+          console.log(`[BOUNCE-LIVE] Goblin UID: ${goblin.uid}, HP decreased: ${prevHp} -> ${goblin.currentHp}`);
+          gobEl.classList.remove('goblin-wobble-active', 'goblin-mutation-active');
+          void gobEl.offsetWidth; // Force reflow/repaint
+          gobEl.classList.add('goblin-damaged-bounce-active');
+          setTimeout(() => {
+            gobEl.classList.remove('goblin-damaged-bounce-active');
+          }, 900);
+        }
       }
 
       if (!gameState.isMarketPhase) {
@@ -2740,6 +2753,12 @@ function renderBattlefield() {
       renderBattlefield();
     }, 850);
   }
+
+  // Actualizar el historial de vidas de los goblins para la detección de daño en el siguiente render
+  previousGoblinHps.clear();
+  gameState.battlefield.goblins.forEach(gob => {
+    previousGoblinHps.set(gob.uid, gob.currentHp);
+  });
 }
 
 function doesEquipmentDealDamage(eq, value, asg) {
