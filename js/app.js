@@ -1102,8 +1102,8 @@ function initSendaSelectionScreen() {
 
     .split-card {
       position: relative;
-      width: 220px;
-      height: 310px;
+      width: 300px;
+      height: 420px;
       border-radius: 12px;
       border: 2px solid rgba(212, 175, 55, 0.4);
       background: #000;
@@ -1147,7 +1147,7 @@ function initSendaSelectionScreen() {
       position: absolute;
       top: 0;
       height: 100%;
-      width: 216px;
+      width: 296px;
       background-size: 100% 100%;
       background-repeat: no-repeat;
       transition: left 0.35s ease, width 0.35s ease;
