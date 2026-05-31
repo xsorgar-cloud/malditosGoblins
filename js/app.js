@@ -3272,7 +3272,7 @@ function renderCombatOverlay() {
         const hpDiff = pAfter.hp - pBeforeState.hp;
         if (hpDiff !== 0) {
           let hpDiffText = hpDiff > 0 ? `+${hpDiff}` : `${hpDiff}`;
-          statsLines.push(`❤️ Vida: ${hpDiffText} PV (actual: ${pAfter.hp}/${pAfter.maxHp})`);
+          statsLines.push(`❤️ Vida: ${hpDiffText} PV`);
           hasPlayerStats = true;
         }
 
@@ -3280,7 +3280,7 @@ function renderCombatOverlay() {
         const moDiff = pAfter.mo - pBeforeState.mo;
         if (moDiff !== 0) {
           let moDiffText = moDiff > 0 ? `+${moDiff}` : `${moDiff}`;
-          statsLines.push(`🪙 Monedas: ${moDiffText} mo (actual: ${pAfter.mo} mo)`);
+          statsLines.push(`🪙 Monedas: ${moDiffText} mo`);
           hasPlayerStats = true;
         }
 
@@ -3288,7 +3288,7 @@ function renderCombatOverlay() {
         const pexDiff = pAfter.pex - pBeforeState.pex;
         if (pexDiff !== 0) {
           let pexDiffText = pexDiff > 0 ? `+${pexDiff}` : `${pexDiff}`;
-          statsLines.push(`⭐ PEX: ${pexDiffText} PEX (actual: ${pAfter.pex})`);
+          statsLines.push(`⭐ PEX: ${pexDiffText} PEX`);
           hasPlayerStats = true;
         }
 
@@ -3302,7 +3302,7 @@ function renderCombatOverlay() {
         const energyDiff = pAfter.energy - pBeforeState.energy;
         if (energyDiff !== 0) {
           let energyDiffText = energyDiff > 0 ? `+${energyDiff}` : `${energyDiff}`;
-          statsLines.push(`⚡ Energía: ${energyDiffText} (actual: ${pAfter.energy})`);
+          statsLines.push(`⚡ Energía: ${energyDiffText}`);
           hasPlayerStats = true;
         }
 
@@ -3310,18 +3310,6 @@ function renderCombatOverlay() {
           statsLines.forEach(line => combatSummaryLines.push(line));
         }
 
-        // 2. ENEMIGOS DERROTADOS
-        let defeatedGoblins = [];
-        dbg.goblins.forEach(g => {
-          let currentG = gameState.battlefield.goblins.find(bg => bg.uid === g.uid);
-          if (currentG && currentG.isDying) {
-            defeatedGoblins.push(`${g.name || ('Goblin Nvl ' + g.level)}`);
-          }
-        });
-        if (defeatedGoblins.length > 0) {
-          combatSummaryLines.push("\n☠️ ENEMIGOS DERROTADOS:");
-          combatSummaryLines.push(`💀 Eliminados: ${defeatedGoblins.join(', ')}`);
-        }
 
         // 3. DAÑO A TU EQUIPO
         let brokenItems = [];
