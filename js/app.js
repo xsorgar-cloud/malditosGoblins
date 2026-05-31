@@ -588,6 +588,9 @@ function openSettingsModal() {
     const selectSettingsDifficulty = document.getElementById('select-settings-difficulty');
     if (selectSettingsDifficulty) {
       selectSettingsDifficulty.value = gameState.difficulty || 'medio';
+      if (window.syncCustomDifficultySelect) {
+        window.syncCustomDifficultySelect();
+      }
     }
   }
   settingsModal.classList.remove('hidden');
@@ -603,7 +606,7 @@ if (btnOpenSettingsSetup) {
   btnOpenSettingsSetup.addEventListener('click', openSettingsModal);
 }
 
-// --- TOOLTIP DE DIFICULTAD ---
+// --- CUSTOM SELECT Y TOOLTIP DE DIFICULTAD ---
 const difficultyDescriptions = {
   chupado: "<strong>Chupado:</strong> Se invoca 1 Goblin de Nivel 1 por jugador en cada oleada. Ideal para aprender a jugar.",
   facil: "<strong>Fácil:</strong> Se invocan tantos Goblins del nivel de la oleada actual como jugadores. Curva de dificultad muy suave.",
@@ -611,10 +614,7 @@ const difficultyDescriptions = {
   dificil: "<strong>Difícil:</strong> Se invocan tantos Goblins de Nivel 1 como jugadores, más un Goblin de cada nivel superior hasta la oleada actual, incluida. ¡Un auténtico desafío!"
 };
 
-function showDifficultyTooltip() {
-  const selectEl = document.getElementById('select-settings-difficulty');
-  if (!selectEl) return;
-
+function showDifficultyTooltipForValue(selectedValue, targetEl) {
   let tooltip = document.getElementById('difficulty-tooltip');
   if (!tooltip) {
     tooltip = document.createElement('div');
@@ -626,7 +626,7 @@ function showDifficultyTooltip() {
       border-radius: 8px;
       padding: 10px 14px;
       box-shadow: 0 8px 24px rgba(0,0,0,0.8), 0 0 10px rgba(212,175,55,0.2);
-      z-index: 99999;
+      z-index: 100005;
       pointer-events: none;
       opacity: 0;
       transition: opacity 0.15s ease-out;
@@ -640,7 +640,6 @@ function showDifficultyTooltip() {
     document.body.appendChild(tooltip);
   }
 
-  const selectedValue = selectEl.value;
   const desc = difficultyDescriptions[selectedValue] || "Sin descripción disponible.";
 
   tooltip.innerHTML = `
@@ -651,7 +650,7 @@ function showDifficultyTooltip() {
   `;
   tooltip.style.display = 'block';
 
-  const rect = selectEl.getBoundingClientRect();
+  const rect = targetEl.getBoundingClientRect();
   const tooltipWidth = tooltip.offsetWidth || 280;
   const tooltipHeight = tooltip.offsetHeight || 80;
   const x = window.scrollX + rect.left + (rect.width / 2) - (tooltipWidth / 2);
@@ -670,16 +669,204 @@ function hideDifficultyTooltip() {
   }
 }
 
-const selectSettingsDifficulty = document.getElementById('select-settings-difficulty');
-if (selectSettingsDifficulty) {
-  selectSettingsDifficulty.addEventListener('mouseenter', showDifficultyTooltip);
-  selectSettingsDifficulty.addEventListener('mouseleave', hideDifficultyTooltip);
-  selectSettingsDifficulty.addEventListener('change', () => {
-    const tooltip = document.getElementById('difficulty-tooltip');
-    if (tooltip && tooltip.style.display === 'block') {
-      showDifficultyTooltip();
+function createCustomDifficultySelect() {
+  const nativeSelect = document.getElementById('select-settings-difficulty');
+  if (!nativeSelect) return;
+
+  // Evitar duplicaciones
+  const existingContainer = nativeSelect.nextElementSibling;
+  if (existingContainer && existingContainer.classList.contains('custom-select-container')) {
+    existingContainer.remove();
+  }
+
+  // Ocultar select nativo
+  nativeSelect.style.display = 'none';
+
+  // Crear contenedor
+  const container = document.createElement('div');
+  container.className = 'custom-select-container';
+  container.style.cssText = `
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+  `;
+
+  // Trigger
+  const trigger = document.createElement('div');
+  trigger.className = 'custom-select-trigger';
+  trigger.style.cssText = `
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 2px solid #ff9f1c;
+    background: #0a0a0a;
+    color: #fff;
+    font-size: 0.95rem;
+    font-family: 'Outfit', sans-serif;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+    transition: all 0.2s;
+  `;
+  
+  const triggerText = document.createElement('span');
+  triggerText.textContent = nativeSelect.options[nativeSelect.selectedIndex]?.text || 'Medio';
+  trigger.appendChild(triggerText);
+
+  const arrow = document.createElement('span');
+  arrow.innerHTML = '&#9662;'; // Flecha abajo
+  arrow.style.cssText = `
+    font-size: 0.8rem;
+    color: #ff9f1c;
+    transition: transform 0.2s;
+    margin-left: 6px;
+  `;
+  trigger.appendChild(arrow);
+  container.appendChild(trigger);
+
+  // Contenedor de opciones
+  const optionsContainer = document.createElement('div');
+  optionsContainer.className = 'custom-select-options';
+  optionsContainer.style.cssText = `
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #0d0d0f;
+    border: 2px solid #ff9f1c;
+    border-radius: 6px;
+    margin-top: 4px;
+    z-index: 100000;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.9);
+    display: none;
+    overflow: hidden;
+    box-sizing: border-box;
+  `;
+
+  // Rellenar opciones
+  const optionsList = Array.from(nativeSelect.options);
+  optionsList.forEach(opt => {
+    const optEl = document.createElement('div');
+    optEl.className = 'custom-select-option';
+    optEl.dataset.value = opt.value;
+    optEl.textContent = opt.text;
+    
+    const isSelected = opt.value === nativeSelect.value;
+    
+    optEl.style.cssText = `
+      padding: 8px 12px;
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+      color: ${isSelected ? '#ff9f1c' : '#ccc'};
+      font-weight: ${isSelected ? 'bold' : 'normal'};
+      font-size: 0.95rem;
+      background: ${isSelected ? 'rgba(255, 159, 28, 0.08)' : 'transparent'};
+      border-left: 3px solid ${isSelected ? '#ff9f1c' : 'transparent'};
+      transition: all 0.15s;
+    `;
+
+    optEl.addEventListener('mouseenter', () => {
+      optEl.style.background = 'rgba(255, 159, 28, 0.15)';
+      optEl.style.color = '#ff9f1c';
+      showDifficultyTooltipForValue(opt.value, optEl);
+    });
+
+    optEl.addEventListener('mouseleave', () => {
+      const currentSelected = nativeSelect.value === opt.value;
+      optEl.style.background = currentSelected ? 'rgba(255, 159, 28, 0.08)' : 'transparent';
+      optEl.style.color = currentSelected ? '#ff9f1c' : '#ccc';
+      hideDifficultyTooltip();
+    });
+
+    optEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      nativeSelect.value = opt.value;
+      triggerText.textContent = opt.text;
+      optionsContainer.style.display = 'none';
+      arrow.style.transform = 'rotate(0deg)';
+      hideDifficultyTooltip();
+
+      // Forzar actualización de estilos de selección
+      Array.from(optionsContainer.children).forEach(child => {
+        const childVal = child.dataset.value;
+        const childSelected = childVal === opt.value;
+        child.style.color = childSelected ? '#ff9f1c' : '#ccc';
+        child.style.fontWeight = childSelected ? 'bold' : 'normal';
+        child.style.background = childSelected ? 'rgba(255, 159, 28, 0.08)' : 'transparent';
+        child.style.borderLeft = `3px solid ${childSelected ? '#ff9f1c' : 'transparent'}`;
+      });
+      
+      // Disparar evento de cambio nativo
+      const event = new Event('change');
+      nativeSelect.dispatchEvent(event);
+    });
+
+    optionsContainer.appendChild(optEl);
+  });
+
+  container.appendChild(optionsContainer);
+  nativeSelect.parentNode.insertBefore(container, nativeSelect.nextSibling);
+
+  // Manejar el toggle
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = optionsContainer.style.display === 'block';
+    if (isOpen) {
+      optionsContainer.style.display = 'none';
+      arrow.style.transform = 'rotate(0deg)';
+      hideDifficultyTooltip();
+    } else {
+      // Cerrar otros dropdowns si los hubiera
+      optionsContainer.style.display = 'block';
+      arrow.style.transform = 'rotate(180deg)';
+      // Mostrar la tooltip del valor seleccionado al abrir, apuntando al trigger
+      showDifficultyTooltipForValue(nativeSelect.value, trigger);
     }
   });
+
+  // Hover en el trigger (cuando está colapsado)
+  trigger.addEventListener('mouseenter', () => {
+    if (optionsContainer.style.display !== 'block') {
+      showDifficultyTooltipForValue(nativeSelect.value, trigger);
+    }
+  });
+  trigger.addEventListener('mouseleave', () => {
+    if (optionsContainer.style.display !== 'block') {
+      hideDifficultyTooltip();
+    }
+  });
+
+  // Sincronizar trigger y opciones seleccionadas
+  window.syncCustomDifficultySelect = () => {
+    const activeIndex = nativeSelect.selectedIndex;
+    const activeOpt = nativeSelect.options[activeIndex];
+    if (activeOpt) {
+      triggerText.textContent = activeOpt.text;
+      
+      // Actualizar estilos de los elementos del menú
+      Array.from(optionsContainer.children).forEach(child => {
+        const childVal = child.dataset.value;
+        const childSelected = childVal === activeOpt.value;
+        child.style.color = childSelected ? '#ff9f1c' : '#ccc';
+        child.style.fontWeight = childSelected ? 'bold' : 'normal';
+        child.style.background = childSelected ? 'rgba(255, 159, 28, 0.08)' : 'transparent';
+        child.style.borderLeft = `3px solid ${childSelected ? '#ff9f1c' : 'transparent'}`;
+      });
+    }
+  };
+
+  // Click fuera para cerrar
+  document.addEventListener('click', () => {
+    optionsContainer.style.display = 'none';
+    arrow.style.transform = 'rotate(0deg)';
+  });
+}
+
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', createCustomDifficultySelect);
+} else {
+  createCustomDifficultySelect();
 }
 
 document.getElementById('btn-close-settings-x').addEventListener('click', () => {
