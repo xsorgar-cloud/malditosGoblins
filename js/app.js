@@ -3385,21 +3385,25 @@ function renderCombatOverlay() {
         // Trigger bounce animation for damaged surviving Goblins
         setTimeout(() => {
           if (dbg && dbg.goblins) {
-            dbg.goblins.forEach(g => {
-              let liveG = gameState.battlefield.goblins.find(bg => bg.uid === g.uid && !bg.isDying);
-              if (liveG && liveG.currentHp < g.hp) {
-                const cardEl = document.querySelector(`.goblin-card[data-uid="${g.uid}"]`);
-                if (cardEl) {
-                  cardEl.classList.remove('goblin-wobble-active', 'goblin-mutation-active');
-                  cardEl.classList.add('goblin-damaged-bounce-active');
-                  setTimeout(() => {
-                    cardEl.classList.remove('goblin-damaged-bounce-active');
-                  }, 900);
+            const container = document.getElementById('goblins-container');
+            if (container) {
+              dbg.goblins.forEach(g => {
+                let liveG = gameState.battlefield.goblins.find(bg => bg.uid === g.uid && !bg.isDying);
+                if (liveG && liveG.currentHp < g.hp) {
+                  const cardEl = Array.from(container.children).find(el => String(el.dataset.uid) === String(g.uid));
+                  if (cardEl) {
+                    cardEl.classList.remove('goblin-wobble-active', 'goblin-mutation-active');
+                    void cardEl.offsetWidth; // Force reflow/repaint
+                    cardEl.classList.add('goblin-damaged-bounce-active');
+                    setTimeout(() => {
+                      cardEl.classList.remove('goblin-damaged-bounce-active');
+                    }, 900);
+                  }
                 }
-              }
-            });
+              });
+            }
           }
-        }, 50);
+        }, 150);
 
         window.saveGame(true);
       };
