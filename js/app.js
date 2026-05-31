@@ -603,7 +603,87 @@ if (btnOpenSettingsSetup) {
   btnOpenSettingsSetup.addEventListener('click', openSettingsModal);
 }
 
+// --- TOOLTIP DE DIFICULTAD ---
+const difficultyDescriptions = {
+  chupado: "<strong>Chupado:</strong> Se invoca 1 Goblin de Nivel 1 por jugador en cada oleada. Ideal para aprender a jugar.",
+  facil: "<strong>Fácil:</strong> Se invocan tantos Goblins del nivel de la oleada actual como jugadores. Curva de dificultad muy suave.",
+  medio: "<strong>Medio (Recomendado):</strong> Se invocan tantos Goblins de Nivel 1 como jugadores, más un Goblin adicional del nivel de la oleada actual. Dificultad equilibrada.",
+  dificil: "<strong>Difícil:</strong> Se invocan tantos Goblins de Nivel 1 como jugadores, más un Goblin de cada nivel superior hasta la oleada actual, incluida. ¡Un auténtico desafío!"
+};
+
+function showDifficultyTooltip() {
+  const selectEl = document.getElementById('select-settings-difficulty');
+  if (!selectEl) return;
+
+  let tooltip = document.getElementById('difficulty-tooltip');
+  if (!tooltip) {
+    tooltip = document.createElement('div');
+    tooltip.id = 'difficulty-tooltip';
+    tooltip.style.cssText = `
+      position: absolute;
+      background: rgba(15, 15, 20, 0.95);
+      border: 1px solid var(--gold);
+      border-radius: 8px;
+      padding: 10px 14px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.8), 0 0 10px rgba(212,175,55,0.2);
+      z-index: 99999;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s ease-out;
+      display: none;
+      max-width: 300px;
+      font-family: 'Outfit', sans-serif;
+      color: #eee;
+      font-size: 0.9rem;
+      line-height: 1.45;
+    `;
+    document.body.appendChild(tooltip);
+  }
+
+  const selectedValue = selectEl.value;
+  const desc = difficultyDescriptions[selectedValue] || "Sin descripción disponible.";
+
+  tooltip.innerHTML = `
+    <div style="font-weight: bold; color: #ff9f1c; font-family: 'Cinzel', serif; font-size: 0.95rem; border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom: 4px; margin-bottom: 6px; display: flex; align-items: center; gap: 6px;">
+      🎮 MODO DE DIFICULTAD
+    </div>
+    <div>${desc}</div>
+  `;
+  tooltip.style.display = 'block';
+
+  const rect = selectEl.getBoundingClientRect();
+  const tooltipWidth = tooltip.offsetWidth || 280;
+  const tooltipHeight = tooltip.offsetHeight || 80;
+  const x = window.scrollX + rect.left + (rect.width / 2) - (tooltipWidth / 2);
+  const y = window.scrollY + rect.top - tooltipHeight - 8;
+
+  tooltip.style.left = `${Math.max(10, Math.min(window.innerWidth - tooltipWidth - 10, x))}px`;
+  tooltip.style.top = `${Math.max(10, y)}px`;
+  tooltip.style.opacity = '1';
+}
+
+function hideDifficultyTooltip() {
+  const tooltip = document.getElementById('difficulty-tooltip');
+  if (tooltip) {
+    tooltip.style.opacity = '0';
+    tooltip.style.display = 'none';
+  }
+}
+
+const selectSettingsDifficulty = document.getElementById('select-settings-difficulty');
+if (selectSettingsDifficulty) {
+  selectSettingsDifficulty.addEventListener('mouseenter', showDifficultyTooltip);
+  selectSettingsDifficulty.addEventListener('mouseleave', hideDifficultyTooltip);
+  selectSettingsDifficulty.addEventListener('change', () => {
+    const tooltip = document.getElementById('difficulty-tooltip');
+    if (tooltip && tooltip.style.display === 'block') {
+      showDifficultyTooltip();
+    }
+  });
+}
+
 document.getElementById('btn-close-settings-x').addEventListener('click', () => {
+  hideDifficultyTooltip();
   settingsModal.classList.add('hidden');
 });
 
@@ -644,6 +724,7 @@ document.getElementById('btn-save-settings').addEventListener('click', () => {
       window.saveGame(true);
     }
   }
+  hideDifficultyTooltip();
   settingsModal.classList.add('hidden');
 });
 
