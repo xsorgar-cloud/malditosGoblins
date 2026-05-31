@@ -801,7 +801,7 @@ function createCustomDifficultySelect() {
   `;
   
   const triggerText = document.createElement('span');
-  triggerText.textContent = nativeSelect.options[nativeSelect.selectedIndex]?.text || 'Medio';
+  triggerText.textContent = nativeSelect.options[nativeSelect.selectedIndex]?.text || 'Fácil';
   trigger.appendChild(triggerText);
 
   const arrow = document.createElement('span');
@@ -1435,7 +1435,7 @@ btnStartGame.addEventListener('click', () => {
   const initSenda = selectSendaEl ? selectSendaEl.value : 'iniciacion';
 
   const selectDifficultyEl = document.getElementById('select-settings-difficulty');
-  const initDifficulty = selectDifficultyEl ? selectDifficultyEl.value : 'medio';
+  const initDifficulty = selectDifficultyEl ? selectDifficultyEl.value : 'facil';
 
   const rawWave = parseInt(document.getElementById('input-init-wave').value, 10);
   const initWave = isNaN(rawWave) ? 1 : rawWave;

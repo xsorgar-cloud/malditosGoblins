@@ -28,7 +28,7 @@ class GameState {
     this.lastCombatId = 0;
     this.lastActionWasCombat = false;
     this.lastWarlordExtraDmg = 0;
-    this.difficulty = 'medio';
+    this.difficulty = 'facil';
     this.lastCombatAcquiredEffects = { escozor: 0, calambre: 0, tembleque: 0 };
 
     // Log de acciones
@@ -1216,10 +1216,10 @@ class GameState {
     }
   }
 
-  setupPlayers(numPlayers, selectedRoles = [], customSettings = { hp: 10, maxHp: 10, energy: 0, mo: 2, hito: 1, level: 1, senda: 'iniciacion', difficulty: 'medio' }) {
+  setupPlayers(numPlayers, selectedRoles = [], customSettings = { hp: 10, maxHp: 10, energy: 0, mo: 2, hito: 1, level: 1, senda: 'iniciacion', difficulty: 'facil' }) {
     this.currentHito = customSettings.hito !== undefined ? customSettings.hito : 1;
     this.activeSenda = customSettings.senda || 'iniciacion';
-    this.difficulty = customSettings.difficulty || 'medio';
+    this.difficulty = customSettings.difficulty || 'facil';
     this.pendingHito1Goblins = 0;
     let initLvl = customSettings.level !== undefined ? customSettings.level : 1;
     let basePex = 0;
@@ -1817,7 +1817,7 @@ class GameState {
 
     if (this.wavePhaseState.phase === 'spawns') {
       let spawns = [];
-      const diff = this.difficulty || 'medio';
+      const diff = this.difficulty || 'facil';
 
       if (diff === 'chupado') {
         // Nivel Chupado: Voltea boca arriba tantos Goblins de nivel 1 como jugadores.
