@@ -1,4 +1,4 @@
-let lastWaveLevel = 0;
+﻿let lastWaveLevel = 0;
 let lastActionCount = 0;
 const gameState = new GameState();
 const COIN_SVG = `<svg viewBox="0 0 24 24" width="18" height="18" style="vertical-align: middle; margin-right: 3px;"><circle cx="12" cy="12" r="10" fill="#ffd700" stroke="#c79a32" stroke-width="2"/><circle cx="12" cy="12" r="7" fill="none" stroke="#e6c200" stroke-width="1" stroke-dasharray="2,2"/><path d="M12 7v10" stroke="#c79a32" stroke-width="2" stroke-linecap="round"/></svg>`;
@@ -805,7 +805,7 @@ function createCustomDifficultySelect() {
   trigger.appendChild(triggerText);
 
   const arrow = document.createElement('span');
-  arrow.innerHTML = '&#9662;'; // Flecha abajo
+  arrow.innerHTML = '&#9662;';
   arrow.style.cssText = `
     font-size: 0.8rem;
     color: #ff9f1c;
@@ -954,9 +954,12 @@ function createCustomSendaSelect(selectId) {
     box-sizing: border-box;
   `;
 
-  const trigger = document.createElement('div');
-  trigger.className = 'custom-select-trigger';
+  // Trigger Button
+  const trigger = document.createElement('button');
+  trigger.type = 'button';
+  trigger.className = 'custom-senda-select-btn';
   trigger.style.cssText = `
+    width: 100%;
     padding: 10px 12px;
     border-radius: 8px;
     border: 2px solid var(--gold);
@@ -983,136 +986,36 @@ function createCustomSendaSelect(selectId) {
   trigger.appendChild(triggerText);
 
   const arrow = document.createElement('span');
-  arrow.innerHTML = '&#9662;';
+  arrow.innerHTML = '&#9662;'; // Flecha abajo
   arrow.style.cssText = `
     font-size: 0.8rem;
     color: var(--gold);
-    transition: transform 0.2s;
     margin-left: 6px;
   `;
   trigger.appendChild(arrow);
   container.appendChild(trigger);
 
-  const optionsContainer = document.createElement('div');
-  optionsContainer.className = 'custom-select-options';
-  optionsContainer.style.cssText = `
-    position: absolute;
-    top: 100%;
-    left: 0;
-    right: 0;
-    background: #0d0d0f;
-    border: 2px solid var(--gold);
-    border-radius: 8px;
-    margin-top: 4px;
-    z-index: 100000;
-    box-shadow: 0 8px 24px rgba(0,0,0,0.9);
-    display: none;
-    overflow: hidden;
-    box-sizing: border-box;
-  `;
-
-  if (selectId === 'select-settings-senda') {
-    optionsContainer.style.borderRadius = '6px';
-  }
-
-  const optionsList = Array.from(nativeSelect.options);
-  optionsList.forEach(opt => {
-    const optEl = document.createElement('div');
-    optEl.className = 'custom-select-option';
-    optEl.dataset.value = opt.value;
-    optEl.textContent = opt.text;
-    
-    const isSelected = opt.value === nativeSelect.value;
-    
-    optEl.style.cssText = `
-      padding: 8px 12px;
-      cursor: pointer;
-      font-family: 'Outfit', sans-serif;
-      color: ${isSelected ? 'var(--gold)' : '#ccc'};
-      font-weight: ${isSelected ? 'bold' : 'normal'};
-      font-size: 0.95rem;
-      background: ${isSelected ? 'rgba(212, 175, 55, 0.08)' : 'transparent'};
-      border-left: 3px solid ${isSelected ? 'var(--gold)' : 'transparent'};
-      transition: all 0.15s;
-    `;
-
-    optEl.addEventListener('mouseenter', () => {
-      optEl.style.background = 'rgba(212, 175, 55, 0.15)';
-      optEl.style.color = 'var(--gold)';
-      showSendaTooltipForValue(opt.value, optEl);
-    });
-
-    optEl.addEventListener('mouseleave', () => {
-      const currentSelected = nativeSelect.value === opt.value;
-      optEl.style.background = currentSelected ? 'rgba(212, 175, 55, 0.08)' : 'transparent';
-      optEl.style.color = currentSelected ? 'var(--gold)' : '#ccc';
-      hideSendaTooltip();
-    });
-
-    optEl.addEventListener('click', (e) => {
-      e.stopPropagation();
-      nativeSelect.value = opt.value;
-      triggerText.textContent = opt.text;
-      optionsContainer.style.display = 'none';
-      arrow.style.transform = 'rotate(0deg)';
-      hideSendaTooltip();
-
-      Array.from(optionsContainer.children).forEach(child => {
-        const childVal = child.dataset.value;
-        const childSelected = childVal === opt.value;
-        child.style.color = childSelected ? 'var(--gold)' : '#ccc';
-        child.style.fontWeight = childSelected ? 'bold' : 'normal';
-        child.style.background = childSelected ? 'rgba(212, 175, 55, 0.08)' : 'transparent';
-        child.style.borderLeft = `3px solid ${childSelected ? 'var(--gold)' : 'transparent'}`;
-      });
-      
-      const event = new Event('change');
-      nativeSelect.dispatchEvent(event);
-    });
-
-    optionsContainer.appendChild(optEl);
-  });
-
-  container.appendChild(optionsContainer);
   nativeSelect.parentNode.insertBefore(container, nativeSelect.nextSibling);
 
+  // Abrir la pantalla modal de selección
   trigger.addEventListener('click', (e) => {
     e.stopPropagation();
-    const isOpen = optionsContainer.style.display === 'block';
     closeAllCustomSelects();
-
-    if (!isOpen) {
-      optionsContainer.style.display = 'block';
-      arrow.style.transform = 'rotate(180deg)';
-      showSendaTooltipForValue(nativeSelect.value, trigger);
-    }
+    openSendaSelectionScreen(selectId);
   });
 
+  // Hover en el trigger para mostrar el tooltip
   trigger.addEventListener('mouseenter', () => {
-    if (optionsContainer.style.display !== 'block') {
-      showSendaTooltipForValue(nativeSelect.value, trigger);
-    }
+    showSendaTooltipForValue(nativeSelect.value, trigger);
   });
   trigger.addEventListener('mouseleave', () => {
-    if (optionsContainer.style.display !== 'block') {
-      hideSendaTooltip();
-    }
+    hideSendaTooltip();
   });
 
   const syncFunc = () => {
-    const activeIndex = nativeSelect.selectedIndex;
-    const activeOpt = nativeSelect.options[activeIndex];
+    const activeOpt = nativeSelect.options[nativeSelect.selectedIndex];
     if (activeOpt) {
       triggerText.textContent = activeOpt.text;
-      
-      Array.from(optionsContainer.children).forEach(child => {
-        const childVal = child.dataset.value;
-        const childSelected = childVal === activeOpt.value;
-        child.style.color = childSelected ? 'var(--gold)' : '#ccc';
-        child.style.fontWeight = childSelected ? 'bold' : 'normal';
-        child.style.background = childSelected ? 'rgba(212, 175, 55, 0.08)' : 'transparent';
-        child.style.borderLeft = `3px solid ${childSelected ? 'var(--gold)' : 'transparent'}`;
-      });
     }
   };
 
@@ -1123,22 +1026,340 @@ function createCustomSendaSelect(selectId) {
   }
 }
 
+let selectedSendaValue = 'iniciacion';
+let currentSendaTargetSelectId = 'select-senda';
+
+function initSendaSelectionScreen() {
+  if (document.getElementById('senda-selection-screen')) return;
+
+  const styleEl = document.createElement('style');
+  styleEl.textContent = `
+    .split-card-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background: rgba(10, 10, 12, 0.98);
+      backdrop-filter: blur(15px);
+      -webkit-backdrop-filter: blur(15px);
+      z-index: 110000;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      box-sizing: border-box;
+      padding: 40px 20px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s ease;
+      overflow-y: auto;
+    }
+    .split-card-screen.visible {
+      opacity: 1;
+      pointer-events: auto;
+    }
+    .split-card-container {
+      display: flex;
+      flex-direction: row;
+      gap: 24px;
+      justify-content: flex-start;
+      align-items: center;
+      max-width: 98%;
+      overflow-x: auto;
+      padding: 30px 15px;
+      box-sizing: border-box;
+      margin-bottom: 25px;
+    }
+    .split-card-container::-webkit-scrollbar {
+      height: 8px;
+    }
+    .split-card-container::-webkit-scrollbar-track {
+      background: rgba(255,255,255,0.05);
+      border-radius: 4px;
+    }
+    .split-card-container::-webkit-scrollbar-thumb {
+      background: var(--gold);
+      border-radius: 4px;
+    }
+
+    .senda-card-wrapper {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 12px;
+      flex-shrink: 0;
+    }
+
+    .senda-card-header {
+      text-align: center;
+      font-family: 'Cinzel', serif;
+      font-weight: bold;
+      color: var(--gold);
+      font-size: 1rem;
+      min-height: 50px;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: 4px;
+    }
+    .senda-card-stars {
+      color: #ff9f1c;
+      font-size: 0.9rem;
+      letter-spacing: 2px;
+    }
+
+    .split-card {
+      position: relative;
+      width: 220px;
+      height: 310px;
+      border-radius: 12px;
+      border: 2px solid rgba(212, 175, 55, 0.4);
+      background: #000;
+      overflow: hidden;
+      cursor: pointer;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.8);
+      transition: all 0.3s cubic-bezier(0.25, 0.8, 0.25, 1);
+      box-sizing: border-box;
+    }
+
+    .split-card.selected {
+      border: 3px solid var(--gold);
+      box-shadow: 0 0 30px rgba(212,175,55,0.6), inset 0 0 15px rgba(212,175,55,0.2);
+      transform: translateY(-8px) scale(1.02);
+    }
+
+    .split-card .half-left,
+    .split-card .half-right {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      overflow: hidden;
+      transition: width 0.35s ease;
+      box-sizing: border-box;
+    }
+
+    .split-card .half-left {
+      left: 0;
+      width: 50%;
+      border-right: 1.5px solid rgba(212, 175, 55, 0.4);
+      z-index: 2;
+    }
+
+    .split-card .half-right {
+      right: 0;
+      width: 50%;
+      z-index: 2;
+    }
+
+    .split-card .card-image {
+      position: absolute;
+      top: 0;
+      height: 100%;
+      width: 216px;
+      background-size: 100% 100%;
+      background-repeat: no-repeat;
+      transition: left 0.35s ease, width 0.35s ease;
+    }
+
+    .split-card .boss-img {
+      left: 0;
+      background-position: left center;
+    }
+
+    .split-card .rules-img {
+      left: 0;
+      background-position: left center;
+    }
+
+    .split-card:has(.half-left:hover) .half-left {
+      width: 100%;
+      border-right-color: transparent;
+      z-index: 3;
+    }
+    .split-card:has(.half-left:hover) .half-right {
+      width: 0%;
+    }
+
+    .split-card:has(.half-right:hover) .half-right {
+      width: 100%;
+      z-index: 3;
+    }
+    .split-card:has(.half-right:hover) .half-left {
+      width: 0%;
+      border-right-color: transparent;
+    }
+
+    .split-card-btn-container {
+      display: flex;
+      gap: 20px;
+      margin-top: 15px;
+    }
+  `;
+  document.head.appendChild(styleEl);
+
+  const screen = document.createElement('div');
+  screen.id = 'senda-selection-screen';
+  screen.className = 'split-card-screen';
+  
+  const title = document.createElement('h2');
+  title.innerText = "SELECCIONA TU SENDA";
+  title.style.cssText = "margin: 0 0 5px 0; color: var(--gold); font-family: 'Cinzel', serif; font-size: 2.2rem; letter-spacing: 2px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);";
+  screen.appendChild(title);
+
+  const subtitle = document.createElement('p');
+  subtitle.innerText = "Descubre las reglas de cada senda y su jefe final antes de comenzar tu aventura.";
+  subtitle.style.cssText = "margin: 0 0 10px 0; color: #aaa; font-family: 'Outfit', sans-serif; font-size: 1rem; text-align: center;";
+  screen.appendChild(subtitle);
+
+  const container = document.createElement('div');
+  container.className = 'split-card-container';
+  screen.appendChild(container);
+
+  const sendasData = [
+    { value: 'iniciacion', name: 'Senda de Iniciación', stars: '★', bossImg: 'assets/Monstruos/Jefes/Inicicion.jpg', rulesImg: 'assets/Monstruos/Jefes/reglas_Inicicion.jpg' },
+    { value: 'guerrero', name: 'Senda de El Zeñor de la Guerra', stars: '★★', bossImg: 'assets/Monstruos/Jefes/Señor-de-la-Guerra.jpg', rulesImg: 'assets/Monstruos/Jefes/reglas_Señor-de-la-Guerra.jpg' },
+    { value: 'rey_brujo', name: 'Senda de El Rey Brujo', stars: '★★★', bossImg: 'assets/Monstruos/Jefes/Rey-Brujo.jpg', rulesImg: 'assets/Monstruos/Jefes/reglas_Rey-Brujo.jpg' },
+    { value: 'recaudador', name: 'Senda de El Gran Recaudador', stars: '★★★', bossImg: 'assets/Monstruos/Jefes/Gran-Recaudador.jpg', rulesImg: 'assets/Monstruos/Jefes/reglas_Gran-Recaudador.jpg' },
+    { value: 'piromante', name: 'Senda de El Piromante', stars: '★★★★', bossImg: 'assets/Monstruos/Jefes/El-Piromante.jpg', rulesImg: 'assets/Monstruos/Jefes/reglas_El-Piromante.jpg' },
+    { value: 'la_madre', name: 'Senda de La Madre', stars: '★★★★★', bossImg: 'assets/Monstruos/Jefes/La-Madre.jpg', rulesImg: 'assets/Monstruos/Jefes/reglas_La-Madre.jpg' }
+  ];
+
+  sendasData.forEach(senda => {
+    const wrapper = document.createElement('div');
+    wrapper.className = 'senda-card-wrapper';
+
+    const header = document.createElement('div');
+    header.className = 'senda-card-header';
+    header.innerHTML = `
+      <div>${senda.name}</div>
+      <div class="senda-card-stars">${senda.stars}</div>
+    `;
+    wrapper.appendChild(header);
+
+    const card = document.createElement('div');
+    card.className = 'split-card';
+    card.dataset.value = senda.value;
+
+    const halfLeft = document.createElement('div');
+    halfLeft.className = 'half-left';
+    const bossImg = document.createElement('div');
+    bossImg.className = 'card-image boss-img';
+    bossImg.style.backgroundImage = `url('${senda.bossImg}')`;
+    halfLeft.appendChild(bossImg);
+    card.appendChild(halfLeft);
+
+    const halfRight = document.createElement('div');
+    halfRight.className = 'half-right';
+    const rulesImg = document.createElement('div');
+    rulesImg.className = 'card-image rules-img';
+    rulesImg.style.backgroundImage = `url('${senda.rulesImg}')`;
+    halfRight.appendChild(rulesImg);
+    card.appendChild(halfRight);
+
+    card.addEventListener('click', () => {
+      container.querySelectorAll('.split-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedSendaValue = senda.value;
+    });
+
+    card.addEventListener('dblclick', () => {
+      container.querySelectorAll('.split-card').forEach(c => c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedSendaValue = senda.value;
+      btnConfirm.click();
+    });
+
+    wrapper.appendChild(card);
+    container.appendChild(wrapper);
+  });
+
+  const btnContainer = document.createElement('div');
+  btnContainer.className = 'split-card-btn-container';
+  
+  const btnCancel = document.createElement('button');
+  btnCancel.className = 'btn secondary';
+  btnCancel.innerText = "CANCELAR";
+  btnCancel.style.padding = "10px 30px";
+  btnCancel.addEventListener('click', () => {
+    screen.classList.remove('visible');
+  });
+  btnContainer.appendChild(btnCancel);
+
+  const btnConfirm = document.createElement('button');
+  btnConfirm.className = 'btn primary';
+  btnConfirm.innerText = "CONFIRMAR SENDA";
+  btnConfirm.style.padding = "10px 40px";
+  btnConfirm.addEventListener('click', () => {
+    const targetSelect = document.getElementById(currentSendaTargetSelectId);
+    if (targetSelect) {
+      targetSelect.value = selectedSendaValue;
+      
+      const triggerBtn = targetSelect.nextElementSibling;
+      if (triggerBtn && triggerBtn.classList.contains('custom-select-container')) {
+        const textSpan = triggerBtn.querySelector('.custom-senda-select-btn span');
+        const nativeOpt = targetSelect.options[targetSelect.selectedIndex];
+        if (textSpan && nativeOpt) {
+          textSpan.textContent = nativeOpt.text;
+        }
+      }
+
+      const event = new Event('change');
+      targetSelect.dispatchEvent(event);
+    }
+    screen.classList.remove('visible');
+  });
+  btnContainer.appendChild(btnConfirm);
+
+  screen.appendChild(btnContainer);
+  document.body.appendChild(screen);
+}
+
+function openSendaSelectionScreen(targetSelectId) {
+  initSendaSelectionScreen();
+
+  currentSendaTargetSelectId = targetSelectId;
+  const nativeSelect = document.getElementById(targetSelectId);
+  if (nativeSelect) {
+    selectedSendaValue = nativeSelect.value;
+  }
+
+  const screen = document.getElementById('senda-selection-screen');
+  if (screen) {
+    screen.querySelectorAll('.split-card').forEach(card => {
+      if (card.dataset.value === selectedSendaValue) {
+        card.classList.add('selected');
+        setTimeout(() => {
+          card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+        }, 50);
+      } else {
+        card.classList.remove('selected');
+      }
+    });
+
+    screen.classList.add('visible');
+  }
+}
+
 if (document.readyState === 'loading') {
   document.addEventListener('DOMContentLoaded', () => {
     createCustomDifficultySelect();
     createCustomSendaSelect('select-senda');
     createCustomSendaSelect('select-settings-senda');
+    initSendaSelectionScreen();
   });
 } else {
   createCustomDifficultySelect();
   createCustomSendaSelect('select-senda');
   createCustomSendaSelect('select-settings-senda');
+  initSendaSelectionScreen();
 }
 
 // Click global para cerrar
 document.addEventListener('click', () => {
   closeAllCustomSelects();
 });
+
 
 document.getElementById('btn-close-settings-x').addEventListener('click', () => {
   closeAllCustomSelects();
