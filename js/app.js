@@ -1,4 +1,4 @@
-﻿let lastWaveLevel = 0;
+let lastWaveLevel = 0;
 let lastActionCount = 0;
 const gameState = new GameState();
 const COIN_SVG = `<svg viewBox="0 0 24 24" width="18" height="18" style="vertical-align: middle; margin-right: 3px;"><circle cx="12" cy="12" r="10" fill="#ffd700" stroke="#c79a32" stroke-width="2"/><circle cx="12" cy="12" r="7" fill="none" stroke="#e6c200" stroke-width="1" stroke-dasharray="2,2"/><path d="M12 7v10" stroke="#c79a32" stroke-width="2" stroke-linecap="round"/></svg>`;
@@ -946,19 +946,11 @@ function createCustomSendaSelect(selectId) {
 
   nativeSelect.style.display = 'none';
 
-  const container = document.createElement('div');
-  container.className = 'custom-select-container';
-  container.style.cssText = `
-    position: relative;
-    width: 100%;
-    box-sizing: border-box;
-  `;
-
-  // Trigger Button
-  const trigger = document.createElement('button');
-  trigger.type = 'button';
-  trigger.className = 'custom-senda-select-btn';
-  trigger.style.cssText = `
+  // Create a single button replacing the container element
+  const button = document.createElement('button');
+  button.type = 'button';
+  button.className = 'custom-select-container custom-senda-select-btn';
+  button.style.cssText = `
     width: 100%;
     padding: 10px 12px;
     border-radius: 8px;
@@ -976,14 +968,14 @@ function createCustomSendaSelect(selectId) {
   `;
   
   if (selectId === 'select-settings-senda') {
-    trigger.style.padding = '6px 10px';
-    trigger.style.borderRadius = '6px';
-    trigger.style.fontSize = '0.95rem';
+    button.style.padding = '6px 10px';
+    button.style.borderRadius = '6px';
+    button.style.fontSize = '0.95rem';
   }
   
   const triggerText = document.createElement('span');
   triggerText.textContent = nativeSelect.options[nativeSelect.selectedIndex]?.text || '';
-  trigger.appendChild(triggerText);
+  button.appendChild(triggerText);
 
   const arrow = document.createElement('span');
   arrow.innerHTML = '&#9662;'; // Flecha abajo
@@ -992,23 +984,22 @@ function createCustomSendaSelect(selectId) {
     color: var(--gold);
     margin-left: 6px;
   `;
-  trigger.appendChild(arrow);
-  container.appendChild(trigger);
+  button.appendChild(arrow);
 
-  nativeSelect.parentNode.insertBefore(container, nativeSelect.nextSibling);
+  nativeSelect.parentNode.insertBefore(button, nativeSelect.nextSibling);
 
   // Abrir la pantalla modal de selección
-  trigger.addEventListener('click', (e) => {
+  button.addEventListener('click', (e) => {
     e.stopPropagation();
     closeAllCustomSelects();
     openSendaSelectionScreen(selectId);
   });
 
   // Hover en el trigger para mostrar el tooltip
-  trigger.addEventListener('mouseenter', () => {
-    showSendaTooltipForValue(nativeSelect.value, trigger);
+  button.addEventListener('mouseenter', () => {
+    showSendaTooltipForValue(nativeSelect.value, button);
   });
-  trigger.addEventListener('mouseleave', () => {
+  button.addEventListener('mouseleave', () => {
     hideSendaTooltip();
   });
 
@@ -1297,7 +1288,7 @@ function initSendaSelectionScreen() {
       
       const triggerBtn = targetSelect.nextElementSibling;
       if (triggerBtn && triggerBtn.classList.contains('custom-select-container')) {
-        const textSpan = triggerBtn.querySelector('.custom-senda-select-btn span');
+        const textSpan = triggerBtn.querySelector('span');
         const nativeOpt = targetSelect.options[targetSelect.selectedIndex];
         if (textSpan && nativeOpt) {
           textSpan.textContent = nativeOpt.text;
