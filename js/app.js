@@ -715,8 +715,90 @@ document.getElementById('btn-end-turn').addEventListener('click', () => {
   updateUI();
 });
 
+window.showHitoGoblinsTooltip = function(e) {
+  if (gameState.currentHito > 5) return;
+  const sendaHitos = DB.hitos[gameState.activeSenda] || DB.hitos.iniciacion;
+  const nextHito = sendaHitos[gameState.currentHito - 1];
+  if (!nextHito || !nextHito.goblins) return;
+
+  let tooltip = document.getElementById('hito-goblins-tooltip');
+  if (!tooltip) {
+    tooltip = document.createElement('div');
+    tooltip.id = 'hito-goblins-tooltip';
+    tooltip.style.cssText = `
+      position: absolute;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      z-index: 99999;
+      pointer-events: none !important;
+      opacity: 0;
+      transition: opacity 0.15s ease-out;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 0px;
+      flex-direction: row;
+    `;
+    document.body.appendChild(tooltip);
+  }
+
+  const cardHeight = 140;
+  const cardWidth = 60; // Proporción exacta 214x502 para 140px de alto (140 * 214/502 = 59.7px)
+  const overlap = 20;  // Solape de exactamente 1/3 (20px)
+  const numGoblins = nextHito.goblins.length;
+  const calculatedWidth = numGoblins === 1 ? cardWidth : cardWidth + (numGoblins - 1) * (cardWidth - overlap);
+
+  const html = nextHito.goblins.map((lvl, idx) => {
+    const overlapStyle = idx > 0 ? `margin-left: -${overlap}px !important;` : '';
+    let imgSrc = `assets/Monstruos/t${lvl}.png`;
+    if (lvl === 5 && nextHito.bossStats && nextHito.bossStats.image) {
+      const parts = nextHito.bossStats.image.split('/');
+      const fileWithExt = parts[parts.length - 1];
+      const bossName = fileWithExt.substring(0, fileWithExt.lastIndexOf('.'));
+      imgSrc = `assets/Monstruos/Jefes/t5_${bossName}.png`;
+    }
+    return `<img src="${imgSrc}" style="height: ${cardHeight}px !important; width: ${cardWidth}px !important; flex-shrink: 0 !important; pointer-events: none !important; border-radius: 6px; border: none; box-shadow: none; opacity: 0.95; display: block; position: relative; z-index: ${idx}; ${overlapStyle}" alt="G${lvl}">`;
+  }).join('');
+
+  tooltip.innerHTML = html;
+  tooltip.style.display = 'flex';
+  tooltip.style.width = `${calculatedWidth}px`;
+  tooltip.style.height = `${cardHeight}px`;
+
+  const targetBtn = e.currentTarget || e.target;
+  if (!targetBtn) return;
+  
+  const rect = targetBtn.getBoundingClientRect();
+  
+  // Determinamos de forma precisa si es el botón del pie de página (o de información de hitos)
+  // para usar alineación a la izquierda, o centrado para botones del campo de batalla.
+  let leftPos;
+  const isFooterButton = targetBtn.id === 'btn-deploy-hito' || targetBtn.id === 'btn-info-hitos' || targetBtn.closest('#hito-actions');
+  if (isFooterButton) {
+    leftPos = window.scrollX + rect.left;
+  } else {
+    leftPos = window.scrollX + rect.left + (rect.width / 2) - (calculatedWidth / 2);
+  }
+  
+  const y = window.scrollY + rect.top - cardHeight - 8;
+
+  tooltip.style.left = `${Math.max(10, Math.min(window.innerWidth - calculatedWidth - 10, leftPos))}px`;
+  tooltip.style.top = `${Math.max(10, y)}px`;
+  tooltip.style.opacity = '1';
+};
+
+window.hideHitoGoblinsTooltip = function() {
+  const tooltip = document.getElementById('hito-goblins-tooltip');
+  if (tooltip) {
+    tooltip.style.opacity = '0';
+    tooltip.style.display = 'none';
+  }
+};
+
 const btnDeployHito = document.getElementById('btn-deploy-hito');
 btnDeployHito.addEventListener('click', () => {
+  window.hideHitoGoblinsTooltip();
   const sendaHitos = DB.hitos[gameState.activeSenda] || DB.hitos.iniciacion;
   const hitoToDeploy = sendaHitos[gameState.currentHito - 1];
 
@@ -727,6 +809,8 @@ btnDeployHito.addEventListener('click', () => {
     updateUI();
   }
 });
+btnDeployHito.addEventListener('mouseenter', window.showHitoGoblinsTooltip);
+btnDeployHito.addEventListener('mouseleave', window.hideHitoGoblinsTooltip);
 
 function openHitosModal() {
   const modal = document.getElementById('hitos-modal');
@@ -1733,17 +1817,20 @@ function renderBattlefield() {
       btnOptB.style.opacity = '0.5';
       btnOptB.style.cursor = 'not-allowed';
     }
-    btnOptB.addEventListener('mouseenter', () => {
+    btnOptB.addEventListener('mouseenter', (e) => {
       if (!btnOptB.disabled) {
         btnOptB.style.transform = 'scale(1.05)';
         btnOptB.style.boxShadow = '0 6px 20px rgba(212, 175, 55, 0.4)';
+        window.showHitoGoblinsTooltip(e);
       }
     });
     btnOptB.addEventListener('mouseleave', () => {
       btnOptB.style.transform = 'scale(1)';
       btnOptB.style.boxShadow = '0 4px 15px rgba(212, 175, 55, 0.2)';
+      window.hideHitoGoblinsTooltip();
     });
     btnOptB.addEventListener('click', () => {
+      window.hideHitoGoblinsTooltip();
       const sendaHitos = DB.hitos[gameState.activeSenda] || DB.hitos.iniciacion;
       const hitoToDeploy = sendaHitos[gameState.currentHito - 1];
 
@@ -2320,7 +2407,7 @@ function renderCombatOverlay() {
     // --- FIN PROYECCION ---
 
     statsContainer.innerHTML = `
-      <div style="font-size: 1.4rem; font-weight: bold; color: var(--gold); margin-bottom: 15px;">${p.name}</div>
+      <div class="player-name-hover" data-player-index="${gameState.players.indexOf(p)}" style="font-size: 1.4rem; font-weight: bold; color: var(--gold); margin-bottom: 15px; cursor: pointer; width: fit-content; margin-left: auto; margin-right: auto;">${p.name}</div>
       <div class="stats" style="display: flex; flex-direction: column; gap: 15px; font-size: 1.2rem;">
         <div class="stat hp ${isLowHP ? 'low-hp' : ''}" style="display: flex; align-items: center; gap: 10px; height: 24px;"><span style="display: flex; align-items: center; width: 24px; justify-content: center;">❤️</span> <span>Vida: <span>${p.hp}</span>/<span>${p.maxHp}</span> ${finalProjectedHp !== p.hp && !isCrampPhase ? `<span style="color:${finalProjectedHp < p.hp ? '#ff4d4d' : '#33cc33'}; font-size: 0.9em; margin-left: 8px;">(➔ ${finalProjectedHp})</span>` : ''}</span></div>
         ${projectedHtml}
@@ -3497,7 +3584,7 @@ function renderPlayer() {
       <div class="player-panel ${isCurrent ? 'active-turn' : ''} ${isDead ? 'player-dead' : ''}">
         <div class="player-hud-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 8px; margin-bottom: 8px; gap: 10px;">
             <div style="display: flex; align-items: center; gap: 15px;">
-                <h3 style="font-size: 1.2rem; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 80px; max-width: 140px;">${p.name}</h3>
+                <h3 class="player-name-hover" data-player-index="${index}" style="font-size: 1.2rem; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 80px; max-width: 140px; cursor: pointer;">${p.name}</h3>
                 <div class="status-effects-container">${statusHTML}</div>
             </div>
             <div class="stats">
@@ -4026,7 +4113,7 @@ function checkLevelUpChoice() {
       header.className = 'player-info-header';
       header.innerHTML = `
         <div style="text-align: left;">
-          <h3 style="margin: 0; font-size: 1.4rem;">${p.name}</h3>
+          <h3 class="player-name-hover" data-player-index="${pIndex}" style="margin: 0; font-size: 1.4rem; cursor: pointer;">${p.name}</h3>
           <span style="color: var(--text-dim); font-size: 0.9rem;">Ha subido al nivel ${p.level}${p.pendingLevelUpChoices > 1 ? ` (Elección 1 de ${p.pendingLevelUpChoices})` : ''}</span>
         </div>
         <div class="collection-mini">
@@ -4077,6 +4164,67 @@ function checkLevelUpChoice() {
   }
 }
 
+window.showPlayerDiceTooltip = function(e, playerIndex) {
+  let tooltip = document.getElementById('player-dice-tooltip');
+  if (!tooltip) {
+    tooltip = document.createElement('div');
+    tooltip.id = 'player-dice-tooltip';
+    tooltip.style.cssText = `
+      position: absolute;
+      background: linear-gradient(135deg, #1a1e29 0%, #0a0c10 100%);
+      border: 2px solid var(--gold);
+      border-radius: 8px;
+      padding: 6px 10px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.8), 0 0 15px rgba(212,175,55,0.25);
+      z-index: 99999;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s ease-out;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      flex-direction: row;
+    `;
+    document.body.appendChild(tooltip);
+  }
+
+  const p = gameState.players[playerIndex];
+  if (!p) return;
+
+  let diceHTML = p.dicePool.map(d => {
+    const isD4 = d.faces === 4;
+    const paddingStyle = isD4 ? 'padding-top: 5px !important;' : 'padding: 0 !important;';
+
+    return `
+      <div class="die ${d.type} ${isD4 ? 'd4' : ''}" style="width: 24px !important; height: 24px !important; font-size: 0.8rem !important; ${paddingStyle} flex-shrink: 0 !important; position: relative !important; margin: 0 !important; cursor: default !important; display: flex !important; align-items: center !important; justify-content: center !important;">
+        ${d.faces}
+      </div>
+    `;
+  }).join('');
+
+  tooltip.innerHTML = diceHTML;
+  tooltip.style.display = 'flex';
+
+  const rect = e.target.getBoundingClientRect();
+  const tooltipWidth = tooltip.offsetWidth || (p.dicePool.length * 30 + 20);
+  const tooltipHeight = tooltip.offsetHeight || 38;
+  const x = window.scrollX + rect.left + (rect.width / 2) - (tooltipWidth / 2);
+  const y = window.scrollY + rect.top - tooltipHeight - 8;
+
+  tooltip.style.left = `${Math.max(10, Math.min(window.innerWidth - tooltipWidth - 10, x))}px`;
+  tooltip.style.top = `${Math.max(10, y)}px`;
+  tooltip.style.opacity = '1';
+};
+
+window.hidePlayerDiceTooltip = function () {
+  const tooltip = document.getElementById('player-dice-tooltip');
+  if (tooltip) {
+    tooltip.style.opacity = '0';
+    tooltip.style.display = 'none';
+  }
+};
+
 window.handleLevelUpChoice = function (playerIndex, dieType) {
   const faces = dieType === 'red' ? 6 : 4;
   if (gameState.addDieToPool(playerIndex, dieType, faces)) {
@@ -4084,7 +4232,7 @@ window.handleLevelUpChoice = function (playerIndex, dieType) {
   }
 };
 
-// Global Hover Preview para las cartas
+// Global Hover Preview para las cartas y Tooltip de Dados
 document.addEventListener('mouseover', (e) => {
   const card = e.target.closest('.equipment-card, .deck, .goblin-card, .equip-slot, .player-role, .mini-equip-icon');
   const preview = document.getElementById('card-preview-overlay');
@@ -4113,6 +4261,15 @@ document.addEventListener('mouseover', (e) => {
     }
   } else {
     preview.style.display = 'none';
+  }
+
+  // Tooltip de Dados del Jugador al pasar por su nombre
+  const playerName = e.target.closest('.player-name-hover');
+  if (playerName) {
+    const pIdx = parseInt(playerName.dataset.playerIndex);
+    window.showPlayerDiceTooltip(e, pIdx);
+  } else {
+    window.hidePlayerDiceTooltip();
   }
 });
 function updateNarrowStates() {

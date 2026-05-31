@@ -707,9 +707,9 @@ main {
 }
 
 .equipment-card {
-  flex: 0 1 140px;
+  flex: 0 1 175px;
   min-width: 40px;
-  height: 200px;
+  height: 250px;
   border: 1px solid var(--text-dim);
   border-radius: 8px;
   background-size: auto 100%;
@@ -724,7 +724,7 @@ main {
 }
 
 .equipment-card:hover {
-  min-width: 140px;
+  min-width: 175px;
   transform: translateY(-5px);
   border-color: var(--gold);
   z-index: 100;
@@ -2389,14 +2389,17 @@ main {
     aspect-ratio: 180 / 255 !important;
   }
 
-  .goblin-hp {
+  .goblin-hp,
+  .goblin-invulnerable-badge {
     font-size: 1.1rem !important;
-    /* VIDA DE GOBLINS MÃS PEQUEÃ‘A */
+    /* VIDA DE GOBLINS MÁS PEQUEÑA */
     width: 32px !important;
     height: 32px !important;
+    top: -10px !important;
+    right: -10px !important;
   }
 
-  /* --- BOTONES DE ACCIÃ“N GENERALES MÃS PEQUEÃ‘OS --- */
+  /* --- BOTONES DE ACCIÃ“N GENERALES MÃ S PEQUEÃ‘OS --- */
   button,
   .btn {
     font-size: 0.8rem !important;
@@ -2838,18 +2841,18 @@ main {
 
 .goblin-invulnerable-badge {
   position: absolute;
-  top: -8px;
-  right: -8px;
+  top: -10px;
+  right: -10px;
   background: linear-gradient(135deg, #00d2ff 0%, #0066ff 100%);
   color: white;
   border: 2px solid #fff;
   border-radius: 50%;
-  width: 32px;
-  height: 32px;
+  width: 30px;
+  height: 30px;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.1rem;
+  font-size: 1rem;
   box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
   z-index: 10;
   animation: pulse-blue 2s infinite ease-in-out;
