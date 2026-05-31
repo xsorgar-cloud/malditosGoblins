@@ -4835,10 +4835,22 @@ window.showTargetSelectionModal = function (playerIndex) {
 
         gbtn.onclick = () => {
           if (p.energy < 1 || isMagoRestricted) return;
-          gameState.useRoleAbility(playerIndex, gob.uid);
-          updateUI();
-          if (p.energy > 0) showTargetSelectionModal(playerIndex);
-          else modal.classList.add('hidden');
+          
+          // Animación inmediata en el botón del modal
+          gbtn.classList.remove('goblin-wobble-active', 'goblin-mutation-active');
+          void gbtn.offsetWidth; // Force reflow
+          gbtn.classList.add('goblin-damaged-bounce-active');
+          
+          // Bloquear clics adicionales durante la animación
+          modal.style.pointerEvents = 'none';
+          
+          setTimeout(() => {
+            gameState.useRoleAbility(playerIndex, gob.uid);
+            updateUI();
+            modal.style.pointerEvents = 'auto';
+            if (p.energy > 0) showTargetSelectionModal(playerIndex);
+            else modal.classList.add('hidden');
+          }, 450);
         };
         gobGrid.appendChild(gbtn);
       });

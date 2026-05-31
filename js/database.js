@@ -12,9 +12,9 @@ const DB = {
   roles: [
     { id: 'guerrero', name: 'Guerrero', image: 'assets/Roles/rol_guerrero.jpg', icon: 'assets/Roles/ico_rol_guerrero.png', effect: 'Inflige Daño Directo a un Goblin en combate.', energyRates: [0, 0, 2, 3, 4, 4] },
     { id: 'mago', name: 'Mago', image: 'assets/Roles/rol_mago.jpg', icon: 'assets/Roles/ico_rol_mago.png', effect: 'Inflige Daño Directo No Letal a cualquier Goblin.', energyRates: [0, 1, 2, 2, 3, 3] },
-    { id: 'protector', name: 'Protector', image: 'assets/Roles/rol_protector.jpg', icon: 'assets/Roles/ico_rol_protector.png', effect: 'Obtiene o proporciona Escudo a un compañero.', energyRates: [2, 2, 2, 3, 3, 4] },
+    { id: 'protector', name: 'Protector', image: 'assets/Roles/rol_protector.jpg', icon: 'assets/Roles/ico_rol_protector.png', effect: 'Obtiene o proporciona Escudo a un compañero en el próximo combate.', energyRates: [2, 2, 2, 3, 3, 4] },
     { id: 'sanador', name: 'Sanador', image: 'assets/Roles/rol_sanador.jpg', icon: 'assets/Roles/ico_rol_sanador.png', effect: 'Cura Puntos de Vida a tí mismo o a un compañero.', energyRates: [0, 2, 3, 3, 3, 1] },
-    { id: 'ladron', name: 'Ladrón', image: 'assets/Roles/rol_ladron.jpg', icon: 'assets/Roles/ico_rol_ladron.png', effect: 'Obtiene Monedas de oro, o las proporciona a un compañero.', energyRates: [1, 1, 2, 2, 2, 3] },
+    { id: 'ladron', name: 'Ladrón', image: 'assets/Roles/rol_ladron.jpg', icon: 'assets/Roles/ico_rol_ladron.png', effect: 'Obtiene Monedas de oro, o las consigue para un compañero.', energyRates: [1, 1, 2, 2, 2, 3] },
     { id: 'curandero', name: 'Curandero', image: 'assets/Roles/rol_curandero.jpg', icon: 'assets/Roles/ico_rol_curandero.png', effect: 'Repara tu equipo roto o el de un compañero.', energyRates: [1, 2, 2, 3, 3, 0] }
   ],
 
