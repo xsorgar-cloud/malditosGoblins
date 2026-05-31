@@ -3242,40 +3242,52 @@ function renderCombatOverlay() {
         const pBeforeState = dbg.player;
 
         // 1. ESTADÍSTICAS DEL COMBATE
-        combatSummaryLines.push("📊 ESTADÍSTICAS DE JUGADOR:");
+        let hasPlayerStats = false;
+        let statsLines = ["📊 ESTADÍSTICAS DE JUGADOR:"];
 
         // HP
         const hpDiff = pAfter.hp - pBeforeState.hp;
-        let hpDiffText = hpDiff > 0 ? `+${hpDiff}` : `${hpDiff}`;
-        if (hpDiff === 0) hpDiffText = "sin cambios";
-        combatSummaryLines.push(`❤️ Vida: ${hpDiffText} PV (actual: ${pAfter.hp}/${pAfter.maxHp})`);
+        if (hpDiff !== 0) {
+          let hpDiffText = hpDiff > 0 ? `+${hpDiff}` : `${hpDiff}`;
+          statsLines.push(`❤️ Vida: ${hpDiffText} PV (actual: ${pAfter.hp}/${pAfter.maxHp})`);
+          hasPlayerStats = true;
+        }
 
         // Oro / Monedas
         const moDiff = pAfter.mo - pBeforeState.mo;
-        let moDiffText = moDiff > 0 ? `+${moDiff}` : `${moDiff}`;
-        if (moDiff === 0) moDiffText = "sin cambios";
-        combatSummaryLines.push(`🪙 Monedas: ${moDiffText} mo (actual: ${pAfter.mo} mo)`);
+        if (moDiff !== 0) {
+          let moDiffText = moDiff > 0 ? `+${moDiff}` : `${moDiff}`;
+          statsLines.push(`🪙 Monedas: ${moDiffText} mo (actual: ${pAfter.mo} mo)`);
+          hasPlayerStats = true;
+        }
 
         // PEX
         const pexDiff = pAfter.pex - pBeforeState.pex;
-        let pexDiffText = pexDiff > 0 ? `+${pexDiff}` : `${pexDiff}`;
-        if (pexDiff === 0) pexDiffText = "sin cambios";
-        combatSummaryLines.push(`⭐ PEX: ${pexDiffText} PEX (actual: ${pAfter.pex})`);
+        if (pexDiff !== 0) {
+          let pexDiffText = pexDiff > 0 ? `+${pexDiff}` : `${pexDiff}`;
+          statsLines.push(`⭐ PEX: ${pexDiffText} PEX (actual: ${pAfter.pex})`);
+          hasPlayerStats = true;
+        }
 
         // Level Up
         if (pAfter.level > pBeforeState.level) {
-          combatSummaryLines.push(`🎉 Nivel: ¡Subida de nivel! (Nivel ${pBeforeState.level} ➔ ${pAfter.level})`);
+          statsLines.push(`🎉 Nivel: ¡Subida de nivel! (Nivel ${pBeforeState.level} ➔ ${pAfter.level})`);
+          hasPlayerStats = true;
         }
 
         // Energía
         const energyDiff = pAfter.energy - pBeforeState.energy;
         if (energyDiff !== 0) {
           let energyDiffText = energyDiff > 0 ? `+${energyDiff}` : `${energyDiff}`;
-          combatSummaryLines.push(`⚡ Energía: ${energyDiffText} (actual: ${pAfter.energy})`);
+          statsLines.push(`⚡ Energía: ${energyDiffText} (actual: ${pAfter.energy})`);
+          hasPlayerStats = true;
+        }
+
+        if (hasPlayerStats) {
+          statsLines.forEach(line => combatSummaryLines.push(line));
         }
 
         // 2. ENEMIGOS DERROTADOS
-        combatSummaryLines.push("\n☠️ ENEMIGOS DERROTADOS:");
         let defeatedGoblins = [];
         dbg.goblins.forEach(g => {
           let currentG = gameState.battlefield.goblins.find(bg => bg.uid === g.uid);
@@ -3284,13 +3296,11 @@ function renderCombatOverlay() {
           }
         });
         if (defeatedGoblins.length > 0) {
+          combatSummaryLines.push("\n☠️ ENEMIGOS DERROTADOS:");
           combatSummaryLines.push(`💀 Eliminados: ${defeatedGoblins.join(', ')}`);
-        } else {
-          combatSummaryLines.push(`💀 Eliminados: ninguno`);
         }
 
         // 3. DAÑO A TU EQUIPO
-        combatSummaryLines.push("\n🔧 DAÑO A TU EQUIPO:");
         let brokenItems = [];
         pAfter.equipped.forEach(eq => {
           let beforeEq = pBeforeState.equipped.find(e => e.id === eq.id);
@@ -3299,9 +3309,8 @@ function renderCombatOverlay() {
           }
         });
         if (brokenItems.length > 0) {
+          combatSummaryLines.push("\n🔧 DAÑO A TU EQUIPO:");
           combatSummaryLines.push(`💥 Roto: ${brokenItems.join(', ')}`);
-        } else {
-          combatSummaryLines.push(`🔧 Roto: ningún equipo dañado`);
         }
       }
 
@@ -3374,6 +3383,10 @@ function renderCombatOverlay() {
         updateUI();
         window.saveGame(true);
       };
+
+      if (combatSummaryLines.length === 1) {
+        combatSummaryLines.push("⚔️ Combate: sin cambios significativos en tus atributos.");
+      }
 
       alert(combatSummaryLines.join('\n'), runEndOfCombatUI);
     };
