@@ -335,9 +335,9 @@ window.alert = function (messageText, callback = null) {
         let cleanText = trimmed.replace(/<br\s*\/?>/gi, '').replace(/🪙/g, COIN_SVG);
         let headerColor = '#ffd700'; // Dorado por defecto
         if (cleanText.toLowerCase().includes('equipo') || cleanText.toLowerCase().includes('rotura') || cleanText.toLowerCase().includes('roto')) {
-          headerColor = '#ff4d4d'; // Rojo para rotura/daño equipo
+          headerColor = '#8a2387'; // Púrpura para rotura/daño equipo
         }
-        let textShadow = headerColor === '#ff4d4d' ? 'rgba(255, 77, 77, 0.4)' : 'rgba(212, 175, 55, 0.4)';
+        let textShadow = headerColor === '#8a2387' ? 'rgba(138, 35, 135, 0.4)' : 'rgba(212, 175, 55, 0.4)';
         html += `<div style="font-family: 'Cinzel', serif; font-size: 1.25rem; font-weight: bold; color: ${headerColor}; margin-top: 18px; margin-bottom: 10px; text-shadow: 0 0 8px ${textShadow}; text-transform: uppercase; text-align: center;">${cleanText}</div>`;
       } 
       // Contenido diferenciado por Título: Descripción
@@ -349,8 +349,10 @@ window.alert = function (messageText, callback = null) {
         // Elegir color para el TÍTULO según las palabras clave
         let titleColor = '#ffcc00'; // Color por defecto (dorado/amarillo suave)
         
-        if (blockTitle.includes('⚔️') || blockTitle.toLowerCase().includes('daño') || blockTitle.toLowerCase().includes('golpe') || blockTitle.toLowerCase().includes('ataque') || blockTitle.toLowerCase().includes('vida') || blockTitle.toLowerCase().includes('roto') || blockTitle.toLowerCase().includes('rotura')) {
-          titleColor = '#ff4d4d'; // Rojo vibrante para daño/combate/vida/rotura
+        if (blockTitle.toLowerCase().includes('roto') || blockTitle.toLowerCase().includes('rotura') || blockTitle.toLowerCase().includes('equipo')) {
+          titleColor = '#8a2387'; // Púrpura de rotura
+        } else if (blockTitle.includes('⚔️') || blockTitle.toLowerCase().includes('daño') || blockTitle.toLowerCase().includes('golpe') || blockTitle.toLowerCase().includes('ataque') || blockTitle.toLowerCase().includes('vida')) {
+          titleColor = '#ff4d4d'; // Rojo vibrante para daño/combate/vida
         } else if (blockTitle.includes('🪙') || blockTitle.includes('💰') || blockTitle.includes('💸') || blockTitle.toLowerCase().includes('escudo de oro') || blockTitle.toLowerCase().includes('saqueo') || blockTitle.toLowerCase().includes('carteristas') || blockTitle.toLowerCase().includes('armadura') || blockTitle.toLowerCase().includes('peaje') || blockTitle.toLowerCase().includes('prestamista') || blockTitle.toLowerCase().includes('recaudador') || blockTitle.toLowerCase().includes('mo') || blockTitle.toLowerCase().includes('monedas') || blockTitle.toLowerCase().includes('oro')) {
           titleColor = '#ffd700'; // Dorado brillante
         } else if (blockTitle.includes('🔥') || blockTitle.toLowerCase().includes('escozor') || blockTitle.toLowerCase().includes('fuego') || blockTitle.toLowerCase().includes('piromante')) {
@@ -3271,7 +3273,7 @@ function renderCombatOverlay() {
 
         // 1. ESTADÍSTICAS DEL COMBATE
         let hasPlayerStats = false;
-        let statsLines = ["📊 ESTADÍSTICAS DE JUGADOR:"];
+        let statsLines = [""];
 
         // HP
         const hpDiff = pAfter.hp - pBeforeState.hp;
