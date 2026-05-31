@@ -583,6 +583,9 @@ function openSettingsModal() {
     const selectSettingsSenda = document.getElementById('select-settings-senda');
     if (selectSettingsSenda) {
       selectSettingsSenda.value = gameState.activeSenda;
+      if (window.syncCustomSettingsSendaSelect) {
+        window.syncCustomSettingsSendaSelect();
+      }
     }
 
     const selectSettingsDifficulty = document.getElementById('select-settings-difficulty');
@@ -606,7 +609,7 @@ if (btnOpenSettingsSetup) {
   btnOpenSettingsSetup.addEventListener('click', openSettingsModal);
 }
 
-// --- CUSTOM SELECT Y TOOLTIP DE DIFICULTAD ---
+// --- CUSTOM SELECT, TOOLTIPS Y COMPONENTES DE AJUSTES ---
 const difficultyDescriptions = {
   chupado: "<strong>Chupado:</strong> Se invoca 1 Goblin de Nivel 1 por jugador en cada oleada. Ideal para aprender a jugar.",
   facil: "<strong>Fácil:</strong> Se invocan tantos Goblins del nivel de la oleada actual como jugadores. Curva de dificultad muy suave.",
@@ -669,20 +672,108 @@ function hideDifficultyTooltip() {
   }
 }
 
+function showSendaTooltipForValue(selectedValue, targetEl) {
+  let tooltip = document.getElementById('senda-tooltip');
+  if (!tooltip) {
+    tooltip = document.createElement('div');
+    tooltip.id = 'senda-tooltip';
+    tooltip.style.cssText = `
+      position: absolute;
+      background: rgba(15, 15, 20, 0.95);
+      border: 1px solid var(--gold);
+      border-radius: 8px;
+      padding: 12px 16px;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.8), 0 0 10px rgba(212,175,55,0.2);
+      z-index: 100005;
+      pointer-events: none;
+      opacity: 0;
+      transition: opacity 0.15s ease-out;
+      display: none;
+      max-width: 320px;
+      font-family: 'Outfit', sans-serif;
+      color: #eee;
+      font-size: 0.85rem;
+      line-height: 1.4;
+    `;
+    document.body.appendChild(tooltip);
+  }
+
+  const names = {
+    iniciacion: "Senda de Iniciación",
+    guerrero: "Senda de El Zeñor de la Guerra",
+    rey_brujo: "Senda de El Rey Brujo",
+    recaudador: "Senda de El Gran Recaudador",
+    piromante: "Senda de El Piromante",
+    la_madre: "Senda de La Madre"
+  };
+  const pathName = names[selectedValue] || selectedValue;
+
+  const rules = DB.sendaReglasGenerales[selectedValue] || [];
+  let rulesText = "";
+  if (rules.length === 0 || (rules.length === 1 && rules[0].name === "Sin reglas especiales")) {
+    rulesText = "<p style='margin: 0; color: #aaa; font-style: italic;'>Sin reglas adicionales de entorno.</p>";
+  } else {
+    rules.forEach(rule => {
+      rulesText += `<div style='margin-bottom: 6px;'>
+        <strong style='color: #fff;'>${rule.name}:</strong> 
+        <span style='color: #ccc;'>${rule.desc.replace(/<BR>/gi, ' ')}</span>
+      </div>`;
+    });
+  }
+
+  const sendaHitos = DB.hitos[selectedValue] || [];
+  const bossHito = sendaHitos.find(h => h.isBoss);
+  const bossText = bossHito ? `<div style='margin-top: 8px; border-top: 1px solid rgba(212,175,55,0.2); padding-top: 6px; color: var(--accent-red); font-weight: bold;'>👿 Jefe: ${bossHito.name}</div>` : "";
+
+  tooltip.innerHTML = `
+    <div style="font-weight: bold; color: var(--gold); font-family: 'Cinzel', serif; font-size: 0.95rem; border-bottom: 1px solid rgba(212,175,55,0.3); padding-bottom: 4px; margin-bottom: 8px;">
+      🗺️ ${pathName.toUpperCase()}
+    </div>
+    <div>${rulesText}</div>
+    ${bossText}
+  `;
+  tooltip.style.display = 'block';
+
+  const rect = targetEl.getBoundingClientRect();
+  const tooltipWidth = tooltip.offsetWidth || 300;
+  const tooltipHeight = tooltip.offsetHeight || 100;
+  const x = window.scrollX + rect.left + (rect.width / 2) - (tooltipWidth / 2);
+  const y = window.scrollY + rect.top - tooltipHeight - 8;
+
+  tooltip.style.left = `${Math.max(10, Math.min(window.innerWidth - tooltipWidth - 10, x))}px`;
+  tooltip.style.top = `${Math.max(10, y)}px`;
+  tooltip.style.opacity = '1';
+}
+
+function hideSendaTooltip() {
+  const tooltip = document.getElementById('senda-tooltip');
+  if (tooltip) {
+    tooltip.style.opacity = '0';
+    tooltip.style.display = 'none';
+  }
+}
+
+function closeAllCustomSelects() {
+  document.querySelectorAll('.custom-select-options').forEach(el => {
+    el.style.display = 'none';
+    const arrowEl = el.previousElementSibling.querySelector('span:last-child');
+    if (arrowEl) arrowEl.style.transform = 'rotate(0deg)';
+  });
+  hideDifficultyTooltip();
+  hideSendaTooltip();
+}
+
 function createCustomDifficultySelect() {
   const nativeSelect = document.getElementById('select-settings-difficulty');
   if (!nativeSelect) return;
 
-  // Evitar duplicaciones
   const existingContainer = nativeSelect.nextElementSibling;
   if (existingContainer && existingContainer.classList.contains('custom-select-container')) {
     existingContainer.remove();
   }
 
-  // Ocultar select nativo
   nativeSelect.style.display = 'none';
 
-  // Crear contenedor
   const container = document.createElement('div');
   container.className = 'custom-select-container';
   container.style.cssText = `
@@ -691,7 +782,6 @@ function createCustomDifficultySelect() {
     box-sizing: border-box;
   `;
 
-  // Trigger
   const trigger = document.createElement('div');
   trigger.className = 'custom-select-trigger';
   trigger.style.cssText = `
@@ -725,7 +815,6 @@ function createCustomDifficultySelect() {
   trigger.appendChild(arrow);
   container.appendChild(trigger);
 
-  // Contenedor de opciones
   const optionsContainer = document.createElement('div');
   optionsContainer.className = 'custom-select-options';
   optionsContainer.style.cssText = `
@@ -744,7 +833,6 @@ function createCustomDifficultySelect() {
     box-sizing: border-box;
   `;
 
-  // Rellenar opciones
   const optionsList = Array.from(nativeSelect.options);
   optionsList.forEach(opt => {
     const optEl = document.createElement('div');
@@ -787,7 +875,6 @@ function createCustomDifficultySelect() {
       arrow.style.transform = 'rotate(0deg)';
       hideDifficultyTooltip();
 
-      // Forzar actualización de estilos de selección
       Array.from(optionsContainer.children).forEach(child => {
         const childVal = child.dataset.value;
         const childSelected = childVal === opt.value;
@@ -797,7 +884,6 @@ function createCustomDifficultySelect() {
         child.style.borderLeft = `3px solid ${childSelected ? '#ff9f1c' : 'transparent'}`;
       });
       
-      // Disparar evento de cambio nativo
       const event = new Event('change');
       nativeSelect.dispatchEvent(event);
     });
@@ -808,24 +894,18 @@ function createCustomDifficultySelect() {
   container.appendChild(optionsContainer);
   nativeSelect.parentNode.insertBefore(container, nativeSelect.nextSibling);
 
-  // Manejar el toggle
   trigger.addEventListener('click', (e) => {
     e.stopPropagation();
     const isOpen = optionsContainer.style.display === 'block';
-    if (isOpen) {
-      optionsContainer.style.display = 'none';
-      arrow.style.transform = 'rotate(0deg)';
-      hideDifficultyTooltip();
-    } else {
-      // Cerrar otros dropdowns si los hubiera
+    closeAllCustomSelects();
+
+    if (!isOpen) {
       optionsContainer.style.display = 'block';
       arrow.style.transform = 'rotate(180deg)';
-      // Mostrar la tooltip del valor seleccionado al abrir, apuntando al trigger
       showDifficultyTooltipForValue(nativeSelect.value, trigger);
     }
   });
 
-  // Hover en el trigger (cuando está colapsado)
   trigger.addEventListener('mouseenter', () => {
     if (optionsContainer.style.display !== 'block') {
       showDifficultyTooltipForValue(nativeSelect.value, trigger);
@@ -837,14 +917,12 @@ function createCustomDifficultySelect() {
     }
   });
 
-  // Sincronizar trigger y opciones seleccionadas
   window.syncCustomDifficultySelect = () => {
     const activeIndex = nativeSelect.selectedIndex;
     const activeOpt = nativeSelect.options[activeIndex];
     if (activeOpt) {
       triggerText.textContent = activeOpt.text;
       
-      // Actualizar estilos de los elementos del menú
       Array.from(optionsContainer.children).forEach(child => {
         const childVal = child.dataset.value;
         const childSelected = childVal === activeOpt.value;
@@ -855,22 +933,215 @@ function createCustomDifficultySelect() {
       });
     }
   };
+}
 
-  // Click fuera para cerrar
-  document.addEventListener('click', () => {
-    optionsContainer.style.display = 'none';
-    arrow.style.transform = 'rotate(0deg)';
+function createCustomSendaSelect(selectId) {
+  const nativeSelect = document.getElementById(selectId);
+  if (!nativeSelect) return;
+
+  const existingContainer = nativeSelect.nextElementSibling;
+  if (existingContainer && existingContainer.classList.contains('custom-select-container')) {
+    existingContainer.remove();
+  }
+
+  nativeSelect.style.display = 'none';
+
+  const container = document.createElement('div');
+  container.className = 'custom-select-container';
+  container.style.cssText = `
+    position: relative;
+    width: 100%;
+    box-sizing: border-box;
+  `;
+
+  const trigger = document.createElement('div');
+  trigger.className = 'custom-select-trigger';
+  trigger.style.cssText = `
+    padding: 10px 12px;
+    border-radius: 8px;
+    border: 2px solid var(--gold);
+    background: #0a0a0a;
+    color: #fff;
+    font-size: 1rem;
+    font-family: 'Outfit', sans-serif;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-sizing: border-box;
+    transition: all 0.2s;
+  `;
+  
+  if (selectId === 'select-settings-senda') {
+    trigger.style.padding = '6px 10px';
+    trigger.style.borderRadius = '6px';
+    trigger.style.fontSize = '0.95rem';
+  }
+  
+  const triggerText = document.createElement('span');
+  triggerText.textContent = nativeSelect.options[nativeSelect.selectedIndex]?.text || '';
+  trigger.appendChild(triggerText);
+
+  const arrow = document.createElement('span');
+  arrow.innerHTML = '&#9662;';
+  arrow.style.cssText = `
+    font-size: 0.8rem;
+    color: var(--gold);
+    transition: transform 0.2s;
+    margin-left: 6px;
+  `;
+  trigger.appendChild(arrow);
+  container.appendChild(trigger);
+
+  const optionsContainer = document.createElement('div');
+  optionsContainer.className = 'custom-select-options';
+  optionsContainer.style.cssText = `
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
+    background: #0d0d0f;
+    border: 2px solid var(--gold);
+    border-radius: 8px;
+    margin-top: 4px;
+    z-index: 100000;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.9);
+    display: none;
+    overflow: hidden;
+    box-sizing: border-box;
+  `;
+
+  if (selectId === 'select-settings-senda') {
+    optionsContainer.style.borderRadius = '6px';
+  }
+
+  const optionsList = Array.from(nativeSelect.options);
+  optionsList.forEach(opt => {
+    const optEl = document.createElement('div');
+    optEl.className = 'custom-select-option';
+    optEl.dataset.value = opt.value;
+    optEl.textContent = opt.text;
+    
+    const isSelected = opt.value === nativeSelect.value;
+    
+    optEl.style.cssText = `
+      padding: 8px 12px;
+      cursor: pointer;
+      font-family: 'Outfit', sans-serif;
+      color: ${isSelected ? 'var(--gold)' : '#ccc'};
+      font-weight: ${isSelected ? 'bold' : 'normal'};
+      font-size: 0.95rem;
+      background: ${isSelected ? 'rgba(212, 175, 55, 0.08)' : 'transparent'};
+      border-left: 3px solid ${isSelected ? 'var(--gold)' : 'transparent'};
+      transition: all 0.15s;
+    `;
+
+    optEl.addEventListener('mouseenter', () => {
+      optEl.style.background = 'rgba(212, 175, 55, 0.15)';
+      optEl.style.color = 'var(--gold)';
+      showSendaTooltipForValue(opt.value, optEl);
+    });
+
+    optEl.addEventListener('mouseleave', () => {
+      const currentSelected = nativeSelect.value === opt.value;
+      optEl.style.background = currentSelected ? 'rgba(212, 175, 55, 0.08)' : 'transparent';
+      optEl.style.color = currentSelected ? 'var(--gold)' : '#ccc';
+      hideSendaTooltip();
+    });
+
+    optEl.addEventListener('click', (e) => {
+      e.stopPropagation();
+      nativeSelect.value = opt.value;
+      triggerText.textContent = opt.text;
+      optionsContainer.style.display = 'none';
+      arrow.style.transform = 'rotate(0deg)';
+      hideSendaTooltip();
+
+      Array.from(optionsContainer.children).forEach(child => {
+        const childVal = child.dataset.value;
+        const childSelected = childVal === opt.value;
+        child.style.color = childSelected ? 'var(--gold)' : '#ccc';
+        child.style.fontWeight = childSelected ? 'bold' : 'normal';
+        child.style.background = childSelected ? 'rgba(212, 175, 55, 0.08)' : 'transparent';
+        child.style.borderLeft = `3px solid ${childSelected ? 'var(--gold)' : 'transparent'}`;
+      });
+      
+      const event = new Event('change');
+      nativeSelect.dispatchEvent(event);
+    });
+
+    optionsContainer.appendChild(optEl);
   });
+
+  container.appendChild(optionsContainer);
+  nativeSelect.parentNode.insertBefore(container, nativeSelect.nextSibling);
+
+  trigger.addEventListener('click', (e) => {
+    e.stopPropagation();
+    const isOpen = optionsContainer.style.display === 'block';
+    closeAllCustomSelects();
+
+    if (!isOpen) {
+      optionsContainer.style.display = 'block';
+      arrow.style.transform = 'rotate(180deg)';
+      showSendaTooltipForValue(nativeSelect.value, trigger);
+    }
+  });
+
+  trigger.addEventListener('mouseenter', () => {
+    if (optionsContainer.style.display !== 'block') {
+      showSendaTooltipForValue(nativeSelect.value, trigger);
+    }
+  });
+  trigger.addEventListener('mouseleave', () => {
+    if (optionsContainer.style.display !== 'block') {
+      hideSendaTooltip();
+    }
+  });
+
+  const syncFunc = () => {
+    const activeIndex = nativeSelect.selectedIndex;
+    const activeOpt = nativeSelect.options[activeIndex];
+    if (activeOpt) {
+      triggerText.textContent = activeOpt.text;
+      
+      Array.from(optionsContainer.children).forEach(child => {
+        const childVal = child.dataset.value;
+        const childSelected = childVal === activeOpt.value;
+        child.style.color = childSelected ? 'var(--gold)' : '#ccc';
+        child.style.fontWeight = childSelected ? 'bold' : 'normal';
+        child.style.background = childSelected ? 'rgba(212, 175, 55, 0.08)' : 'transparent';
+        child.style.borderLeft = `3px solid ${childSelected ? 'var(--gold)' : 'transparent'}`;
+      });
+    }
+  };
+
+  if (selectId === 'select-settings-senda') {
+    window.syncCustomSettingsSendaSelect = syncFunc;
+  } else {
+    window.syncCustomSendaSelect = syncFunc;
+  }
 }
 
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', createCustomDifficultySelect);
+  document.addEventListener('DOMContentLoaded', () => {
+    createCustomDifficultySelect();
+    createCustomSendaSelect('select-senda');
+    createCustomSendaSelect('select-settings-senda');
+  });
 } else {
   createCustomDifficultySelect();
+  createCustomSendaSelect('select-senda');
+  createCustomSendaSelect('select-settings-senda');
 }
 
+// Click global para cerrar
+document.addEventListener('click', () => {
+  closeAllCustomSelects();
+});
+
 document.getElementById('btn-close-settings-x').addEventListener('click', () => {
-  hideDifficultyTooltip();
+  closeAllCustomSelects();
   settingsModal.classList.add('hidden');
 });
 
@@ -911,7 +1182,7 @@ document.getElementById('btn-save-settings').addEventListener('click', () => {
       window.saveGame(true);
     }
   }
-  hideDifficultyTooltip();
+  closeAllCustomSelects();
   settingsModal.classList.add('hidden');
 });
 
