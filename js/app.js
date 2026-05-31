@@ -305,7 +305,7 @@ window.alert = function (messageText, callback = null) {
     titleFontSize = "1.5rem";
   }
 
-  title.innerHTML = headerText;
+  title.innerHTML = headerText.replace(/🪙/g, COIN_SVG);
   title.style.cssText = `font-family: 'Cinzel', serif; font-size: ${titleFontSize}; font-weight: 800; color: #ffd700; text-shadow: 0 0 15px rgba(255, 215, 0, 0.4); text-align: center; margin-bottom: 25px; letter-spacing: 2px; text-transform: uppercase;`;
 
   // Función de parseo interno para colorear y estructurar el mensaje
@@ -332,7 +332,7 @@ window.alert = function (messageText, callback = null) {
 
       // Detectar subcabeceras secundarias dentro del mensaje (por ejemplo, "Senda del Gran Recaudador - Resumen:")
       if (trimmed.endsWith(':') || (trimmed.startsWith('¡') && trimmed.endsWith('!')) || trimmed.toLowerCase().includes('resumen')) {
-        let cleanText = trimmed.replace(/<br\s*\/?>/gi, '');
+        let cleanText = trimmed.replace(/<br\s*\/?>/gi, '').replace(/🪙/g, COIN_SVG);
         html += `<div style="font-family: 'Cinzel', serif; font-size: 1.25rem; font-weight: bold; color: #ffd700; margin-top: 18px; margin-bottom: 10px; text-shadow: 0 0 8px rgba(212, 175, 55, 0.4); text-transform: uppercase; text-align: center;">${cleanText}</div>`;
       } 
       // Contenido diferenciado por Título: Descripción
@@ -360,15 +360,19 @@ window.alert = function (messageText, callback = null) {
           titleColor = '#ff5252'; // Rojo brillante para alertas críticas
         }
 
+        let displayTitle = blockTitle.replace(/🪙/g, COIN_SVG);
+        let displayDesc = blockDesc.replace(/🪙/g, COIN_SVG);
+
         // Título en negrita y coloreado distinto a la descripción
         html += `<div style="margin-bottom: 8px; font-size: 1.05rem; line-height: 1.4; ${alignStyle}">
-          <span style="font-weight: bold; color: ${titleColor};">${blockTitle}</span>
-          <span style="color: #cbd5e1; font-weight: normal; margin-left: 4px;">${blockDesc}</span>
+          <span style="font-weight: bold; color: ${titleColor};">${displayTitle}</span>
+          <span style="color: #cbd5e1; font-weight: normal; margin-left: 4px;">${displayDesc}</span>
         </div>`;
       } 
       // Líneas normales de descripción o texto plano
       else {
-        html += `<div style="font-size: 1.05rem; color: #cbd5e1; line-height: 1.4; margin-bottom: 8px; ${alignStyle}">${trimmed}</div>`;
+        let displayText = trimmed.replace(/🪙/g, COIN_SVG);
+        html += `<div style="font-size: 1.05rem; color: #cbd5e1; line-height: 1.4; margin-bottom: 8px; ${alignStyle}">${displayText}</div>`;
       }
     });
 
