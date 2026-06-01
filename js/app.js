@@ -1147,6 +1147,8 @@ function initSendaSelectionScreen() {
   const styleEl = document.createElement('style');
   styleEl.textContent = `
     .split-card-screen {
+      --senda-card-w: 340px;
+      --senda-card-h: 480px;
       position: fixed;
       top: 0;
       left: 0;
@@ -1223,8 +1225,8 @@ function initSendaSelectionScreen() {
 
     .split-card {
       position: relative;
-      width: 340px;
-      height: 480px;
+      width: var(--senda-card-w);
+      height: var(--senda-card-h);
       border-radius: 12px;
       border: 2px solid rgba(212, 175, 55, 0.4);
       background: #000;
@@ -1268,7 +1270,7 @@ function initSendaSelectionScreen() {
       position: absolute;
       top: 0;
       height: 100%;
-      width: 336px;
+      width: calc(var(--senda-card-w) - 4px);
       background-size: 100% 100%;
       background-repeat: no-repeat;
       transition: left 0.35s ease, width 0.35s ease;
@@ -1306,6 +1308,41 @@ function initSendaSelectionScreen() {
       display: flex;
       gap: 20px;
       margin-top: 15px;
+    }
+
+    @media (max-width: 768px) {
+      .split-card-screen {
+        --senda-card-w: 240px;
+        --senda-card-h: 340px;
+        padding: 20px 10px;
+      }
+      .split-card-container {
+        gap: 16px;
+        padding: 15px 5px;
+        scroll-snap-type: x mandatory;
+        scroll-behavior: smooth;
+      }
+      .senda-card-wrapper {
+        scroll-snap-align: center;
+      }
+      .split-card-screen h2 {
+        font-size: 1.5rem !important;
+      }
+      .split-card-screen p {
+        font-size: 0.85rem !important;
+        margin-bottom: 5px !important;
+      }
+      .senda-card-header {
+        font-size: 0.85rem;
+        min-height: 40px;
+      }
+      .senda-card-stars {
+        font-size: 0.75rem;
+      }
+      .split-card-btn-container button {
+        padding: 8px 20px !important;
+        font-size: 0.85rem !important;
+      }
     }
   `;
   document.head.appendChild(styleEl);
