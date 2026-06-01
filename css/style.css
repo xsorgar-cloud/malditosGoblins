@@ -3013,3 +3013,198 @@ main {
   }
 }
 
+/* ===================================================
+   RESPONSIVO PARA PANTALLAS PEQUEÑAS (SETUP MODAL)
+   =================================================== */
+@media (max-width: 768px) {
+  #setup-modal-layout {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 15px !important;
+    padding: 5px !important;
+    width: 100% !important;
+    max-height: 95vh !important;
+  }
+
+  #setup-modal-layout .modal-content {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 20px 15px !important;
+    height: auto !important;
+    max-height: none !important;
+    margin-bottom: 10px !important;
+  }
+
+  /* Títulos y Subtítulos */
+  #setup-content h2.setup-title,
+  #setup-senda-content h2.setup-title {
+    font-size: 1.5rem !important;
+    margin-top: 5px !important;
+    margin-bottom: 8px !important;
+  }
+
+  #setup-content p.setup-subtitle {
+    font-size: 0.85rem !important;
+    margin-bottom: 20px !important;
+  }
+
+  /* Contenedores de selección */
+  #setup-columns-container {
+    flex-direction: column !important;
+    gap: 20px !important;
+    align-items: center !important;
+    width: 100% !important;
+  }
+
+  #role-selection-container {
+    width: 100% !important;
+    flex-grow: 0 !important;
+  }
+
+  /* Filas de jugador */
+  #role-selection-container > div {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+    padding: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  #role-selection-container label {
+    font-size: 0.95rem !important;
+    width: auto !important;
+    margin-bottom: 2px !important;
+  }
+
+  #role-selection-container div[style*="display: flex"] {
+    flex-wrap: wrap !important;
+    gap: 8px !important;
+    width: 100% !important;
+  }
+
+  /* Opciones de rol */
+  .role-option {
+    width: 55px !important;
+    height: 60px !important;
+  }
+
+  /* Previsualización del rol */
+  #setup-role-preview {
+    width: 100% !important;
+    max-width: 260px !important;
+    height: 380px !important;
+    min-height: 380px !important;
+    max-height: 380px !important;
+    padding: 15px !important;
+    margin: 10px auto !important;
+    flex-shrink: 0 !important;
+  }
+
+  #setup-role-name {
+    font-size: 1rem !important;
+    margin-bottom: 10px !important;
+    height: auto !important;
+  }
+
+  #setup-role-card {
+    width: 140px !important;
+    height: 210px !important;
+  }
+
+  #setup-role-effect {
+    font-size: 0.85rem !important;
+    height: auto !important;
+    min-height: 60px !important;
+    max-height: 60px !important;
+    margin-top: 15px !important;
+  }
+
+  /* Botones de acción */
+  #btn-start-game,
+  #btn-load-game {
+    font-size: 1rem !important;
+    padding: 10px 20px !important;
+    min-width: 200px !important;
+  }
+
+  #setup-content > div:last-child {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin-top: 15px !important;
+    width: 100% !important;
+  }
+
+  /* Selector de Senda y Reglas */
+  #select-senda {
+    font-size: 0.9rem !important;
+    padding: 8px 10px !important;
+  }
+
+  #setup-senda-preview h4 {
+    font-size: 0.95rem !important;
+    margin-top: 15px !important;
+    margin-bottom: 8px !important;
+  }
+
+  #setup-senda-preview p,
+  #setup-senda-preview strong,
+  #setup-senda-preview div {
+    font-size: 0.85rem !important;
+  }
+
+  #setup-senda-preview p {
+    line-height: 1.35 !important;
+  }
+
+  /* Contenedor de imágenes de jefe */
+  #setup-senda-preview div[style*="display: flex"] {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    justify-content: center !important;
+  }
+
+  #setup-boss-image,
+  #setup-rules-image {
+    width: 130px !important;
+    height: 184px !important;
+  }
+
+  /* Ajustes e Info superior */
+  #btn-open-settings-setup {
+    font-size: 1.4rem !important;
+    top: 15px !important;
+    left: 15px !important;
+  }
+
+  #game-version-badge {
+    font-size: 0.75rem !important;
+    top: 18px !important;
+    left: 55px !important;
+    padding: 2px 8px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  #setup-modal-layout .modal-content {
+    padding: 15px 10px !important;
+  }
+
+  #setup-content h2.setup-title,
+  #setup-senda-content h2.setup-title {
+    font-size: 1.3rem !important;
+  }
+
+  #setup-senda-preview h4 {
+    font-size: 0.9rem !important;
+  }
+
+  #setup-boss-image,
+  #setup-rules-image {
+    width: 110px !important;
+    height: 156px !important;
+  }
+}
+
