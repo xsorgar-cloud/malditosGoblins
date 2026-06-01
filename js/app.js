@@ -572,10 +572,11 @@ function renderRoleSelection() {
 
       // Si este rol acaba de ser seleccionado, mostramos un cartel momentáneo sobre él
       if (justSelectedRole && justSelectedRole.playerIndex === i && justSelectedRole.roleId === r.id) {
-        let toast = document.createElement('div');
+        let toast = document.createElement('span');
         toast.className = 'role-option-toast';
         toast.style.setProperty('--text-len', r.name.length);
         toast.innerText = r.name.toUpperCase();
+        
         img.appendChild(toast);
         
         setTimeout(() => {

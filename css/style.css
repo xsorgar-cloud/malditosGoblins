@@ -663,7 +663,6 @@ main {
   border: 3px solid var(--accent-green);
   filter: brightness(1.1);
   box-shadow: 0 0 15px rgba(42, 157, 143, 0.8);
-  transform: scale(1.05);
 }
 
 .player-equipment {
@@ -3240,47 +3239,56 @@ main {
 /* ====== CARTEL TEMPORAL DE ROL SELECCIONADO ====== */
 .role-option-toast {
   position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%) scale(0.85); /* Centrado absoluto con escala de pop */
-  width: 92%;
+  left: 4px;
+  right: 4px;
+  height: 22px;
+  top: calc(50% - 11px);
   box-sizing: border-box;
-  background: rgba(10, 10, 15, 0.75); /* Sombreado oscuro detrás del texto */
-  border-radius: 12px;
-  padding: 3px 6px;
+  background: rgba(12, 12, 18, 0.92); /* Fondo oscuro muy opaco para contraste máximo */
+  border-radius: 4px; /* Radio de borde más pequeño y limpio */
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
-  font-family: 'Cinzel', serif;
-  font-weight: 900;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-weight: 700;
   color: var(--gold);
   white-space: nowrap; /* Evitar salto de línea */
   overflow: hidden;
-  animation: role-pop-toast 1.5s forwards;
+  animation: role-pop-toast 1.5s ease-in-out forwards; /* Solo opacidad para máxima nitidez */
+  border: 1px solid var(--gold); /* Borde dorado fino */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+  text-shadow: none; /* Sin sombra difuminada para conservar nitidez en texto pequeño */
   pointer-events: none;
   z-index: 10;
-  border: 1px solid var(--gold); /* Borde dorado fino */
-  box-shadow: 0 3px 8px rgba(0, 0, 0, 0.7);
-  text-shadow: 0 1px 2px #000;
   
-  /* Ajustar tamaño de letra en base al ancho del contenedor (cqw) y número de letras */
-  font-size: 0.65rem; /* Fallback */
-  font-size: calc(105cqw / var(--text-len, 8));
-  font-size: clamp(0.42rem, calc(105cqw / var(--text-len, 8)), 0.72rem);
+  /* Optimizaciones de renderizado de texto para máxima nitidez */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  
+  /* Ajustar tamaño de letra en base al contenedor de forma segura */
+  font-size: calc(85cqw / var(--text-len, 8));
+  font-size: clamp(8.5px, calc(85cqw / var(--text-len, 8)), 13px);
 }
 
 @media (max-width: 768px) {
   .role-option-toast {
-    padding: 2px 4px;
-    width: 95%;
+    left: 2px;
+    right: 2px;
+    height: 18px;
+    top: calc(50% - 9px);
+    border-radius: 3px;
+    font-size: calc(85cqw / var(--text-len, 8));
+    font-size: clamp(8px, calc(85cqw / var(--text-len, 8)), 10.5px);
   }
 }
 
+/* Animación limpia de opacidad para que el navegador mantenga el texto perfectamente nítido y vectorizado */
 @keyframes role-pop-toast {
-  0% { opacity: 0; transform: translate(-50%, -50%) scale(0.85); }
-  15% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-  75% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-  100% { opacity: 0; transform: translate(-50%, -50%) scale(0.9); }
+  0% { opacity: 0; }
+  15% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
 }
 
