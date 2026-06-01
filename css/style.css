@@ -2927,6 +2927,7 @@ main {
   #setup-modal-layout {
     flex-direction: column !important;
     align-items: center !important;
+    justify-content: flex-start !important; /* Evitar corte superior por centrado flex */
     overflow-y: auto !important;
     max-height: 95vh !important;
     padding: 15px 10px !important;
@@ -3043,6 +3044,7 @@ main {
   #setup-modal-layout {
     flex-direction: column !important;
     align-items: center !important;
+    justify-content: flex-start !important; /* Evitar corte superior por centrado flex */
     gap: 15px !important;
     padding: 5px !important;
     width: 100% !important;
