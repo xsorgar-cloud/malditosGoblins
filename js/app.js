@@ -330,6 +330,76 @@ window.alert = function (messageText, callback = null) {
         return;
       }
 
+      if (trimmed.startsWith('COMBAT_STATS:')) {
+        const query = trimmed.substring('COMBAT_STATS:'.length).trim();
+        const params = {};
+        query.split(';').forEach(part => {
+          const [key, val] = part.split('=');
+          if (key && val !== undefined) {
+            params[key] = parseInt(val, 10);
+          }
+        });
+
+        let rowHtml = '<div style="display: flex; justify-content: center; align-items: center; gap: 24px; margin-top: 15px; margin-bottom: 15px; flex-wrap: wrap;">';
+
+        // 1. Vida (HP)
+        if (params.hp !== undefined) {
+          const val = params.hp;
+          const sign = val > 0 ? '+' : '';
+          const color = val === 0 ? '#8892b0' : (val < 0 ? '#ff4d4d' : '#2ecc71');
+          rowHtml += `
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 2.5rem; filter: drop-shadow(0 0 6px rgba(255,77,77,0.4)); line-height: 1;">❤️</span>
+              <span style="font-size: 1.8rem; font-weight: bold; color: ${color}; line-height: 1;">${sign}${val}</span>
+            </div>
+          `;
+        }
+
+        // 2. Monedas (mo)
+        if (params.mo !== undefined) {
+          const val = params.mo;
+          const sign = val > 0 ? '+' : '';
+          const color = val === 0 ? '#8892b0' : (val < 0 ? '#ff4d4d' : '#ffd700');
+          const coinSvgLarge = COIN_SVG.replace('width="18" height="18"', 'width="34" height="34"').replace('margin-right: 3px;', 'margin-right: 0px;');
+          rowHtml += `
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="display: inline-flex; align-items: center; filter: drop-shadow(0 0 8px rgba(255,215,0,0.4)); line-height: 1;">${coinSvgLarge}</span>
+              <span style="font-size: 1.8rem; font-weight: bold; color: ${color}; line-height: 1;">${sign}${val}</span>
+            </div>
+          `;
+        }
+
+        // 3. Energía
+        if (params.energy !== undefined) {
+          const val = params.energy;
+          const sign = val > 0 ? '+' : '';
+          const color = val === 0 ? '#8892b0' : (val < 0 ? '#ff4d4d' : '#ffda79');
+          rowHtml += `
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 2.5rem; filter: drop-shadow(0 0 6px rgba(255,218,121,0.4)); line-height: 1;">⚡</span>
+              <span style="font-size: 1.8rem; font-weight: bold; color: ${color}; line-height: 1;">${sign}${val}</span>
+            </div>
+          `;
+        }
+
+        // 4. PEX
+        if (params.pex !== undefined) {
+          const val = params.pex;
+          const sign = val > 0 ? '+' : '';
+          const color = val === 0 ? '#8892b0' : (val < 0 ? '#ff4d4d' : '#f1c40f');
+          rowHtml += `
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 2.5rem; filter: drop-shadow(0 0 6px rgba(241,196,15,0.4)); line-height: 1;">⭐</span>
+              <span style="font-size: 1.8rem; font-weight: bold; color: ${color}; line-height: 1;">${sign}${val}</span>
+            </div>
+          `;
+        }
+
+        rowHtml += '</div>';
+        html += rowHtml;
+        return;
+      }
+
       // Detectar subcabeceras secundarias dentro del mensaje (por ejemplo, "Senda del Gran Recaudador - Resumen:")
       if (trimmed.endsWith(':') || (trimmed.startsWith('¡') && trimmed.endsWith('!')) || trimmed.toLowerCase().includes('resumen')) {
         let cleanText = trimmed.replace(/<br\s*\/?>/gi, '').replace(/🪙/g, COIN_SVG);
@@ -3300,49 +3370,16 @@ function renderCombatOverlay() {
         const pBeforeState = dbg.player;
 
         // 1. ESTADÍSTICAS DEL COMBATE
-        let hasPlayerStats = false;
-        let statsLines = [""];
-
-        // HP
         const hpDiff = pAfter.hp - pBeforeState.hp;
-        if (hpDiff !== 0) {
-          let hpDiffText = hpDiff > 0 ? `+${hpDiff}` : `${hpDiff}`;
-          statsLines.push(`❤️ Vida: ${hpDiffText} PV`);
-          hasPlayerStats = true;
-        }
-
-        // Oro / Monedas
         const moDiff = pAfter.mo - pBeforeState.mo;
-        if (moDiff !== 0) {
-          let moDiffText = moDiff > 0 ? `+${moDiff}` : `${moDiff}`;
-          statsLines.push(`🪙 Monedas: ${moDiffText} mo`);
-          hasPlayerStats = true;
-        }
-
-        // PEX
+        const energyDiff = pAfter.energy - pBeforeState.energy;
         const pexDiff = pAfter.pex - pBeforeState.pex;
-        if (pexDiff !== 0) {
-          let pexDiffText = pexDiff > 0 ? `+${pexDiff}` : `${pexDiff}`;
-          statsLines.push(`⭐ PEX: ${pexDiffText} PEX`);
-          hasPlayerStats = true;
-        }
+
+        combatSummaryLines.push(`COMBAT_STATS: hp=${hpDiff};mo=${moDiff};energy=${energyDiff};pex=${pexDiff}`);
 
         // Level Up
         if (pAfter.level > pBeforeState.level) {
-          statsLines.push(`🎉 Nivel: ¡Subida de nivel! (Nivel ${pBeforeState.level} ➔ ${pAfter.level})`);
-          hasPlayerStats = true;
-        }
-
-        // Energía
-        const energyDiff = pAfter.energy - pBeforeState.energy;
-        if (energyDiff !== 0) {
-          let energyDiffText = energyDiff > 0 ? `+${energyDiff}` : `${energyDiff}`;
-          statsLines.push(`⚡ Energía: ${energyDiffText}`);
-          hasPlayerStats = true;
-        }
-
-        if (hasPlayerStats) {
-          statsLines.forEach(line => combatSummaryLines.push(line));
+          combatSummaryLines.push(`🎉 Nivel: ¡Subida de nivel! (Nivel ${pBeforeState.level} ➔ ${pAfter.level})`);
         }
 
 
