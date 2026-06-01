@@ -373,10 +373,10 @@ window.alert = function (messageText, callback = null) {
         if (params.energy !== undefined) {
           const val = params.energy;
           const sign = val > 0 ? '+' : '';
-          const color = val === 0 ? '#8892b0' : (val < 0 ? '#ff4d4d' : '#ffda79');
+          const color = val === 0 ? '#8892b0' : '#00d2ff';
           rowHtml += `
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 2.5rem; filter: drop-shadow(0 0 6px rgba(255,218,121,0.4)); line-height: 1;">⚡</span>
+              <span style="font-size: 2.5rem; filter: drop-shadow(0 0 6px rgba(0, 210, 255, 0.4)); line-height: 1;">⚡</span>
               <span style="font-size: 1.8rem; font-weight: bold; color: ${color}; line-height: 1;">${sign}${val}</span>
             </div>
           `;
@@ -405,9 +405,9 @@ window.alert = function (messageText, callback = null) {
         let cleanText = trimmed.replace(/<br\s*\/?>/gi, '').replace(/🪙/g, COIN_SVG);
         let headerColor = '#ffd700'; // Dorado por defecto
         if (cleanText.toLowerCase().includes('equipo') || cleanText.toLowerCase().includes('rotura') || cleanText.toLowerCase().includes('roto')) {
-          headerColor = '#8a2387'; // Púrpura para rotura/daño equipo
+          headerColor = '#c975ff'; // Nuevo púrpura para rotura/daño equipo
         }
-        let textShadow = headerColor === '#8a2387' ? 'rgba(138, 35, 135, 0.4)' : 'rgba(212, 175, 55, 0.4)';
+        let textShadow = headerColor === '#c975ff' ? 'rgba(201, 117, 255, 0.4)' : 'rgba(212, 175, 55, 0.4)';
         html += `<div style="font-family: 'Cinzel', serif; font-size: 1.25rem; font-weight: bold; color: ${headerColor}; margin-top: 18px; margin-bottom: 10px; text-shadow: 0 0 8px ${textShadow}; text-transform: uppercase; text-align: center;">${cleanText}</div>`;
       } 
       // Contenido diferenciado por Título: Descripción
@@ -418,9 +418,11 @@ window.alert = function (messageText, callback = null) {
 
         // Elegir color para el TÍTULO según las palabras clave
         let titleColor = '#ffcc00'; // Color por defecto (dorado/amarillo suave)
+        let descColor = '#cbd5e1'; // Color por defecto de descripción (grisáceo)
         
         if (blockTitle.toLowerCase().includes('roto') || blockTitle.toLowerCase().includes('rotura') || blockTitle.toLowerCase().includes('equipo')) {
-          titleColor = '#8a2387'; // Púrpura de rotura
+          titleColor = '#c975ff'; // Nuevo púrpura para rotura/daño equipo
+          descColor = '#c975ff';  // Todo el texto de rotura en el color específico
         } else if (blockTitle.includes('⚔️') || blockTitle.toLowerCase().includes('daño') || blockTitle.toLowerCase().includes('golpe') || blockTitle.toLowerCase().includes('ataque') || blockTitle.toLowerCase().includes('vida')) {
           titleColor = '#ff4d4d'; // Rojo vibrante para daño/combate/vida
         } else if (blockTitle.includes('🪙') || blockTitle.includes('💰') || blockTitle.includes('💸') || blockTitle.toLowerCase().includes('escudo de oro') || blockTitle.toLowerCase().includes('saqueo') || blockTitle.toLowerCase().includes('carteristas') || blockTitle.toLowerCase().includes('armadura') || blockTitle.toLowerCase().includes('peaje') || blockTitle.toLowerCase().includes('prestamista') || blockTitle.toLowerCase().includes('recaudador') || blockTitle.toLowerCase().includes('mo') || blockTitle.toLowerCase().includes('monedas') || blockTitle.toLowerCase().includes('oro')) {
@@ -428,7 +430,8 @@ window.alert = function (messageText, callback = null) {
         } else if (blockTitle.includes('🔥') || blockTitle.toLowerCase().includes('escozor') || blockTitle.toLowerCase().includes('fuego') || blockTitle.toLowerCase().includes('piromante')) {
           titleColor = '#ff6600'; // Naranja para escozor
         } else if (blockTitle.includes('⚡') || blockTitle.toLowerCase().includes('calambre') || blockTitle.toLowerCase().includes('energía') || blockTitle.toLowerCase().includes('habilidad')) {
-          titleColor = '#ffda79'; // Amarillo eléctrico para calambres/energía
+          titleColor = '#00d2ff'; // Nuevo celeste de energía
+          descColor = '#00d2ff';  // Todo el texto de energía en el color específico
         } else if (blockTitle.includes('🌀') || blockTitle.toLowerCase().includes('tembleque')) {
           titleColor = '#34ace0'; // Azul claro para tembleque
         } else if (blockTitle.includes('🛡️') || blockTitle.toLowerCase().includes('escudo') || blockTitle.toLowerCase().includes('defensa') || blockTitle.toLowerCase().includes('invulnerable')) {
@@ -443,7 +446,7 @@ window.alert = function (messageText, callback = null) {
         // Título en negrita y coloreado distinto a la descripción
         html += `<div style="margin-bottom: 8px; font-size: 1.05rem; line-height: 1.4; ${alignStyle}">
           <span style="font-weight: bold; color: ${titleColor};">${displayTitle}</span>
-          <span style="color: #cbd5e1; font-weight: normal; margin-left: 4px;">${displayDesc}</span>
+          <span style="color: ${descColor}; font-weight: normal; margin-left: 4px;">${displayDesc}</span>
         </div>`;
       } 
       // Líneas normales de descripción o texto plano
