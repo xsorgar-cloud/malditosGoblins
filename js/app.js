@@ -3509,7 +3509,13 @@ function renderCombatOverlay() {
       const pAfter = gameState.getCurrentPlayer();
       const dbg = gameState.lastCombatDebugState;
 
-      let combatSummaryLines = ["¡COMBATE COMPLETADO!\n"];
+      let hasStatsChange = false;
+      let statsLine = "";
+      let hasLevelUp = false;
+      let levelUpLine = "";
+      let brokenItems = [];
+      let statusEffectsLines = [];
+      let sendaLines = [];
 
       if (dbg && dbg.player) {
         const pBeforeState = dbg.player;
@@ -3520,41 +3526,37 @@ function renderCombatOverlay() {
         const energyDiff = pAfter.energy - pBeforeState.energy;
         const pexDiff = pAfter.pex - pBeforeState.pex;
 
-        combatSummaryLines.push(`COMBAT_STATS: hp=${hpDiff};mo=${moDiff};energy=${energyDiff};pex=${pexDiff}`);
+        if (hpDiff !== 0 || moDiff !== 0 || energyDiff !== 0 || pexDiff !== 0) {
+          hasStatsChange = true;
+          statsLine = `COMBAT_STATS: hp=${hpDiff};mo=${moDiff};energy=${energyDiff};pex=${pexDiff}`;
+        }
 
         // Level Up
         if (pAfter.level > pBeforeState.level) {
-          combatSummaryLines.push(`🎉 Nivel: ¡Subida de nivel! (Nivel ${pBeforeState.level} ➔ ${pAfter.level})`);
+          hasLevelUp = true;
+          levelUpLine = `🎉 Nivel: ¡Subida de nivel! (Nivel ${pBeforeState.level} ➔ ${pAfter.level})`;
         }
 
-
         // 3. DAÑO A TU EQUIPO
-        let brokenItems = [];
         pAfter.equipped.forEach(eq => {
           let beforeEq = pBeforeState.equipped.find(e => e.id === eq.id);
           if (beforeEq && !beforeEq.isBroken && eq.isBroken) {
             brokenItems.push(eq.name);
           }
         });
-        if (brokenItems.length > 0) {
-          combatSummaryLines.push("\n🔧 DAÑO A TU EQUIPO:");
-          combatSummaryLines.push(`💥 Roto: ${brokenItems.join(', ')}`);
-        }
       }
 
       // 4. EFECTOS DE ESTADO ADQUIRIDOS
       if (gameState.lastCombatAcquiredEffects) {
         const effects = gameState.lastCombatAcquiredEffects;
         if (effects.escozor > 0 || effects.calambre > 0 || effects.tembleque > 0) {
-          combatSummaryLines.push("\n🔥 EFECTOS DE ESTADO ADQUIRIDOS:");
-          if (effects.escozor > 0) combatSummaryLines.push(`🔥 Escozor: +${effects.escozor}`);
-          if (effects.calambre > 0) combatSummaryLines.push(`⚡ Calambre: +${effects.calambre}`);
-          if (effects.tembleque > 0) combatSummaryLines.push(`🌀 Tembleque: +${effects.tembleque}`);
+          if (effects.escozor > 0) statusEffectsLines.push(`🔥 Escozor: +${effects.escozor}`);
+          if (effects.calambre > 0) statusEffectsLines.push(`⚡ Calambre: +${effects.calambre}`);
+          if (effects.tembleque > 0) statusEffectsLines.push(`🌀 Tembleque: +${effects.tembleque}`);
         }
       }
 
       // 5. DETALLES DE LA SENDA Y OTROS DETALLES
-      let sendaLines = [];
       if (gameState.lastWarlordExtraDmg > 0) {
         sendaLines.push(`• Golpe Certero: El Zeñor de la Guerra infligió +${gameState.lastWarlordExtraDmg} de daño extra.`);
       }
@@ -3580,10 +3582,7 @@ function renderCombatOverlay() {
         }
       }
 
-      if (sendaLines.length > 0) {
-        combatSummaryLines.push("\n🗺️ DETALLES DE LA SENDA:");
-        sendaLines.forEach(line => combatSummaryLines.push(line));
-      }
+      const hasSomethingToShow = hasStatsChange || hasLevelUp || (brokenItems.length > 0) || (statusEffectsLines.length > 0) || (sendaLines.length > 0);
 
       const runEndOfCombatUI = () => {
         const hpAfter = pBefore.hp;
@@ -3653,7 +3652,27 @@ function renderCombatOverlay() {
         window.saveGame(true);
       };
 
-      if (combatSummaryLines.length > 1) {
+      if (hasSomethingToShow) {
+        let combatSummaryLines = ["¡COMBATE COMPLETADO!\n"];
+        if (hasStatsChange) {
+          combatSummaryLines.push(statsLine);
+        }
+        if (hasLevelUp) {
+          combatSummaryLines.push(levelUpLine);
+        }
+        if (brokenItems.length > 0) {
+          combatSummaryLines.push("\n🔧 DAÑO A TU EQUIPO:");
+          combatSummaryLines.push(`💥 Roto: ${brokenItems.join(', ')}`);
+        }
+        if (statusEffectsLines.length > 0) {
+          combatSummaryLines.push("\n🔥 EFECTOS DE ESTADO ADQUIRIDOS:");
+          statusEffectsLines.forEach(line => combatSummaryLines.push(line));
+        }
+        if (sendaLines.length > 0) {
+          combatSummaryLines.push("\n🗺️ DETALLES DE LA SENDA:");
+          sendaLines.forEach(line => combatSummaryLines.push(line));
+        }
+
         alert(combatSummaryLines.join('\n'), runEndOfCombatUI);
       } else {
         runEndOfCombatUI();
