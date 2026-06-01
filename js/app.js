@@ -506,6 +506,7 @@ const roleSelectionContainer = document.getElementById('role-selection-container
 const playersContainer = document.getElementById('players-container');
 
 let selectedSetupRoles = ['guerrero', null, null, null];
+let justSelectedRole = null;
 
 function renderRoleSelection() {
   roleSelectionContainer.innerHTML = '';
@@ -553,6 +554,7 @@ function renderRoleSelection() {
           if (i !== 0) selectedSetupRoles[i] = null;
         } else {
           selectedSetupRoles[i] = r.id;
+          justSelectedRole = { playerIndex: i, roleId: r.id };
         }
         renderRoleSelection();
       };
@@ -567,6 +569,23 @@ function renderRoleSelection() {
           previewEffect.innerText = r.effect;
         }
       };
+
+      // Si este rol acaba de ser seleccionado, mostramos un cartel momentáneo sobre él
+      if (justSelectedRole && justSelectedRole.playerIndex === i && justSelectedRole.roleId === r.id) {
+        let toast = document.createElement('div');
+        toast.className = 'role-option-toast';
+        toast.innerText = r.name.toUpperCase();
+        img.appendChild(toast);
+        
+        setTimeout(() => {
+          if (toast.parentNode) {
+            toast.parentNode.removeChild(toast);
+          }
+        }, 1500);
+        
+        justSelectedRole = null; // resetear para el siguiente renderizado
+      }
+
       optionsDiv.appendChild(img);
     });
 
