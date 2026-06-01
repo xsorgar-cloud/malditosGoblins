@@ -808,6 +808,7 @@ class GameState {
 
               let applied = false;
               let brokenItem = null;
+              let rolledValueText = '';
 
               if (effLow.includes('gana+2 pv por cada carga') || effLow.includes('gana+2 pv por cada carga escozor')) {
                 if (!isIntercepted) {
@@ -903,6 +904,7 @@ class GameState {
                       goblinDmg += extraDmg;
                     }
                     this.addLog(`🎲 ¡G${targetGoblin.level} lanza un dado extra y suma <span style="color:#ff4d4d">${extraDmg} de daño</span>!`);
+                    rolledValueText = ` (obtuvo ${extraDmg})`;
                   }
                 }
               } else if (effLow === 'daño+2') {
@@ -918,7 +920,7 @@ class GameState {
                 }
               }
 
-              let effectText = eff;
+              let effectText = eff + rolledValueText;
               if (applied && brokenItem) {
                 effectText = `${eff} [Se rompió: ${brokenItem.name}]`;
               }
