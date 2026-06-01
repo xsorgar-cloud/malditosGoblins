@@ -20,6 +20,7 @@ class GameState {
     this.currentHito = 1;
     this.isRetaliationPhase = false;
     this.retaliationQueue = [];
+    this.retaliationEscudoDeOroTriggeredPlayers = [];
     this.isGameOver = false;
     this.isGameWon = false;
     this.activeSenda = 'iniciacion';
@@ -61,7 +62,24 @@ class GameState {
     let goldPrevented = false;
     let extraGoldDamage = false;
 
+    let applyEscudoDeOro = false;
     if (this.activeSenda === 'recaudador') {
+      if (reason !== 'Represalia') {
+        applyEscudoDeOro = true;
+      } else {
+        if (!this.retaliationEscudoDeOroTriggeredPlayers) {
+          this.retaliationEscudoDeOroTriggeredPlayers = [];
+        }
+        if (!this.retaliationEscudoDeOroTriggeredPlayers.includes(player.id)) {
+          applyEscudoDeOro = true;
+          this.retaliationEscudoDeOroTriggeredPlayers.push(player.id);
+        }
+      }
+    }
+
+    this.lastDamageAppliedEscudoDeOro = applyEscudoDeOro;
+
+    if (applyEscudoDeOro) {
       if (player.mo > 0) {
         player.mo = Math.max(0, player.mo - 1);
         finalDamage = Math.max(0, finalDamage - 1);
@@ -74,7 +92,7 @@ class GameState {
 
     player.hp = Math.max(0, player.hp - finalDamage);
 
-    if (this.activeSenda === 'recaudador') {
+    if (this.activeSenda === 'recaudador' && applyEscudoDeOro) {
       if (goldPrevented) {
         this.addLog(`🪙 <strong>Escudo de Oro:</strong> <strong>${player.name}</strong> pierde 1 mo y evita 1 daño. Daño resultante: <span style="color:#ff4d4d"><strong>${finalDamage}</strong></span> (HP: ${player.hp}/${player.maxHp}).`);
         this.lastCombatGoldPrevented = (this.lastCombatGoldPrevented || 0) + 1;
@@ -1635,6 +1653,7 @@ class GameState {
 
       this.isRetaliationPhase = true;
       this.retaliationQueue = [...activeGoblins];
+      this.retaliationEscudoDeOroTriggeredPlayers = [];
       this.addLog(`⚠️ <span style="color: #e63946;"><strong>¡REPRESALIA!</strong></span> Los ${activeGoblins.length} goblins restantes atacan.`);
       return; // Esperamos a que los jugadores asignen el daño
     }
