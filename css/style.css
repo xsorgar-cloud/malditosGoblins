@@ -3243,15 +3243,15 @@ main {
   left: 0;
   width: 100%;
   height: 100%;
-  background: rgba(10, 10, 15, 0.9);
+  background: rgba(10, 10, 15, 0.25); /* Fondo muy sutil y casi transparente para no tapar el arte */
   border-radius: inherit;
   display: flex;
   align-items: center;
   justify-content: center;
   text-align: center;
   font-family: 'Cinzel', serif;
-  font-size: 0.7rem;
-  font-weight: bold;
+  font-size: 0.72rem;
+  font-weight: 900; /* Texto extra negrita */
   color: var(--gold);
   padding: 4px;
   box-sizing: border-box;
@@ -3259,9 +3259,8 @@ main {
   animation: role-pop-toast 1.5s forwards;
   pointer-events: none;
   z-index: 10;
-  text-shadow: 0 2px 4px rgba(0,0,0,0.8);
-  border: 2px solid var(--accent-green);
-  box-shadow: inset 0 0 10px rgba(46, 204, 113, 0.4);
+  text-shadow: 0 0 6px #000, 0 0 12px #000, 0 2px 4px #000; /* Sombra negra para legibilidad sobre la imagen */
+  border: 2px solid var(--accent-green); /* Borde verde para indicar éxito */
 }
 
 @media (max-width: 768px) {
