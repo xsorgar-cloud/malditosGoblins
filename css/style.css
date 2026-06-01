@@ -3241,8 +3241,8 @@ main {
   position: absolute;
   left: 4px;
   right: 4px;
-  height: 22px;
-  top: calc(50% - 11px);
+  height: 24px;
+  top: calc(50% - 12px);
   box-sizing: border-box;
   background: rgba(12, 12, 18, 0.92); /* Fondo oscuro muy opaco para contraste máximo */
   border-radius: 4px; /* Radio de borde más pequeño y limpio */
@@ -3268,8 +3268,8 @@ main {
   text-rendering: optimizeLegibility;
   
   /* Ajustar tamaño de letra en base al contenedor de forma segura */
-  font-size: calc(85cqw / var(--text-len, 8));
-  font-size: clamp(8.5px, calc(85cqw / var(--text-len, 8)), 13px);
+  font-size: calc(120cqw / var(--text-len, 8));
+  font-size: clamp(11.5px, calc(120cqw / var(--text-len, 8)), 16px);
 }
 
 @media (max-width: 768px) {
@@ -3279,8 +3279,8 @@ main {
     height: 18px;
     top: calc(50% - 9px);
     border-radius: 3px;
-    font-size: calc(85cqw / var(--text-len, 8));
-    font-size: clamp(8px, calc(85cqw / var(--text-len, 8)), 10.5px);
+    font-size: calc(110cqw / var(--text-len, 8));
+    font-size: clamp(8.5px, calc(110cqw / var(--text-len, 8)), 11.5px);
   }
 }
 
