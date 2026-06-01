@@ -1648,6 +1648,81 @@ window.hideHitoGoblinsTooltip = function() {
   }
 };
 
+window.showSendaRulesTooltip = function(e) {
+  const btnDeployHito = document.getElementById('btn-deploy-hito');
+  const btnWidth = btnDeployHito ? btnDeployHito.getBoundingClientRect().width : 220;
+
+  const generalRules = DB.sendaReglasGenerales[gameState.activeSenda] || [];
+  let rulesHtml = '';
+  if (generalRules.length === 0) {
+    rulesHtml = '<div style="color: #cbd5e1; font-size: 0.8rem; font-style: italic;">Sin reglas especiales.</div>';
+  } else {
+    rulesHtml = generalRules.map((rule, idx) => {
+      const marginStyle = idx < generalRules.length - 1 ? 'margin-bottom: 8px;' : '';
+      return `<div style="${marginStyle} text-align: left;">
+        <strong style="color: var(--gold); display: block; margin-bottom: 3px; font-size: 0.82rem; font-family: 'Cinzel', serif;">${rule.name}</strong>
+        <div style="font-size: 0.76rem; color: #cbd5e1; line-height: 1.35;">${rule.desc}</div>
+      </div>`;
+    }).join('');
+  }
+
+  let tooltip = document.getElementById('senda-rules-tooltip');
+  if (!tooltip) {
+    tooltip = document.createElement('div');
+    tooltip.id = 'senda-rules-tooltip';
+    tooltip.style.cssText = `
+      position: absolute;
+      background: transparent;
+      border: none;
+      box-shadow: none;
+      z-index: 99999;
+      pointer-events: none !important;
+      opacity: 0;
+      transition: opacity 0.15s ease-out;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+    `;
+    document.body.appendChild(tooltip);
+  }
+
+  tooltip.innerHTML = `
+    <div style="background: rgba(15, 10, 25, 0.96); border: 2px solid var(--gold); border-radius: 8px; padding: 10px 12px; color: #cbd5e1; box-shadow: 0 4px 15px rgba(0,0,0,0.8); max-width: ${btnWidth}px; width: ${btnWidth}px; box-sizing: border-box; backdrop-filter: blur(5px); font-family: 'Inter', sans-serif; font-weight: normal;">
+      ${rulesHtml}
+    </div>
+  `;
+
+  tooltip.style.display = 'flex';
+  tooltip.style.width = 'auto';
+  tooltip.style.height = 'auto';
+
+  const targetBtn = e.currentTarget || e.target;
+  if (!targetBtn) return;
+
+  const rect = targetBtn.getBoundingClientRect();
+  const tooltipWidth = tooltip.offsetWidth || btnWidth;
+  const tooltipHeight = tooltip.offsetHeight || 80;
+
+  const refBtn = btnDeployHito || targetBtn;
+  const refRect = refBtn.getBoundingClientRect();
+  const leftPos = window.scrollX + refRect.left;
+
+  const y = window.scrollY + rect.top - tooltipHeight - 8;
+
+  tooltip.style.left = `${Math.max(10, Math.min(window.innerWidth - tooltipWidth - 10, leftPos))}px`;
+  tooltip.style.top = `${Math.max(10, y)}px`;
+  tooltip.style.opacity = '1';
+};
+
+window.hideSendaRulesTooltip = function() {
+  const tooltip = document.getElementById('senda-rules-tooltip');
+  if (tooltip) {
+    tooltip.style.opacity = '0';
+    tooltip.style.display = 'none';
+  }
+};
+
 const btnDeployHito = document.getElementById('btn-deploy-hito');
 btnDeployHito.addEventListener('click', () => {
   window.hideHitoGoblinsTooltip();
@@ -1739,7 +1814,15 @@ function openHitosModal() {
   modal.classList.remove('hidden');
 }
 
-document.getElementById('btn-info-hitos').addEventListener('click', openHitosModal);
+const btnInfoHitos = document.getElementById('btn-info-hitos');
+if (btnInfoHitos) {
+  btnInfoHitos.addEventListener('click', () => {
+    window.hideSendaRulesTooltip();
+    openHitosModal();
+  });
+  btnInfoHitos.addEventListener('mouseenter', window.showSendaRulesTooltip);
+  btnInfoHitos.addEventListener('mouseleave', window.hideSendaRulesTooltip);
+}
 
 document.getElementById('btn-close-hitos').addEventListener('click', () => {
   document.getElementById('hitos-modal').classList.add('hidden');
