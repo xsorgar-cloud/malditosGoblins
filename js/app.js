@@ -1573,9 +1573,11 @@ window.showHitoGoblinsTooltip = function(e) {
       align-items: center;
       justify-content: center;
       gap: 0px;
-      flex-direction: row;
+      flex-direction: column;
     `;
     document.body.appendChild(tooltip);
+  } else {
+    tooltip.style.flexDirection = 'column';
   }
 
   const cardHeight = 140;
@@ -1584,27 +1586,43 @@ window.showHitoGoblinsTooltip = function(e) {
   const numGoblins = nextHito.goblins.length;
   const calculatedWidth = numGoblins === 1 ? cardWidth : cardWidth + (numGoblins - 1) * (cardWidth - overlap);
 
-  const html = nextHito.goblins.map((lvl, idx) => {
-    const overlapStyle = idx > 0 ? `margin-left: -${overlap}px !important;` : '';
-    let imgSrc = `assets/Monstruos/t${lvl}.png`;
-    if (lvl === 5 && nextHito.bossStats && nextHito.bossStats.image) {
-      const parts = nextHito.bossStats.image.split('/');
-      const fileWithExt = parts[parts.length - 1];
-      const bossName = fileWithExt.substring(0, fileWithExt.lastIndexOf('.'));
-      imgSrc = `assets/Monstruos/Jefes/t5_${bossName}.png`;
-    }
-    return `<img src="${imgSrc}" style="height: ${cardHeight}px !important; width: ${cardWidth}px !important; flex-shrink: 0 !important; pointer-events: none !important; border-radius: 6px; border: none; box-shadow: none; opacity: 0.95; display: block; position: relative; z-index: ${idx}; ${overlapStyle}" alt="G${lvl}">`;
-  }).join('');
+  const btnEl = document.getElementById('btn-deploy-hito');
+  const btnWidth = btnEl ? btnEl.getBoundingClientRect().width : 220;
 
-  tooltip.innerHTML = html;
+  const textHtml = `
+    <div style="background: rgba(15, 10, 25, 0.96); border: 2px solid var(--gold); border-radius: 8px; padding: 10px; color: #fff; text-align: center; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(0,0,0,0.8); max-width: ${btnWidth}px; width: ${btnWidth}px; box-sizing: border-box; margin-bottom: 10px; backdrop-filter: blur(5px);">
+      <strong style="color: var(--gold); display: block; margin-bottom: 6px; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 0.95rem; letter-spacing: 0.5px;">HITO ${gameState.currentHito}: ${nextHito.name}</strong>
+      <span style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.35; display: block; font-weight: normal; font-family: 'Inter', sans-serif;">${nextHito.ruleDesc || 'Sin reglas especiales.'}</span>
+    </div>
+  `;
+
+  const goblinsHtml = `
+    <div style="display: flex; flex-direction: row; align-items: center; justify-content: center; width: ${calculatedWidth}px; height: ${cardHeight}px;">
+      ${nextHito.goblins.map((lvl, idx) => {
+        const overlapStyle = idx > 0 ? `margin-left: -${overlap}px !important;` : '';
+        let imgSrc = `assets/Monstruos/t${lvl}.png`;
+        if (lvl === 5 && nextHito.bossStats && nextHito.bossStats.image) {
+          const parts = nextHito.bossStats.image.split('/');
+          const fileWithExt = parts[parts.length - 1];
+          const bossName = fileWithExt.substring(0, fileWithExt.lastIndexOf('.'));
+          imgSrc = `assets/Monstruos/Jefes/t5_${bossName}.png`;
+        }
+        return `<img src="${imgSrc}" style="height: ${cardHeight}px !important; width: ${cardWidth}px !important; flex-shrink: 0 !important; pointer-events: none !important; border-radius: 6px; border: none; box-shadow: none; opacity: 0.95; display: block; position: relative; z-index: ${idx}; ${overlapStyle}" alt="G${lvl}">`;
+      }).join('')}
+    </div>
+  `;
+
+  tooltip.innerHTML = textHtml + goblinsHtml;
   tooltip.style.display = 'flex';
-  tooltip.style.width = `${calculatedWidth}px`;
-  tooltip.style.height = `${cardHeight}px`;
+  tooltip.style.width = 'auto';
+  tooltip.style.height = 'auto';
 
   const targetBtn = e.currentTarget || e.target;
   if (!targetBtn) return;
   
   const rect = targetBtn.getBoundingClientRect();
+  const tooltipWidth = tooltip.offsetWidth || btnWidth;
+  const tooltipHeight = tooltip.offsetHeight || (cardHeight + 70);
   
   // Determinamos de forma precisa si es el botón del pie de página (o de información de hitos)
   // para usar alineación a la izquierda, o centrado para botones del campo de batalla.
@@ -1613,12 +1631,12 @@ window.showHitoGoblinsTooltip = function(e) {
   if (isFooterButton) {
     leftPos = window.scrollX + rect.left;
   } else {
-    leftPos = window.scrollX + rect.left + (rect.width / 2) - (calculatedWidth / 2);
+    leftPos = window.scrollX + rect.left + (rect.width / 2) - (tooltipWidth / 2);
   }
   
-  const y = window.scrollY + rect.top - cardHeight - 8;
+  const y = window.scrollY + rect.top - tooltipHeight - 8;
 
-  tooltip.style.left = `${Math.max(10, Math.min(window.innerWidth - calculatedWidth - 10, leftPos))}px`;
+  tooltip.style.left = `${Math.max(10, Math.min(window.innerWidth - tooltipWidth - 10, leftPos))}px`;
   tooltip.style.top = `${Math.max(10, y)}px`;
   tooltip.style.opacity = '1';
 };
