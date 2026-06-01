@@ -1174,6 +1174,7 @@ function initSendaSelectionScreen() {
       pointer-events: auto;
     }
     .split-card-container {
+      position: relative;
       display: flex;
       flex-direction: row;
       gap: 24px;
@@ -1312,36 +1313,38 @@ function initSendaSelectionScreen() {
 
     @media (max-width: 768px) {
       .split-card-screen {
-        --senda-card-w: 240px;
-        --senda-card-h: 340px;
-        padding: 20px 10px;
+        --senda-card-w: 200px;
+        --senda-card-h: 280px;
+        padding: 15px 10px;
       }
       .split-card-container {
-        gap: 16px;
-        padding: 15px 5px;
+        gap: 12px;
+        padding: 10px 5px;
         scroll-snap-type: x mandatory;
         scroll-behavior: smooth;
       }
       .senda-card-wrapper {
         scroll-snap-align: center;
+        gap: 6px;
       }
       .split-card-screen h2 {
-        font-size: 1.5rem !important;
+        font-size: 1.3rem !important;
       }
       .split-card-screen p {
-        font-size: 0.85rem !important;
-        margin-bottom: 5px !important;
+        font-size: 0.8rem !important;
+        margin-bottom: 2px !important;
       }
       .senda-card-header {
-        font-size: 0.85rem;
-        min-height: 40px;
+        font-size: 0.75rem;
+        min-height: 32px;
       }
       .senda-card-stars {
-        font-size: 0.75rem;
+        font-size: 0.65rem;
+        letter-spacing: 1px;
       }
       .split-card-btn-container button {
-        padding: 8px 20px !important;
-        font-size: 0.85rem !important;
+        padding: 6px 16px !important;
+        font-size: 0.8rem !important;
       }
     }
   `;
@@ -1479,7 +1482,12 @@ function openSendaSelectionScreen(targetSelectId) {
       if (card.dataset.value === selectedSendaValue) {
         card.classList.add('selected');
         setTimeout(() => {
-          card.scrollIntoView({ behavior: 'smooth', block: 'nearest', inline: 'center' });
+          const container = screen.querySelector('.split-card-container');
+          const wrapper = card.parentElement;
+          if (container && wrapper) {
+            const scrollLeftToSet = wrapper.offsetLeft - (container.clientWidth / 2) + (wrapper.clientWidth / 2);
+            container.scrollTo({ left: scrollLeftToSet, behavior: 'smooth' });
+          }
         }, 50);
       } else {
         card.classList.remove('selected');
