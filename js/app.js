@@ -420,7 +420,11 @@ window.alert = function (messageText, callback = null) {
           headerColor = '#c975ff'; // Nuevo púrpura para rotura/daño equipo
         }
         let textShadow = headerColor === '#c975ff' ? 'rgba(201, 117, 255, 0.4)' : 'rgba(212, 175, 55, 0.4)';
-        html += `<div style="font-family: 'Cinzel', serif; font-size: 1.25rem; font-weight: bold; color: ${headerColor}; margin-top: 18px; margin-bottom: 10px; text-shadow: 0 0 8px ${textShadow}; text-transform: uppercase; text-align: center;">${cleanText}</div>`;
+        let marginTop = '18px';
+        if (cleanText.toLowerCase().includes('senda')) {
+          marginTop = '32px';
+        }
+        html += `<div style="font-family: 'Cinzel', serif; font-size: 1.25rem; font-weight: bold; color: ${headerColor}; margin-top: ${marginTop}; margin-bottom: 10px; text-shadow: 0 0 8px ${textShadow}; text-transform: uppercase; text-align: center;">${cleanText}</div>`;
       } 
       // Contenido diferenciado por Título: Descripción
       else if (trimmed.includes(':')) {
