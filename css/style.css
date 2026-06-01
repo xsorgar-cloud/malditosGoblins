@@ -3292,3 +3292,26 @@ main {
   100% { opacity: 0; }
 }
 
+/* Animación de foco inicial para llamar la atención del jugador en el panel de acciones */
+@keyframes focus-pulse-gold {
+  0% {
+    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0.8), 0 4px 15px rgba(0, 0, 0, 0.2);
+    transform: scale(1);
+  }
+  50% {
+    box-shadow: 0 0 20px 6px rgba(212, 175, 55, 0.7), 0 4px 25px rgba(212, 175, 55, 0.3);
+    transform: scale(1.03);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0), 0 4px 15px rgba(0, 0, 0, 0.2);
+    transform: scale(1);
+  }
+}
+
+.focus-highlight:not(:disabled) {
+  animation: focus-pulse-gold 2s infinite ease-in-out !important;
+  position: relative;
+  z-index: 2;
+}
+
+

@@ -1566,6 +1566,7 @@ btnStartGame.addEventListener('click', () => {
   setupModal.classList.add('hidden');
   const versionBadge = document.getElementById('game-version-badge');
   if (versionBadge) versionBadge.style.display = 'none';
+  highlightInitialFocusButtons();
   updateUI();
   if (typeof window !== 'undefined' && window.saveGame) {
     window.saveGame(true);
@@ -6515,6 +6516,38 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
   }
+});
+
+// Funciones para resaltar y desresaltar botones al inicio de la partida para capturar el foco
+function highlightInitialFocusButtons() {
+  const ids = ['btn-confirm-attack', 'btn-gold', 'btn-gold-dmg', 'btn-role'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.add('focus-highlight');
+    }
+  });
+}
+
+function removeInitialFocusHighlights() {
+  const ids = ['btn-confirm-attack', 'btn-gold', 'btn-gold-dmg', 'btn-role'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.classList.remove('focus-highlight');
+    }
+  });
+}
+
+// Escuchar clics en los botones enfocados para remover el foco tras el primer uso
+document.addEventListener('DOMContentLoaded', () => {
+  const ids = ['btn-confirm-attack', 'btn-gold', 'btn-gold-dmg', 'btn-role'];
+  ids.forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.addEventListener('click', removeInitialFocusHighlights);
+    }
+  });
 });
 
 
