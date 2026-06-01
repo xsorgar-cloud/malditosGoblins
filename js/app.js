@@ -574,6 +574,7 @@ function renderRoleSelection() {
       if (justSelectedRole && justSelectedRole.playerIndex === i && justSelectedRole.roleId === r.id) {
         let toast = document.createElement('div');
         toast.className = 'role-option-toast';
+        toast.style.setProperty('--text-len', r.name.length);
         toast.innerText = r.name.toUpperCase();
         img.appendChild(toast);
         
