@@ -3669,7 +3669,7 @@ function renderCombatOverlay() {
           statusEffectsLines.forEach(line => combatSummaryLines.push(line));
         }
         if (sendaLines.length > 0) {
-          combatSummaryLines.push("\n🗺️ DETALLES DE LA SENDA:");
+          combatSummaryLines.push("<br><br>🗺️ DETALLES DE LA SENDA:");
           sendaLines.forEach(line => combatSummaryLines.push(line));
         }
 
