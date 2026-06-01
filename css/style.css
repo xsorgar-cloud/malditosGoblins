@@ -2939,6 +2939,7 @@ main {
     height: auto !important;
     max-height: none !important;
     flex-shrink: 0 !important;
+    overflow: visible !important; /* Desactivar scroll interno */
     padding: 25px 20px !important;
     margin-bottom: 20px !important;
   }
@@ -3055,6 +3056,8 @@ main {
     padding: 20px 15px !important;
     height: auto !important;
     max-height: none !important;
+    flex-shrink: 0 !important;
+    overflow: visible !important; /* Desactivar scroll interno */
     margin-bottom: 10px !important;
   }
 
