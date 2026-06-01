@@ -341,25 +341,29 @@ window.alert = function (messageText, callback = null) {
         });
 
         let rowHtml = '<div style="display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 15px; margin-bottom: 15px; flex-wrap: wrap;">';
+        let hasPriorElement = false;
+        let hasAnyElement = false;
 
         // 1. Vida (HP)
-        if (params.hp !== undefined) {
+        if (params.hp !== undefined && params.hp !== 0) {
           const val = params.hp;
           const sign = val > 0 ? '+' : '';
-          const color = val === 0 ? '#8892b0' : (val < 0 ? '#ff4d4d' : '#2ecc71');
+          const color = val < 0 ? '#ff4d4d' : '#2ecc71';
           rowHtml += `
             <div style="display: flex; align-items: center; gap: 8px;">
               <span style="font-size: 2.5rem; filter: drop-shadow(0 0 6px rgba(255,77,77,0.4)); line-height: 1;">❤️</span>
               <span style="font-size: 1.8rem; font-weight: bold; color: ${color}; line-height: 1;">${sign}${val}</span>
             </div>
           `;
+          hasPriorElement = true;
+          hasAnyElement = true;
         }
 
         // 2. Monedas (mo)
-        if (params.mo !== undefined) {
+        if (params.mo !== undefined && params.mo !== 0) {
           const val = params.mo;
           const sign = val > 0 ? '+' : '';
-          const color = val === 0 ? '#8892b0' : (val < 0 ? '#ff4d4d' : '#ffd700');
+          const color = val < 0 ? '#ff4d4d' : '#ffd700';
           const coinSvgLarge = COIN_SVG.replace('width="18" height="18"', 'width="34" height="34"').replace('margin-right: 3px;', 'margin-right: 0px;');
           rowHtml += `
             <div style="display: flex; align-items: center; gap: 8px;">
@@ -367,36 +371,44 @@ window.alert = function (messageText, callback = null) {
               <span style="font-size: 1.8rem; font-weight: bold; color: ${color}; line-height: 1;">${sign}${val}</span>
             </div>
           `;
+          hasPriorElement = true;
+          hasAnyElement = true;
         }
 
         // 3. Energía
-        if (params.energy !== undefined) {
+        if (params.energy !== undefined && params.energy !== 0) {
           const val = params.energy;
           const sign = val > 0 ? '+' : '';
-          const color = val === 0 ? '#8892b0' : '#00d2ff';
+          const color = '#00d2ff';
           rowHtml += `
             <div style="display: flex; align-items: center; gap: 8px;">
               <span style="font-size: 2.5rem; filter: drop-shadow(0 0 6px rgba(0, 210, 255, 0.4)); line-height: 1;">⚡</span>
               <span style="font-size: 1.8rem; font-weight: bold; color: ${color}; line-height: 1;">${sign}${val}</span>
             </div>
           `;
+          hasPriorElement = true;
+          hasAnyElement = true;
         }
 
-        // 4. PEX (Separado del resto por un margen izquierdo considerable, ej: 50px)
-        if (params.pex !== undefined) {
+        // 4. PEX (Separado del resto por un margen izquierdo considerable si hay elementos previos)
+        if (params.pex !== undefined && params.pex !== 0) {
           const val = params.pex;
           const sign = val > 0 ? '+' : '';
-          const color = val === 0 ? '#8892b0' : (val < 0 ? '#ff4d4d' : '#f1c40f');
+          const color = val < 0 ? '#ff4d4d' : '#f1c40f';
+          const marginStyle = hasPriorElement ? 'margin-left: 50px;' : '';
           rowHtml += `
-            <div style="display: flex; align-items: center; gap: 8px; margin-left: 50px;">
+            <div style="display: flex; align-items: center; gap: 8px; ${marginStyle}">
               <span style="font-size: 2.5rem; filter: drop-shadow(0 0 6px rgba(241,196,15,0.4)); line-height: 1;">⭐</span>
               <span style="font-size: 1.8rem; font-weight: bold; color: ${color}; line-height: 1;">${sign}${val}</span>
             </div>
           `;
+          hasAnyElement = true;
         }
 
-        rowHtml += '</div>';
-        html += rowHtml;
+        if (hasAnyElement) {
+          rowHtml += '</div>';
+          html += rowHtml;
+        }
         return;
       }
 
