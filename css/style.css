@@ -2925,17 +2925,39 @@ main {
 
 @media (max-width: 1250px) {
   #setup-modal-layout {
-    flex-direction: column;
-    align-items: center;
-    overflow-y: auto;
-    max-height: 90vh;
-    padding: 10px;
+    flex-direction: column !important;
+    align-items: center !important;
+    overflow-y: auto !important;
+    max-height: 95vh !important;
+    padding: 15px 10px !important;
+    width: 100% !important;
   }
   
   #setup-modal-layout .modal-content {
     width: 100% !important;
-    max-width: 800px;
+    max-width: 800px !important;
+    height: auto !important;
+    max-height: none !important;
+    flex-shrink: 0 !important;
+    padding: 25px 20px !important;
     margin-bottom: 20px !important;
+  }
+
+  /* Compactar espaciado vertical y textos */
+  #setup-content h2.setup-title,
+  #setup-senda-content h2.setup-title {
+    font-size: 1.8rem !important;
+    margin-top: 5px !important;
+    margin-bottom: 8px !important;
+  }
+
+  #setup-content p.setup-subtitle {
+    font-size: 0.95rem !important;
+    margin-bottom: 15px !important;
+  }
+
+  #setup-columns-container {
+    gap: 20px !important;
   }
 }
 
