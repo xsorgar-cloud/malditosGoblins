@@ -4026,8 +4026,6 @@ function renderCombatOverlay() {
           
           if (isExtraDmgModifier) {
             el.style.color = '#ff4d4d';
-            el.style.border = '1px solid #ff4d4d';
-            el.style.boxShadow = '0 0 8px rgba(255, 77, 77, 0.4)';
             el.title = `Daño extra del dado (+${valToShow - item.val}) aplicado`;
           } else if (item.isHitoRule) {
             el.style.color = '#ff4d4d';
