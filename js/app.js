@@ -398,7 +398,7 @@ window.alert = function (messageText, callback = null) {
           const marginStyle = hasPriorElement ? 'margin-left: 50px;' : '';
           rowHtml += `
             <div style="display: flex; align-items: center; gap: 8px; ${marginStyle}">
-              <span style="font-size: 2.5rem; filter: drop-shadow(0 0 6px rgba(241,196,15,0.4)); line-height: 1;">⭐</span>
+              <span style="font-size: 2.5rem; filter: drop-shadow(0 0 6px rgba(241,196,15,0.4)); line-height: 1;">✨</span>
               <span style="font-size: 1.8rem; font-weight: bold; color: ${color}; line-height: 1;">${sign}${val}</span>
             </div>
           `;
