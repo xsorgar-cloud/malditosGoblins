@@ -1590,9 +1590,8 @@ window.showHitoGoblinsTooltip = function(e) {
   const btnWidth = btnEl ? btnEl.getBoundingClientRect().width : 220;
 
   const textHtml = `
-    <div style="background: rgba(15, 10, 25, 0.96); border: 2px solid var(--gold); border-radius: 8px; padding: 10px; color: #fff; text-align: center; font-size: 0.9rem; box-shadow: 0 4px 15px rgba(0,0,0,0.8); max-width: ${btnWidth}px; width: ${btnWidth}px; box-sizing: border-box; margin-bottom: 10px; backdrop-filter: blur(5px);">
-      <strong style="color: var(--gold); display: block; margin-bottom: 6px; font-family: 'Cinzel', serif; text-transform: uppercase; font-size: 0.95rem; letter-spacing: 0.5px;">HITO ${gameState.currentHito}: ${nextHito.name}</strong>
-      <span style="font-size: 0.8rem; color: #cbd5e1; line-height: 1.35; display: block; font-weight: normal; font-family: 'Inter', sans-serif;">${nextHito.ruleDesc || 'Sin reglas especiales.'}</span>
+    <div style="background: rgba(15, 10, 25, 0.96); border: 2px solid var(--gold); border-radius: 8px; padding: 8px 12px; color: #cbd5e1; text-align: center; font-size: 0.8rem; box-shadow: 0 4px 15px rgba(0,0,0,0.8); max-width: ${btnWidth}px; width: ${btnWidth}px; box-sizing: border-box; margin-bottom: 10px; backdrop-filter: blur(5px); font-family: 'Inter', sans-serif; font-weight: normal; line-height: 1.35;">
+      ${nextHito.ruleDesc || 'Sin reglas especiales.'}
     </div>
   `;
 
