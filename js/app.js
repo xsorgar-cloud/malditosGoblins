@@ -3304,6 +3304,8 @@ function renderCombatOverlay() {
         }
       }
 
+      let uninterceptedExtraD4Count = 0;
+
       c.goblins.forEach(gob => {
         if (gob.isDying) return;
         let greenDiceResult = c.dice.green[gob.uid];
@@ -3373,6 +3375,10 @@ function renderCombatOverlay() {
                   normalDmg += dieDmg;
                 }
                 attacks.forEach(eff => allSpecialAttacks.push(eff));
+
+                if (gob.level === 3 && detail.val === 4) {
+                  uninterceptedExtraD4Count++;
+                }
               }
             }
           });
@@ -3407,12 +3413,21 @@ function renderCombatOverlay() {
     let projectedHtml = '';
     let goblinsProjHtml = '';
     if (!isCrampPhase) {
+       let extraD4Text = "";
+       if (uninterceptedExtraD4Count > 0) {
+         extraD4Text = ` <span style="color: #ff4d4d; font-weight: bold;">(+${uninterceptedExtraD4Count}d4 extra)</span>`;
+       }
+
        if (finalProjectedHp < p.hp) {
-           projectedHtml = `<div style="color: #ff4d4d; font-size: 0.9rem; margin-top: -10px; margin-left: 34px;">Daño Previsto: -${p.hp - finalProjectedHp} PV</div>`;
+           projectedHtml = `<div style="color: #ff4d4d; font-size: 0.9rem; margin-top: -10px; margin-left: 34px;">Daño Previsto: -${p.hp - finalProjectedHp} PV${extraD4Text}</div>`;
        } else if (finalProjectedHp > p.hp) {
-           projectedHtml = `<div style="color: #33cc33; font-size: 0.9rem; margin-top: -10px; margin-left: 34px;">Cura Prevista: +${finalProjectedHp - p.hp} PV</div>`;
+           projectedHtml = `<div style="color: #33cc33; font-size: 0.9rem; margin-top: -10px; margin-left: 34px;">Cura Prevista: +${finalProjectedHp - p.hp} PV${extraD4Text}</div>`;
        } else {
-           projectedHtml = `<div style="color: #888; font-size: 0.9rem; margin-top: -10px; margin-left: 34px;">Sin daños previstos</div>`;
+           if (uninterceptedExtraD4Count > 0) {
+               projectedHtml = `<div style="color: #ff4d4d; font-size: 0.9rem; margin-top: -10px; margin-left: 34px;">Daño Previsto: 0 PV${extraD4Text}</div>`;
+           } else {
+               projectedHtml = `<div style="color: #888; font-size: 0.9rem; margin-top: -10px; margin-left: 34px;">Sin daños previstos</div>`;
+           }
        }
 
        c.goblins.forEach(gob => {
@@ -3965,6 +3980,34 @@ function renderCombatOverlay() {
           el.style.fontSize = '1.8rem';
           el.style.borderRadius = '10px';
           el.style.boxShadow = '0 3px 8px rgba(0,0,0,0.9), inset 0 0 8px rgba(0,0,0,0.6)';
+
+          if (gob.level === 3 && item.val === 4) {
+            let extraBadge = document.createElement('span');
+            extraBadge.className = 'extra-d4-badge';
+            extraBadge.innerText = '+1d4';
+            extraBadge.style.fontSize = '0.9rem';
+            extraBadge.style.fontWeight = 'bold';
+            extraBadge.style.padding = '2px 5px';
+            extraBadge.style.borderRadius = '4px';
+            extraBadge.style.marginLeft = '-5px';
+            extraBadge.style.marginRight = '5px';
+            extraBadge.style.zIndex = '10';
+            if (isIntercepted) {
+              extraBadge.style.color = '#888';
+              extraBadge.style.textDecoration = 'line-through';
+              extraBadge.style.background = 'rgba(255, 255, 255, 0.1)';
+              extraBadge.title = 'Mitigado por intercepción';
+            } else {
+              extraBadge.style.color = '#ff4d4d';
+              extraBadge.style.background = 'rgba(255, 77, 77, 0.2)';
+              extraBadge.style.border = '1px solid #ff4d4d';
+              extraBadge.style.boxShadow = '0 0 8px rgba(255, 77, 77, 0.4)';
+              extraBadge.title = 'Daño Extra si no se intercepta';
+            }
+            diceCont.appendChild(el);
+            diceCont.appendChild(extraBadge);
+            return;
+          }
         } else {
           el.className = 'mod-green';
           el.innerText = (item.val >= 0 ? '+' : '') + item.val;
