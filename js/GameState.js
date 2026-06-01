@@ -1683,15 +1683,19 @@ class GameState {
       this.damagePlayer(player, damage, false, 'Represalia');
 
       if (this.activeSenda === 'recaudador') {
-        const hpDiff = hpBefore - player.hp;
-        const moDiff = moBefore - player.mo;
-        this.retaliationEscudoDeOroTriggers.push({
-          playerName: player.name,
-          goblinLevel: goblin.level,
-          moLost: moDiff,
-          hpLost: hpDiff,
-          hasGold: moBefore > 0
-        });
+        if (this.lastDamageAppliedEscudoDeOro) {
+          const hpDiff = hpBefore - player.hp;
+          const moDiff = moBefore - player.mo;
+          this.retaliationEscudoDeOroTriggers.push({
+            playerName: player.name,
+            goblinLevel: goblin.level,
+            moLost: moDiff,
+            hpLost: hpDiff,
+            hasGold: moBefore > 0
+          });
+        } else {
+          this.addLog(`💀 <strong>Represalia:</strong> Causó ${damage} daño a <strong>${player.name}</strong> (HP: ${player.hp}/${player.maxHp}).`);
+        }
       }
 
       // Eliminar de la cola
