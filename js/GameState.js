@@ -122,7 +122,27 @@ class GameState {
         for (let c = 0; c < count; c++) {
           let val = this.rollDice(faces);
           total += val;
-          details.push({ type: 'die', faces: faces, val: val });
+          let dieDetail = { type: 'die', faces: faces, val: val };
+          
+          // Pre-roll extra damage die if this attack triggers it (e.g. lanza +1d4)
+          let gobDB = goblin.attacks ? goblin : (typeof DB !== 'undefined' && DB.goblins ? DB.goblins[goblin.level] : null);
+          if (gobDB && gobDB.attacks && gobDB.attacks[val]) {
+            let attacks = gobDB.attacks[val];
+            attacks.forEach(eff => {
+              if (eff.toLowerCase().includes('lanza +')) {
+                const dieMatch = eff.toLowerCase().match(/(\d*)d(\d+)/);
+                if (dieMatch) {
+                  const num = parseInt(dieMatch[1]) || 1;
+                  const facesExtra = parseInt(dieMatch[2]);
+                  let extraDmg = 0;
+                  for (let i = 0; i < num; i++) extraDmg += this.rollDice(facesExtra);
+                  dieDetail.extraDmgRoll = extraDmg;
+                }
+              }
+            });
+          }
+          
+          details.push(dieDetail);
         }
       } else {
         let mod = parseInt(part);
@@ -891,21 +911,26 @@ class GameState {
               } else if (effLow.includes('lanza +')) {
                 if (!isIntercepted) {
                   applied = true;
-                  const dieMatch = effLow.match(/(\d*)d(\d+)/);
-                  if (dieMatch) {
-                    const num = parseInt(dieMatch[1]) || 1;
-                    const faces = parseInt(dieMatch[2]);
-                    let extraDmg = 0;
-                    for (let i = 0; i < num; i++) extraDmg += this.rollDice(faces);
-                    if (!isSpecialBoss) {
-                      if (isDieDirect) directDmg += extraDmg;
-                      else normalDmg += extraDmg;
+                  let extraDmg = detail.extraDmgRoll;
+                  if (extraDmg === undefined) {
+                    const dieMatch = effLow.match(/(\d*)d(\d+)/);
+                    if (dieMatch) {
+                      const num = parseInt(dieMatch[1]) || 1;
+                      const faces = parseInt(dieMatch[2]);
+                      extraDmg = 0;
+                      for (let i = 0; i < num; i++) extraDmg += this.rollDice(faces);
                     } else {
-                      goblinDmg += extraDmg;
+                      extraDmg = 0;
                     }
-                    this.addLog(`🎲 ¡G${targetGoblin.level} lanza un dado extra y suma <span style="color:#ff4d4d">${extraDmg} de daño</span>!`);
-                    rolledValueText = ` (obtuvo ${extraDmg})`;
                   }
+                  if (!isSpecialBoss) {
+                    if (isDieDirect) directDmg += extraDmg;
+                    else normalDmg += extraDmg;
+                  } else {
+                    goblinDmg += extraDmg;
+                  }
+                  this.addLog(`🎲 ¡G${targetGoblin.level} lanza un dado extra y suma <span style="color:#ff4d4d">${extraDmg} de daño</span>!`);
+                  rolledValueText = ` (obtuvo ${extraDmg})`;
                 }
               } else if (effLow === 'daño+2') {
                 if (!isIntercepted) {

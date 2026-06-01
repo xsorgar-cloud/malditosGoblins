@@ -3253,6 +3253,7 @@ function renderCombatOverlay() {
     let projHeal = 0;
     let projDamagePerTarget = {};
     let uninterceptedExtraD4Count = 0;
+    let uninterceptedExtraDmgSum = 0;
     
     if (!isCrampPhase) {
       c.goblins.forEach(g => { projDamagePerTarget[g.uid] = { damage: 0, shield: 0 }; });
@@ -3306,6 +3307,7 @@ function renderCombatOverlay() {
       }
 
       uninterceptedExtraD4Count = 0;
+      uninterceptedExtraDmgSum = 0;
 
       c.goblins.forEach(gob => {
         if (gob.isDying) return;
@@ -3379,6 +3381,13 @@ function renderCombatOverlay() {
 
                 if (gob.level === 3 && detail.val === 4) {
                   uninterceptedExtraD4Count++;
+                  let extraDmg = detail.extraDmgRoll !== undefined ? detail.extraDmgRoll : 0;
+                  uninterceptedExtraDmgSum += extraDmg;
+                  if (isDieDirect) {
+                    directDmg += extraDmg;
+                  } else {
+                    normalDmg += extraDmg;
+                  }
                 }
               }
             }
@@ -3416,7 +3425,11 @@ function renderCombatOverlay() {
     if (!isCrampPhase) {
        let extraD4Text = "";
        if (uninterceptedExtraD4Count > 0) {
-         extraD4Text = ` <span style="color: #ff4d4d; font-weight: bold;">(+${uninterceptedExtraD4Count}d4 extra)</span>`;
+         if (uninterceptedExtraDmgSum > 0) {
+           extraD4Text = ` <span style="color: #ff4d4d; font-weight: bold;">(+${uninterceptedExtraDmgSum} extra)</span>`;
+         } else {
+           extraD4Text = ` <span style="color: #ff4d4d; font-weight: bold;">(+${uninterceptedExtraD4Count}d4 extra)</span>`;
+         }
        }
 
        if (finalProjectedHp < p.hp) {
@@ -3985,7 +3998,8 @@ function renderCombatOverlay() {
           if (gob.level === 3 && item.val === 4) {
             let extraBadge = document.createElement('span');
             extraBadge.className = 'extra-d4-badge';
-            extraBadge.innerText = '+1d4';
+            let rolledVal = item.extraDmgRoll !== undefined ? `+${item.extraDmgRoll}` : '+1d4';
+            extraBadge.innerText = rolledVal;
             extraBadge.style.fontSize = '0.9rem';
             extraBadge.style.fontWeight = 'bold';
             extraBadge.style.padding = '2px 5px';
