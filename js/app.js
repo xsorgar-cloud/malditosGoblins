@@ -340,7 +340,7 @@ window.alert = function (messageText, callback = null) {
           }
         });
 
-        let rowHtml = '<div style="display: flex; justify-content: center; align-items: center; margin-top: 15px; margin-bottom: 15px; flex-wrap: wrap;">';
+        let rowHtml = '<div style="display: flex; justify-content: center; align-items: center; gap: 20px; margin-top: 15px; margin-bottom: 15px; flex-wrap: wrap;">';
 
         // 1. Vida (HP)
         if (params.hp !== undefined) {
@@ -348,15 +348,12 @@ window.alert = function (messageText, callback = null) {
           const sign = val > 0 ? '+' : '';
           const color = val === 0 ? '#8892b0' : (val < 0 ? '#ff4d4d' : '#2ecc71');
           rowHtml += `
-            <div style="display: flex; align-items: center; gap: 8px; padding: 0 14px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
               <span style="font-size: 2.5rem; filter: drop-shadow(0 0 6px rgba(255,77,77,0.4)); line-height: 1;">❤️</span>
               <span style="font-size: 1.8rem; font-weight: bold; color: ${color}; line-height: 1;">${sign}${val}</span>
             </div>
           `;
         }
-
-        // Divisor 1
-        rowHtml += '<div style="width: 1px; height: 22px; background: rgba(255, 255, 255, 0.15);"></div>';
 
         // 2. Monedas (mo)
         if (params.mo !== undefined) {
@@ -365,15 +362,12 @@ window.alert = function (messageText, callback = null) {
           const color = val === 0 ? '#8892b0' : (val < 0 ? '#ff4d4d' : '#ffd700');
           const coinSvgLarge = COIN_SVG.replace('width="18" height="18"', 'width="34" height="34"').replace('margin-right: 3px;', 'margin-right: 0px;');
           rowHtml += `
-            <div style="display: flex; align-items: center; gap: 8px; padding: 0 14px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
               <span style="display: inline-flex; align-items: center; filter: drop-shadow(0 0 8px rgba(255,215,0,0.4)); line-height: 1;">${coinSvgLarge}</span>
               <span style="font-size: 1.8rem; font-weight: bold; color: ${color}; line-height: 1;">${sign}${val}</span>
             </div>
           `;
         }
-
-        // Divisor 2
-        rowHtml += '<div style="width: 1px; height: 22px; background: rgba(255, 255, 255, 0.15);"></div>';
 
         // 3. Energía
         if (params.energy !== undefined) {
@@ -381,23 +375,20 @@ window.alert = function (messageText, callback = null) {
           const sign = val > 0 ? '+' : '';
           const color = val === 0 ? '#8892b0' : (val < 0 ? '#ff4d4d' : '#ffda79');
           rowHtml += `
-            <div style="display: flex; align-items: center; gap: 8px; padding: 0 14px;">
+            <div style="display: flex; align-items: center; gap: 8px;">
               <span style="font-size: 2.5rem; filter: drop-shadow(0 0 6px rgba(255,218,121,0.4)); line-height: 1;">⚡</span>
               <span style="font-size: 1.8rem; font-weight: bold; color: ${color}; line-height: 1;">${sign}${val}</span>
             </div>
           `;
         }
 
-        // Divisor Especial PEX (Dorado, más grueso y con márgenes laterales extra para separarlo claramente)
-        rowHtml += '<div style="width: 2px; height: 22px; background: rgba(255, 215, 0, 0.35); margin: 0 12px;"></div>';
-
-        // 4. PEX
+        // 4. PEX (Separado del resto por un margen izquierdo considerable, ej: 50px)
         if (params.pex !== undefined) {
           const val = params.pex;
           const sign = val > 0 ? '+' : '';
           const color = val === 0 ? '#8892b0' : (val < 0 ? '#ff4d4d' : '#f1c40f');
           rowHtml += `
-            <div style="display: flex; align-items: center; gap: 8px; padding: 0 14px;">
+            <div style="display: flex; align-items: center; gap: 8px; margin-left: 50px;">
               <span style="font-size: 2.5rem; filter: drop-shadow(0 0 6px rgba(241,196,15,0.4)); line-height: 1;">⭐</span>
               <span style="font-size: 1.8rem; font-weight: bold; color: ${color}; line-height: 1;">${sign}${val}</span>
             </div>
