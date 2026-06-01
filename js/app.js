@@ -2470,6 +2470,33 @@ function openExploreMarketModal() {
 let animatedGoblinUids = new Set();
 let previousGoblinHps = new Map();
 
+function getGoblinImageWithHpState(goblin, imageUrl) {
+  if (!goblin || goblin.isBoss) return imageUrl;
+
+  const maxHp = goblin.maxHp || (DB.goblins[goblin.level] ? DB.goblins[goblin.level].hp : goblin.currentHp);
+  if (!maxHp) return imageUrl;
+
+  const p = goblin.currentHp / maxHp;
+  let suffix = "";
+  if (p >= 0.75) {
+    suffix = "";
+  } else if (p >= 0.50) {
+    suffix = "_r1";
+  } else if (p >= 0.25) {
+    suffix = "_r2";
+  } else {
+    suffix = "_r3";
+  }
+
+  if (suffix && imageUrl && typeof imageUrl === 'string') {
+    const isStandard = /\/0[1-5]\.(jpg|jpeg|png)$/i.test(imageUrl);
+    if (isStandard) {
+      return imageUrl.replace(/(\.[\w\d]+)$/, `${suffix}$1`);
+    }
+  }
+  return imageUrl;
+}
+
 function renderBattlefield() {
   waveLevelSpan.innerText = gameState.battlefield.waveLevel;
 
@@ -2625,6 +2652,7 @@ function renderBattlefield() {
         imageUrl = imageUrl.replace(/([^\/]+)$/, 'nomo_$1');
       }
     }
+    imageUrl = getGoblinImageWithHpState(goblin, imageUrl);
     gobEl.style.backgroundImage = `url('${imageUrl}')`;
 
     if (goblin.isDying) {
@@ -3480,6 +3508,7 @@ function renderCombatOverlay() {
         imageUrl = imageUrl.replace(/([^\/]+)$/, 'nomo_$1');
       }
     }
+    imageUrl = getGoblinImageWithHpState(gob, imageUrl);
     gobCard.style.backgroundImage = `url('${imageUrl}')`;
     const isInvulnerable = gameState.isGoblinInvulnerable(gob);
     if (isInvulnerable) {
@@ -4821,6 +4850,7 @@ window.showTargetSelectionModal = function (playerIndex) {
           gbtn.style.boxShadow = '0 0 25px rgba(0,0,0,0.9)';
         }
         gbtn.style.borderRadius = '12px';
+        displayImg = getGoblinImageWithHpState(gob, displayImg);
         gbtn.style.backgroundImage = `url('${displayImg}')`;
         gbtn.style.backgroundSize = '100% 100%';
         gbtn.style.display = 'block';
