@@ -1650,7 +1650,16 @@ window.hideHitoGoblinsTooltip = function() {
 
 window.showSendaRulesTooltip = function(e) {
   const btnDeployHito = document.getElementById('btn-deploy-hito');
-  const btnWidth = btnDeployHito ? btnDeployHito.getBoundingClientRect().width : 220;
+  const btnInfoHitos = document.getElementById('btn-info-hitos');
+  const hitoActions = document.getElementById('hito-actions');
+  let combinedWidth = 255;
+  if (hitoActions) {
+    combinedWidth = hitoActions.getBoundingClientRect().width;
+  } else if (btnDeployHito && btnInfoHitos) {
+    combinedWidth = btnDeployHito.getBoundingClientRect().width + btnInfoHitos.getBoundingClientRect().width + 5;
+  } else if (btnDeployHito) {
+    combinedWidth = btnDeployHito.getBoundingClientRect().width + 35;
+  }
 
   const generalRules = DB.sendaReglasGenerales[gameState.activeSenda] || [];
   let rulesHtml = '';
@@ -1688,7 +1697,7 @@ window.showSendaRulesTooltip = function(e) {
   }
 
   tooltip.innerHTML = `
-    <div style="background: rgba(15, 10, 25, 0.96); border: 2px solid var(--gold); border-radius: 8px; padding: 10px 12px; color: #cbd5e1; box-shadow: 0 4px 15px rgba(0,0,0,0.8); max-width: ${btnWidth}px; width: ${btnWidth}px; box-sizing: border-box; backdrop-filter: blur(5px); font-family: 'Inter', sans-serif; font-weight: normal;">
+    <div style="background: rgba(15, 10, 25, 0.96); border: 2px solid var(--gold); border-radius: 8px; padding: 10px 12px; color: #cbd5e1; box-shadow: 0 4px 15px rgba(0,0,0,0.8); max-width: ${combinedWidth}px; width: ${combinedWidth}px; box-sizing: border-box; backdrop-filter: blur(5px); font-family: 'Inter', sans-serif; font-weight: normal;">
       ${rulesHtml}
     </div>
   `;
@@ -1701,7 +1710,7 @@ window.showSendaRulesTooltip = function(e) {
   if (!targetBtn) return;
 
   const rect = targetBtn.getBoundingClientRect();
-  const tooltipWidth = tooltip.offsetWidth || btnWidth;
+  const tooltipWidth = tooltip.offsetWidth || combinedWidth;
   const tooltipHeight = tooltip.offsetHeight || 80;
 
   const refBtn = btnDeployHito || targetBtn;
