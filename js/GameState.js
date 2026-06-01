@@ -2015,12 +2015,12 @@ class GameState {
       if (targetP && !isSelf) {
         p.energy -= energyCost;
         targetP.mo += 1;
-        this.addLog(`💠 <strong>${p.name}</strong> usó su rol (Ladrón) para dar 1 mo a ${targetP.name}.`);
+        this.addLog(`🔷 <strong>${p.name}</strong> usó su rol (Ladrón) para dar 1 mo a ${targetP.name}.`);
         return true;
       } else {
         p.energy -= energyCost;
         p.mo += 1;
-        this.addLog(`💠 <strong>${p.name}</strong> usó su rol (Ladrón) para obtener 1 mo.`);
+        this.addLog(`🔷 <strong>${p.name}</strong> usó su rol (Ladrón) para obtener 1 mo.`);
         return true;
       }
     }
@@ -2056,7 +2056,7 @@ class GameState {
           // No hace nada más, pero la energía se consumió
         } else {
           gob.currentHp -= 1;
-          this.addLog(`💠 <strong>${p.name}</strong> usó su rol para infligir 1 daño directo a ${gob.name}.`);
+          this.addLog(`🔷 <strong>${p.name}</strong> usó su rol para infligir 1 daño directo a ${gob.name}.`);
 
           // Defensa del Nido (Senda de La Madre)
           if (gob.isBoss && (this.activeSenda === 'la_madre' || gob.name === "La Madre")) {
@@ -2115,7 +2115,7 @@ class GameState {
       if (targetP && targetP.hp < targetP.maxHp) {
         p.energy -= energyCost;
         targetP.hp += 1;
-        this.addLog(`💠 <strong>${p.name}</strong> usó su rol (Sanador) para curar 1 PV a ${targetP.name}.`);
+        this.addLog(`🔷 <strong>${p.name}</strong> usó su rol (Sanador) para curar 1 PV a ${targetP.name}.`);
         return true;
       }
     }
@@ -2124,7 +2124,7 @@ class GameState {
       if (targetP) {
         p.energy -= energyCost;
         targetP.shield = (targetP.shield || 0) + 1;
-        this.addLog(`💠 <strong>${p.name}</strong> usó su rol (Protector) para dar 1 Escudo a ${targetP.name}.`);
+        this.addLog(`🔷 <strong>${p.name}</strong> usó su rol (Protector) para dar 1 Escudo a ${targetP.name}.`);
         return true;
       }
     }
@@ -2135,7 +2135,7 @@ class GameState {
         if (brokenItems.length > 0) {
           p.energy -= energyCost;
           brokenItems.forEach(e => { e.isBroken = false; e.brokenAnimationPlayed = false; });
-          this.addLog(`💠 <strong>${p.name}</strong> usó su rol (Curandero) para <span style="color:#2a9d8f">REPARAR</span> el equipo de ${targetP.name}.`);
+          this.addLog(`🔷 <strong>${p.name}</strong> usó su rol (Curandero) para <span style="color:#2a9d8f">REPARAR</span> el equipo de ${targetP.name}.`);
           return true;
         }
       }

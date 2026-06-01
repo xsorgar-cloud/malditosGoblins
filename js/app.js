@@ -69,7 +69,7 @@ const TutorialManager = {
       title: "Selección de Grupo",
       body: `
       <ul>
-        <li><strong>Roles:</strong> En el inicio de la partida debes seleccionra de 1 a 4 héroes. Cada rol tiene una habilidad única que consume 💠 Puntos de Energía.</li>
+        <li><strong>Roles:</strong> En el inicio de la partida debes seleccionra de 1 a 4 héroes. Cada rol tiene una habilidad única que consume 🔷 Puntos de Energía.</li>
         <li><br><strong>Ajustes (⚙️):</strong> Puedes configurar la dificultad inicial (Oleada y Hito) y los estados iniciales con los que empieza cada héroe.</li>
       </ul>`
     },
@@ -382,7 +382,7 @@ window.alert = function (messageText, callback = null) {
           const color = '#00d2ff';
           rowHtml += `
             <div style="display: flex; align-items: center; gap: 8px;">
-              <span style="font-size: 2.5rem; filter: drop-shadow(0 0 6px rgba(0, 210, 255, 0.4)); line-height: 1;">💠</span>
+              <span style="font-size: 2.5rem; filter: drop-shadow(0 0 6px rgba(0, 210, 255, 0.4)); line-height: 1;">🔷</span>
               <span style="font-size: 1.8rem; font-weight: bold; color: ${color}; line-height: 1;">${sign}${val}</span>
             </div>
           `;
@@ -441,7 +441,7 @@ window.alert = function (messageText, callback = null) {
           titleColor = '#ffd700'; // Dorado brillante
         } else if (blockTitle.includes('🔥') || blockTitle.toLowerCase().includes('escozor') || blockTitle.toLowerCase().includes('fuego') || blockTitle.toLowerCase().includes('piromante')) {
           titleColor = '#ff6600'; // Naranja para escozor
-        } else if (blockTitle.includes('⚡') || blockTitle.includes('💠') || blockTitle.toLowerCase().includes('calambre') || blockTitle.toLowerCase().includes('energía') || blockTitle.toLowerCase().includes('habilidad')) {
+        } else if (blockTitle.includes('⚡') || blockTitle.includes('🔷') || blockTitle.toLowerCase().includes('calambre') || blockTitle.toLowerCase().includes('energía') || blockTitle.toLowerCase().includes('habilidad')) {
           titleColor = '#00d2ff'; // Nuevo celeste de energía
           descColor = '#00d2ff';  // Todo el texto de energía en el color específico
         } else if (blockTitle.includes('🌀') || blockTitle.toLowerCase().includes('tembleque')) {
@@ -2157,7 +2157,7 @@ document.getElementById('btn-confirm-role-fill').addEventListener('click', () =>
 
   p.energy += energyGain;
 
-  gameState.addLog(`💠 <strong>${p.name}</strong> usó la acción Rellenar Rol. Asignó un ${val} y ganó ${energyGain} Energía.`);
+  gameState.addLog(`🔷 <strong>${p.name}</strong> usó la acción Rellenar Rol. Asignó un ${val} y ganó ${energyGain} Energía.`);
   gameState.consumeAction();
 
   document.getElementById('role-fill-overlay').classList.add('hidden');
@@ -3416,7 +3416,7 @@ function renderCombatOverlay() {
         ${projectedHtml}
         ${p.shield > 0 ? `<div class="stat shield" style="display: flex; align-items: center; gap: 10px; height: 24px; color: #33cc33;" title="Escudos del Protector"><span style="display: flex; align-items: center; width: 24px; justify-content: center;">🛡️</span> <span>Escudos: <span>${p.shield}</span></span></div>` : ''}
         <div class="stat gold" style="display: flex; align-items: center; gap: 10px; height: 24px;"><span style="display: flex; align-items: center; width: 24px; justify-content: center;">${COIN_SVG}</span> <span>Oro: <span>${p.mo}</span></span></div>
-        <div class="stat energy" style="display: flex; align-items: center; gap: 10px; height: 24px; color: #00d2ff;" title="Energía del Rol"><span style="display: flex; align-items: center; width: 24px; justify-content: center;">💠</span> <span>Energía: <span>${p.energy}</span></span></div>
+        <div class="stat energy" style="display: flex; align-items: center; gap: 10px; height: 24px; color: #00d2ff;" title="Energía del Rol"><span style="display: flex; align-items: center; width: 24px; justify-content: center;">🔷</span> <span>Energía: <span>${p.energy}</span></span></div>
       </div>
       ${goblinSection}
     `;
@@ -4292,7 +4292,7 @@ function renderCombatOverlay() {
   const energyPulse = p.energy > 0 ? 'energy-pulse' : '';
   const energyBadge = document.createElement('div');
   energyBadge.className = `role-energy-badge ${energyPulse}`;
-  energyBadge.innerText = `💠 ${p.energy}`;
+  energyBadge.innerText = `🔷 ${p.energy}`;
   roleContainer.appendChild(energyBadge);
 
   equipSlots.appendChild(roleContainer);
@@ -4673,7 +4673,7 @@ function renderPlayer() {
                 <div class="player-role ${canUseRole ? 'role-ready' : ''}" 
                      data-player-index="${index}"
                      style="background-image: url('${p.role.image.replace('rol_', 'mini_rol_')}'); background-size: cover; background-position: left; cursor: ${isCurrent ? 'pointer' : 'default'};">
-                     <div class="role-energy-badge ${energyPulse}">💠 ${p.energy}</div>
+                     <div class="role-energy-badge ${energyPulse}">🔷 ${p.energy}</div>
                 </div>
             </div>
             <div class="player-equipment">
@@ -4901,13 +4901,13 @@ window.showTargetSelectionModal = function (playerIndex) {
   energyVisor.className = 'modal-energy-visor';
   energyVisor.innerHTML = `
     <span>TU ENERGÍA:</span>
-    <span class="energy-val" style="font-size: 1.5rem;">${p.energy} 💠</span>
+    <span class="energy-val" style="font-size: 1.5rem;">${p.energy} 🔷</span>
   `;
   options.appendChild(energyVisor);
 
   // LÓGICA ESPECIAL PARA CURANDERO (Mostrar cartas rotas)
   if (roleId === 'curandero') {
-    desc.innerHTML = `Selecciona una carta equipada para <strong>repararla</strong>.<br><small>(Coste: 1💠 Propio / 2💠 Aliado)</small>`;
+    desc.innerHTML = `Selecciona una carta equipada para <strong>repararla</strong>.<br><small>(Coste: 1🔷 Propio / 2🔷 Aliado)</small>`;
 
     let anyBroken = false;
     gameState.players.forEach((targetP, targetIdx) => {
@@ -4924,7 +4924,7 @@ window.showTargetSelectionModal = function (playerIndex) {
         playerGroup.innerHTML = `
           <div class="repair-group-header">
             <div class="repair-group-title">${isSelf ? 'TU EQUIPO' : targetP.name.toUpperCase()}</div>
-            <div class="repair-group-cost ${p.energy < cost ? 'insufficient' : ''}">Coste: ${cost}💠</div>
+            <div class="repair-group-cost ${p.energy < cost ? 'insufficient' : ''}">Coste: ${cost}🔷</div>
           </div>
         `;
 
@@ -4961,7 +4961,7 @@ window.showTargetSelectionModal = function (playerIndex) {
     }
   } else if (roleId === 'guerrero' || roleId === 'mago') {
     // LÓGICA PARA GUERRERO / MAGO (Atacar Goblins)
-    desc.innerHTML = `Selecciona un Goblin para infligirle <strong>1 daño directo</strong>.<br><small>(Coste: 1💠)</small>`;
+    desc.innerHTML = `Selecciona un Goblin para infligirle <strong>1 daño directo</strong>.<br><small>(Coste: 1🔷)</small>`;
 
     let allGoblins = [];
     if (roleId === 'mago') {
@@ -5075,7 +5075,7 @@ window.showTargetSelectionModal = function (playerIndex) {
     <div class="target-name">✨ A TI MISMO</div>
     <div class="target-stats">❤️ ${p.hp}/${p.maxHp} ${COIN_SVG} ${p.mo}</div>
     <div class="target-desc">${selfDesc}</div>
-    <div class="target-cost ${p.energy < 1 ? 'insufficient' : ''}">COSTE: 1💠</div>
+    <div class="target-cost ${p.energy < 1 ? 'insufficient' : ''}">COSTE: 1🔷</div>
   `;
     btnSelf.onclick = () => {
       if (isDisabledSelf) return;
@@ -5126,7 +5126,7 @@ window.showTargetSelectionModal = function (playerIndex) {
           <div class="target-name">🤝 ${otherP.name}</div>
           <div class="target-stats">❤️ ${otherP.hp}/${otherP.maxHp} ${COIN_SVG} ${otherP.mo}</div>
           <div class="target-desc">${otherDesc}</div>
-          <div class="target-cost ${p.energy < 2 ? 'insufficient' : ''}">COSTE: 2💠</div>
+          <div class="target-cost ${p.energy < 2 ? 'insufficient' : ''}">COSTE: 2🔷</div>
         `;
 
           obtn.onclick = () => {
