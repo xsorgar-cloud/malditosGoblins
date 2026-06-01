@@ -3252,6 +3252,7 @@ function renderCombatOverlay() {
     let projShield = p.shield || 0;
     let projHeal = 0;
     let projDamagePerTarget = {};
+    let uninterceptedExtraD4Count = 0;
     
     if (!isCrampPhase) {
       c.goblins.forEach(g => { projDamagePerTarget[g.uid] = { damage: 0, shield: 0 }; });
@@ -3304,7 +3305,7 @@ function renderCombatOverlay() {
         }
       }
 
-      let uninterceptedExtraD4Count = 0;
+      uninterceptedExtraD4Count = 0;
 
       c.goblins.forEach(gob => {
         if (gob.isDying) return;
