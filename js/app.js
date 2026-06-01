@@ -1182,9 +1182,11 @@ function initSendaSelectionScreen() {
       align-items: center;
       max-width: 98%;
       overflow-x: auto;
+      overflow-y: hidden;
       padding: 30px 15px;
       box-sizing: border-box;
       margin-bottom: 25px;
+      flex-shrink: 0;
     }
     .split-card-container::-webkit-scrollbar {
       height: 8px;
@@ -1309,6 +1311,7 @@ function initSendaSelectionScreen() {
       display: flex;
       gap: 20px;
       margin-top: 15px;
+      flex-shrink: 0;
     }
 
     @media (max-width: 768px) {
@@ -1356,12 +1359,12 @@ function initSendaSelectionScreen() {
   
   const title = document.createElement('h2');
   title.innerText = "SELECCIONA TU SENDA";
-  title.style.cssText = "margin: 0 0 5px 0; color: var(--gold); font-family: 'Cinzel', serif; font-size: 2.2rem; letter-spacing: 2px; text-shadow: 0 2px 10px rgba(0,0,0,0.5);";
+  title.style.cssText = "margin: 0 0 5px 0; color: var(--gold); font-family: 'Cinzel', serif; font-size: 2.2rem; letter-spacing: 2px; text-shadow: 0 2px 10px rgba(0,0,0,0.5); flex-shrink: 0;";
   screen.appendChild(title);
 
   const subtitle = document.createElement('p');
   subtitle.innerText = "Descubre las reglas de cada senda y su jefe final antes de comenzar tu aventura.";
-  subtitle.style.cssText = "margin: 0 0 10px 0; color: #aaa; font-family: 'Outfit', sans-serif; font-size: 1rem; text-align: center;";
+  subtitle.style.cssText = "margin: 0 0 10px 0; color: #aaa; font-family: 'Outfit', sans-serif; font-size: 1rem; text-align: center; flex-shrink: 0;";
   screen.appendChild(subtitle);
 
   const container = document.createElement('div');
