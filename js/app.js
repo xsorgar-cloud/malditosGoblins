@@ -3995,43 +3995,41 @@ function renderCombatOverlay() {
           el.style.borderRadius = '10px';
           el.style.boxShadow = '0 3px 8px rgba(0,0,0,0.9), inset 0 0 8px rgba(0,0,0,0.6)';
 
-          if (gob.level === 3 && item.val === 4) {
-            let extraBadge = document.createElement('span');
-            extraBadge.className = 'extra-d4-badge';
-            let rolledVal = item.extraDmgRoll !== undefined ? `+${item.extraDmgRoll}` : '+1d4';
-            extraBadge.innerText = rolledVal;
-            extraBadge.style.fontSize = '0.9rem';
-            extraBadge.style.fontWeight = 'bold';
-            extraBadge.style.padding = '2px 5px';
-            extraBadge.style.borderRadius = '4px';
-            extraBadge.style.marginLeft = '-5px';
-            extraBadge.style.marginRight = '5px';
-            extraBadge.style.zIndex = '10';
-            if (isIntercepted) {
-              extraBadge.style.color = '#888';
-              extraBadge.style.textDecoration = 'line-through';
-              extraBadge.style.background = 'rgba(255, 255, 255, 0.1)';
-              extraBadge.title = 'Mitigado por intercepción';
-            } else {
-              extraBadge.style.color = '#ff4d4d';
-              extraBadge.style.background = 'rgba(255, 77, 77, 0.2)';
-              extraBadge.style.border = '1px solid #ff4d4d';
-              extraBadge.style.boxShadow = '0 0 8px rgba(255, 77, 77, 0.4)';
-              extraBadge.title = 'Daño Extra si no se intercepta';
-            }
-            diceCont.appendChild(el);
-            diceCont.appendChild(extraBadge);
-            return;
-          }
         } else {
           el.className = 'mod-green';
-          el.innerText = (item.val >= 0 ? '+' : '') + item.val;
+          let valToShow = item.val;
+          let isExtraDmgModifier = false;
+          
+          if (idx > 0) {
+            let prevDie = c.dice.green[gob.uid].details[idx - 1];
+            if (prevDie && prevDie.type === 'die' && prevDie.extraDmgRoll !== undefined) {
+              let prevNaturalIdx = 0;
+              for (let i = 0; i < idx - 1; i++) {
+                if (c.dice.green[gob.uid].details[i].type === 'die') {
+                  prevNaturalIdx++;
+                }
+              }
+              const isPrevIntercepted = intAsgs && intAsgs.some(asg => Number(asg.goblinDieIndex) === Number(prevNaturalIdx));
+              if (!isPrevIntercepted) {
+                valToShow = item.val + prevDie.extraDmgRoll;
+                isExtraDmgModifier = true;
+              }
+            }
+          }
+
+          el.innerText = (valToShow >= 0 ? '+' : '') + valToShow;
           el.style.fontSize = '1.6rem';
           el.style.padding = '2px 6px';
           el.style.background = 'rgba(0,0,0,0.7)';
           el.style.borderRadius = '4px';
           el.style.fontWeight = 'bold';
-          if (item.isHitoRule) {
+          
+          if (isExtraDmgModifier) {
+            el.style.color = '#ff4d4d';
+            el.style.border = '1px solid #ff4d4d';
+            el.style.boxShadow = '0 0 8px rgba(255, 77, 77, 0.4)';
+            el.title = `Daño extra del dado (+${valToShow - item.val}) aplicado`;
+          } else if (item.isHitoRule) {
             el.style.color = '#ff4d4d';
             el.style.border = '1px solid #ff4d4d';
             el.style.boxShadow = '0 0 8px rgba(255, 77, 77, 0.4)';
