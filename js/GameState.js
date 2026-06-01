@@ -1654,7 +1654,26 @@ class GameState {
       if (this.activeSenda !== 'recaudador') {
         this.addLog(`💀 <strong>Represalia:</strong> Causó ${damage} daño a <strong>${player.name}</strong>.`);
       }
+
+      if (!this.retaliationEscudoDeOroTriggers) {
+        this.retaliationEscudoDeOroTriggers = [];
+      }
+      const hpBefore = player.hp;
+      const moBefore = player.mo;
+
       this.damagePlayer(player, damage, false, 'Represalia');
+
+      if (this.activeSenda === 'recaudador') {
+        const hpDiff = hpBefore - player.hp;
+        const moDiff = moBefore - player.mo;
+        this.retaliationEscudoDeOroTriggers.push({
+          playerName: player.name,
+          goblinLevel: goblin.level,
+          moLost: moDiff,
+          hpLost: hpDiff,
+          hasGold: moBefore > 0
+        });
+      }
 
       // Eliminar de la cola
       this.retaliationQueue.splice(gobIdx, 1);

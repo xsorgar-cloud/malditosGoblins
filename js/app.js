@@ -5547,28 +5547,48 @@ function assignAllRetaliationToPlayer(pIndex) {
   const remaining = [...gameState.retaliationQueue];
   activeSelectedOrbUids = [];
 
+  gameState.retaliationEscudoDeOroTriggers = [];
+
   remaining.forEach(gob => {
     gameState.assignRetaliationDamage(gob.uid, pIndex);
   });
 
-  updateUI();
+  const triggers = gameState.retaliationEscudoDeOroTriggers || [];
 
-  // Solo realizamos limpieza de represalia si la partida NO ha terminado
-  if (!gameState.isGameOver) {
-    if (!gameState.isRetaliationPhase) {
-      document.getElementById('global-event-overlay').classList.add('hidden');
-      const modal = document.querySelector('.event-modal');
-      if (modal) modal.classList.remove('retaliation-theme');
-      container.classList.remove('retaliation-layout');
-    } else if (gameState.retaliationQueue.length > 0) {
-      renderRetaliationModal();
+  const showNextUI = () => {
+    updateUI();
+    if (!gameState.isGameOver) {
+      if (!gameState.isRetaliationPhase) {
+        document.getElementById('global-event-overlay').classList.add('hidden');
+        const modal = document.querySelector('.event-modal');
+        if (modal) modal.classList.remove('retaliation-theme');
+        container.classList.remove('retaliation-layout');
+      } else if (gameState.retaliationQueue.length > 0) {
+        renderRetaliationModal();
+      }
     }
+  };
+
+  if (triggers.length > 0) {
+    let messageLines = ["¡ESCUDO DE ORO!\n"];
+    triggers.forEach(t => {
+      if (t.hasGold) {
+        messageLines.push(`🪙 **${t.playerName}** usa 1 mo para mitigar el ataque del Goblin de Nvl ${t.goblinLevel}.\n• Monedas perdidas: -1 mo\n• Vida perdida: -${t.hpLost} PV\n`);
+      } else {
+        messageLines.push(`💸 **${t.playerName}** no tiene monedas de oro. ¡Sufre +1 daño de penalización!\n• Vida perdida: -${t.hpLost} PV (Ataque Nvl ${t.goblinLevel} + 1 extra)\n`);
+      }
+    });
+    alert(messageLines.join('\n'), showNextUI);
+  } else {
+    showNextUI();
   }
 }
 
 function handleRetaliationChoice(gobUids, playerIdx) {
   activeSelectedOrbUids = [];
   const uids = Array.isArray(gobUids) ? gobUids : [gobUids];
+
+  gameState.retaliationEscudoDeOroTriggers = [];
 
   let anyAssigned = false;
   uids.forEach(uid => {
@@ -5578,18 +5598,36 @@ function handleRetaliationChoice(gobUids, playerIdx) {
   });
 
   if (anyAssigned) {
-    // Pequeño retardo para que se vea la actualización del HUD antes de re-renderizar el modal
-    setTimeout(() => {
+    const triggers = gameState.retaliationEscudoDeOroTriggers || [];
+
+    const showNextUI = () => {
       updateUI();
-      // Solo cerramos el overlay si la fase de represalia ha terminado Y la partida sigue activa
-      if (!gameState.isRetaliationPhase && !gameState.isGameOver) {
-        document.getElementById('global-event-overlay').classList.add('hidden');
-        const modal = document.querySelector('.event-modal');
-        if (modal) modal.classList.remove('retaliation-theme');
-        const container = document.getElementById('event-choices-container');
-        if (container) container.classList.remove('retaliation-layout');
+      if (!gameState.isGameOver) {
+        if (!gameState.isRetaliationPhase) {
+          document.getElementById('global-event-overlay').classList.add('hidden');
+          const modal = document.querySelector('.event-modal');
+          if (modal) modal.classList.remove('retaliation-theme');
+          const container = document.getElementById('event-choices-container');
+          if (container) container.classList.remove('retaliation-layout');
+        } else {
+          renderRetaliationModal();
+        }
       }
-    }, 100);
+    };
+
+    if (triggers.length > 0) {
+      let messageLines = ["¡ESCUDO DE ORO!\n"];
+      triggers.forEach(t => {
+        if (t.hasGold) {
+          messageLines.push(`🪙 **${t.playerName}** usa 1 mo para mitigar el ataque del Goblin de Nvl ${t.goblinLevel}.\n• Monedas perdidas: -1 mo\n• Vida perdida: -${t.hpLost} PV\n`);
+        } else {
+          messageLines.push(`💸 **${t.playerName}** no tiene monedas de oro. ¡Sufre +1 daño de penalización!\n• Vida perdida: -${t.hpLost} PV (Ataque Nvl ${t.goblinLevel} + 1 extra)\n`);
+        }
+      });
+      alert(messageLines.join('\n'), showNextUI);
+    } else {
+      setTimeout(showNextUI, 100);
+    }
   }
 }
 
