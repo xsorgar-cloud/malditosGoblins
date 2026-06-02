@@ -2665,8 +2665,9 @@ function renderMarket() {
   if (p && p.mo >= 1) {
     const btnExplore = document.createElement('button');
     btnExplore.className = 'btn secondary btn-explore-market';
-    btnExplore.style.display = 'block';
-    btnExplore.style.margin = '0 auto 15px auto';
+    btnExplore.style.position = 'absolute';
+    btnExplore.style.left = 'calc(50% + 295px)';
+    btnExplore.style.top = '10px';
     btnExplore.style.padding = '8px 14px';
     btnExplore.style.fontSize = '1.1rem';
     btnExplore.style.borderColor = 'var(--gold)';
@@ -2676,12 +2677,7 @@ function renderMarket() {
     btnExplore.onclick = () => openExploreMarketModal();
 
     if (marketZone) {
-      const marketTitle = marketZone.querySelector('.market-title');
-      if (marketTitle) {
-        marketTitle.after(btnExplore);
-      } else {
-        marketZone.appendChild(btnExplore);
-      }
+      marketZone.appendChild(btnExplore);
     } else {
       marketDecks.appendChild(btnExplore);
     }
