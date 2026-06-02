@@ -1892,7 +1892,7 @@ function openHitosModal() {
     const badgeHTML = isCompleted ? `<div style="background: #2d6a4f; color: white; padding: 4px 10px; border-radius: 20px; font-size: 0.85rem; font-weight: bold; border: 1px solid #52b788; box-shadow: 0 0 10px rgba(82,183,136,0.5);">&#10003;</div>` : '';
 
     let ruleHTML = '';
-    if (hito.ruleDesc) {
+    if (hito.ruleDesc && !hito.isBoss) {
       ruleHTML = `<div style="font-size: 0.85rem; color: var(--gold); margin-top: 4px; font-style: italic;">Regla: ${hito.ruleDesc}</div>`;
     }
 
@@ -1908,7 +1908,7 @@ function openHitosModal() {
   html += '</ul>';
 
   content.innerHTML = html;
-  bossPreview.innerHTML = bossImgHTML;
+  bossPreview.innerHTML = rulesHTML + bossImgHTML;
   modal.classList.remove('hidden');
 }
 
