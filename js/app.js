@@ -1844,7 +1844,10 @@ function openHitosModal() {
     const sendaNames = {
       iniciacion: "Senda de Iniciaci\u00F3n",
       guerrero: "Senda de El Ze\u00F1or de la Guerra",
-      rey_brujo: "Senda de El Rey Brujo"
+      rey_brujo: "Senda de El Rey Brujo",
+      recaudador: "Senda de El Gran Recaudador",
+      piromante: "Senda de El Piromante",
+      la_madre: "Senda de La Madre"
     };
     const sendaName = sendaNames[gameState.activeSenda] || "Senda de Iniciaci\u00F3n";
     titleEl.innerText = `${sendaName} - Hitos y Reglas`;
