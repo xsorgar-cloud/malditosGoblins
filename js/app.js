@@ -2249,6 +2249,22 @@ document.getElementById('btn-cancel-role-fill').addEventListener('click', () => 
 const logPanel = document.getElementById('log-panel');
 const logContent = document.getElementById('log-content');
 
+const btnToggleMenu = document.getElementById('btn-toggle-global-menu');
+if (btnToggleMenu) {
+  btnToggleMenu.addEventListener('click', () => {
+    const menuCollapsible = document.getElementById('global-menu-collapsible');
+    if (menuCollapsible) {
+      if (menuCollapsible.style.display === 'none') {
+        menuCollapsible.style.display = 'flex';
+        btnToggleMenu.innerText = '▶';
+      } else {
+        menuCollapsible.style.display = 'none';
+        btnToggleMenu.innerText = '◀';
+      }
+    }
+  });
+}
+
 document.getElementById('btn-toggle-log').addEventListener('click', () => {
   if (logPanel.style.display === 'none' || logPanel.style.display === '') {
     logPanel.style.display = 'flex';

@@ -5,7 +5,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Malditos Goblins</title>
-    <link rel="stylesheet" href="css/style.css?v=1.198">
+    <link rel="stylesheet" href="css/style.css?v=1.199">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap"
         rel="stylesheet">
 </head>
@@ -25,22 +25,27 @@
 
 
         <div style="display: flex; gap: 8px; align-items: center;">
-            <label style="color: #fff; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; cursor: pointer; background: rgba(10,10,15,0.9); padding: 4px 8px; border-radius: 12px; border: 1px solid rgba(212,175,55,0.3);">
-                <input type="checkbox" id="cheat-dice-toggle" style="accent-color: var(--accent-red); cursor: pointer;">
-                Trampas
-            </label>
-            <button id="btn-toggle-log" class="btn secondary"
-                style="font-size: 0.85rem; padding: 6px 14px; border-radius: 20px; background: rgba(10,10,15,0.9); box-shadow: 0 2px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 6px; border: 1px solid rgba(212, 175, 55, 0.3); height: 32px;"
-                title="Ver Historial de Acciones">📜 Historial</button>
-            <button id="btn-debug-combat" class="btn secondary"
-                style="border-radius: 20px; padding: 6px 14px; font-size: 0.85rem; box-shadow: 0 2px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 6px; background: rgba(10,10,15,0.9); border: 1px solid #ff3366; color: #ff3366; height: 32px;"
-                title="Ver último combate">🐞</button>
-			<button id="btn-save-game" class="btn secondary"
-                style="font-size: 0.85rem; padding: 6px 14px; border-radius: 20px; background: rgba(10,10,15,0.9); box-shadow: 0 2px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 6px; border: 1px solid rgba(212, 175, 55, 0.3); height: 32px;"
-                title="Guardar Partida">💾</button>
+            <div id="global-menu-collapsible" style="display: none; gap: 8px; align-items: center;">
+                <label style="color: #fff; font-size: 0.8rem; display: flex; align-items: center; gap: 5px; cursor: pointer; background: rgba(10,10,15,0.9); padding: 4px 8px; border-radius: 12px; border: 1px solid rgba(212,175,55,0.3);">
+                    <input type="checkbox" id="cheat-dice-toggle" style="accent-color: var(--accent-red); cursor: pointer;">
+                    Trampas
+                </label>
+                <button id="btn-toggle-log" class="btn secondary"
+                    style="font-size: 0.85rem; padding: 6px 14px; border-radius: 20px; background: rgba(10,10,15,0.9); box-shadow: 0 2px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 6px; border: 1px solid rgba(212, 175, 55, 0.3); height: 32px;"
+                    title="Ver Historial de Acciones">📜 Historial</button>
+                <button id="btn-debug-combat" class="btn secondary"
+                    style="border-radius: 20px; padding: 6px 14px; font-size: 0.85rem; box-shadow: 0 2px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 6px; background: rgba(10,10,15,0.9); border: 1px solid #ff3366; color: #ff3366; height: 32px;"
+                    title="Ver último combate">🐞</button>
+                <button id="btn-save-game" class="btn secondary"
+                    style="font-size: 0.85rem; padding: 6px 14px; border-radius: 20px; background: rgba(10,10,15,0.9); box-shadow: 0 2px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 6px; border: 1px solid rgba(212, 175, 55, 0.3); height: 32px;"
+                    title="Guardar Partida">💾</button>
+            </div>
 			<button id="btn-open-settings" class="btn secondary"
                 style="font-size: 0.85rem; padding: 6px 14px; border-radius: 20px; background: rgba(10,10,15,0.9); box-shadow: 0 2px 10px rgba(0,0,0,0.5); display: flex; align-items: center; gap: 6px; border: 1px solid rgba(212, 175, 55, 0.3); height: 32px;"
                 title="Ajustes de Partida">⚙️</button>
+            <button id="btn-toggle-global-menu" class="btn secondary"
+                style="font-size: 1rem; padding: 6px 14px; border-radius: 20px; background: rgba(10,10,15,0.9); box-shadow: 0 2px 10px rgba(0,0,0,0.5); display: flex; align-items: center; justify-content: center; border: 1px solid rgba(212, 175, 55, 0.3); height: 32px; width: 32px;"
+                title="Expandir Menú">◀</button>
         </div>
         <button id="btn-tutorial" class="btn primary hidden"
             style="border-radius: 20px; padding: 6px 14px; font-size: 0.85rem; box-shadow: 0 4px 15px rgba(0,0,0,0.8); display: flex; align-items: center; gap: 6px; background: linear-gradient(45deg, #235f8a, #40bae9, #21f2df); border: none; height: 32px;">
@@ -199,7 +204,7 @@
                 <!-- NUMERO DE VERSION (A LA DERECHA DEL ENGRANAJE) -->
                 <div id="game-version-badge"
                     style="position: absolute; top: 28px; left: 70px; z-index: 10; font-family: 'Cinzel', serif; font-size: 0.85rem; font-weight: bold; color: var(--gold); background: rgba(10, 10, 15, 0.8); padding: 4px 12px; border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); backdrop-filter: blur(5px); letter-spacing: 1px;">
-                    v.1.167
+                    v.1.168
                 </div>
 
                 <h2 class="setup-title" style="margin-top: 0; margin-bottom: 10px; font-size: 2.2rem; text-align: center;">Configura tu Grupo</h2>
@@ -740,9 +745,9 @@
         </div>
     </div>
 
-    <script src="js/database.js?v=1.198"></script>
-    <script src="js/GameState.js?v=1.198"></script>
-    <script src="js/app.js?v=1.198"></script>
+    <script src="js/database.js?v=1.199"></script>
+    <script src="js/GameState.js?v=1.199"></script>
+    <script src="js/app.js?v=1.199"></script>
     <!-- DEBUG COMBAT MODAL -->
     <div id="debug-combat-modal" class="hidden" style="position: fixed; top: 60px; right: 20px; width: 550px; max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; text-align: left; border: 2px solid #ff3366; background: rgba(15, 10, 25, 0.95); box-shadow: 0 0 40px rgba(255, 51, 102, 0.4); border-radius: 15px; padding: 20px; z-index: 99999; backdrop-filter: blur(5px);">
         <div id="debug-combat-header" style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; cursor: grab; padding-bottom: 5px; border-bottom: 1px solid rgba(255, 51, 102, 0.3);">
