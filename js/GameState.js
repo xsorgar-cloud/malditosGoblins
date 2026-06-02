@@ -2255,7 +2255,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
         pl.maxHp += 5;
         pl.hp += 5;
       }
-      this.addLog(`🎉 <span style="color:#ecf542">¡<strong>Los jugadores subieron al Nivel ${pLeader.level}!</strong></span> 🎉`);
+      this.addLog(`🎉 <span style="color:#ecf542">¡<strong>Los jugadores subieron al Nivel ${pLeader.level}!  ❤️+5</strong></span> 🎉`);
 
       // Activar flag de elección para todos los jugadores
       this.players.forEach(pl => {

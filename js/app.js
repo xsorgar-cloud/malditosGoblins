@@ -3699,6 +3699,11 @@ function renderCombatOverlay() {
         document.getElementById('btn-confirm-attack').innerText = `Atacar Goblins (0)`;
         updateUI();
 
+        const debugCombatModal = document.getElementById('debug-combat-modal');
+        if (debugCombatModal && !debugCombatModal.classList.contains('hidden') && typeof window.updateDebugCombatModalData === 'function') {
+          window.updateDebugCombatModalData();
+        }
+
         // Trigger bounce animation for damaged surviving Goblins
         setTimeout(() => {
           console.log("[BOUNCE] Starting animation check...");
@@ -6361,8 +6366,7 @@ setInterval(() => {
 // --- DEBUG COMBAT ---
 const btnDebugCombat = document.getElementById('btn-debug-combat');
 
-if (btnDebugCombat) {
-  btnDebugCombat.addEventListener('click', () => {
+window.updateDebugCombatModalData = function() {
     const debugCombatModal = document.getElementById('debug-combat-modal');
     const debugCombatData = document.getElementById('debug-combat-data');
     if (!debugCombatModal || !debugCombatData) return;
@@ -6629,7 +6633,6 @@ if (btnDebugCombat) {
       html += `</div>`;
       debugCombatData.innerHTML = html;
     }
-    debugCombatModal.classList.remove('hidden');
     
     const btnCloseDebugModal = document.getElementById('btn-close-debug-modal');
     if (btnCloseDebugModal) {
@@ -6637,6 +6640,13 @@ if (btnDebugCombat) {
         debugCombatModal.classList.add('hidden');
       };
     }
+};
+
+if (btnDebugCombat) {
+  btnDebugCombat.addEventListener('click', () => {
+    window.updateDebugCombatModalData();
+    const debugCombatModal = document.getElementById('debug-combat-modal');
+    if (debugCombatModal) debugCombatModal.classList.remove('hidden');
   });
 }
 // Make debug modal draggable
