@@ -2757,7 +2757,7 @@ function getGoblinImageWithHpState(goblin, imageUrl) {
   }
 
   if (suffix && imageUrl && typeof imageUrl === 'string') {
-    const isStandard = /\/0[1-5]\.(jpg|jpeg|png)$/i.test(imageUrl);
+    const isStandard = /\/(nomo_)?(0[1-5]|invocacion_0[1-5])\.(jpg|jpeg|png)$/i.test(imageUrl);
     if (isStandard) {
       return imageUrl.replace(/(\.[\w\d]+)$/, `${suffix}$1`);
     }
@@ -2917,7 +2917,9 @@ function renderBattlefield() {
       const pLeader = gameState.players[gameState.currentPlayerIndex] || gameState.players[0];
       if (goblin.level < pLeader.level) {
         gobEl.classList.add('goblin-no-reward');
-        imageUrl = imageUrl.replace(/([^\/]+)$/, 'nomo_$1');
+        if (!goblin.isInvocacion && !imageUrl.includes('invocacion')) {
+          imageUrl = imageUrl.replace(/([^\/]+)$/, 'nomo_$1');
+        }
       }
     }
     imageUrl = getGoblinImageWithHpState(goblin, imageUrl);
@@ -3788,7 +3790,9 @@ function renderCombatOverlay() {
       const pActive = gameState.players[gameState.currentPlayerIndex] || gameState.players[0];
       if (gob.level < pActive.level) {
         gobCard.classList.add('goblin-no-reward');
-        imageUrl = imageUrl.replace(/([^\/]+)$/, 'nomo_$1');
+        if (!gob.isInvocacion && !imageUrl.includes('invocacion')) {
+          imageUrl = imageUrl.replace(/([^\/]+)$/, 'nomo_$1');
+        }
       }
     }
     imageUrl = getGoblinImageWithHpState(gob, imageUrl);
@@ -5139,7 +5143,9 @@ window.showTargetSelectionModal = function (playerIndex) {
           borderColor = '#9d4edd';
         } else if (gob.level < p.level) {
           borderColor = '#000000';
-          displayImg = displayImg.replace(/([^\/]+)$/, 'nomo_$1');
+          if (!gob.isInvocacion && !displayImg.includes('invocacion')) {
+            displayImg = displayImg.replace(/([^\/]+)$/, 'nomo_$1');
+          }
         }
 
         const gbtn = document.createElement('button');
