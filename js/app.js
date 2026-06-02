@@ -1908,7 +1908,7 @@ function openHitosModal() {
   html += '</ul>';
 
   content.innerHTML = html;
-  bossPreview.innerHTML = rulesHTML + bossImgHTML;
+  bossPreview.innerHTML = bossImgHTML;
   modal.classList.remove('hidden');
 }
 
