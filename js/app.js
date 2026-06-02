@@ -2780,9 +2780,9 @@ function getGoblinImageWithHpState(goblin, imageUrl) {
   }
 
   if (suffix && imageUrl && typeof imageUrl === 'string') {
-    const isStandard = /\/(nomo_)?(0[1-5]|invocacion_0[1-5])\.(jpg|jpeg|png)$/i.test(imageUrl);
+    const isStandard = /\/(nomo_)?(0\d|invocacion.*)\.(jpg|jpeg|png)(\?.*)?$/i.test(imageUrl);
     if (isStandard) {
-      return imageUrl.replace(/(\.[\w\d]+)$/, `${suffix}$1`);
+      return imageUrl.replace(/(\.(jpg|jpeg|png))(\?.*)?$/i, `${suffix}$1$3`);
     }
   }
   return imageUrl;
