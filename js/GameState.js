@@ -1239,7 +1239,7 @@ class GameState {
             escozorDamageDealt: escozorDamageDealt,
             warlordExtraDmg: warlordExtraDmg,
             healed: playerHeal,
-            finalDamageHpChange: Math.max(0, hpBefore - p.hp)
+            finalDamageHpChange: Math.max(0, hpBefore - (p.hp - ((p.level > levelBefore ? p.level - levelBefore : 0) * 5)))
           }
         }
       };
