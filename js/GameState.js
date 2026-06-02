@@ -433,6 +433,7 @@ class GameState {
     let energyBefore = p.energy;
     let moBefore = p.mo;
     let pexBefore = p.pex;
+    let levelBefore = p.level;
     let equippedBefore = p.equipped.map(eq => ({ id: eq.id, name: eq.name, isBroken: eq.isBroken }));
 
     let playerDiceDetails = [];
@@ -450,6 +451,7 @@ class GameState {
           energy: p.energy,
           mo: p.mo,
           pex: p.pex,
+          level: p.level,
           role: p.role.id,
           equipped: p.equipped.map(eq => ({ id: eq.id, name: eq.name, isBroken: eq.isBroken }))
         },
@@ -1204,6 +1206,7 @@ class GameState {
           energy: energyBefore, // Energía al inicio
           mo: moBefore, // Oro al inicio
           pex: pexBefore, // Experiencia al inicio
+          level: levelBefore, // Nivel al inicio
           role: p.role.id,
           equipped: equippedBefore // Equipamiento al inicio
         },
@@ -1227,7 +1230,7 @@ class GameState {
           finalPlayerOutcome: {
             hpBefore: hpBefore,
             hpAfter: p.hp,
-            levelBefore: pBeforeState ? pBeforeState.level : p.level,
+            levelBefore: levelBefore,
             levelAfter: p.level,
             directDamageReceived: totalDirectGoblinDamage,
             normalDamageIncoming: totalNormalGoblinDamage,
