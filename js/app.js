@@ -2605,26 +2605,30 @@ function renderMarket() {
         // Si no tiene dinero, no hacemos nada (la UI ya debería reflejarlo o buyFromMarket fallará)
         if (player.mo < topCard.cost) return;
 
-        const buyAction = () => {
-          const hasCard = player.equipped.some(eq => eq.id === topCard.id);
+        const executeBuy = () => {
+          const result = gameState.buyFromMarket(type);
+          if (result === "OVERWEIGHT") {
+            alert(`¡DEMASIADO PESO! No puedes llevar más de ${DB.playerLevels[player.level - 1].blocks} bloques de equipo. Sube de nivel para aumentar tu capacidad.`);
+          } else if (result) {
+            animateCardPurchase(deckEl);
+            updateUI();
+          }
+        };
 
+        const hasCard = player.equipped.some(eq => eq.id === topCard.id);
+
+        const promptBuy = () => {
           if (hasCard) {
             openDuplicateWarningModal(type, topCard);
           } else {
-            const result = gameState.buyFromMarket(type);
-            if (result === "OVERWEIGHT") {
-              alert(`¡DEMASIADO PESO! No puedes llevar más de ${DB.playerLevels[player.level - 1].blocks} bloques de equipo. Sube de nivel para aumentar tu capacidad.`);
-            } else if (result) {
-              animateCardPurchase(deckEl);
-              updateUI();
-            }
+            openPurchaseConfirmationModal(topCard, executeBuy);
           }
         };
 
         if (!gameState.isMarketPhase) {
-          openActionLossWarningModal(buyAction);
+          openActionLossWarningModal(promptBuy);
         } else {
-          buyAction();
+          promptBuy();
         }
       });
 
@@ -6020,6 +6024,42 @@ function openDuplicateWarningModal(type, card) {
   const btnNo = document.createElement('button');
   btnNo.className = 'btn secondary';
   btnNo.innerText = "CANCELAR COMPRA";
+  btnNo.onclick = () => {
+    overlay.classList.add('hidden');
+  };
+
+  container.appendChild(btnYes);
+  container.appendChild(btnNo);
+  overlay.classList.remove('hidden');
+}
+
+function openPurchaseConfirmationModal(card, onConfirm) {
+  const overlay = document.getElementById('global-event-overlay');
+  const title = document.getElementById('event-modal-title');
+  const desc = document.getElementById('event-modal-desc');
+  const container = document.getElementById('event-choices-container');
+
+  title.innerText = "CONFIRMAR COMPRA";
+  title.style.color = "var(--gold)";
+  desc.innerHTML = `¿Deseas comprar <strong>${card.name}</strong> por <strong>${card.cost} mo</strong>?`;
+
+  container.innerHTML = '';
+  const marker = document.createElement('div');
+  marker.className = 'purchase-confirmation-card';
+  container.appendChild(marker);
+
+  const btnYes = document.createElement('button');
+  btnYes.className = 'btn primary';
+  btnYes.style.marginRight = '10px';
+  btnYes.innerText = "SÍ, COMPRAR";
+  btnYes.onclick = () => {
+    overlay.classList.add('hidden');
+    onConfirm();
+  };
+
+  const btnNo = document.createElement('button');
+  btnNo.className = 'btn secondary';
+  btnNo.innerText = "CANCELAR";
   btnNo.onclick = () => {
     overlay.classList.add('hidden');
   };
