@@ -1227,6 +1227,8 @@ class GameState {
           finalPlayerOutcome: {
             hpBefore: hpBefore,
             hpAfter: p.hp,
+            levelBefore: pBeforeState ? pBeforeState.level : p.level,
+            levelAfter: p.level,
             directDamageReceived: totalDirectGoblinDamage,
             normalDamageIncoming: totalNormalGoblinDamage,
             damageBlocked: blockedDamage,

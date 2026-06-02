@@ -3608,8 +3608,16 @@ function renderCombatOverlay() {
       if (dbg && dbg.player) {
         const pBeforeState = dbg.player;
 
+        // Level Up
+        let levelUpHpBonus = 0;
+        if (pAfter.level > pBeforeState.level) {
+          hasLevelUp = true;
+          levelUpLine = `🎉 Nivel: ¡Subida de nivel! (Nivel ${pBeforeState.level} ➔ ${pAfter.level})`;
+          levelUpHpBonus = (pAfter.level - pBeforeState.level) * 5;
+        }
+
         // 1. ESTADÍSTICAS DEL COMBATE
-        const hpDiff = pAfter.hp - pBeforeState.hp;
+        const hpDiff = pAfter.hp - pBeforeState.hp - levelUpHpBonus;
         const moDiff = pAfter.mo - pBeforeState.mo;
         const energyDiff = pAfter.energy - pBeforeState.energy;
         const pexDiff = pAfter.pex - pBeforeState.pex;
@@ -3617,12 +3625,6 @@ function renderCombatOverlay() {
         if (hpDiff !== 0 || moDiff !== 0 || energyDiff !== 0 || pexDiff !== 0) {
           hasStatsChange = true;
           statsLine = `COMBAT_STATS: hp=${hpDiff};mo=${moDiff};energy=${energyDiff};pex=${pexDiff}`;
-        }
-
-        // Level Up
-        if (pAfter.level > pBeforeState.level) {
-          hasLevelUp = true;
-          levelUpLine = `🎉 Nivel: ¡Subida de nivel! (Nivel ${pBeforeState.level} ➔ ${pAfter.level})`;
         }
 
         // 3. DAÑO A TU EQUIPO
@@ -6526,10 +6528,17 @@ if (btnDebugCombat) {
         }
         
         let hpChangeStr = '';
+        let hpGainFromLevelUp = 0;
+        if (outcome.levelAfter > outcome.levelBefore) {
+          hpGainFromLevelUp = (outcome.levelAfter - outcome.levelBefore) * 5;
+        }
+        
+        let netHpChange = outcome.hpAfter - outcome.hpBefore - hpGainFromLevelUp;
+        
         if (outcome.finalDamageHpChange > 0) {
           hpChangeStr = `<span style="color:#ff4d4d; font-weight:bold;">-${outcome.finalDamageHpChange} PV</span>`;
-        } else if (outcome.hpAfter > outcome.hpBefore) {
-          hpChangeStr = `<span style="color:#2ecc71; font-weight:bold;">+${outcome.hpAfter - outcome.hpBefore} PV</span>`;
+        } else if (netHpChange > 0) {
+          hpChangeStr = `<span style="color:#2ecc71; font-weight:bold;">+${netHpChange} PV</span>`;
         } else {
           hpChangeStr = `<span style="color:#888; font-weight:bold;">Sin cambio neto</span>`;
         }
