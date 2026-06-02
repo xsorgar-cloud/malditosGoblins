@@ -1408,6 +1408,12 @@ class GameState {
       if (brokenCount >= 2) {
         this.addLog(`💨 <strong>Aire Viciado:</strong> <strong>${player.name}</strong> tiene ${brokenCount} equipos rotos y sufre <span style="color:#ff4d4d"><strong>${brokenCount} Daño Directo</strong></span>.`);
         this.damagePlayer(player, brokenCount, true, 'Aire Viciado');
+        if (typeof window !== 'undefined' && typeof window.alert === 'function') {
+          window.alert(`¡AIRE VICIADO!
+La atmósfera corrupta del Rey Brujo te envenena:
+Equipos rotos: Tienes ${brokenCount} equipos rotos.
+Daño directo: Sufres ${brokenCount} de daño.`);
+        }
       }
     }
   }
