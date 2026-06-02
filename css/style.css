@@ -2322,10 +2322,6 @@ main {
     flex: 0 0 auto !important;
   }
 
-  /* --- ZONA DE MERCADO --- */
-  #market-zone {
-    padding-top: 35px !important;
-  }
 
   #market-zone h2 {
     top: 5px !important;

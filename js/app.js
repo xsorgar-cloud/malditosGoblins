@@ -2665,19 +2665,25 @@ function renderMarket() {
   if (p && p.mo >= 1) {
     const btnExplore = document.createElement('button');
     btnExplore.className = 'btn secondary btn-explore-market';
-    btnExplore.style.position = 'absolute';
-    btnExplore.style.left = 'calc(50% + 295px)';
-    btnExplore.style.top = '10px';
-    btnExplore.style.padding = '8px 14px';
-    btnExplore.style.fontSize = '1.1rem';
+    btnExplore.style.display = 'flex';
+    btnExplore.style.alignItems = 'center';
+    btnExplore.style.gap = '8px';
+    btnExplore.style.margin = '0 auto 15px auto';
+    btnExplore.style.padding = '6px 16px';
+    btnExplore.style.fontSize = '0.95rem';
     btnExplore.style.borderColor = 'var(--gold)';
     btnExplore.style.background = 'rgba(20,20,30,0.85)';
-    btnExplore.innerHTML = '🔍';
+    btnExplore.innerHTML = '🔍 Explorar';
     btnExplore.title = 'Paga 1 moneda para descartar una carta del mercado y revelar la siguiente del mazo.';
     btnExplore.onclick = () => openExploreMarketModal();
 
     if (marketZone) {
-      marketZone.appendChild(btnExplore);
+      const marketTitle = marketZone.querySelector('.market-title');
+      if (marketTitle) {
+        marketTitle.after(btnExplore);
+      } else {
+        marketZone.appendChild(btnExplore);
+      }
     } else {
       marketDecks.appendChild(btnExplore);
     }
