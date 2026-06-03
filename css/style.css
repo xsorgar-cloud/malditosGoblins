@@ -353,6 +353,10 @@ main {
 }
 
 /* BUTTONS */
+.txt-corto {
+  display: none;
+}
+
 .btn {
   padding: 10px 20px;
   border: none;
@@ -2434,15 +2438,24 @@ main {
     height: 32px !important;
   }
 
+  #action-buttons .txt-largo {
+    display: none !important;
+  }
+
+  #action-buttons .txt-corto {
+    display: inline !important;
+  }
+
   #hito-actions {
     position: relative !important;
     display: flex !important;
     flex-direction: row !important;
     justify-content: center !important;
     align-items: center !important;
-    width: 100% !important;
-    margin-bottom: 8px !important;
+    width: auto !important;
+    margin-bottom: 0 !important;
     z-index: 505 !important;
+    left: auto !important;
   }
 
   /* --- ZONA DE JUGADORES --- */

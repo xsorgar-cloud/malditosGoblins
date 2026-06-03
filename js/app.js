@@ -2493,7 +2493,7 @@ function updateUI() {
     btnRole.disabled = true;
   } else {
     btnConfirmAttack.disabled = !hasGoblinsAlive;
-    btnConfirmAttack.innerText = `Atacar Goblins (${selectedGoblins.length})`;
+    btnConfirmAttack.innerHTML = `<span class="txt-largo">Atacar Goblins (${selectedGoblins.length})</span><span class="txt-corto">Atacar (${selectedGoblins.length})</span>`;
 
     if (gameState.activeSenda === 'guerrero' && hasGoblinsAlive) {
       // Si hay goblins vivos, obligatorio luchar: las demás acciones se desactivan
@@ -3068,7 +3068,7 @@ function renderBattlefield() {
           gobEl.classList.add('selected');
         }
         const btn = document.getElementById('btn-confirm-attack');
-        if (btn) btn.innerText = `Atacar Goblins (${selectedGoblins.length})`;
+        if (btn) btn.innerHTML = `<span class="txt-largo">Atacar Goblins (${selectedGoblins.length})</span><span class="txt-corto">Atacar (${selectedGoblins.length})</span>`;
       });
     }
 
@@ -3715,7 +3715,7 @@ function renderCombatOverlay() {
         activeSelectedDieId = null;
         activeSelectedEquipId = null;
         document.querySelectorAll('.goblin-card').forEach(el => el.classList.remove('selectable', 'selected'));
-        document.getElementById('btn-confirm-attack').innerText = `Atacar Goblins (0)`;
+        document.getElementById('btn-confirm-attack').innerHTML = `<span class="txt-largo">Atacar Goblins (0)</span><span class="txt-corto">Atacar (0)</span>`;
         updateUI();
 
         const debugCombatModal = document.getElementById('debug-combat-modal');
@@ -3802,7 +3802,7 @@ function renderCombatOverlay() {
     activeSelectedDieId = null;
     activeSelectedEquipId = null;
     document.querySelectorAll('.goblin-card').forEach(el => el.classList.remove('selectable', 'selected'));
-    document.getElementById('btn-confirm-attack').innerText = `Atacar Goblins (0)`;
+    document.getElementById('btn-confirm-attack').innerHTML = `<span class="txt-largo">Atacar Goblins (0)</span><span class="txt-corto">Atacar (0)</span>`;
     updateUI();
   };
 
