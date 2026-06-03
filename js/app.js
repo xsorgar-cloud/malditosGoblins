@@ -445,7 +445,9 @@ window.alert = function (messageText, callback = null) {
           titleColor = '#ffd700'; // Dorado brillante
         } else if (blockTitle.includes('🔥') || blockTitle.toLowerCase().includes('escozor') || blockTitle.toLowerCase().includes('fuego') || blockTitle.toLowerCase().includes('piromante')) {
           titleColor = '#ff6600'; // Naranja para escozor
-        } else if (blockTitle.includes('⚡') || blockTitle.includes('🔷') || blockTitle.toLowerCase().includes('calambre') || blockTitle.toLowerCase().includes('energía') || blockTitle.toLowerCase().includes('habilidad')) {
+        } else if (blockTitle.includes('⚡') || blockTitle.toLowerCase().includes('calambre')) {
+          titleColor = '#f1c40f'; // Amarillo para calambre
+        } else if (blockTitle.includes('🔷') || blockTitle.toLowerCase().includes('energía') || blockTitle.toLowerCase().includes('habilidad')) {
           titleColor = '#00d2ff'; // Nuevo celeste de energía
           descColor = '#00d2ff';  // Todo el texto de energía en el color específico
         } else if (blockTitle.includes('🌀') || blockTitle.toLowerCase().includes('tembleque')) {
@@ -1147,8 +1149,8 @@ function initSendaSelectionScreen() {
   const styleEl = document.createElement('style');
   styleEl.textContent = `
     .split-card-screen {
-      --senda-card-w: 340px;
-      --senda-card-h: 480px;
+      --senda-card-w: 310px;
+      --senda-card-h: 440px;
       position: fixed;
       top: 0;
       left: 0;
@@ -1316,8 +1318,8 @@ function initSendaSelectionScreen() {
 
     @media (max-width: 768px) {
       .split-card-screen {
-        --senda-card-w: 200px;
-        --senda-card-h: 280px;
+        --senda-card-w: 180px;
+        --senda-card-h: 252px;
         padding: 15px 10px;
       }
       .split-card-container {
@@ -3265,6 +3267,9 @@ function triggerCombatDiceRoll() {
     const dieId = el.id;
     const dieObj = gameState.currentCombat.playerDice.find(d => d.id === dieId);
     if (!dieObj) return;
+    
+    if (dieObj.isCramped || dieObj.isShaking) return;
+    
     const faces = dieObj.faces;
     const interval = setInterval(() => {
       el.innerText = Math.floor(Math.random() * faces) + 1;
@@ -4179,7 +4184,9 @@ function renderCombatOverlay() {
 
     if (isRollingCombatDice) {
       dieEl.draggable = false;
-      dieEl.classList.add('die-rolling');
+      if (!die.isCramped && !die.isShaking) {
+        dieEl.classList.add('die-rolling');
+      }
       dieEl.style.cursor = 'default';
       dieWrapper.appendChild(dieEl);
       dicePoolContainer.appendChild(dieWrapper);
@@ -4191,7 +4198,7 @@ function renderCombatOverlay() {
     // Bloquear movimiento de dados con calambre si ya pasó la fase
     if (!isCrampPhase && die.isCramped) {
       dieEl.draggable = false;
-      dieEl.style.opacity = die.assignedTo ? "1" : "0.3";
+      dieEl.style.opacity = "0.3";
       dieEl.title = die.assignedTo ? "Calambre: Asignado" : "Calambre: Dado perdido";
     }
 
@@ -4457,6 +4464,7 @@ function renderCombatOverlay() {
         if (dieData.faces === 4) placeholder.classList.add('d4');
         if (dieData.isStung) placeholder.classList.add('stung');
         if (dieData.isShaking) placeholder.classList.add('shaking');
+        if (dieData.isCramped) placeholder.classList.add('cramped');
 
         // Ajuste de posición si hay múltiples
         if (roleAsgs.length > 1) {
@@ -4537,6 +4545,11 @@ function renderCombatOverlay() {
 
       if (maxUses === 1 && currentAssignments[eq.id] && currentAssignments[eq.id].length > 0) {
         const oldDieId = currentAssignments[eq.id][0].dieId;
+        const oldDieData = c.playerDice.find(d => d.id === oldDieId);
+        if (oldDieData && oldDieData.isCramped) {
+          alert("No puedes sustituir un dado con Calambre.");
+          return;
+        }
         clearDieAssignment(oldDieId);
       }
 
@@ -4578,6 +4591,11 @@ function renderCombatOverlay() {
 
         if (maxUses === 1 && currentAssignments[eq.id] && currentAssignments[eq.id].length > 0) {
           const oldDieId = currentAssignments[eq.id][0].dieId;
+          const oldDieData = c.playerDice.find(d => d.id === oldDieId);
+          if (oldDieData && oldDieData.isCramped) {
+            alert("No puedes sustituir un dado con Calambre.");
+            return;
+          }
           clearDieAssignment(oldDieId);
         }
 
@@ -4640,6 +4658,7 @@ function renderCombatOverlay() {
           if (dieData.faces === 4) placeholder.classList.add('d4');
           if (dieData.isStung) placeholder.classList.add('stung');
           if (dieData.isShaking) placeholder.classList.add('shaking');
+          if (dieData.isCramped) placeholder.classList.add('cramped');
 
           // Ajuste de posición si hay múltiples
           if (asgs.length > 1) {
@@ -5178,12 +5197,14 @@ window.showTargetSelectionModal = function (playerIndex) {
           }
         }
 
-        const gbtn = document.createElement('button');
+        const gbtn = document.createElement('div');
         gbtn.className = 'target-btn other-btn';
         if (p.energy < 1 || isMagoRestricted) gbtn.classList.add('disabled');
         
         gbtn.style.width = '220px';
         gbtn.style.height = '308px';
+        gbtn.style.minHeight = '308px';
+        gbtn.style.flexShrink = '0';
         gbtn.style.minWidth = '220px';
         gbtn.style.maxWidth = '220px';
         gbtn.style.padding = '0';

@@ -1724,23 +1724,18 @@ main {
 
   0%,
   100% {
-    opacity: 1;
     filter: brightness(1.2);
     box-shadow: 0 0 12px #ff3300, 0 0 5px #ff9900;
   }
 
   50% {
-    opacity: 0.8;
-    filter: brightness(1.8);
-    box-shadow: 0 0 20px #ff3300, 0 0 10px #ff9900;
-  }
-
-  80% {
-    opacity: 0.9;
+    filter: brightness(0.9);
+    box-shadow: 0 0 5px #ff3300, 0 0 2px #ff9900;
   }
 }
 
 /* EFECTO CALAMBRE (PARPADEO ELÉCTRICO, COLOR AMARILLO Y TOQUE ROJO) */
+.die-placeholder.active.cramped,
 .die.cramped {
   border-color: #ffcc00 !important;
   background: #ffcc00 !important;
@@ -1755,19 +1750,13 @@ main {
 
   0%,
   100% {
-    opacity: 1;
     filter: brightness(1.2);
     box-shadow: 0 0 12px #ffcc00, 0 0 5px #ff3300;
   }
 
   50% {
-    opacity: 0.8;
-    filter: brightness(1.8);
-    box-shadow: 0 0 20px #ffcc00, 0 0 10px #ff3300;
-  }
-
-  80% {
-    opacity: 0.9;
+    filter: brightness(0.9);
+    box-shadow: 0 0 6px #ffcc00, 0 0 2px #ff3300;
   }
 }
 
@@ -2291,6 +2280,8 @@ main {
   max-width: 600px;
   width: fit-content;
   min-width: 320px;
+  max-height: 90vh;
+  overflow-y: auto;
 }
 
 #target-modal .modal-content.wide-modal {
@@ -2877,7 +2868,6 @@ main {
 
 #hitos-info-content {
   flex-grow: 1;
-  max-height: 70vh;
   overflow-y: auto;
   padding-right: 8px;
 }
@@ -2933,14 +2923,23 @@ main {
 }
 
 @media (max-width: 1250px) {
+  /* Fix genérico para que TODOS los modales largos puedan hacer scroll en móvil */
+  .modal {
+    align-items: flex-start !important;
+    overflow-y: auto !important;
+    padding: 20px 0 !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+  
   #setup-modal-layout {
     flex-direction: column !important;
     align-items: center !important;
     justify-content: flex-start !important; /* Evitar corte superior por centrado flex */
-    overflow-y: auto !important;
-    max-height: 95vh !important;
+    overflow-y: visible !important;
+    max-height: none !important;
     padding: 15px 10px !important;
     width: 100% !important;
+    margin: 0 auto !important;
   }
   
   #setup-modal-layout .modal-content {
@@ -3057,7 +3056,7 @@ main {
     gap: 15px !important;
     padding: 5px !important;
     width: 100% !important;
-    max-height: 95vh !important;
+    max-height: none !important;
   }
 
   #setup-modal-layout .modal-content {
