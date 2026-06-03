@@ -1941,8 +1941,6 @@ main {
   /* Esto evita que reciba eventos de drop de forma nativa */
 }
 
-
-
 /* TEMA ROJIZO PARA EL MODAL DE REPRESALIA */
 .event-modal.retaliation-theme {
   background: linear-gradient(135deg, #2a0a0a 0%, #0a0000 100%) !important;
@@ -2466,6 +2464,7 @@ main {
     align-items: center !important;
     width: auto !important;
     margin-bottom: 0 !important;
+    margin-right: 30px !important; /* Espacio equivalente a la anchura del botón (?) */
     z-index: 505 !important;
     left: auto !important;
   }
@@ -3337,9 +3336,209 @@ main {
 }
 
 .focus-highlight:not(:disabled) {
+    width: 55px !important;
+    height: 60px !important;
+  }
+
+  /* Previsualización del rol */
+  #setup-role-preview {
+    width: 100% !important;
+    max-width: 260px !important;
+    height: 380px !important;
+    min-height: 380px !important;
+    max-height: 380px !important;
+    padding: 15px !important;
+    margin: 10px auto !important;
+    flex-shrink: 0 !important;
+  }
+
+  #setup-role-name {
+    font-size: 1rem !important;
+    margin-bottom: 10px !important;
+    height: auto !important;
+  }
+
+  #setup-role-card {
+    width: 140px !important;
+    height: 210px !important;
+  }
+
+  #setup-role-effect {
+    font-size: 0.85rem !important;
+    height: auto !important;
+    min-height: 60px !important;
+    max-height: 60px !important;
+    margin-top: 15px !important;
+  }
+
+  /* Botones de acción */
+  #btn-start-game,
+  #btn-load-game {
+    font-size: 1rem !important;
+    padding: 10px 20px !important;
+    min-width: 200px !important;
+  }
+
+  #setup-content > div:last-child {
+    flex-direction: column !important;
+    align-items: center !important;
+    gap: 10px !important;
+    margin-top: 15px !important;
+    width: 100% !important;
+  }
+
+  /* Selector de Senda y Reglas */
+  #select-senda {
+    font-size: 0.9rem !important;
+    padding: 8px 10px !important;
+  }
+
+  #setup-senda-preview h4 {
+    font-size: 0.95rem !important;
+    margin-top: 15px !important;
+    margin-bottom: 8px !important;
+  }
+
+  #setup-senda-preview p,
+  #setup-senda-preview strong,
+  #setup-senda-preview div {
+    font-size: 0.85rem !important;
+  }
+
+  #setup-senda-preview p {
+    line-height: 1.35 !important;
+  }
+
+  /* Contenedor de imágenes de jefe */
+  #setup-senda-preview div[style*="display: flex"] {
+    flex-wrap: wrap !important;
+    gap: 10px !important;
+    justify-content: center !important;
+  }
+
+  #setup-boss-image,
+  #setup-rules-image {
+    width: 130px !important;
+    height: 184px !important;
+  }
+
+  /* Ajustes e Info superior */
+  #btn-open-settings-setup {
+    font-size: 1.4rem !important;
+    top: 15px !important;
+    left: 15px !important;
+  }
+
+  #game-version-badge {
+    font-size: 0.75rem !important;
+    top: 18px !important;
+    left: 55px !important;
+    padding: 2px 8px !important;
+  }
+}
+
+@media (max-width: 480px) {
+  #setup-modal-layout .modal-content {
+    padding: 15px 10px !important;
+  }
+
+  #setup-content h2.setup-title,
+  #setup-senda-content h2.setup-title {
+    font-size: 1.3rem !important;
+  }
+
+  #setup-senda-preview h4 {
+    font-size: 0.9rem !important;
+  }
+
+  #setup-boss-image,
+  #setup-rules-image {
+    width: 110px !important;
+    height: 156px !important;
+  }
+}
+
+/* ====== CARTEL TEMPORAL DE ROL SELECCIONADO ====== */
+.role-option-toast {
+  position: absolute;
+  left: 4px;
+  right: 4px;
+  height: 24px;
+  top: calc(50% - 12px);
+  box-sizing: border-box;
+  background: rgba(12, 12, 18, 0.92); /* Fondo oscuro muy opaco para contraste máximo */
+  border-radius: 4px; /* Radio de borde más pequeño y limpio */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-weight: 700;
+  color: var(--gold);
+  white-space: nowrap; /* Evitar salto de línea */
+  overflow: hidden;
+  animation: role-pop-toast 1.5s ease-in-out forwards; /* Solo opacidad para máxima nitidez */
+  border: 1px solid var(--gold); /* Borde dorado fino */
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.5);
+  text-shadow: none; /* Sin sombra difuminada para conservar nitidez en texto pequeño */
+  pointer-events: none;
+  z-index: 10;
+  
+  /* Optimizaciones de renderizado de texto para máxima nitidez */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  
+  /* Ajustar tamaño de letra en base al contenedor de forma segura */
+  font-size: calc(120cqw / var(--text-len, 8));
+  font-size: clamp(11.5px, calc(120cqw / var(--text-len, 8)), 16px);
+}
+
+@media (max-width: 768px) {
+  .role-option-toast {
+    left: 2px;
+    right: 2px;
+    height: 18px;
+    top: calc(50% - 9px);
+    border-radius: 3px;
+    font-size: calc(110cqw / var(--text-len, 8));
+    font-size: clamp(8.5px, calc(110cqw / var(--text-len, 8)), 11.5px);
+  }
+}
+
+/* Animación limpia de opacidad para que el navegador mantenga el texto perfectamente nítido y vectorizado */
+@keyframes role-pop-toast {
+  0% { opacity: 0; }
+  15% { opacity: 1; }
+  80% { opacity: 1; }
+  100% { opacity: 0; }
+}
+
+/* Animación de foco inicial: un barrido dorado límpio y rápido */
+@keyframes focus-sweep {
+  0% {
+    box-shadow: 0 0 0 0 rgba(212, 175, 55, 0);
+    filter: brightness(1);
+  }
+  30% {
+    box-shadow: 0 0 25px 8px rgba(212, 175, 55, 0.9);
+    filter: brightness(1.6);
+  }
+  100% {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    filter: brightness(1);
+  }
+}
+
+.focus-highlight:not(:disabled) {
   animation: focus-sweep 0.5s ease-out 0s 1 forwards !important;
   position: relative;
   z-index: 2;
 }
 
-
+/* En móviles muy estrechos, quitamos la separación extra para que los botones quepan en una fila */
+@media (max-width: 795px) {
+  #hito-actions {
+    margin-right: 0 !important;
+  }
+}
