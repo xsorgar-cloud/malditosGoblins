@@ -1,4 +1,4 @@
-const DB = {
+﻿const DB = {
   // CONFIGURACIÓN DE NIVELES DEL JUGADOR
   playerLevels: [
     { level: 1, maxHp: 10, pexNeeded: 2, blocks: 6, extraDice: null },

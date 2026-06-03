@@ -1409,40 +1409,60 @@ main {
   align-items: center;
 }
 
-/* ACTION NOTIFICATION TOAST (CENTERED IN BATTLEFIELD WITH CINEMATIC STRIP) */
+/* ACTION NOTIFICATION TOAST (CINEMATIC DIAGONAL SLASH) */
 #action-notification {
   position: absolute;
   top: 50%;
-  left: 0;
-  width: 100%;
-  height: 120px;
-  /* Sombra radial elíptica que se desvanece en todas direcciones */
-  background: radial-gradient(ellipse at center, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 50%, transparent 80%);
-  transform: translateY(-50%);
-  z-index: 1000;
+  left: -20%;
+  width: 140%;
+  height: 140px;
+  background: linear-gradient(90deg, transparent 0%, rgba(200, 0, 0, 0.9) 20%, rgba(15, 17, 21, 0.98) 50%, rgba(200, 0, 0, 0.9) 80%, transparent 100%);
+  border-top: 3px solid var(--gold);
+  border-bottom: 3px solid var(--gold);
+  box-shadow: 0 0 50px rgba(255, 0, 0, 0.6), inset 0 0 20px rgba(255, 255, 255, 0.1);
+  transform: translateY(-50%) rotate(-5deg);
+  z-index: 999999;
   pointer-events: none;
-  transition: opacity 0.8s;
-  /* Desvanecimiento más lento */
   display: flex;
   align-items: center;
   justify-content: center;
+  animation: cinematicSlash 1.8s forwards;
 }
 
 #action-notification.hidden {
-  display: none;
-  opacity: 0;
+  display: none !important;
 }
 
 .action-toast-content {
-  background: rgba(15, 17, 21, 0.95);
-  border: 2px solid var(--gold);
-  padding: 12px 25px;
-  border-radius: 8px;
-  box-shadow: 0 0 30px rgba(0, 0, 0, 0.8), 0 0 15px rgba(244, 211, 94, 0.4);
   display: flex;
   align-items: center;
-  gap: 20px;
-  animation: actionPopIn 0.4s cubic-bezier(0.18, 0.89, 0.32, 1.28) forwards;
+  gap: 30px;
+  /* Enderezar el contenido interior para compensar la rotación del padre */
+  transform: rotate(5deg) scale(1.2);
+}
+
+@keyframes cinematicSlash {
+  0% { 
+    transform: translateY(-50%) rotate(-5deg) translateX(-100%) skewX(-30deg);
+    opacity: 0;
+    /* Ease-out agresivo para la entrada: arranca rápido, frena suave */
+    animation-timing-function: cubic-bezier(0.19, 1, 0.22, 1);
+  }
+  15% { 
+    transform: translateY(-50%) rotate(-5deg) translateX(0%) skewX(0deg); 
+    opacity: 1;
+    animation-timing-function: linear;
+  }
+  90% { 
+    transform: translateY(-50%) rotate(-5deg) translateX(0%) skewX(0deg); 
+    opacity: 1;
+    /* Ease-in ultra rápido: tarda solo el 10% del tiempo, saliendo como un disparo */
+    animation-timing-function: cubic-bezier(0.7, 0, 1, 1);
+  }
+  100% { 
+    transform: translateY(-50%) rotate(-5deg) translateX(100%) skewX(30deg); 
+    opacity: 0;
+  }
 }
 
 .action-label {
@@ -3299,27 +3319,24 @@ main {
   100% { opacity: 0; }
 }
 
-/* Animación de foco inicial: un pulso rápido con rebote (elastic bounce) que se ejecuta una sola vez */
-@keyframes focus-bounce {
+/* Animación de foco inicial: un barrido dorado límpio y rápido */
+@keyframes focus-sweep {
   0% {
     box-shadow: 0 0 0 0 rgba(212, 175, 55, 0);
+    filter: brightness(1);
   }
   30% {
-    box-shadow: 0 0 18px 6px rgba(212, 175, 55, 0.75);
-  }
-  50% {
-    box-shadow: 0 0 6px 1px rgba(212, 175, 55, 0.2);
-  }
-  70% {
-    box-shadow: 0 0 12px 3px rgba(212, 175, 55, 0.45);
+    box-shadow: 0 0 25px 8px rgba(212, 175, 55, 0.9);
+    filter: brightness(1.6);
   }
   100% {
     box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+    filter: brightness(1);
   }
 }
 
 .focus-highlight:not(:disabled) {
-  animation: focus-bounce 0.8s cubic-bezier(0.175, 0.885, 0.32, 1.275) 1s 1 forwards !important;
+  animation: focus-sweep 0.5s ease-out 0s 1 forwards !important;
   position: relative;
   z-index: 2;
 }

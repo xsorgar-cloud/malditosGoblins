@@ -1,4 +1,4 @@
-class GameState {
+﻿class GameState {
   constructor() {
     this.players = [];
     this.currentPlayerIndex = 0;
@@ -31,6 +31,29 @@ class GameState {
     this.lastWarlordExtraDmg = 0;
     this.difficulty = 'facil';
     this.lastCombatAcquiredEffects = { escozor: 0, calambre: 0, tembleque: 0 };
+
+    // --- VARIABLES DE INTERFAZ Y ESTADO TRASLADADAS DESDE APP.JS ---
+    this.lastWaveLevel = 0;
+    this.lastActionCount = 0;
+    this.activeSelectedDieId = null;
+    this.activeSelectedEquipId = null;
+    this.selectedSetupRoles = ['guerrero', null, null, null];
+    this.justSelectedRole = null;
+    this.selectedGoblins = [];
+    this.selectedSendaValue = 'iniciacion';
+    this.currentSendaTargetSelectId = 'select-senda';
+    this.roleFillDice = { red1: 0, red2: 0, black: 0 };
+    this.roleFillAssigned = null;
+    this.roleFillBlackRerolled = false;
+    this.roleFillSilverSelected = null;
+    this.isRollingRoleFillDice = false;
+    this.animatedGoblinUids = new Set();
+    this.previousGoblinHps = new Map();
+    this.currentAssignments = {};
+    this.interceptionAssignments = {};
+    this.isRollingCombatDice = false;
+    this.prevPlayerStats = [];
+    this.activeSelectedOrbUids = [];
 
     // Log de acciones
     this.logs = [];

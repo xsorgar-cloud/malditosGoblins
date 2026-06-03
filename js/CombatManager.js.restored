@@ -1,0 +1,1363 @@
+﻿function renderCombatOverlay() {
+  const overlay = document.getElementById('combat-overlay');
+  const c = gameState.currentCombat;
+  if (!c) {
+    uiManager.closeModal('combat-overlay');
+    return;
+  }
+  uiManager.openModal('combat-overlay');
+
+  const goblinsContainer = document.getElementById('combat-goblins-container');
+  goblinsContainer.innerHTML = '';
+
+  const p = gameState.getCurrentPlayer();
+  const isCrampPhase = c.needsCrampResolution;
+
+  // Render Player Stats Header
+  const statsContainer = document.getElementById('combat-player-stats');
+  const expReq = {
+    1: 2 * gameState.players.length,
+    2: 6 * gameState.players.length,
+    3: 12 * gameState.players.length,
+    4: 22 * gameState.players.length
+  };
+  const nextExp = expReq[p.level] || '-';
+  if (statsContainer) {
+    const isLowHP = p.hp <= (p.maxHp * 0.25);
+    const combatRoles = ['guerrero', 'mago', 'protector'];
+    const canUseRole = combatRoles.includes(p.role.id) && p.energy > 0;
+
+    // --- PROYECCIÓN DE DAÑO ---
+    let projDamageObj = { direct: 0, normal: 0 };
+    let projShield = p.shield || 0;
+    let projHeal = 0;
+    let projDamagePerTarget = {};
+    let uninterceptedExtraD4Count = 0;
+    let uninterceptedExtraDmgSum = 0;
+    
+    if (!isCrampPhase) {
+      c.goblins.forEach(g => { projDamagePerTarget[g.uid] = { damage: 0, shield: 0 }; });
+
+      for (let eqId in currentAssignments) {
+        let asgData = currentAssignments[eqId];
+        let asgList = Array.isArray(asgData) ? asgData : [asgData];
+
+        let eqDamagePerTarget = {};
+        c.goblins.forEach(g => { eqDamagePerTarget[g.uid] = 0; });
+
+        asgList.forEach(asg => {
+          if (asg.isRole) return;
+          let eq = p.equipped.find(e => e.id === eqId);
+          if (!eq) return;
+          let simulatedAsg = { ...asg };
+          if (!simulatedAsg.targetUid && c.goblins.length === 1 && doesEquipmentDealDamage(eq, simulatedAsg.value, simulatedAsg)) {
+            simulatedAsg.targetUid = c.goblins[0].uid;
+          }
+
+          let healObj = { heal: 0 };
+          let shieldObj = { shield: 0 };
+          let tempDamage = {};
+          c.goblins.forEach(g => { tempDamage[g.uid] = { damage: 0, shield: 0 }; });
+
+          gameState.applyEquipmentEffect(p, eq, simulatedAsg, tempDamage, healObj, shieldObj);
+          projHeal += healObj.heal;
+          projShield += shieldObj.shield;
+
+          for (let uid in tempDamage) {
+            eqDamagePerTarget[uid] += tempDamage[uid].damage;
+          }
+        });
+
+        // Apply Armadura de Monedas to the total damage of this equipment card against the boss in projection
+        for (let uid in eqDamagePerTarget) {
+          let targetGoblin = c.goblins.find(g => g.uid === uid || String(g.uid) === String(uid));
+          let isRecaudadorBoss = (targetGoblin && targetGoblin.isBoss && targetGoblin.name === "El Gran Recaudador");
+          let dmg = eqDamagePerTarget[uid];
+          if (isRecaudadorBoss && dmg > 0) {
+            eqDamagePerTarget[uid] = Math.max(0, dmg - 1);
+          }
+        }
+
+        // Add to the global projDamagePerTarget
+        for (let uid in eqDamagePerTarget) {
+          if (projDamagePerTarget[uid]) {
+            projDamagePerTarget[uid].damage += eqDamagePerTarget[uid];
+          }
+        }
+      }
+
+      uninterceptedExtraD4Count = 0;
+      uninterceptedExtraDmgSum = 0;
+
+      c.goblins.forEach(gob => {
+        if (gob.isDying) return;
+        let greenDiceResult = c.dice.green[gob.uid];
+        let goblinDmg = greenDiceResult ? greenDiceResult.total : 1;
+        let directDmg = 0;
+        let normalDmg = 0;
+        let isSpecialBoss = (gob.isBoss && (gob.name === "Rey Brujo" || gob.name === "La Madre" || gameState.activeSenda === "rey_brujo" || gameState.activeSenda === "la_madre"));
+
+        if (gob.isBoss && (gob.name === "La Madre" || gameState.activeSenda === "la_madre")) {
+           goblinDmg = 0;
+        } else if (gob.isBoss && (gob.name === "Rey Brujo" || gameState.activeSenda === "rey_brujo") && greenDiceResult && greenDiceResult.details) {
+           let naturalDie = greenDiceResult.details.find(d => d.type === 'die');
+           if (naturalDie) {
+              let rollVal = naturalDie.val;
+              if (rollVal === 1 || rollVal === 5) goblinDmg = 4;
+              else if (rollVal === 2) goblinDmg = 3;
+              else if (rollVal === 4 || rollVal === 6) goblinDmg = 1;
+              else if (rollVal === 3) goblinDmg = 0;
+           }
+        }
+        
+        let goblinInterceptions = [];
+        if (interceptionAssignments) {
+          if (interceptionAssignments[gob.uid]) {
+            goblinInterceptions = interceptionAssignments[gob.uid];
+          } else {
+            const uidStr = String(gob.uid);
+            const foundKey = Object.keys(interceptionAssignments).find(k => String(k) === uidStr);
+            if (foundKey) goblinInterceptions = interceptionAssignments[foundKey];
+          }
+        }
+
+        let allSpecialAttacks = [];
+        if (greenDiceResult && greenDiceResult.details) {
+          let naturalDieIdx = 0;
+          greenDiceResult.details.forEach((detail, rawIdx) => {
+            if (detail.type === 'die') {
+              const isIntercepted = goblinInterceptions.some(asg => Number(asg.goblinDieIndex) === Number(naturalDieIdx));
+              
+              let dieDmg = detail.val;
+              const nextDetail = greenDiceResult.details[rawIdx + 1];
+              if (nextDetail && nextDetail.type === 'mod') {
+                dieDmg += nextDetail.val;
+              }
+
+              if (gob.isBoss && gob.name === "El Gran Recaudador" && (detail.val === 3 || detail.val === 6)) {
+                dieDmg = 0;
+              }
+
+              if (isIntercepted) {
+                goblinDmg -= detail.val;
+                if (nextDetail && nextDetail.type === 'mod') {
+                  goblinDmg -= nextDetail.val;
+                }
+              }
+              
+              naturalDieIdx++;
+              
+              let gobDB = gob.attacks ? gob : DB.goblins[gob.level];
+              let attacks = (gobDB && gobDB.attacks) ? (gobDB.attacks[detail.val] || []) : [];
+              let isDieDirect = attacks.some(a => a.toLowerCase().includes('daño directo'));
+
+              if (!isIntercepted) {
+                if (isDieDirect) {
+                  directDmg += dieDmg;
+                } else {
+                  normalDmg += dieDmg;
+                }
+                attacks.forEach(eff => allSpecialAttacks.push(eff));
+
+                if (gob.level === 3 && detail.val === 4) {
+                  uninterceptedExtraD4Count++;
+                  let extraDmg = detail.extraDmgRoll !== undefined ? detail.extraDmgRoll : 0;
+                  uninterceptedExtraDmgSum += extraDmg;
+                  if (isDieDirect) {
+                    directDmg += extraDmg;
+                  } else {
+                    normalDmg += extraDmg;
+                  }
+                }
+              }
+            }
+          });
+        }
+
+        if (gameState.activeSenda === 'guerrero' && gob.level === 2) {
+           let lvl1Count = gameState.battlefield.goblins.filter(g => g.level === 1 && g.currentHp > 0).length;
+           if (lvl1Count > 0) {
+              if (isSpecialBoss) goblinDmg += lvl1Count;
+              else normalDmg += lvl1Count;
+           }
+        }
+        
+        if (isSpecialBoss) {
+          let isDirect = allSpecialAttacks.some(a => a.toLowerCase().includes('daño directo'));
+          goblinDmg = Math.max(0, goblinDmg);
+          if (isDirect) {
+            directDmg = goblinDmg;
+          } else {
+            normalDmg = goblinDmg;
+          }
+        }
+
+        projDamageObj.direct += directDmg;
+        projDamageObj.normal += normalDmg;
+      });
+    }
+
+    let projNetDamage = isCrampPhase ? 0 : Math.max(0, projDamageObj.normal - projShield) + projDamageObj.direct;
+    let finalProjectedHp = Math.min(p.maxHp, Math.max(0, p.hp - projNetDamage + projHeal));
+    
+    let projectedHtml = '';
+    let goblinsProjHtml = '';
+    if (!isCrampPhase) {
+       let extraD4Text = "";
+       if (uninterceptedExtraD4Count > 0) {
+         if (uninterceptedExtraDmgSum > 0) {
+           extraD4Text = ` <span style="color: #ff4d4d; font-weight: bold;">(+${uninterceptedExtraDmgSum} extra)</span>`;
+         } else {
+           extraD4Text = ` <span style="color: #ff4d4d; font-weight: bold;">(+${uninterceptedExtraD4Count}d4 extra)</span>`;
+         }
+       }
+
+       if (finalProjectedHp < p.hp) {
+           projectedHtml = `<div style="color: #ff4d4d; font-size: 0.9rem; margin-top: -10px; margin-left: 34px;">Daño Previsto: -${p.hp - finalProjectedHp} PV${extraD4Text}</div>`;
+       } else if (finalProjectedHp > p.hp) {
+           projectedHtml = `<div style="color: #33cc33; font-size: 0.9rem; margin-top: -10px; margin-left: 34px;">Cura Prevista: +${finalProjectedHp - p.hp} PV${extraD4Text}</div>`;
+       } else {
+           if (uninterceptedExtraD4Count > 0) {
+               projectedHtml = `<div style="color: #ff4d4d; font-size: 0.9rem; margin-top: -10px; margin-left: 34px;">Daño Previsto: 0 PV${extraD4Text}</div>`;
+           } else {
+               projectedHtml = `<div style="color: #888; font-size: 0.9rem; margin-top: -10px; margin-left: 34px;">Sin daños previstos</div>`;
+           }
+       }
+
+       c.goblins.forEach(gob => {
+         let stats = projDamagePerTarget[gob.uid] || { damage: 0, shield: 0 };
+         let finalGobHp = gob.currentHp - stats.damage;
+         let isDamaged = finalGobHp < gob.currentHp;
+         let finalColor = isDamaged ? '#ff4d4d' : '#888';
+         let displayName = gob.isBoss ? gob.name : `Goblin ${gob.level}`;
+         goblinsProjHtml += `<div style="font-size: 0.95rem; margin-top: 5px; color: #888;">
+             <span style="color: #33cc33;">${displayName}</span>: ${gob.currentHp} &rarr; <span style="color: ${finalColor}; font-weight: bold;">${finalGobHp}</span>
+         </div>`;
+       });
+    }
+
+    let goblinSection = goblinsProjHtml ? `
+      <div style="margin-top: 25px; padding-top: 15px; border-top: 1px solid rgba(212, 175, 55, 0.3);">
+        <div style="font-size: 1rem; font-weight: bold; color: var(--gold); margin-bottom: 8px;">Proyección Goblins</div>
+        ${goblinsProjHtml}
+      </div>
+    ` : '';
+    // --- FIN PROYECCION ---
+
+    statsContainer.innerHTML = `
+      <div class="player-name-hover" data-player-index="${gameState.players.indexOf(p)}" style="font-size: 1.4rem; font-weight: bold; color: var(--gold); margin-bottom: 15px; cursor: pointer; width: fit-content; margin-left: auto; margin-right: auto;">${p.name}</div>
+      <div class="stats" style="display: flex; flex-direction: column; gap: 15px; font-size: 1.2rem;">
+        <div class="stat hp ${isLowHP ? 'low-hp' : ''}" style="display: flex; align-items: center; gap: 10px; height: 24px;"><span style="display: flex; align-items: center; width: 24px; justify-content: center;">❤️</span> <span>Vida: <span>${p.hp}</span>/<span>${p.maxHp}</span> ${finalProjectedHp !== p.hp && !isCrampPhase ? `<span style="color:${finalProjectedHp < p.hp ? '#ff4d4d' : '#33cc33'}; font-size: 0.9em; margin-left: 8px;">(➔ ${finalProjectedHp})</span>` : ''}</span></div>
+        ${projectedHtml}
+        ${p.shield > 0 ? `<div class="stat shield" style="display: flex; align-items: center; gap: 10px; height: 24px; color: #33cc33;" title="Escudos del Protector"><span style="display: flex; align-items: center; width: 24px; justify-content: center;">🛡️</span> <span>Escudos: <span>${p.shield}</span></span></div>` : ''}
+        <div class="stat gold" style="display: flex; align-items: center; gap: 10px; height: 24px;"><span style="display: flex; align-items: center; width: 24px; justify-content: center;">${COIN_SVG}</span> <span>Oro: <span>${p.mo}</span></span></div>
+        <div class="stat energy" style="display: flex; align-items: center; gap: 10px; height: 24px; color: #00d2ff;" title="Energía del Rol"><span style="display: flex; align-items: center; width: 24px; justify-content: center;">🔷</span> <span>Energía: <span>${p.energy}</span></span></div>
+      </div>
+      ${goblinSection}
+    `;
+  }
+
+  const btnResolve = document.getElementById('btn-resolve-combat');
+  const btnCancel = document.getElementById('btn-cancel-combat');
+
+  if (isRollingCombatDice) {
+    btnResolve.disabled = true;
+    btnCancel.disabled = true;
+  } else {
+    btnResolve.disabled = false;
+    btnCancel.disabled = false;
+  }
+
+  if (isCrampPhase) {
+    btnResolve.innerText = "Lanzar dados rojos";
+    btnResolve.style.background = 'linear-gradient(135deg, #ffcc00, #ff9900)';
+    btnResolve.onclick = () => {
+      if (isRollingCombatDice) return;
+      c.needsCrampResolution = false;
+      gameState.addLog(`⚡ <strong>${p.name}</strong> ha resuelto sus calambres.`);
+      triggerCombatDiceRoll();
+    };
+  } else {
+    btnResolve.innerText = "Resolver Ataque";
+    btnResolve.style.background = '';
+    btnResolve.onclick = () => {
+      if (isRollingCombatDice) return;
+      // Automatización: Si solo hay un goblin, asignar automáticamente lo que falte (solo las que hacen daño)
+      const combatGoblins = c.goblins;
+      if (combatGoblins.length === 1) {
+        const targetUid = combatGoblins[0].uid;
+        for (let id in currentAssignments) {
+          let eqObj = p.equipped.find(e => e.id === id);
+          let asgs = currentAssignments[id];
+          if (Array.isArray(asgs)) {
+            asgs.forEach(a => {
+              if (!a.isRole && !a.targetUid && doesEquipmentDealDamage(eqObj, a.value, a)) {
+                a.targetUid = targetUid;
+              }
+            });
+          } else {
+            if (!asgs.isRole && !asgs.targetUid && doesEquipmentDealDamage(eqObj, asgs.value, asgs)) {
+              asgs.targetUid = targetUid;
+            }
+          }
+        }
+      }
+
+      // Validar que todo el equipo cargado que hace daño tiene un objetivo
+      for (let eqId in currentAssignments) {
+        let eqObj = p.equipped.find(e => e.id === eqId);
+        let asgs = currentAssignments[eqId];
+        const asgList = Array.isArray(asgs) ? asgs : [asgs];
+
+        if (asgList.some(a => !a.isRole && !a.targetUid && doesEquipmentDealDamage(eqObj, a.value, a))) {
+          alert("Asigna un objetivo a todas las cartas de ataque cargadas arrastrándolas sobre un Goblin.");
+          return;
+        }
+      }
+
+      const pBefore = gameState.getCurrentPlayer();
+      const hpBefore = pBefore.hp;
+
+      gameState.resolveCombat(currentAssignments, interceptionAssignments);
+
+      const pAfter = gameState.getCurrentPlayer();
+      const dbg = gameState.lastCombatDebugState;
+
+      let hasStatsChange = false;
+      let statsLine = "";
+      let hasLevelUp = false;
+      let levelUpLine = "";
+      let brokenItems = [];
+      let statusEffectsLines = [];
+      let sendaLines = [];
+
+      if (dbg && dbg.player) {
+        const pBeforeState = dbg.player;
+
+        // Level Up
+        let levelUpHpBonus = 0;
+        if (pAfter.level > pBeforeState.level) {
+          hasLevelUp = true;
+          levelUpLine = `🎉 Nivel: ¡Subida de nivel! (Nivel ${pBeforeState.level} ➔ ${pAfter.level})`;
+          levelUpHpBonus = (pAfter.level - pBeforeState.level) * 5;
+        }
+
+        // 1. ESTADÍSTICAS DEL COMBATE
+        const hpDiff = pAfter.hp - pBeforeState.hp - levelUpHpBonus;
+        const moDiff = pAfter.mo - pBeforeState.mo;
+        const energyDiff = pAfter.energy - pBeforeState.energy;
+        const pexDiff = pAfter.pex - pBeforeState.pex;
+
+        if (hpDiff !== 0 || moDiff !== 0 || energyDiff !== 0 || pexDiff !== 0) {
+          hasStatsChange = true;
+          statsLine = `COMBAT_STATS: hp=${hpDiff};mo=${moDiff};energy=${energyDiff};pex=${pexDiff}`;
+        }
+
+        // 3. DAÑO A TU EQUIPO
+        pAfter.equipped.forEach(eq => {
+          let beforeEq = pBeforeState.equipped.find(e => e.id === eq.id);
+          if (beforeEq && !beforeEq.isBroken && eq.isBroken) {
+            brokenItems.push(eq.name);
+          }
+        });
+      }
+
+      // 4. EFECTOS DE ESTADO ADQUIRIDOS
+      if (gameState.lastCombatAcquiredEffects) {
+        const effects = gameState.lastCombatAcquiredEffects;
+        if (effects.escozor > 0 || effects.calambre > 0 || effects.tembleque > 0) {
+          if (effects.escozor > 0) statusEffectsLines.push(`🔥 Escozor: +${effects.escozor}`);
+          if (effects.calambre > 0) statusEffectsLines.push(`⚡ Calambre: +${effects.calambre}`);
+          if (effects.tembleque > 0) statusEffectsLines.push(`🌀 Tembleque: +${effects.tembleque}`);
+        }
+      }
+
+      // 5. DETALLES DE LA SENDA Y OTROS DETALLES
+      if (gameState.lastWarlordExtraDmg > 0) {
+        sendaLines.push(`• Golpe Certero: El Zeñor de la Guerra infligió +${gameState.lastWarlordExtraDmg} de daño extra.`);
+      }
+
+      if (gameState.activeSenda === 'recaudador') {
+        if (gameState.lastCombatGoldPrevented > 0) {
+          sendaLines.push(`• Escudo de Oro: perdiste ${gameState.lastCombatGoldPrevented} mo y evitaste ${gameState.lastCombatGoldPrevented} de daño.`);
+        }
+        if (gameState.lastCombatExtraGoldDamage > 0) {
+          sendaLines.push(`• Escudo de Oro (sin oro): sufriste +${gameState.lastCombatExtraGoldDamage} de Daño Extra.`);
+        }
+        if (gameState.lastCombatSaqueoExperto > 0) {
+          sendaLines.push(`• Saqueo Experto: obtuviste +${gameState.lastCombatSaqueoExperto} mo extra.`);
+        }
+        if (gameState.lastCombatLosCarteristasRobo > 0) {
+          sendaLines.push(`• Los Carteristas: un goblin te robó ${gameState.lastCombatLosCarteristasRobo} mo extra.`);
+        }
+        if (gameState.lastCombatLosCarteristasDmg > 0) {
+          sendaLines.push(`• Los Carteristas: sufriste +${gameState.lastCombatLosCarteristasDmg} Daño Directo por no tener oro.`);
+        }
+        if (gameState.lastCombatArmaduraMonedasGold > 0) {
+          sendaLines.push(`• Armadura de monedas: obtuviste +${gameState.lastCombatArmaduraMonedasGold} mo por dañar al jefe.`);
+        }
+      }
+
+      const hasSomethingToShow = hasStatsChange || hasLevelUp || (brokenItems.length > 0) || (statusEffectsLines.length > 0) || (sendaLines.length > 0);
+
+      const runEndOfCombatUI = () => {
+        const hpAfter = pBefore.hp;
+        if (hpAfter < hpBefore) {
+          const flash = document.createElement('div');
+          flash.style.cssText = `
+            position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
+            background: rgba(230, 57, 70, 0.55);
+            pointer-events: none;
+            z-index: 999999;
+            transition: background 0.5s ease-out;
+          `;
+          document.body.appendChild(flash);
+          flash.getBoundingClientRect(); // Forzar reflow
+          flash.style.background = 'rgba(230, 57, 70, 0)';
+          setTimeout(() => flash.remove(), 500);
+        }
+
+        uiManager.closeModal('combat-overlay');
+        selectedGoblins = [];
+        activeSelectedDieId = null;
+        activeSelectedEquipId = null;
+        document.querySelectorAll('.goblin-card').forEach(el => el.classList.remove('selectable', 'selected'));
+        document.getElementById('btn-confirm-attack').innerHTML = `<span class="txt-largo">Atacar Goblins (0)</span><span class="txt-corto">Atacar (0)</span>`;
+        updateUI();
+
+        const debugCombatModal = document.getElementById('debug-combat-modal');
+        if (debugCombatModal && !debugCombatModal.classList.contains('hidden') && typeof window.updateDebugCombatModalData === 'function') {
+          window.updateDebugCombatModalData();
+        }
+
+        // Trigger bounce animation for damaged surviving Goblins
+        setTimeout(() => {
+          // console.log("[BOUNCE] Starting animation check...");
+          if (dbg && dbg.goblins) {
+            const container = document.getElementById('goblins-container');
+            if (container) {
+              // console.log("[BOUNCE] goblins-container found. Children count:", container.children.length);
+              dbg.goblins.forEach(g => {
+                let liveG = gameState.battlefield.goblins.find(bg => bg.uid === g.uid && !bg.isDying);
+                if (liveG) {
+                  // console.log(`[BOUNCE] Goblin UID: ${g.uid}, Name: ${g.name || g.level}, Before HP: ${g.hp}, Current HP: ${liveG.currentHp}`);
+                  if (liveG.currentHp < g.hp) {
+                    const cardEl = Array.from(container.children).find(el => String(el.dataset.uid) === String(g.uid));
+                    if (cardEl) {
+                      // console.log("[BOUNCE] Match found in DOM! Adding animation class...");
+                      cardEl.classList.remove('goblin-wobble-active', 'goblin-mutation-active');
+                      void cardEl.offsetWidth; // Force reflow/repaint
+                      cardEl.classList.add('goblin-damaged-bounce-active');
+                      setTimeout(() => {
+                        cardEl.classList.remove('goblin-damaged-bounce-active');
+                        // console.log("[BOUNCE] Animation class removed.");
+                      }, 900);
+                    } else {
+                      // console.error(`[BOUNCE] Match NOT found in DOM for UID ${g.uid}`);
+                    }
+                  } else {
+                    // console.log(`[BOUNCE] Goblin did not take damage or took 0 damage.`);
+                  }
+                } else {
+                  // console.log(`[BOUNCE] Goblin UID ${g.uid} is dead or not found on board.`);
+                }
+              });
+            } else {
+              console.error("[BOUNCE] goblins-container NOT found!");
+            }
+          } else {
+            console.error("[BOUNCE] dbg.goblins not found!");
+          }
+        }, 150);
+
+        window.saveGame(true);
+      };
+
+      if (hasSomethingToShow) {
+        let combatSummaryLines = ["¡COMBATE COMPLETADO!\n"];
+        if (hasStatsChange) {
+          combatSummaryLines.push(statsLine);
+        }
+        if (hasLevelUp) {
+          combatSummaryLines.push(levelUpLine);
+        }
+        if (brokenItems.length > 0) {
+          combatSummaryLines.push("\n🔧 DAÑO A TU EQUIPO:");
+          combatSummaryLines.push(`💥 Roto: ${brokenItems.join(', ')}`);
+        }
+        if (statusEffectsLines.length > 0) {
+          combatSummaryLines.push("\n🔥 EFECTOS DE ESTADO ADQUIRIDOS:");
+          statusEffectsLines.forEach(line => combatSummaryLines.push(line));
+        }
+        if (sendaLines.length > 0) {
+          combatSummaryLines.push("<br><br>🗺️ DETALLES DE LA SENDA:");
+          sendaLines.forEach(line => combatSummaryLines.push(line));
+        }
+
+        alert(combatSummaryLines.join('\n'), runEndOfCombatUI);
+      } else {
+        runEndOfCombatUI();
+      }
+    };
+  }
+
+  btnCancel.onclick = () => {
+    if (isRollingCombatDice) return;
+    gameState.cancelCombat();
+    uiManager.closeModal('combat-overlay');
+    selectedGoblins = [];
+    activeSelectedDieId = null;
+    activeSelectedEquipId = null;
+    document.querySelectorAll('.goblin-card').forEach(el => el.classList.remove('selectable', 'selected'));
+    document.getElementById('btn-confirm-attack').innerHTML = `<span class="txt-largo">Atacar Goblins (0)</span><span class="txt-corto">Atacar (0)</span>`;
+    updateUI();
+  };
+
+  c.goblins.forEach(gob => {
+    let gobWrapper = document.createElement('div');
+    gobWrapper.className = 'goblin-combat-wrapper';
+
+    // Goblin card
+    let gobCard = document.createElement('div');
+    gobCard.className = 'goblin-card dropzone';
+    gobCard.dataset.dropType = 'goblin';
+    gobCard.dataset.gobUid = gob.uid;
+    let imageUrl = gob.image;
+    if (gob.isHito) {
+      gobCard.classList.add('goblin-hito');
+    } else {
+      const pActive = gameState.players[gameState.currentPlayerIndex] || gameState.players[0];
+      if (gob.level < pActive.level) {
+        gobCard.classList.add('goblin-no-reward');
+        if (!gob.isInvocacion && !imageUrl.includes('invocacion')) {
+          imageUrl = imageUrl.replace(/([^\/]+)$/, 'nomo_$1');
+        }
+      }
+    }
+    imageUrl = getGoblinImageWithHpState(gob, imageUrl);
+    gobCard.style.backgroundImage = `url('${imageUrl}')`;
+    const isInvulnerable = gameState.isGoblinInvulnerable(gob);
+    if (isInvulnerable) {
+      gobCard.classList.add('invulnerable');
+    }
+    let invulnTitle = "Invulnerable por Regla de Hito";
+    if (gameState.activeSenda === 'la_madre') {
+      invulnTitle = "Escudos de Carne: ¡La Madre protege a sus crías!";
+    } else if (gameState.activeSenda === 'recaudador') {
+      if (gameState.currentHito === 3) {
+        invulnTitle = "El Peaje: ¡Paga 2 mo de peaje para hacerlo vulnerable!";
+      } else if (gameState.currentHito === 5) {
+        invulnTitle = "La Banda del Saco: ¡Vence primero a los goblins de Nivel 1!";
+      }
+    }
+    const badgeHTML = isInvulnerable 
+      ? `<div class="goblin-invulnerable-badge" title="${invulnTitle}">🛡️</div>` 
+      : '';
+    gobCard.innerHTML = `<div class="goblin-hp">${gob.currentHp}</div>${badgeHTML}`;
+
+    let assignedEqContainer = document.createElement('div');
+    assignedEqContainer.id = `assigned-${gob.uid}`;
+    assignedEqContainer.className = 'goblin-assigned-equipment';
+
+    // RESTAURAR ICONOS DE EQUIPO ASIGNADO
+    for (let eqId in currentAssignments) {
+      let asgData = currentAssignments[eqId];
+      let firstAsg = Array.isArray(asgData) ? asgData[0] : asgData;
+
+      if (firstAsg && firstAsg.targetUid === gob.uid) {
+        let eqObj = p.equipped.find(eq => eq.id === eqId);
+        if (eqObj) {
+          let miniEl = document.createElement('div');
+          miniEl.className = `mini-equip-icon mini-icon-${eqId} draggable-equip`;
+          miniEl.style.backgroundImage = `url('${eqObj.image}')`;
+          miniEl.title = `Asignado a ${gob.name}`;
+          miniEl.draggable = true;
+          miniEl.dataset.equipId = eqId;
+          miniEl.dataset.dragType = 'equip-assigned';
+          assignedEqContainer.appendChild(miniEl);
+        }
+      }
+    }
+
+    // RESTAURAR ICONOS DE INTERCEPCIÓN
+    const intAsgs = interceptionAssignments[gob.uid];
+    if (intAsgs && Array.isArray(intAsgs)) {
+      intAsgs.forEach(asg => {
+        const dieData = c.playerDice.find(d => d.id === asg.dieId);
+        if (dieData) {
+          let interceptIcon = document.createElement('div');
+          interceptIcon.className = `intercept-icon intercept-${asg.dieId} ${dieData.type}`;
+          interceptIcon.innerHTML = `🛡️ ${asg.value}`;
+          interceptIcon.style.display = 'inline-flex';
+          interceptIcon.style.alignItems = 'center';
+          interceptIcon.style.justifyContent = 'center';
+          if (dieData.faces === 4) interceptIcon.classList.add('d4');
+          interceptIcon.style.color = 'white';
+          interceptIcon.style.border = '1px solid gold';
+          interceptIcon.style.padding = '5px';
+          interceptIcon.style.borderRadius = '5px';
+          interceptIcon.style.margin = '2px';
+          interceptIcon.style.cursor = 'pointer';
+          interceptIcon.title = `Intercepción: Click para retirar (Anula dado index ${asg.goblinDieIndex})`;
+          interceptIcon.onclick = (e) => {
+            e.stopPropagation();
+            clearInterception(asg.dieId);
+          };
+          assignedEqContainer.appendChild(interceptIcon);
+        }
+      });
+    }
+
+    // Green dice for this goblin (Ocultos en fase de calambre)
+    let diceCont = document.createElement('div');
+    diceCont.className = 'dice-container';
+    diceCont.style.position = 'absolute';
+    diceCont.style.top = '36%';
+    diceCont.style.left = '0';
+    diceCont.style.transform = 'translateY(-50%)';
+    diceCont.style.width = '100%';
+    diceCont.style.margin = '0';
+    diceCont.style.padding = '8px 0';
+    diceCont.style.background = 'rgba(0, 0, 0, 0.75)';
+    diceCont.style.boxShadow = '0 4px 15px rgba(0, 0, 0, 0.9)';
+    diceCont.style.gap = '2px';
+    diceCont.style.alignItems = 'center';
+
+    if (!isCrampPhase && c.dice.green[gob.uid]) {
+      let naturalDieIdx = 0;
+      c.dice.green[gob.uid].details.forEach((item, idx) => {
+        let el = document.createElement('div');
+        if (item.type === 'die') {
+          el.className = `die green d${item.faces}`;
+          if (isRollingCombatDice) el.classList.add('die-rolling');
+          el.id = `green-die-${gob.uid}-${idx}`;
+          el.dataset.goblinUid = gob.uid;
+          el.dataset.dieIndex = idx;
+          // Marcar si está interceptado
+          const currentNaturalIdx = naturalDieIdx;
+          const isIntercepted = intAsgs && intAsgs.some(asg => Number(asg.goblinDieIndex) === Number(currentNaturalIdx));
+          if (isIntercepted) el.classList.add('intercepted');
+          naturalDieIdx++;
+
+          el.innerText = item.val;
+          el.style.width = '50px';
+          el.style.height = '50px';
+          el.style.fontSize = '1.8rem';
+          el.style.borderRadius = '10px';
+          el.style.boxShadow = '0 3px 8px rgba(0,0,0,0.9), inset 0 0 8px rgba(0,0,0,0.6)';
+
+        } else {
+          el.className = 'mod-green';
+          let valToShow = item.val;
+          let isExtraDmgModifier = false;
+          
+          if (idx > 0) {
+            let prevDie = c.dice.green[gob.uid].details[idx - 1];
+            if (prevDie && prevDie.type === 'die' && prevDie.extraDmgRoll !== undefined) {
+              let prevNaturalIdx = 0;
+              for (let i = 0; i < idx - 1; i++) {
+                if (c.dice.green[gob.uid].details[i].type === 'die') {
+                  prevNaturalIdx++;
+                }
+              }
+              const isPrevIntercepted = intAsgs && intAsgs.some(asg => Number(asg.goblinDieIndex) === Number(prevNaturalIdx));
+              if (!isPrevIntercepted) {
+                valToShow = item.val + prevDie.extraDmgRoll;
+                isExtraDmgModifier = true;
+              }
+            }
+          }
+
+          el.innerText = (valToShow >= 0 ? '+' : '') + valToShow;
+          el.style.fontSize = '1.6rem';
+          el.style.padding = '2px 6px';
+          el.style.background = 'rgba(0,0,0,0.7)';
+          el.style.borderRadius = '4px';
+          el.style.fontWeight = 'bold';
+          
+          if (isExtraDmgModifier) {
+            el.style.color = '#ff4d4d';
+            el.title = `Daño extra del dado (+${valToShow - item.val}) aplicado`;
+          } else if (item.isHitoRule) {
+            el.style.color = '#ff4d4d';
+            el.style.border = '1px solid #ff4d4d';
+            el.style.boxShadow = '0 0 8px rgba(255, 77, 77, 0.4)';
+            el.title = 'Regla Hito: +1 daño por cada goblin de nivel 1 vivo';
+          } else {
+            el.style.color = '#4CAF50';
+          }
+        }
+        diceCont.appendChild(el);
+      });
+    }
+
+    gobCard.appendChild(diceCont);
+
+    gobWrapper.appendChild(gobCard);
+    gobWrapper.appendChild(assignedEqContainer);
+    goblinsContainer.appendChild(gobWrapper);
+  });
+
+  const combatMain = document.getElementById('combat-main-container');
+  if (combatMain) {
+    combatMain.classList.add('dropzone');
+    combatMain.dataset.dropType = 'combat-main';
+  }
+
+  // Render Dados
+  const dicePoolContainer = document.getElementById('combat-dice-pool');
+  dicePoolContainer.innerHTML = '';
+  c.playerDice.forEach(die => {
+    // Si es un dado plateado y ya está fusionado, no lo renderizamos en la reserva
+    if (die.type === 'silver' && die.assignedTo && die.assignedTo.startsWith('die-')) return;
+
+    // En fase de calambre, ocultar dados rojos y dados negros que no tengan calambre
+    if (isCrampPhase && (die.type === 'red' || (die.type === 'black' && !die.isCramped))) return;
+
+    // Fuera de la fase de calambre, ocultar dados con calambre no asignados (dados perdidos)
+    if (!isCrampPhase && die.isCramped && !die.assignedTo) return;
+
+    let dieWrapper = document.createElement('div');
+    dieWrapper.className = 'die-wrapper';
+    dieWrapper.style.position = 'relative';
+
+    let dieEl = document.createElement('div');
+    dieEl.className = `die ${die.type}`;
+    if (die.faces === 4) dieEl.classList.add('d4');
+    if (die.isStung) dieEl.classList.add('stung');
+    if (die.isShaking) dieEl.classList.add('shaking');
+    if (die.isCramped) dieEl.classList.add('cramped');
+
+    dieEl.id = die.id;
+    dieEl.innerText = die.value;
+    dieEl.style.opacity = die.assignedTo ? '0.3' : '1';
+
+    if (isRollingCombatDice) {
+      dieEl.draggable = false;
+      if (!die.isCramped && !die.isShaking) {
+        dieEl.classList.add('die-rolling');
+      }
+      dieEl.style.cursor = 'default';
+      dieWrapper.appendChild(dieEl);
+      dicePoolContainer.appendChild(dieWrapper);
+      return;
+    }
+
+    dieEl.draggable = !die.assignedTo;
+
+    // Bloquear movimiento de dados con calambre si ya pasó la fase
+    if (!isCrampPhase && die.isCramped) {
+      dieEl.draggable = false;
+      dieEl.style.opacity = "0.3";
+      dieEl.title = die.assignedTo ? "Calambre: Asignado" : "Calambre: Dado perdido";
+    }
+
+    dieEl.classList.add('draggable-die');
+    dieEl.dataset.dieId = die.id;
+
+    // --- LÓGICA DE FUSIÓN DE DADO PLATEADO ---
+    if (die.type === 'red' || die.type === 'black') {
+      dieEl.classList.add('dropzone');
+      dieEl.dataset.dropType = 'die-fusion';
+      dieEl.dataset.dieId = die.id;
+    }
+
+    if (die.silverDieId) {
+      let badge = document.createElement('div');
+      badge.className = 'silver-badge';
+      badge.innerText = '+';
+      badge.style.pointerEvents = 'auto';
+      if (!die.assignedTo) {
+        badge.style.cursor = 'pointer';
+        badge.title = `Valor original: ${die.originalValue}. Click para separar el dado plateado.`;
+        badge.onclick = (e) => {
+           e.stopPropagation();
+           let sDie = c.playerDice.find(d => d.id === die.silverDieId);
+           if (sDie) sDie.assignedTo = null;
+           die.value = die.originalValue;
+           delete die.silverDieId;
+           delete die.originalValue;
+           renderCombatOverlay();
+        };
+      } else {
+        badge.title = "Dado potenciado (No se puede separar mientras esté asignado)";
+      }
+      dieWrapper.appendChild(badge);
+    }
+    // --- FIN LÓGICA PLATEADO ---
+
+    if (die.assignedTo) {
+      // No permitir desasignar calambre si ya pasó su fase
+      if (die.isCramped && !isCrampPhase) {
+        dieEl.style.cursor = 'default';
+        dieEl.title = "Calambre: Asignación fija";
+      } else {
+        dieEl.style.cursor = 'pointer';
+        dieEl.title = 'Click para desasignar';
+        dieEl.onclick = () => {
+          clearDieAssignment(die.id);
+        };
+      }
+    } else if (!die.assignedTo && (!die.isCramped || isCrampPhase)) {
+      // SISTEMA DE RESPALDO (TAP-TO-SELECT): Seleccionar dado para aplicarlo a un objetivo (incluso negros)
+      dieEl.style.cursor = 'pointer';
+      dieEl.title = 'Click para seleccionar dado';
+      if (activeSelectedDieId === die.id) {
+        dieEl.classList.add('die-selected');
+      }
+      dieEl.onclick = () => {
+        if (activeSelectedDieId === die.id) {
+          activeSelectedDieId = null;
+          renderCombatOverlay();
+        } else {
+          if (activeSelectedDieId) {
+             let selectedDie = c.playerDice.find(d => d.id === activeSelectedDieId);
+             if (selectedDie && selectedDie.type === 'silver' && !selectedDie.assignedTo && (die.type === 'red' || die.type === 'black') && !die.assignedTo && !die.silverDieId) {
+                selectedDie.assignedTo = die.id;
+                die.silverDieId = selectedDie.id;
+                die.originalValue = die.value;
+                die.value += selectedDie.value;
+                gameState.addLog(`🎁 <strong>Dado Plateado</strong> fusionado vía clic. ¡Nuevo valor de dado: <span style="color:#c0c0c0; font-weight:bold">${die.value}</span>!`);
+                activeSelectedDieId = null;
+                renderCombatOverlay();
+                return;
+             }
+          }
+          activeSelectedDieId = die.id;
+          activeSelectedEquipId = null; // Limpiar selección de equipo
+          renderCombatOverlay();
+        }
+      };
+    }
+
+    if (die.type === 'black' && !die.rerolled && !die.assignedTo && (!die.isCramped || isCrampPhase)) {
+      const rerollBtn = document.createElement('button');
+      rerollBtn.className = 'die-reroll-icon';
+      rerollBtn.innerHTML = '↻';
+      rerollBtn.title = 'Relanzar dado negro';
+      rerollBtn.onclick = (e) => {
+        e.stopPropagation(); // Evitar seleccionar el dado
+        if (die.silverDieId) {
+           let sDie = c.playerDice.find(d => d.id === die.silverDieId);
+           if (sDie) sDie.assignedTo = null;
+           delete die.silverDieId;
+           delete die.originalValue;
+        }
+        dieEl.classList.add('die-spin');
+        setTimeout(() => {
+          let newVal = gameState.rerollDie(die.id);
+          if (newVal) {
+            dieEl.innerText = newVal;
+          }
+        }, 300);
+        setTimeout(() => {
+          renderCombatOverlay();
+        }, 600);
+      };
+      dieWrapper.appendChild(rerollBtn);
+    }
+
+    if (die.rerolled) {
+      let lock = document.createElement('div');
+      lock.innerHTML = '🔒';
+      lock.style.cssText = 'position: absolute; top: -5px; right: -5px; font-size: 0.8rem; background: #222; border-radius: 50%; width: 18px; height: 18px; display: flex; align-items: center; justify-content: center; border: 1px solid var(--gold); z-index: 10;';
+      dieWrapper.appendChild(lock);
+      dieEl.title = 'Dado bloqueado';
+    }
+
+    dieWrapper.appendChild(dieEl);
+    dicePoolContainer.appendChild(dieWrapper);
+  });
+
+  function clearInterception(dieId, skipRender = false) {
+    for (let gobUid in interceptionAssignments) {
+      const initialLength = interceptionAssignments[gobUid].length;
+      interceptionAssignments[gobUid] = interceptionAssignments[gobUid].filter(asg => asg.dieId !== dieId);
+
+      if (interceptionAssignments[gobUid].length < initialLength) {
+        let dieData = c.playerDice.find(d => d.id === dieId);
+        if (dieData) dieData.assignedTo = null;
+      }
+
+      if (interceptionAssignments[gobUid].length === 0) {
+        delete interceptionAssignments[gobUid];
+      }
+    }
+    if (!skipRender) renderCombatOverlay();
+  }
+
+  function clearDieAssignment(dieId) {
+    for (let eqId in currentAssignments) {
+      let asgData = currentAssignments[eqId];
+      if (Array.isArray(asgData)) {
+        currentAssignments[eqId] = asgData.filter(a => a.dieId !== dieId);
+        if (currentAssignments[eqId].length === 0) delete currentAssignments[eqId];
+      } else if (asgData.dieId === dieId) {
+        delete currentAssignments[eqId];
+      }
+    }
+    clearInterception(dieId, true);
+
+    let dieData = c.playerDice.find(d => d.id === dieId);
+    if (dieData) dieData.assignedTo = null;
+
+    renderCombatOverlay();
+  }
+
+  if (window.combatDieOnEquipHandler) {
+    document.removeEventListener('dd:die-on-equip', window.combatDieOnEquipHandler);
+  }
+  window.combatDieOnEquipHandler = (e) => {
+    if (isRollingCombatDice) return;
+    const { dieId, equipId } = e.detail;
+    const eq = p.equipped.find(e => String(e.id) === String(equipId));
+    if (!eq) return;
+
+    const dieData = c.playerDice.find(d => d.id === dieId);
+    if (!dieData) return;
+    if (dieData.type === 'silver') { alert("Los dados plateados solo pueden fusionarse con otros dados de la reserva."); return; }
+
+    if (!gameState.isValidDieForEquipment(dieData.value, eq)) {
+      return;
+    }
+
+    clearDieAssignment(dieId);
+
+    const extra = (eq.isBroken && eq.broken && eq.broken.extra !== undefined ? eq.broken.extra : (eq.extra || '')).toLowerCase();
+    const isReusable = extra.includes('reutilizable');
+    const maxUses = extra.includes('x3') ? 3 : (isReusable ? 6 : 1);
+
+    if (maxUses === 1 && currentAssignments[eq.id] && currentAssignments[eq.id].length > 0) {
+      const oldDieId = currentAssignments[eq.id][0].dieId;
+      const oldDieData = c.playerDice.find(d => d.id === oldDieId);
+      if (oldDieData && oldDieData.isCramped) {
+        alert("No puedes sustituir un dado con Calambre.");
+        return;
+      }
+      clearDieAssignment(oldDieId);
+    }
+
+    if (!currentAssignments[eq.id]) currentAssignments[eq.id] = [];
+
+    if (currentAssignments[eq.id].length >= maxUses) {
+      return;
+    }
+
+    if (eq.id === 'corazon_elastico') {
+      showElasticModal(dieId, dieData.value, eq.id, (damageChosen) => {
+        currentAssignments[eq.id].push({ dieId: dieId, value: dieData.value, targetUid: null, elasticDamage: damageChosen });
+        dieData.assignedTo = eq.id;
+        renderCombatOverlay();
+      });
+      return;
+    }
+
+    currentAssignments[eq.id].push({ dieId: dieId, value: dieData.value, targetUid: null, elasticDamage: null });
+    dieData.assignedTo = eq.id;
+    renderCombatOverlay();
+  };
+  document.addEventListener('dd:die-on-equip', window.combatDieOnEquipHandler);
+
+  if (window.combatDieOnCombatRoleHandler) {
+    document.removeEventListener('dd:die-on-combat-role', window.combatDieOnCombatRoleHandler);
+  }
+  window.combatDieOnCombatRoleHandler = (e) => {
+    const { dieId } = e.detail;
+    const dieData = c.playerDice.find(d => d.id === dieId);
+    if (!dieData) return;
+    if (dieData.type === 'silver') { alert("Los dados plateados solo pueden fusionarse con otros dados de la reserva."); return; }
+
+    clearDieAssignment(dieId);
+
+    if (!currentAssignments['role']) currentAssignments['role'] = [];
+    currentAssignments['role'].push({ dieId: dieId, value: dieData.value, isRole: true });
+
+    dieData.assignedTo = 'role';
+    renderCombatOverlay();
+  };
+  document.addEventListener('dd:die-on-combat-role', window.combatDieOnCombatRoleHandler);
+
+  if (window.combatDieFusionHandler) {
+    document.removeEventListener('dd:die-fusion', window.combatDieFusionHandler);
+  }
+  window.combatDieFusionHandler = (e) => {
+    const { targetDieId, droppedDieId } = e.detail;
+    const targetDie = c.playerDice.find(d => d.id === targetDieId);
+    const droppedDie = c.playerDice.find(d => d.id === droppedDieId);
+    if (targetDie && droppedDie && droppedDie.type === 'silver' && !droppedDie.assignedTo) {
+      if (!targetDie.assignedTo && !targetDie.silverDieId && !isCrampPhase) {
+        droppedDie.assignedTo = targetDie.id;
+        targetDie.silverDieId = droppedDie.id;
+        targetDie.originalValue = targetDie.value;
+        targetDie.value += droppedDie.value;
+        gameState.addLog(`🎁 <strong>Dado Plateado</strong> fusionado. ¡Nuevo valor de dado: <span style="color:#c0c0c0; font-weight:bold">${targetDie.value}</span>!`);
+        renderCombatOverlay();
+      }
+    }
+  };
+  document.addEventListener('dd:die-fusion', window.combatDieFusionHandler);
+
+  if (window.combatDieOnGoblinHandler) {
+    document.removeEventListener('dd:die-on-goblin', window.combatDieOnGoblinHandler);
+  }
+  window.combatDieOnGoblinHandler = (e) => {
+    const { dieId, gobUid } = e.detail;
+    const gob = c.goblins.find(g => String(g.uid) === String(gobUid));
+    if (!gob) return;
+
+    const dieData = c.playerDice.find(d => d.id === dieId);
+    if (dieData) {
+      if (dieData.type === 'silver') { alert("Los dados plateados solo pueden fusionarse con otros dados de la reserva."); return; }
+      if (isCrampPhase) return;
+      if (gob.isBoss && (gameState.activeSenda === 'la_madre' || gob.name === 'La Madre')) {
+        alert('🛡️ Los ataques de La Madre son Ininterceptables.');
+        return;
+      }
+      if (dieData.isCramped && !isCrampPhase) return;
+
+      const playerDieVal = dieData.value;
+      const goblinDice = c.dice.green[gob.uid].details.filter(d => d.type === 'die');
+
+      if (!interceptionAssignments[gob.uid]) interceptionAssignments[gob.uid] = [];
+
+      let targetDieIndex = -1;
+      for (let i = 0; i < goblinDice.length; i++) {
+        const alreadyIntercepted = interceptionAssignments[gob.uid].some(asg => Number(asg.goblinDieIndex) === Number(i));
+        if (!alreadyIntercepted && goblinDice[i].val === playerDieVal) {
+          targetDieIndex = i;
+          break;
+        }
+      }
+
+      if (targetDieIndex !== -1) {
+        clearDieAssignment(dieId);
+        clearInterception(dieId);
+
+        if (!interceptionAssignments[gob.uid]) interceptionAssignments[gob.uid] = [];
+
+        interceptionAssignments[gob.uid].push({
+          dieId: dieId,
+          value: playerDieVal,
+          goblinDieIndex: targetDieIndex
+        });
+        dieData.assignedTo = `intercept-${gob.uid}-${targetDieIndex}`;
+        renderCombatOverlay();
+      } else {
+        showInterceptionError(playerDieVal);
+      }
+    }
+  };
+  document.addEventListener('dd:die-on-goblin', window.combatDieOnGoblinHandler);
+
+  if (window.combatEquipOnGoblinHandler) {
+    document.removeEventListener('dd:equip-on-goblin', window.combatEquipOnGoblinHandler);
+  }
+  window.combatEquipOnGoblinHandler = (e) => {
+    const { equipId, gobUid } = e.detail;
+    const gob = c.goblins.find(g => String(g.uid) === String(gobUid));
+    if (!gob) return;
+
+    if (currentAssignments[equipId]) {
+      let eqObj = p.equipped.find(eq => String(eq.id) === String(equipId));
+      let asgs = currentAssignments[equipId];
+      let firstAsg = Array.isArray(asgs) ? asgs[0] : asgs;
+      if (doesEquipmentDealDamage(eqObj, firstAsg.value, firstAsg)) {
+        if (Array.isArray(asgs)) {
+          asgs.forEach(a => a.targetUid = gob.uid);
+        } else {
+          asgs.targetUid = gob.uid;
+        }
+        renderCombatOverlay();
+      }
+    }
+  };
+  document.addEventListener('dd:equip-on-goblin', window.combatEquipOnGoblinHandler);
+
+  if (window.combatEquipUnassignHandler) {
+    document.removeEventListener('dd:equip-unassign', window.combatEquipUnassignHandler);
+  }
+  window.combatEquipUnassignHandler = (e) => {
+    const { equipId } = e.detail;
+    if (equipId && currentAssignments[equipId]) {
+      let asgs = currentAssignments[equipId];
+      if (Array.isArray(asgs)) {
+        asgs.forEach(a => a.targetUid = null);
+      } else {
+        asgs.targetUid = null;
+      }
+      renderCombatOverlay();
+    }
+  };
+  document.addEventListener('dd:equip-unassign', window.combatEquipUnassignHandler);
+
+  // Render Equipo para asignar
+  const equipSlots = document.getElementById('combat-equipment-slots');
+  equipSlots.innerHTML = '';
+
+  // Contenedor para la carta de Rol y su botón
+  const roleContainer = document.createElement('div');
+  roleContainer.className = 'equip-slot-container';
+  roleContainer.style.position = 'relative';
+  roleContainer.style.display = 'flex';
+  roleContainer.style.flexDirection = 'column';
+  roleContainer.style.alignItems = 'center';
+  roleContainer.style.gap = '8px';
+
+  const combatRoles = ['guerrero', 'mago', 'protector'];
+  const hasCombatRole = combatRoles.includes(p.role.id);
+
+  // 1. Render Role Slot
+  const roleSlot = document.createElement('div');
+  roleSlot.id = `equip-slot-role`;
+  roleSlot.className = `equip-slot dropzone ${hasCombatRole && p.energy > 0 ? 'role-ready' : ''}`;
+  roleSlot.style.backgroundImage = `url('${p.role.image}')`;
+  if (!hasCombatRole) roleSlot.style.borderColor = '#00d2ff'; // Azul para el rol
+  roleSlot.innerHTML = `<div class="die-placeholder" data-id="role"></div>`;
+  if (hasCombatRole) {
+    roleSlot.style.cursor = 'pointer';
+    roleSlot.title = `Rol: ${p.role.name} (${p.role.effect}). Haz clic en la carta para usar la habilidad.`;
+  }
+
+  roleSlot.dataset.dropType = 'combat-role';
+
+  // SISTEMA DE RESPALDO (TAP-TO-SELECT): Asignar dado activo al rol al hacer clic.
+  // Si no hay dado seleccionado, al hacer clic en el rol se activa su habilidad.
+  roleSlot.addEventListener('click', (e) => {
+    if (isRollingCombatDice) return;
+    if (activeSelectedDieId) {
+      const dieData = c.playerDice.find(d => d.id === activeSelectedDieId);
+      if (!dieData) return;
+      if (dieData.type === 'silver') { alert("Los dados plateados solo pueden fusionarse con otros dados de la reserva."); return; }
+
+      clearDieAssignment(activeSelectedDieId);
+
+      if (!currentAssignments['role']) currentAssignments['role'] = [];
+      currentAssignments['role'].push({ dieId: activeSelectedDieId, value: dieData.value, isRole: true });
+
+      dieData.assignedTo = 'role';
+      activeSelectedDieId = null;
+      renderCombatOverlay();
+      e.stopPropagation();
+    } else {
+      if (hasCombatRole) {
+        if (p.energy <= 0) {
+          alert(ROLE_NO_ENERGY_WARNING);
+          return;
+        }
+        showTargetSelectionModal(gameState.currentPlayerIndex);
+        e.stopPropagation();
+      }
+    }
+  });
+
+  // RESTAURAR ESTADO DE ROL
+  const roleAsgs = currentAssignments['role'];
+  if (roleAsgs && Array.isArray(roleAsgs)) {
+    roleSlot.innerHTML = ''; // Limpiar para re-renderizar múltiples
+    roleAsgs.forEach((asg, idx) => {
+      const placeholder = document.createElement('div');
+      placeholder.className = 'die-placeholder active';
+      const dieData = c.playerDice.find(d => d.id === asg.dieId);
+      if (dieData) {
+        placeholder.innerText = dieData.value;
+        placeholder.classList.add(dieData.type);
+        if (dieData.faces === 4) placeholder.classList.add('d4');
+        if (dieData.isStung) placeholder.classList.add('stung');
+        if (dieData.isShaking) placeholder.classList.add('shaking');
+        if (dieData.isCramped) placeholder.classList.add('cramped');
+
+        // Ajuste de posición si hay múltiples
+        if (roleAsgs.length > 1) {
+          placeholder.style.right = (15 + (idx * 40)) + 'px';
+        }
+        roleSlot.appendChild(placeholder);
+      }
+    });
+  } else {
+    roleSlot.innerHTML = `<div class="die-placeholder" data-id="role"></div>`;
+  }
+  roleContainer.appendChild(roleSlot);
+
+  const energyPulse = p.energy > 0 ? 'energy-pulse' : '';
+  const energyBadge = document.createElement('div');
+  energyBadge.className = `role-energy-badge ${energyPulse}`;
+  energyBadge.innerText = `🔷 ${p.energy}`;
+  roleContainer.appendChild(energyBadge);
+
+  equipSlots.appendChild(roleContainer);
+
+  // 2. Render normal equipment slots
+  p.equipped.filter(eq => eq.isActive).forEach((eq, index) => {
+    const slot = document.createElement('div');
+    slot.id = `equip-slot-${eq.id}`;
+    
+    const currentCombatId = gameState.lastCombatId || 0;
+    const isNewBreak = eq.isBroken && eq.brokenInCombatId === currentCombatId;
+    const justBroken = isNewBreak && !eq.brokenAnimationPlayed;
+
+    let extraStyle = '';
+    let justBrokenClass = '';
+    let brokenClass = '';
+
+    if (eq.isBroken) {
+      if (isNewBreak && isRollingCombatDice) {
+        // No mostrar como roto mientras giran los dados
+      } else if (justBroken) {
+        justBrokenClass = 'just-broken';
+        extraStyle = 'transform: rotate(0deg); transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);';
+      } else {
+        brokenClass = 'broken';
+        extraStyle = 'transform: rotate(180deg);';
+      }
+    }
+
+    slot.className = `equip-slot dropzone ${justBrokenClass} ${brokenClass}`.trim();
+    slot.dataset.dropType = 'equip';
+    slot.dataset.equipId = eq.id;
+    slot.style.backgroundImage = `url('${eq.image}')`;
+    if (extraStyle) {
+      slot.style.cssText += extraStyle;
+    }
+    slot.innerHTML = `<div class="die-placeholder" data-id="${eq.id}"></div>`;
+
+    if (activeSelectedEquipId === eq.id) {
+      slot.classList.add('equip-selected');
+    }
+
+    // SISTEMA DE RESPALDO (TAP-TO-SELECT): Asignar dado activo al equipo o seleccionar equipo cargado al hacer clic
+    slot.addEventListener('click', (e) => {
+      if (isRollingCombatDice) return;
+      if (activeSelectedDieId) {
+        const dieData = c.playerDice.find(d => d.id === activeSelectedDieId);
+        if (!dieData) return;
+        if (dieData.type === 'silver') { alert("Los dados plateados solo pueden fusionarse con otros dados de la reserva."); return; }
+
+        if (!gameState.isValidDieForEquipment(dieData.value, eq)) return;
+
+        clearDieAssignment(activeSelectedDieId);
+
+        const extra = (eq.isBroken && eq.broken && eq.broken.extra !== undefined ? eq.broken.extra : (eq.extra || '')).toLowerCase();
+        const isReusable = extra.includes('reutilizable');
+        const maxUses = extra.includes('x3') ? 3 : (isReusable ? 6 : 1);
+
+        if (maxUses === 1 && currentAssignments[eq.id] && currentAssignments[eq.id].length > 0) {
+          const oldDieId = currentAssignments[eq.id][0].dieId;
+          const oldDieData = c.playerDice.find(d => d.id === oldDieId);
+          if (oldDieData && oldDieData.isCramped) {
+            alert("No puedes sustituir un dado con Calambre.");
+            return;
+          }
+          clearDieAssignment(oldDieId);
+        }
+
+        if (!currentAssignments[eq.id]) currentAssignments[eq.id] = [];
+
+        if (currentAssignments[eq.id].length >= maxUses) return;
+
+        if (eq.id === 'corazon_elastico') {
+          const curDieId = activeSelectedDieId;
+          const curDieVal = dieData.value;
+          activeSelectedDieId = null;
+
+          showElasticModal(curDieId, curDieVal, eq.id, (damageChosen) => {
+            currentAssignments[eq.id].push({ dieId: curDieId, value: curDieVal, targetUid: null, elasticDamage: damageChosen });
+            dieData.assignedTo = eq.id;
+            renderCombatOverlay();
+          });
+          e.stopPropagation();
+          return;
+        }
+
+        currentAssignments[eq.id].push({ dieId: activeSelectedDieId, value: dieData.value, targetUid: null, elasticDamage: null });
+        dieData.assignedTo = eq.id;
+        activeSelectedDieId = null;
+        renderCombatOverlay();
+        e.stopPropagation();
+      } else {
+        const asgs = currentAssignments[eq.id];
+        if (asgs && asgs.length > 0) {
+          const eqObj = p.equipped.find(e => e.id === eq.id);
+          const dealsDamage = doesEquipmentDealDamage(eqObj, asgs[0].value, asgs[0]);
+          if (!dealsDamage) {
+            e.stopPropagation();
+            return;
+          }
+          if (activeSelectedEquipId === eq.id) {
+            activeSelectedEquipId = null;
+            renderCombatOverlay();
+          } else {
+            activeSelectedEquipId = eq.id;
+            activeSelectedDieId = null; // Limpiar selección de dado
+            renderCombatOverlay();
+          }
+          e.stopPropagation();
+        }
+      }
+    });
+
+    // RESTAURAR ESTADO DE EQUIPO
+    const asgs = currentAssignments[eq.id];
+    if (asgs && Array.isArray(asgs)) {
+      slot.innerHTML = '';
+      asgs.forEach((asg, idx) => {
+        const placeholder = document.createElement('div');
+        placeholder.className = 'die-placeholder active';
+        const dieData = c.playerDice.find(d => d.id === asg.dieId);
+        if (dieData) {
+          placeholder.innerText = dieData.value;
+          placeholder.classList.add(dieData.type);
+          if (dieData.faces === 4) placeholder.classList.add('d4');
+          if (dieData.isStung) placeholder.classList.add('stung');
+          if (dieData.isShaking) placeholder.classList.add('shaking');
+          if (dieData.isCramped) placeholder.classList.add('cramped');
+
+          // Ajuste de posición si hay múltiples
+          if (asgs.length > 1) {
+            placeholder.style.top = (15 + (idx * 55)) + 'px';
+          }
+          slot.appendChild(placeholder);
+        }
+      });
+
+      // El primer dado del equipo decide si la carta está "cargada" para ser arrastrada al objetivo
+      // (En este juego, toda la carta se asigna a un objetivo)
+      if (asgs.length > 0) {
+        slot.classList.add('loaded');
+        const eqObj = p.equipped.find(e => e.id === eq.id);
+        const dealsDamage = doesEquipmentDealDamage(eqObj, asgs[0].value, asgs[0]);
+        if (dealsDamage) {
+          if (!isRollingCombatDice) {
+            slot.classList.add('draggable-equip');
+            slot.draggable = true;
+          }
+          if (asgs.some(a => a.targetUid)) slot.style.opacity = '0.5';
+        } else {
+          slot.draggable = false;
+          slot.style.cursor = 'default';
+        }
+      }
+    }
+
+    equipSlots.appendChild(slot);
+  });
+
+  TutorialManager.evaluateSituation();
+
+  setTimeout(() => {
+    document.querySelectorAll('#combat-equipment-slots .equip-slot.just-broken').forEach(slot => {
+      slot.style.transform = 'rotate(180deg)';
+      slot.classList.add('broken');
+      slot.classList.remove('just-broken');
+      const eqId = slot.id.replace('equip-slot-', '');
+      const eq = p.equipped.find(e => e.id === eqId);
+      if (eq) {
+        eq.brokenAnimationPlayed = true;
+      }
+    });
+  }, 100);
+}
+
+// El control de btn-cancel-combat y btn-resolve-combat se gestiona íntegramente
+// dentro de renderCombatOverlay para soportar las fases de Calambre.
+
+
