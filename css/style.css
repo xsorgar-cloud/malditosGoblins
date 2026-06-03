@@ -2590,7 +2590,6 @@ main {
 
   #combat-main {
     flex: 1 !important;
-    padding: 15px !important;
     overflow-y: auto !important;
   }
 
@@ -2598,7 +2597,7 @@ main {
     flex-wrap: wrap !important;
     gap: 10px !important;
     justify-content: center !important;
-    margin-bottom: 20px !important;
+    margin-bottom: 2px !important;
   }
 
   #combat-goblins-container .goblin-combat-wrapper {
