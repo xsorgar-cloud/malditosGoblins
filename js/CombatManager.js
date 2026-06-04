@@ -1115,7 +1115,7 @@ function renderCombatOverlay() {
     }
 
     if (die.type === 'black' && !die.rerolled && !die.assignedTo && (!die.isCramped || isCrampPhase)) {
-      const rerollBtn = document.createElement('button');
+      const rerollBtn = document.createElement('div');
       rerollBtn.className = 'die-reroll-icon';
       rerollBtn.innerHTML = '↻';
       rerollBtn.title = 'Relanzar dado negro';
