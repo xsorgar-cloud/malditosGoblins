@@ -592,7 +592,8 @@ function renderCombatOverlay() {
         }
       }
 
-      const hasSomethingToShow = hasStatsChange || hasLevelUp || (brokenItems.length > 0) || (statusEffectsLines.length > 0) || (sendaLines.length > 0);
+      const hasBossEffects = (gameState.lastCombatBossEffects && gameState.lastCombatBossEffects.length > 0);
+      const hasSomethingToShow = hasStatsChange || hasLevelUp || (brokenItems.length > 0) || (statusEffectsLines.length > 0) || (sendaLines.length > 0) || hasBossEffects;
 
       const runEndOfCombatUI = () => {
         const hpAfter = pBefore.hp;

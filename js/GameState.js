@@ -467,6 +467,7 @@ class GameState {
     if (!c) return;
 
     this.lastCombatBossEffects = []; // Limpiar recolector de habilidades de jefe
+    this.lastCombatPiromanteBombs = 0; // Limpiar contador de bombas del piromante
     let p = this.getCurrentPlayer();
 
     this.lastCombatGoldPrevented = 0;
@@ -1204,6 +1205,7 @@ class GameState {
         // Goblins Bomba: Cada vez que derrotes a un Goblin recibes una carga de Escozor.
         if (this.activeSenda === 'piromante') {
           pObj.statusEffects.escozor = (pObj.statusEffects.escozor || 0) + 1;
+          this.lastCombatPiromanteBombs++;
           this.addLog(`💣 <strong>Goblin Bomba:</strong> Al derrotar a G${g.level}, explota y recibes <span style="color:#ff6600">1 Escozor</span>.`);
         }
       }
