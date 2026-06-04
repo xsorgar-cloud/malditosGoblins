@@ -683,8 +683,12 @@ function renderCombatOverlay() {
           combatSummaryLines.push("\n🔥 EFECTOS DE ESTADO ADQUIRIDOS:");
           statusEffectsLines.forEach(line => combatSummaryLines.push(line));
         }
+        if (gameState.lastCombatBossEffects && gameState.lastCombatBossEffects.length > 0) {
+          combatSummaryLines.push("\n👑 HABILIDADES DEL JEFE:");
+          gameState.lastCombatBossEffects.forEach(line => combatSummaryLines.push(`• ${line}`));
+        }
         if (sendaLines.length > 0) {
-          combatSummaryLines.push("<br><br>🗺️ DETALLES DE LA SENDA:");
+          combatSummaryLines.push("\n🗺️ DETALLES DE LA SENDA:");
           sendaLines.forEach(line => combatSummaryLines.push(line));
         }
 

@@ -62,11 +62,37 @@ class GameState {
     this.shuffleDecks();
   }
 
-  addLog(msg) {
+  addLog(message) {
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-    this.logs.push(`[${time}] ${msg}`);
-    // Mantener un límite razonable para no consumir memoria infinita
-    if (this.logs.length > 200) this.logs.shift();
+    
+    // Mantener un límite razonable para no consumir memoria
+    if (this.logs.length >= 50) this.logs.shift();
+    this.logs.push(`[${time}] ${message}`);
+
+    // Recolector de Habilidades de Jefe para el Alert final de Combate
+    if (this.currentCombat && this.lastCombatBossEffects !== undefined) {
+      if (message.includes('Efecto de La Madre') || 
+          message.includes('Defensa del Nido') || 
+          message.includes('El Piromante (Dado') || 
+          message.includes('El Gran Recaudador (Dado') || 
+          message.includes('Drenaje:') ||
+          message.includes('Rey Brujo') || 
+          message.includes('Maldición:') || 
+          message.includes('Invocación:') ||
+          message.includes('Ininterceptable:')) {
+          
+          // Limpiar HTML para el texto del alert
+          let cleanMsg = message.replace(/<[^>]*>?/gm, '');
+          // Evitar duplicados (a veces se procesan múltiples dados iguales)
+          if (!this.lastCombatBossEffects.includes(cleanMsg)) {
+            this.lastCombatBossEffects.push(cleanMsg);
+          }
+      }
+    }
+
+    if (typeof updateChat === 'function') {
+      updateChat();
+    }
   }
 
   checkGameOver() {
@@ -437,8 +463,11 @@ class GameState {
 
   resolveCombat(assignments, interceptions = {}) {
     this.lastActionWasCombat = true;
+    const c = this.currentCombat;
+    if (!c) return;
+
+    this.lastCombatBossEffects = []; // Limpiar recolector de habilidades de jefe
     let p = this.getCurrentPlayer();
-    let c = this.currentCombat;
 
     this.lastCombatGoldPrevented = 0;
     this.lastCombatExtraGoldDamage = 0;
