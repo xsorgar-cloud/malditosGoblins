@@ -1,4 +1,4 @@
-﻿class GameState {
+class GameState {
   constructor() {
     this.players = [];
     this.currentPlayerIndex = 0;
@@ -2090,7 +2090,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
     return true;
   }
 
-  useRoleAbility(playerIndex, targetId = null, energyCost = null) {
+  useRoleAbility(playerIndex, targetId = null, energyCost = null, damageAmount = 1) {
     let p = this.players[playerIndex];
     const roleId = p.role.id;
 
@@ -2105,7 +2105,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
     if (energyCost === null) {
       const roleId = p.role.id;
       if (roleId === 'guerrero' || roleId === 'mago') {
-        energyCost = 1;
+        energyCost = damageAmount;
       } else {
         energyCost = isSelf ? 1 : 2;
       }
@@ -2158,8 +2158,8 @@ Daño directo: Sufres ${brokenCount} de daño.`);
         if (damageNegated) {
           // No hace nada más, pero la energía se consumió
         } else {
-          gob.currentHp -= 1;
-          this.addLog(`🔷 <strong>${p.name}</strong> usó su rol para infligir 1 daño directo a ${gob.name}.`);
+          gob.currentHp -= damageAmount;
+          this.addLog(`🔷 <strong>${p.name}</strong> usó su rol para infligir ${damageAmount} daño directo a ${gob.name}.`);
 
           // Defensa del Nido (Senda de La Madre)
           if (gob.isBoss && (this.activeSenda === 'la_madre' || gob.name === "La Madre")) {

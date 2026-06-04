@@ -1883,12 +1883,9 @@ window.showTargetSelectionModal = function (playerIndex) {
       }
     });
 
-    if (!anyBroken) {
-      options.innerHTML = '<p style="color:#ccc; padding: 20px;">No hay equipo roto en la mesa.</p>';
-    }
   } else if (roleId === 'guerrero' || roleId === 'mago') {
     // LÓGICA PARA GUERRERO / MAGO (Atacar Goblins)
-    desc.innerHTML = `Selecciona un Goblin para infligirle <strong>1 daño directo</strong>.<br><small>(Coste: 1🔷)</small>`;
+    desc.innerHTML = `Selecciona un Goblin para infligirle <strong>daño directo</strong>.<br><small>(Coste: 1🔷 por daño)</small>`;
 
     let allGoblins = [];
     if (roleId === 'mago') {
@@ -1911,7 +1908,13 @@ window.showTargetSelectionModal = function (playerIndex) {
 
       activeGoblins.forEach(gob => {
         const isInCombat = gameState.currentCombat && gameState.currentCombat.goblins.some(cg => cg.uid === gob.uid);
+        
+        let maxDamage = gob.currentHp;
+        if (roleId === 'mago') maxDamage -= 1;
+        maxDamage = Math.min(p.energy, maxDamage);
+        
         const isMagoRestricted = (roleId === 'mago' && gob.currentHp === 1);
+        const isDisabled = (maxDamage < 1 || p.energy < 1 || isMagoRestricted);
         
         let borderColor = 'var(--accent-red)';
         let displayImg = gob.image;
@@ -1924,9 +1927,15 @@ window.showTargetSelectionModal = function (playerIndex) {
           }
         }
 
+        const cardWrapper = document.createElement('div');
+        cardWrapper.style.display = 'flex';
+        cardWrapper.style.flexDirection = 'column';
+        cardWrapper.style.alignItems = 'center';
+        cardWrapper.style.gap = '8px';
+
         const gbtn = document.createElement('div');
         gbtn.className = 'target-btn other-btn';
-        if (p.energy < 1 || isMagoRestricted) gbtn.classList.add('disabled');
+        if (isDisabled) gbtn.classList.add('disabled');
         
         gbtn.style.width = '220px';
         gbtn.style.height = '308px';
@@ -1949,31 +1958,76 @@ window.showTargetSelectionModal = function (playerIndex) {
 
         gbtn.innerHTML = `
           <div style="position: absolute; top: -16px; right: -16px; background: var(--accent-red); color: white; border-radius: 50%; width: 56px; height: 56px; display: flex; justify-content: center; align-items: center; font-weight: bold; font-size: 1.9rem; box-shadow: 0 0 10px rgba(0,0,0,0.8); z-index: 10; border: 2px solid white;">${gob.currentHp}</div>
-          <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.8); color: ${p.energy < 1 ? '#ff4d4d' : 'var(--gold)'}; text-align: center; font-size: 1.0rem; padding: 8px 0; font-weight: bold; text-shadow: 0 0 4px black;">COSTE: 1&#9889;</div>
+          <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.8); color: ${isDisabled ? '#ff4d4d' : 'var(--gold)'}; text-align: center; font-size: 1.0rem; padding: 8px 0; font-weight: bold; text-shadow: 0 0 4px black;">COSTE: <span class="cost-val">1</span>&#9889;</div>
           ${isMagoRestricted ? '<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,0,0,0.5); display: flex; justify-content: center; align-items: center; font-size: 5rem; text-shadow: 0 0 15px black; z-index: 5;">&#10060;</div>' : ''}
           ${isInCombat ? '<div style="position: absolute; top: 10px; left: 10px; font-size: 1.8rem; filter: drop-shadow(0 0 5px black); z-index: 5;">&#9876;&#65039;</div>' : ''}
+          <div class="dmg-preview" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); color: #ff3366; font-size: 5rem; font-weight: bold; text-shadow: 0 0 15px black, 0 0 5px white; z-index: 6; pointer-events: none; opacity: 0; transition: opacity 0.2s;">-1</div>
         `;
 
+        const sliderContainer = document.createElement('div');
+        sliderContainer.className = 'damage-slider-container';
+        sliderContainer.style.width = '100%';
+        sliderContainer.style.display = isDisabled ? 'none' : 'flex';
+        sliderContainer.style.flexDirection = 'column';
+        sliderContainer.style.alignItems = 'center';
+        
+        const slider = document.createElement('input');
+        slider.type = 'range';
+        slider.className = 'damage-slider';
+        slider.min = '1';
+        slider.max = Math.max(1, maxDamage).toString();
+        slider.value = '1';
+        slider.style.width = '90%';
+        slider.style.cursor = 'pointer';
+        
+        const sliderLabel = document.createElement('span');
+        sliderLabel.style.fontSize = '0.85rem';
+        sliderLabel.style.color = 'var(--text-dim)';
+        sliderLabel.style.marginTop = '4px';
+        sliderLabel.innerHTML = `Infligir <strong style="color: var(--accent-red);" class="slider-dmg-val">1</strong> daño`;
+        
+        sliderContainer.appendChild(slider);
+        sliderContainer.appendChild(sliderLabel);
+
+        const costValEl = gbtn.querySelector('.cost-val');
+        const dmgPreview = gbtn.querySelector('.dmg-preview');
+        const sliderDmgVal = sliderLabel.querySelector('.slider-dmg-val');
+        
+        slider.oninput = () => {
+           const val = slider.value;
+           costValEl.innerText = val;
+           sliderDmgVal.innerText = val;
+           dmgPreview.innerText = `-${val}`;
+           dmgPreview.style.opacity = '1';
+           
+           clearTimeout(gbtn._previewTimeout);
+           gbtn._previewTimeout = setTimeout(() => {
+              dmgPreview.style.opacity = '0';
+           }, 800);
+        };
+
         gbtn.onclick = () => {
-          if (p.energy < 1 || isMagoRestricted) return;
+          if (isDisabled) return;
+          const dmgAmount = parseInt(slider.value, 10);
           
-          // Animación inmediata en el botón del modal
           gbtn.classList.remove('goblin-wobble-active', 'goblin-mutation-active');
-          void gbtn.offsetWidth; // Force reflow
+          void gbtn.offsetWidth;
           gbtn.classList.add('goblin-damaged-bounce-active');
           
-          // Bloquear clics adicionales durante la animación
           modal.style.pointerEvents = 'none';
           
           setTimeout(() => {
-            gameState.useRoleAbility(playerIndex, gob.uid);
+            gameState.useRoleAbility(playerIndex, gob.uid, dmgAmount, dmgAmount);
             updateUI();
             modal.style.pointerEvents = 'auto';
             if (p.energy > 0) showTargetSelectionModal(playerIndex);
             else modal.classList.add('hidden');
           }, 450);
         };
-        gobGrid.appendChild(gbtn);
+        
+        cardWrapper.appendChild(gbtn);
+        cardWrapper.appendChild(sliderContainer);
+        gobGrid.appendChild(cardWrapper);
       });
       options.appendChild(gobGrid);
     }
