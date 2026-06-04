@@ -813,8 +813,15 @@ class GameState {
         let naturalDieIdx = 0;
         greenDiceResult.details.forEach((detail, rawIdx) => {
           if (detail.type === 'die') {
-            const isIntercepted = goblinInterceptions.some(asg => Number(asg.goblinDieIndex) === Number(naturalDieIdx));
+            let isIntercepted = goblinInterceptions.some(asg => Number(asg.goblinDieIndex) === Number(naturalDieIdx));
             let interceptInfo = goblinInterceptions.find(asg => Number(asg.goblinDieIndex) === Number(naturalDieIdx));
+            
+            // Regla La Madre: Sus ataques son ininterceptables
+            if (targetGoblin.isBoss && targetGoblin.name === "La Madre" && isIntercepted) {
+              isIntercepted = false;
+              this.addLog(`🛡️ <strong>Ininterceptable:</strong> Intentaste interceptar el ataque de La Madre, pero fue inútil.`);
+            }
+
             let interceptedByVal = interceptInfo ? interceptInfo.value : null;
             let interceptedByDieId = interceptInfo ? interceptInfo.dieId : null;
             let dieEffects = [];
@@ -855,7 +862,10 @@ class GameState {
               let brokenItem = null;
               let rolledValueText = '';
 
-              if (effLow.includes('gana+2 pv por cada carga') || effLow.includes('gana+2 pv por cada carga escozor')) {
+              if (targetGoblin.isBoss && targetGoblin.name === "La Madre") {
+                // Las habilidades de La Madre se resuelven de forma estática antes, no usamos el parser genérico
+                applied = true;
+              } else if (effLow.includes('gana+2 pv por cada carga') || effLow.includes('gana+2 pv por cada carga escozor')) {
                 if (!isIntercepted) {
                   applied = true;
                   let escozorCount = p.statusEffects.escozor || 0;
