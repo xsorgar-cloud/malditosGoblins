@@ -1,4 +1,4 @@
-:root {
+﻿:root {
   --bg-color: #0f1115;
   --panel-bg: rgba(25, 28, 36, 0.85);
   --panel-active-bg: rgba(3, 40, 46, 0.85);
@@ -2625,13 +2625,12 @@ main {
   }
 
   #combat-goblins-container .goblin-card {
-    flex: 0 0 90px !important;
-    width: 90px !important;
-    /* GOBLINS DE COMBATE MÁS PEQUEÑOS */
-    min-width: 90px !important;
-    max-width: 90px !important;
-    height: 127px !important;
-    max-height: 127px !important;
+    flex: 0 0 clamp(90px, 14vw, 160px) !important;
+    width: clamp(90px, 14vw, 160px) !important;
+    min-width: clamp(90px, 14vw, 160px) !important;
+    max-width: clamp(90px, 14vw, 160px) !important;
+    height: calc(clamp(90px, 14vw, 160px) * 255 / 180) !important;
+    max-height: calc(clamp(90px, 14vw, 160px) * 255 / 180) !important;
     aspect-ratio: 180 / 255 !important;
   }
 
@@ -2643,12 +2642,12 @@ main {
   }
 
   .combat-equipment .equip-slot {
-    flex: 0 0 80px !important;
-    width: 80px !important;
-    min-width: 80px !important;
-    max-width: 80px !important;
-    height: 111px !important;
-    max-height: 111px !important;
+    flex: 0 0 clamp(75px, 11vw, 130px) !important;
+    width: clamp(75px, 11vw, 130px) !important;
+    min-width: clamp(75px, 11vw, 130px) !important;
+    max-width: clamp(75px, 11vw, 130px) !important;
+    height: calc(clamp(75px, 11vw, 130px) * 255 / 180) !important;
+    max-height: calc(clamp(75px, 11vw, 130px) * 255 / 180) !important;
     aspect-ratio: 180 / 250 !important;
   }
 }
@@ -3357,7 +3356,7 @@ main {
   }
 }
 
-/* Estilos para el Slider de Da�o en Modal de Rol */
+/* Estilos para el Slider de Da�o en Modal de Rol */
 .damage-slider-container {
     margin-top: 5px;
     background: rgba(0, 0, 0, 0.6);
@@ -3400,3 +3399,5 @@ main {
     border: 2px solid var(--gold);
     box-shadow: 0 0 5px rgba(0,0,0,0.8);
 }
+
+
