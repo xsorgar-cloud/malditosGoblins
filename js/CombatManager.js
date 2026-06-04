@@ -152,6 +152,10 @@ function renderCombatOverlay() {
      if(!sourceDie || !targetDie) return;
      if((sourceDie.type !== 'red' && sourceDie.type !== 'black' && sourceDie.type !== 'silver') || (targetDie.type !== 'red' && targetDie.type !== 'black')) return;
      if(sourceDie.silverDieId || targetDie.silverDieId) return;
+     if(targetDie.assignedTo) {
+       alert("No puedes fusionar un dado plateado con un dado que ya está asignado. Retíralo primero.");
+       return;
+     }
      clearDieAssignment(sourceDie.id);
      sourceDie.assignedTo = targetDie.id;
      targetDie.silverDieId = sourceDie.id;
@@ -1078,7 +1082,15 @@ function renderCombatOverlay() {
       } else {
         dieEl.style.cursor = 'pointer';
         dieEl.title = 'Click para desasignar';
-        dieEl.onclick = () => {
+        dieEl.onclick = (e) => {
+          if (activeSelectedDieId) {
+             let selectedDie = c.playerDice.find(d => d.id === activeSelectedDieId);
+             if (selectedDie && selectedDie.type === 'silver') {
+                alert("No puedes fusionar un dado plateado con un dado que ya está asignado. Retíralo primero.");
+                e.stopPropagation();
+                return;
+             }
+          }
           clearDieAssignment(die.id);
         };
       }
