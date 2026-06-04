@@ -1429,14 +1429,24 @@ function initSendaSelectionScreen() {
     halfRight.appendChild(rulesImg);
     card.appendChild(halfRight);
 
-    card.addEventListener('click', () => {
+    card.addEventListener('click', (e) => {
       if (card.classList.contains('selected')) {
+        let isClickingRight = e.target.closest('.half-right') !== null;
+        
         if (card.classList.contains('show-right')) {
           card.classList.remove('show-right');
           card.classList.add('show-left');
-        } else {
+        } else if (card.classList.contains('show-left')) {
           card.classList.remove('show-left');
           card.classList.add('show-right');
+        } else {
+          // Si no tiene clases, significa que lo vemos por CSS hover.
+          // Alternamos a la contraria de donde se hizo click.
+          if (isClickingRight) {
+            card.classList.add('show-left');
+          } else {
+            card.classList.add('show-right');
+          }
         }
       } else {
         container.querySelectorAll('.split-card').forEach(c => {
