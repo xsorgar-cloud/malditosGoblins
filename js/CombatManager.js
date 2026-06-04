@@ -300,7 +300,6 @@ function renderCombatOverlay() {
               if (rollVal === 1 || rollVal === 5) goblinDmg = 4;
               else if (rollVal === 2) goblinDmg = 3;
               else if (rollVal === 4 || rollVal === 6) goblinDmg = 1;
-              else if (rollVal === 3) goblinDmg = 0;
            }
         }
         

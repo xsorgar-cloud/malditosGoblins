@@ -705,7 +705,6 @@ class GameState {
           let rollVal = naturalDie.val;
           if (rollVal === 1) goblinDmg = 4;
           else if (rollVal === 2) goblinDmg = 3;
-          else if (rollVal === 3) goblinDmg = 0;
           else if (rollVal === 4) goblinDmg = 1;
           else if (rollVal === 5) goblinDmg = 4;
           else if (rollVal === 6) goblinDmg = 1;
@@ -912,11 +911,6 @@ class GameState {
                   p.statusEffects.escozor = (p.statusEffects.escozor || 0) + 1;
                   this.addLog(`🔥 <strong>El Piromante (Dado 4):</strong> Sufres <span style="color:#ff4d4d"><strong>${damageDealt} Daño Directo</strong></span> (2 PV por cada uno de tus ${escozorCount} Escozor) y recibes <span style="color:#ff6600">1 Escozor</span>.`);
                 }
-              } else if (effLow.includes('daño directo') && isPiromanteBoss) {
-                if (!isIntercepted) {
-                  applied = true;
-                  directDmg += dieDmg; // deals 2 Direct Damage for roll 2
-                }
               } else if (isUnskippable || (!isIntercepted && (isNormalBreak || isStatus))) {
                 applied = true;
                 if (isUnskippable || isNormalBreak) {
@@ -1021,7 +1015,7 @@ class GameState {
               }
             });
 
-            if (!isIntercepted && !isSpecialBoss && !isPiromanteBoss && !isRecaudadorBoss) {
+            if (!isIntercepted && !isSpecialBoss && !isRecaudadorBoss) {
               if (isDieDirect) {
                 directDmg += dieDmg;
               } else {
