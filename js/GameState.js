@@ -2160,20 +2160,6 @@ Daño directo: Sufres ${brokenCount} de daño.`);
         } else {
           gob.currentHp -= damageAmount;
           this.addLog(`🔷 <strong>${p.name}</strong> usó su rol para infligir ${damageAmount} daño directo a ${gob.name}.`);
-
-          // Defensa del Nido (Senda de La Madre)
-          if (gob.isBoss && (this.activeSenda === 'la_madre' || gob.name === "La Madre")) {
-            this.battlefield.goblins.push({
-              ...DB.goblins[1],
-              uid: Date.now() + Math.random(),
-              currentHp: DB.goblins[1].hp,
-              isInvocacion: true,
-              mo: 0,
-              image: 'assets/Monstruos/invocacion_01.jpg'
-            });
-            this.addLog(`🥚 <span style="color:#f54281"><strong>Defensa del Nido:</strong> ¡La Madre recibe daño y aparece 1 Invocación Nivel 1!</span>`);
-          }
-
           if (gob.currentHp <= 0) {
             // Goblin derrotado - Marcar para animación
             gob.isDying = true;
