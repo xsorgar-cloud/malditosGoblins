@@ -72,7 +72,7 @@ function renderCombatOverlay() {
     }
     if (dieData.isCramped && !gameState.currentCombat.isCrampPhase) return;
 
-    if (gob.isBoss && gob.name === "La Madre") {
+    if (gob.isBoss && gob.name.includes("La Madre")) {
       if (typeof gameState !== 'undefined' && gameState.addLog) {
         gameState.addLog(`🛡️ <strong>Ininterceptable:</strong> No puedes interceptar los dados de La Madre.`);
       }
@@ -265,7 +265,7 @@ function renderCombatOverlay() {
         // Apply Armadura de Monedas to the total damage of this equipment card against the boss in projection
         for (let uid in eqDamagePerTarget) {
           let targetGoblin = c.goblins.find(g => g.uid === uid || String(g.uid) === String(uid));
-          let isRecaudadorBoss = (targetGoblin && targetGoblin.isBoss && targetGoblin.name === "El Gran Recaudador");
+          let isRecaudadorBoss = (targetGoblin && targetGoblin.isBoss && targetGoblin.name.includes("El Gran Recaudador"));
           let dmg = eqDamagePerTarget[uid];
           if (isRecaudadorBoss && dmg > 0) {
             eqDamagePerTarget[uid] = Math.max(0, dmg - 1);
@@ -289,11 +289,11 @@ function renderCombatOverlay() {
         let goblinDmg = greenDiceResult ? greenDiceResult.total : 1;
         let directDmg = 0;
         let normalDmg = 0;
-        let isSpecialBoss = (gob.isBoss && (gob.name === "Rey Brujo" || gob.name === "La Madre" || gameState.activeSenda === "rey_brujo" || gameState.activeSenda === "la_madre"));
+        let isSpecialBoss = (gob.isBoss && (gob.name.includes("Rey Brujo") || gob.name.includes("La Madre") || gameState.activeSenda === "rey_brujo" || gameState.activeSenda === "la_madre"));
 
-        if (gob.isBoss && (gob.name === "La Madre" || gameState.activeSenda === "la_madre")) {
+        if (gob.isBoss && (gob.name.includes("La Madre") || gameState.activeSenda === "la_madre")) {
            goblinDmg = 0;
-        } else if (gob.isBoss && (gob.name === "Rey Brujo" || gameState.activeSenda === "rey_brujo") && greenDiceResult && greenDiceResult.details) {
+        } else if (gob.isBoss && (gob.name.includes("Rey Brujo") || gameState.activeSenda === "rey_brujo") && greenDiceResult && greenDiceResult.details) {
            let naturalDie = greenDiceResult.details.find(d => d.type === 'die');
            if (naturalDie) {
               let rollVal = naturalDie.val;
@@ -328,7 +328,7 @@ function renderCombatOverlay() {
                 dieDmg += nextDetail.val;
               }
 
-              if (gob.isBoss && gob.name === "El Gran Recaudador" && (detail.val === 3 || detail.val === 6)) {
+              if (gob.isBoss && gob.name.includes("El Gran Recaudador") && (detail.val === 3 || detail.val === 6)) {
                 dieDmg = 0;
               }
 
@@ -772,7 +772,7 @@ function renderCombatOverlay() {
 
           if (dieData.isCramped && !isCrampPhase) return;
 
-          if (gob.isBoss && gob.name === "La Madre") {
+          if (gob.isBoss && gob.name.includes("La Madre")) {
             if (typeof gameState !== 'undefined' && gameState.addLog) {
               gameState.addLog(`🛡️ <strong>Ininterceptable:</strong> No puedes interceptar los dados de La Madre.`);
             }

@@ -334,7 +334,7 @@ class GameState {
       const greenRoll = this.rollGreenDice(goblin);
 
       // Senda Piromante - Ordenar dados del Piromante de mayor a menor
-      if (goblin.isBoss && goblin.name === "El Piromante") {
+      if (goblin.isBoss && goblin.name.includes("El Piromante")) {
         greenRoll.details.sort((a, b) => {
           if (a.type === 'die' && b.type === 'die') {
             return b.val - a.val;
@@ -621,7 +621,7 @@ class GameState {
       if (eqObj) {
         for (let uid in eqDamagePerTarget) {
           let targetGoblin = c.goblins.find(g => g.uid === uid || String(g.uid) === String(uid));
-          let isRecaudadorBoss = (targetGoblin && targetGoblin.isBoss && targetGoblin.name === "El Gran Recaudador");
+          let isRecaudadorBoss = (targetGoblin && targetGoblin.isBoss && targetGoblin.name.includes("El Gran Recaudador"));
           let dmg = eqDamagePerTarget[uid];
 
           if (isRecaudadorBoss && dmg > 0) {
@@ -662,7 +662,7 @@ class GameState {
           this.addLog(`🛡️ ${targetGoblin.name || ('G' + targetGoblin.level)} es invulnerable y no recibe daño.`);
         } else {
           let damageNegated = false;
-          if (targetGoblin.isBoss && (this.activeSenda === 'rey_brujo' || targetGoblin.name === "Rey Brujo")) {
+          if (targetGoblin.isBoss && (this.activeSenda === 'rey_brujo' || targetGoblin.name.includes("Rey Brujo"))) {
             let forceFieldRoll = this.rollDice(6);
             if (forceFieldRoll >= 5) {
               damageNegated = true;
@@ -679,7 +679,7 @@ class GameState {
             msgParts.push(`inflige ${stats.damage} daño`);
             
             // Defensa del Nido (Senda de La Madre)
-            if (targetGoblin.isBoss && (this.activeSenda === 'la_madre' || targetGoblin.name === "La Madre") && stats.damage > 0) {
+            if (targetGoblin.isBoss && (this.activeSenda === 'la_madre' || targetGoblin.name.includes("La Madre")) && stats.damage > 0) {
               this.battlefield.goblins.push({
                 ...DB.goblins[1],
                 uid: Date.now() + Math.random(),
@@ -699,7 +699,7 @@ class GameState {
       let goblinDmg = greenDiceResult ? greenDiceResult.total : 1;
 
       // Si el goblin es el Rey Brujo, sus daños son estáticos según la tirada natural del dado verde
-      if (targetGoblin.isBoss && targetGoblin.name === "Rey Brujo" && greenDiceResult && greenDiceResult.details) {
+      if (targetGoblin.isBoss && targetGoblin.name.includes("Rey Brujo") && greenDiceResult && greenDiceResult.details) {
         let naturalDie = greenDiceResult.details.find(d => d.type === 'die');
         if (naturalDie) {
           let rollVal = naturalDie.val;
@@ -713,7 +713,7 @@ class GameState {
       }
 
       // La Madre: Efectos estáticos de los dados
-      if (targetGoblin.isBoss && targetGoblin.name === "La Madre" && greenDiceResult && greenDiceResult.details) {
+      if (targetGoblin.isBoss && targetGoblin.name.includes("La Madre") && greenDiceResult && greenDiceResult.details) {
         let naturalDie = greenDiceResult.details.find(d => d.type === 'die');
         if (naturalDie) {
           let rollVal = naturalDie.val;
@@ -835,9 +835,9 @@ class GameState {
       let allSpecialAttacks = [];
       let directDmg = 0;
       let normalDmg = 0;
-      let isSpecialBoss = (targetGoblin.isBoss && (targetGoblin.name === "Rey Brujo" || targetGoblin.name === "La Madre"));
-      let isPiromanteBoss = (targetGoblin.isBoss && targetGoblin.name === "El Piromante");
-      let isRecaudadorBoss = (targetGoblin.isBoss && targetGoblin.name === "El Gran Recaudador");
+      let isSpecialBoss = (targetGoblin.isBoss && (targetGoblin.name.includes("Rey Brujo") || targetGoblin.name.includes("La Madre")));
+      let isPiromanteBoss = (targetGoblin.isBoss && targetGoblin.name.includes("El Piromante"));
+      let isRecaudadorBoss = (targetGoblin.isBoss && targetGoblin.name.includes("El Gran Recaudador"));
 
       if (greenDiceResult && greenDiceResult.details) {
         let naturalDieIdx = 0;
@@ -847,7 +847,7 @@ class GameState {
             let interceptInfo = goblinInterceptions.find(asg => Number(asg.goblinDieIndex) === Number(naturalDieIdx));
             
             // Regla La Madre: Sus ataques son ininterceptables
-            if (targetGoblin.isBoss && targetGoblin.name === "La Madre" && isIntercepted) {
+            if (targetGoblin.isBoss && targetGoblin.name.includes("La Madre") && isIntercepted) {
               isIntercepted = false;
               this.addLog(`🛡️ <strong>Ininterceptable:</strong> Intentaste interceptar el ataque de La Madre, pero fue inútil.`);
             }
@@ -892,7 +892,7 @@ class GameState {
               let brokenItem = null;
               let rolledValueText = '';
 
-              if (targetGoblin.isBoss && targetGoblin.name === "La Madre") {
+              if (targetGoblin.isBoss && targetGoblin.name.includes("La Madre")) {
                 // Las habilidades de La Madre se resuelven de forma estática antes, no usamos el parser genérico
                 applied = true;
               } else if (effLow.includes('gana+2 pv por cada carga') || effLow.includes('gana+2 pv por cada carga escozor')) {
@@ -2186,7 +2186,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
         }
         p.energy -= energyCost;
         let damageNegated = false;
-        if (gob.isBoss && (this.activeSenda === 'rey_brujo' || gob.name === "Rey Brujo")) {
+        if (gob.isBoss && (this.activeSenda === 'rey_brujo' || gob.name.includes("Rey Brujo"))) {
           let forceFieldRoll = this.rollDice(6);
           if (forceFieldRoll >= 5) {
             damageNegated = true;
