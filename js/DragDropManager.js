@@ -1,4 +1,4 @@
-﻿/**
+/**
  * DragDropManager - Gestor centralizado de Drag & Drop (Delegación de Eventos)
  * Recoge los eventos globales del ratón y emite CustomEvents semánticos para que
  * app.js ejecute la lógica de negocio sin estar acoplado al DOM.
@@ -10,6 +10,7 @@ class DragDropManager {
 
   init() {
     document.addEventListener('dragstart', this.handleDragStart.bind(this));
+    document.addEventListener('dragenter', this.handleDragEnter.bind(this));
     document.addEventListener('dragover', this.handleDragOver.bind(this));
     document.addEventListener('drop', this.handleDrop.bind(this));
     document.addEventListener('dragend', this.handleDragEnd.bind(this));
@@ -41,6 +42,13 @@ class DragDropManager {
       e.dataTransfer.setData('text/plain', target.dataset.gobUid);
       e.dataTransfer.setData('source', 'orb');
       target.style.opacity = '0.5';
+    }
+  }
+
+  handleDragEnter(e) {
+    const dropzone = e.target.closest('.dropzone');
+    if (dropzone) {
+      e.preventDefault();
     }
   }
 
