@@ -208,8 +208,8 @@ class GameState {
 
     if (this.activeSenda === 'la_madre') {
       // Regla "Escudos de Carne": Mientras haya al menos un Goblin de Nivel inferior en la mesa, NO puedes declarar ataques contra Goblins de Nivel superior.
-      if (!goblin.isDying && goblin.currentHp > 0) {
-        const aliveGobs = this.battlefield.goblins.filter(g => g.currentHp > 0 && !g.isDying);
+      if (!goblin.isDying && goblin.currentHp > 0 && !goblin.isBoss) {
+        const aliveGobs = this.battlefield.goblins.filter(g => g.currentHp > 0 && !g.isDying && !g.isBoss);
         if (aliveGobs.length > 0) {
           const minLevel = Math.min(...aliveGobs.map(g => g.level));
           if (goblin.level > minLevel) {
