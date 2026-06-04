@@ -1319,6 +1319,11 @@ function initSendaSelectionScreen() {
       border-right-color: transparent;
     }
 
+    .split-card.show-left .half-left { width: 100% !important; border-right-color: transparent !important; z-index: 3 !important; }
+    .split-card.show-left .half-right { width: 0% !important; }
+    .split-card.show-right .half-right { width: 100% !important; z-index: 3 !important; }
+    .split-card.show-right .half-left { width: 0% !important; border-right-color: transparent !important; }
+
     .split-card-btn-container {
       display: flex;
       gap: 20px;
@@ -1425,9 +1430,21 @@ function initSendaSelectionScreen() {
     card.appendChild(halfRight);
 
     card.addEventListener('click', () => {
-      container.querySelectorAll('.split-card').forEach(c => c.classList.remove('selected'));
-      card.classList.add('selected');
-      selectedSendaValue = senda.value;
+      if (card.classList.contains('selected')) {
+        if (card.classList.contains('show-right')) {
+          card.classList.remove('show-right');
+          card.classList.add('show-left');
+        } else {
+          card.classList.remove('show-left');
+          card.classList.add('show-right');
+        }
+      } else {
+        container.querySelectorAll('.split-card').forEach(c => {
+          c.classList.remove('selected', 'show-left', 'show-right');
+        });
+        card.classList.add('selected');
+        selectedSendaValue = senda.value;
+      }
     });
 
     card.addEventListener('dblclick', () => {
