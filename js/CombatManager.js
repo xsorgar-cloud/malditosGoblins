@@ -442,7 +442,12 @@ function renderCombatOverlay() {
 
     statsContainer.innerHTML = `
       <div class="player-name-hover" data-player-index="${gameState.players.indexOf(p)}" style="font-size: 1.4rem; font-weight: bold; color: var(--gold); margin-bottom: 5px; cursor: pointer; width: fit-content; margin-left: auto; margin-right: auto;">${p.name}</div>
-      <div style="font-size: 0.9rem; color: #aaa; margin-bottom: 15px; font-weight: bold; letter-spacing: 1px;">Acción ${gameState.battlefield.actionCount + 1} de 3</div>
+      <div style="font-size: 0.9rem; color: #aaa; margin-bottom: 15px; font-weight: bold; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 5px;">
+        Acción: 
+        <span style="font-size: 1.2rem; color: ${gameState.battlefield.actionCount >= 0 ? '#ff4d4d' : '#444'}; text-shadow: ${gameState.battlefield.actionCount >= 0 ? '0 0 10px rgba(255, 77, 77, 0.6)' : 'none'};">★</span>
+        <span style="font-size: 1.2rem; color: ${gameState.battlefield.actionCount >= 1 ? '#ff4d4d' : '#444'}; text-shadow: ${gameState.battlefield.actionCount >= 1 ? '0 0 10px rgba(255, 77, 77, 0.6)' : 'none'};">★</span>
+        <span style="font-size: 1.2rem; color: ${gameState.battlefield.actionCount >= 2 ? '#ff4d4d' : '#444'}; text-shadow: ${gameState.battlefield.actionCount >= 2 ? '0 0 10px rgba(255, 77, 77, 0.6)' : 'none'};">★</span>
+      </div>
       <div class="stats" style="display: flex; flex-direction: column; gap: 15px; font-size: 1.2rem;">
         <div class="stat hp ${isLowHP ? 'low-hp' : ''}" style="display: flex; align-items: center; gap: 10px; height: 24px;"><span style="display: flex; align-items: center; width: 24px; justify-content: center;">❤️</span> <span>Vida: <span>${p.hp}</span>/<span>${p.maxHp}</span> ${finalProjectedHp !== p.hp && !isCrampPhase ? `<span style="color:${finalProjectedHp < p.hp ? '#ff4d4d' : '#33cc33'}; font-size: 0.9em; margin-left: 8px;">(➔ ${finalProjectedHp}/${p.maxHp})</span>` : ''}</span></div>
         ${projectedHtml}
