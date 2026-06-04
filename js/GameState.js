@@ -2610,7 +2610,9 @@ Daño directo: Sufres ${brokenCount} de daño.`);
         } while (temp > 0);
         
         g.letterAssigned = letters;
-        g.name = (g.name || "Goblin") + " " + letters;
+        if (!g.isBoss) {
+          g.name = (g.name || "Goblin") + " " + letters;
+        }
         this.goblinLetterCounter++;
       }
     });
