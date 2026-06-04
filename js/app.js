@@ -718,6 +718,16 @@ function openSettingsModal() {
         window.syncCustomDifficultySelect();
       }
     }
+  } else {
+    // Sincronizar desde la pantalla principal al engranaje si la partida no ha empezado
+    const selectSettingsSenda = document.getElementById('select-settings-senda');
+    const selectSendaMain = document.getElementById('select-senda');
+    if (selectSettingsSenda && selectSendaMain) {
+      selectSettingsSenda.value = selectSendaMain.value;
+      if (window.syncCustomSettingsSendaSelect) {
+        window.syncCustomSettingsSendaSelect();
+      }
+    }
   }
   settingsModal.classList.remove('hidden');
 }
@@ -1563,6 +1573,25 @@ document.getElementById('btn-save-settings').addEventListener('click', () => {
     updateUI();
     if (typeof window !== 'undefined' && window.saveGame) {
       window.saveGame(true);
+    }
+  } else {
+    // Sincronizar desde el engranaje a la pantalla principal si la partida no ha empezado
+    const selectSettingsSenda = document.getElementById('select-settings-senda');
+    const selectSendaMain = document.getElementById('select-senda');
+    if (selectSettingsSenda && selectSendaMain) {
+      selectSendaMain.value = selectSettingsSenda.value;
+      // Actualizar la interfaz personalizada de la pantalla de inicio
+      const triggerBtn = selectSendaMain.nextElementSibling;
+      if (triggerBtn && triggerBtn.classList.contains('custom-select-container')) {
+        const textSpan = triggerBtn.querySelector('span');
+        const nativeOpt = selectSendaMain.options[selectSendaMain.selectedIndex];
+        if (textSpan && nativeOpt) {
+          textSpan.textContent = nativeOpt.text;
+        }
+      }
+      if (typeof window.updateSetupSendaPreview === 'function') {
+        window.updateSetupSendaPreview();
+      }
     }
   }
   closeAllCustomSelects();
