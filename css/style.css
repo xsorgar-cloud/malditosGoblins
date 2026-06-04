@@ -1,4 +1,4 @@
-﻿:root {
+:root {
   --bg-color: #0f1115;
   --panel-bg: rgba(25, 28, 36, 0.85);
   --panel-active-bg: rgba(3, 40, 46, 0.85);
@@ -2703,11 +2703,15 @@ main {
   height: 24px;
   min-width: 24px;
   min-height: 24px;
+  max-width: 24px;
+  max-height: 24px;
   aspect-ratio: 1 / 1;
   box-sizing: border-box;
   padding: 0;
   margin: 0;
   line-height: 1;
+  -webkit-appearance: none;
+  appearance: none;
   background: var(--text-main);
   color: #000;
   border: 2px solid #fff;
