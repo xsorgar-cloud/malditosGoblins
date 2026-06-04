@@ -1,4 +1,4 @@
-let lastWaveLevel = 0;
+﻿let lastWaveLevel = 0;
 let lastActionCount = 0;
 const gameState = new GameState();
 const COIN_SVG = `<svg viewBox="0 0 24 24" width="18" height="18" style="vertical-align: middle; margin-right: 3px;"><circle cx="12" cy="12" r="10" fill="#ffd700" stroke="#c79a32" stroke-width="2"/><circle cx="12" cy="12" r="7" fill="none" stroke="#e6c200" stroke-width="1" stroke-dasharray="2,2"/><path d="M12 7v10" stroke="#c79a32" stroke-width="2" stroke-linecap="round"/></svg>`;
@@ -1478,7 +1478,6 @@ function initSendaSelectionScreen() {
   btnCancel.addEventListener('click', () => {
     screen.classList.remove('visible');
   });
-  btnContainer.appendChild(btnCancel);
 
   const btnConfirm = document.createElement('button');
   btnConfirm.className = 'btn primary';
@@ -1504,6 +1503,7 @@ function initSendaSelectionScreen() {
     screen.classList.remove('visible');
   });
   btnContainer.appendChild(btnConfirm);
+  btnContainer.appendChild(btnCancel);
 
   screen.appendChild(btnContainer);
   document.body.appendChild(screen);
@@ -4567,6 +4567,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
 
 
 
