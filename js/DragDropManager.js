@@ -17,7 +17,9 @@ class DragDropManager {
   }
 
   handleDragStart(e) {
-    const target = e.target;
+    // Buscar el contenedor arrastrable real, ya que el target podría ser un hijo (ej. una imagen dentro de la carta)
+    const target = e.target.closest ? e.target.closest('.draggable-die, .die, .draggable-equip, .mini-equip-icon, .equip-slot, .draggable-orb') : null;
+    if (!target) return;
     // Identificar qué estamos arrastrando basándonos en clases CSS genéricas
     // app.js usa 'draggable-die' (dataset.dieId), CombatManager usa 'die' o 'draggable' (id)
     if (target.classList && (target.classList.contains('draggable-die') || target.classList.contains('die'))) {
@@ -110,4 +112,5 @@ class DragDropManager {
 }
 
 const dragDropManager = new DragDropManager();
+
 
