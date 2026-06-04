@@ -71,6 +71,14 @@ function renderCombatOverlay() {
       return;
     }
     if (dieData.isCramped && !gameState.currentCombat.isCrampPhase) return;
+
+    if (gob.isBoss && gob.name === "La Madre") {
+      if (typeof gameState !== 'undefined' && gameState.addLog) {
+        gameState.addLog(`🛡️ <strong>Ininterceptable:</strong> No puedes interceptar los dados de La Madre.`);
+      }
+      return;
+    }
+
     const playerDieVal = dieData.value;
     const goblinDice = gameState.currentCombat.dice.green[gob.uid].details.filter(d => d.type === 'die');
     if (!interceptionAssignments[gob.uid]) interceptionAssignments[gob.uid] = [];
@@ -758,6 +766,18 @@ function renderCombatOverlay() {
           }
 
           if (dieData.isCramped && !isCrampPhase) return;
+
+          if (gob.isBoss && gob.name === "La Madre") {
+            if (typeof gameState !== 'undefined' && gameState.addLog) {
+              gameState.addLog(`🛡️ <strong>Ininterceptable:</strong> No puedes interceptar los dados de La Madre.`);
+            }
+            // Limpiar la selección si falla
+            clearDieAssignment(activeSelectedDieId);
+            clearInterception(activeSelectedDieId);
+            activeSelectedDieId = null;
+            renderCombatOverlay();
+            return;
+          }
 
           const playerDieVal = dieData.value;
           const goblinDice = c.dice.green[gob.uid].details.filter(d => d.type === 'die');
