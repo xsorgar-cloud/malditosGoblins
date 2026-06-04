@@ -2701,6 +2701,13 @@ main {
   right: -8px;
   width: 24px;
   height: 24px;
+  min-width: 24px;
+  min-height: 24px;
+  aspect-ratio: 1 / 1;
+  box-sizing: border-box;
+  padding: 0;
+  margin: 0;
+  line-height: 1;
   background: var(--text-main);
   color: #000;
   border: 2px solid #fff;
@@ -2710,6 +2717,7 @@ main {
   justify-content: center;
   font-size: 1rem;
   font-weight: bold;
+  flex-shrink: 0;
   cursor: pointer;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.8);
   z-index: 20;
@@ -3399,5 +3407,6 @@ main {
     border: 2px solid var(--gold);
     box-shadow: 0 0 5px rgba(0,0,0,0.8);
 }
+
 
 
