@@ -2681,7 +2681,10 @@ main {
 .die.silver.die-selected {
   border: none !important;
   box-shadow: none !important;
-  filter: drop-shadow(0 0 2px #fff) drop-shadow(0 0 8px var(--gold)) drop-shadow(0 0 12px var(--gold)) drop-shadow(0 0 16px var(--gold)) drop-shadow(0 0 20px var(--gold));
+  background: radial-gradient(circle, #ffffff 0%, var(--gold) 60%, #b8860b 100%) !important;
+  color: #000 !important;
+  -webkit-filter: drop-shadow(0 0 12px var(--gold));
+  filter: drop-shadow(0 0 12px var(--gold));
 }
 
 .equip-selected {
@@ -3412,6 +3415,7 @@ main {
     border: 2px solid var(--gold);
     box-shadow: 0 0 5px rgba(0,0,0,0.8);
 }
+
 
 
 
