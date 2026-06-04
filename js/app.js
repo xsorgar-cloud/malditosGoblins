@@ -1,4 +1,4 @@
-﻿let lastWaveLevel = 0;
+let lastWaveLevel = 0;
 let lastActionCount = 0;
 const gameState = new GameState();
 const COIN_SVG = `<svg viewBox="0 0 24 24" width="18" height="18" style="vertical-align: middle; margin-right: 3px;"><circle cx="12" cy="12" r="10" fill="#ffd700" stroke="#c79a32" stroke-width="2"/><circle cx="12" cy="12" r="7" fill="none" stroke="#e6c200" stroke-width="1" stroke-dasharray="2,2"/><path d="M12 7v10" stroke="#c79a32" stroke-width="2" stroke-linecap="round"/></svg>`;
@@ -2218,7 +2218,7 @@ function renderRoleFillDice() {
     // --- FIN LÓGICA PLATEADO ---
 
     if (die.type === 'black' && !die.rerolled && roleFillAssigned !== die.id) {
-      const rerollBtn = document.createElement('button');
+      const rerollBtn = document.createElement('div');
       rerollBtn.className = 'die-reroll-icon';
       rerollBtn.innerHTML = '↻';
       rerollBtn.title = 'Relanzar dado negro';
