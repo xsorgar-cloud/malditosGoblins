@@ -544,6 +544,8 @@ main {
   border: 1px solid var(--gold);
   border-radius: 8px;
   position: relative;
+  transform: translateZ(0);
+  backface-visibility: hidden;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -728,6 +730,8 @@ main {
   flex-shrink: 1;
   transition: all 0.3s ease;
   position: relative;
+  transform: translateZ(0);
+  backface-visibility: hidden;
   z-index: 1;
   background-repeat: no-repeat;
   background-color: var(--bg-color);
@@ -1392,6 +1396,8 @@ main {
   font-size: 1.8rem;
   box-shadow: 0 5px 15px rgba(0, 0, 0, 0.5);
   transition: transform 0.3s;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .die-option:hover .die {
