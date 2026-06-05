@@ -1498,6 +1498,44 @@ class GameState {
     this.lastActionWasCombat = false;  
 
     let previousPlayer = this.getCurrentPlayer();
+    
+    const continueNextTurn = () => {
+      if (this.players[this.currentPlayerIndex]) {
+        this.players[this.currentPlayerIndex].goblinsFoughtThisTurn = [];
+      }
+
+      if (this.checkGameOver()) return;
+
+      let iterations = 0;
+      do {
+        this.currentPlayerIndex++;
+        if (this.currentPlayerIndex >= this.players.length) {
+          this.currentPlayerIndex = 0;
+          this.battlefield.actionCount++;
+
+          if (this.battlefield.actionCount >= 3) {
+            this.resolveWavePhase();
+          }
+        }
+        iterations++;
+        if (iterations > this.players.length * 2) break; // Fallback
+      } while (this.players[this.currentPlayerIndex] && this.players[this.currentPlayerIndex].hp <= 0 && !this.isGameOver);
+
+      if (!this.isGameOver && !this.isRetaliationPhase && !this.isResolvingWaveSequentially) {
+        this.startPlayerTurn(this.getCurrentPlayer());
+      }
+      
+      // Auto-guardado silencioso al iniciar el turno
+      if (typeof window !== 'undefined' && window.saveGame) {
+        window.saveGame(true);
+      }
+      
+      // Forzar actualización de UI si venimos de un callback asíncrono
+      if (typeof window !== 'undefined' && window.updateUI) {
+        window.updateUI();
+      }
+    };
+
     if (previousPlayer) {
       const color = this.getPlayerColor(previousPlayer);
       this.addLog(`<span style="color: ${color};">🔄<<< <strong>${previousPlayer.name}</strong> ha finalizado su turno.</span>`);
@@ -1508,40 +1546,18 @@ class GameState {
         if (activeGobs > 0) {
           previousPlayer.hp = Math.max(0, previousPlayer.hp - activeGobs);
           this.addLog(`☣️ <strong>Toxina Goblin:</strong> Al finalizar tu turno sufres <span style="color:#ff4d4d"><strong>${activeGobs} Daño Directo</strong></span> por las toxinas. (HP: ${previousPlayer.hp}/${previousPlayer.maxHp})`);
-          this.checkGameOver();
+          
+          if (this.checkGameOver()) return;
+          
+          alert(`⚠️ Toxina Goblin:\nAl finalizar tu turno hay ${activeGobs} goblins vivos en la mesa.\n\nSufres ${activeGobs} de Daño Directo.`, () => {
+             continueNextTurn();
+          });
+          return;
         }
       }
     }
 
-    if (this.players[this.currentPlayerIndex]) {
-      this.players[this.currentPlayerIndex].goblinsFoughtThisTurn = [];
-    }
-
-    if (this.checkGameOver()) return;
-
-    let iterations = 0;
-    do {
-      this.currentPlayerIndex++;
-      if (this.currentPlayerIndex >= this.players.length) {
-        this.currentPlayerIndex = 0;
-        this.battlefield.actionCount++;
-
-        if (this.battlefield.actionCount >= 3) {
-          this.resolveWavePhase();
-        }
-      }
-      iterations++;
-      if (iterations > this.players.length * 2) break; // Fallback
-    } while (this.players[this.currentPlayerIndex] && this.players[this.currentPlayerIndex].hp <= 0 && !this.isGameOver);
-
-    if (!this.isGameOver && !this.isRetaliationPhase && !this.isResolvingWaveSequentially) {
-      this.startPlayerTurn(this.getCurrentPlayer());
-    }
-    
-    // Auto-guardado silencioso al iniciar el turno
-    if (typeof window !== 'undefined' && window.saveGame) {
-      window.saveGame(true);
-    }
+    continueNextTurn();
   }
 
   startPlayerTurn(player) {
