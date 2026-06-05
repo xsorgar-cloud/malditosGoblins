@@ -1,4 +1,4 @@
-function renderCombatOverlay() {
+﻿function renderCombatOverlay() {
   if (window.combatDieOnEquipHandler) {
     document.removeEventListener('dd:die-on-equip', window.combatDieOnEquipHandler);
     document.removeEventListener('dd:die-on-combat-role', window.combatDieOnCombatRoleHandler);
@@ -2386,4 +2386,5 @@ document.addEventListener('mouseover', (e) => {
 });
 
 let activeSelectedOrbUids = [];
+
 

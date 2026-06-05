@@ -1,4 +1,4 @@
-let lastWaveLevel = 0;
+﻿let lastWaveLevel = 0;
 let lastActionCount = 0;
 const gameState = new GameState();
 const COIN_SVG = `<svg viewBox="0 0 24 24" width="18" height="18" style="vertical-align: middle; margin-right: 3px;"><circle cx="12" cy="12" r="10" fill="#ffd700" stroke="#c79a32" stroke-width="2"/><circle cx="12" cy="12" r="7" fill="none" stroke="#e6c200" stroke-width="1" stroke-dasharray="2,2"/><path d="M12 7v10" stroke="#c79a32" stroke-width="2" stroke-linecap="round"/></svg>`;
@@ -77,7 +77,7 @@ const TutorialManager = {
       title: "Tablero Principal",
       body: `
       <div style="text-align: center; margin-bottom: 15px;">
-        <img src="assets/logo.png" style="height: 50px; filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.4));">
+        <img src="assets/logo.webp" style="height: 50px; filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.4));">
       </div>
       <ul>
         <li>La pantalla principal se divide en 3 zonas diferenciadas.</li>
@@ -103,7 +103,7 @@ const TutorialManager = {
       title: "Represalia y Fin",
       body: `
       <div style="text-align: center; margin-bottom: 15px;">
-        <img src="assets/Monstruos/03.jpg" style="height: 70px; border-radius: 8px; border: 2px solid #8B0000; box-shadow: 0 0 15px rgba(255,0,0,0.4);">
+        <img src="assets/Monstruos/03.webp" style="height: 70px; border-radius: 8px; border: 2px solid #8B0000; box-shadow: 0 0 15px rgba(255,0,0,0.4);">
       </div>
       <ul>
         <li><strong>Daño Recibido:</strong> Recibirás 1 PV de daño por cada orbe morado no bloqueado.</li>
@@ -115,7 +115,7 @@ const TutorialManager = {
       title: "Fase de Mercado",
       body: `
       <div style="text-align: center; margin-bottom: 15px;">
-        <img src="assets/Equipo/inicial/!1-Espada.jpg" style="height: 70px; border-radius: 8px; border: 1px solid #aaa;">
+        <img src="assets/Equipo/inicial/!1-Espada.webp" style="height: 70px; border-radius: 8px; border: 1px solid #aaa;">
       </div>
       <ul>
         <li><strong>Comprar:</strong> Si tienes monedas, haz clic en el equipo de arriba para comprarlo. Irá a tu inventario inactivo 📦.</li>
@@ -1389,12 +1389,12 @@ function initSendaSelectionScreen() {
   screen.appendChild(container);
 
   const sendasData = [
-    { value: 'iniciacion', name: 'Senda de Iniciación', stars: '★', bossImg: 'assets/Monstruos/Jefes/Inicicion.jpg', rulesImg: 'assets/Monstruos/Jefes/reglas_Inicicion.jpg' },
-    { value: 'guerrero', name: 'Senda de El Zeñor de la Guerra', stars: '★★', bossImg: 'assets/Monstruos/Jefes/Señor-de-la-Guerra.jpg', rulesImg: 'assets/Monstruos/Jefes/reglas_Señor-de-la-Guerra.jpg' },
-    { value: 'rey_brujo', name: 'Senda de El Rey Brujo', stars: '★★★', bossImg: 'assets/Monstruos/Jefes/Rey-Brujo.jpg', rulesImg: 'assets/Monstruos/Jefes/reglas_Rey-Brujo.jpg' },
-    { value: 'recaudador', name: 'Senda de El Gran Recaudador', stars: '★★★', bossImg: 'assets/Monstruos/Jefes/Gran-Recaudador.jpg', rulesImg: 'assets/Monstruos/Jefes/reglas_Gran-Recaudador.jpg' },
-    { value: 'piromante', name: 'Senda de El Piromante', stars: '★★★★', bossImg: 'assets/Monstruos/Jefes/El-Piromante.jpg', rulesImg: 'assets/Monstruos/Jefes/reglas_El-Piromante.jpg' },
-    { value: 'la_madre', name: 'Senda de La Madre', stars: '★★★★★', bossImg: 'assets/Monstruos/Jefes/La-Madre.jpg', rulesImg: 'assets/Monstruos/Jefes/reglas_La-Madre.jpg' }
+    { value: 'iniciacion', name: 'Senda de Iniciación', stars: '★', bossImg: 'assets/Monstruos/Jefes/Inicicion.webp', rulesImg: 'assets/Monstruos/Jefes/reglas_Inicicion.webp' },
+    { value: 'guerrero', name: 'Senda de El Zeñor de la Guerra', stars: '★★', bossImg: 'assets/Monstruos/Jefes/Señor-de-la-Guerra.webp', rulesImg: 'assets/Monstruos/Jefes/reglas_Señor-de-la-Guerra.webp' },
+    { value: 'rey_brujo', name: 'Senda de El Rey Brujo', stars: '★★★', bossImg: 'assets/Monstruos/Jefes/Rey-Brujo.webp', rulesImg: 'assets/Monstruos/Jefes/reglas_Rey-Brujo.webp' },
+    { value: 'recaudador', name: 'Senda de El Gran Recaudador', stars: '★★★', bossImg: 'assets/Monstruos/Jefes/Gran-Recaudador.webp', rulesImg: 'assets/Monstruos/Jefes/reglas_Gran-Recaudador.webp' },
+    { value: 'piromante', name: 'Senda de El Piromante', stars: '★★★★', bossImg: 'assets/Monstruos/Jefes/El-Piromante.webp', rulesImg: 'assets/Monstruos/Jefes/reglas_El-Piromante.webp' },
+    { value: 'la_madre', name: 'Senda de La Madre', stars: '★★★★★', bossImg: 'assets/Monstruos/Jefes/La-Madre.webp', rulesImg: 'assets/Monstruos/Jefes/reglas_La-Madre.webp' }
   ];
 
   sendasData.forEach(senda => {
@@ -1743,12 +1743,12 @@ window.showHitoGoblinsTooltip = function(e) {
     <div style="display: flex; flex-direction: row; align-items: center; justify-content: center; width: ${calculatedWidth}px; height: ${cardHeight}px;">
       ${nextHito.goblins.map((lvl, idx) => {
         const overlapStyle = idx > 0 ? `margin-left: -${overlap}px !important;` : '';
-        let imgSrc = `assets/Monstruos/t${lvl}.png`;
+        let imgSrc = `assets/Monstruos/t${lvl}.webp`;
         if (lvl === 5 && nextHito.bossStats && nextHito.bossStats.image) {
           const parts = nextHito.bossStats.image.split('/');
           const fileWithExt = parts[parts.length - 1];
           const bossName = fileWithExt.substring(0, fileWithExt.lastIndexOf('.'));
-          imgSrc = `assets/Monstruos/Jefes/t5_${bossName}.png`;
+          imgSrc = `assets/Monstruos/Jefes/t5_${bossName}.webp`;
         }
         return `<img src="${imgSrc}" style="height: ${cardHeight}px !important; width: ${cardWidth}px !important; flex-shrink: 0 !important; pointer-events: none !important; border-radius: 6px; border: none; box-shadow: none; opacity: 0.95; display: block; position: relative; z-index: ${idx}; ${overlapStyle}" alt="G${lvl}">`;
       }).join('')}
@@ -1938,7 +1938,7 @@ function openHitosModal() {
   sendaHitos.forEach(hito => {
     let gobsDesc = hito.isBoss
       ? `Jefe: ${hito.name}`
-      : hito.goblins.map(lvl => `<img src="assets/g${lvl}.png" style="height: 50px; vertical-align: middle; margin: 0 4px;" alt="G${lvl}">`).join(' ');
+      : hito.goblins.map(lvl => `<img src="assets/g${lvl}.webp" style="height: 50px; vertical-align: middle; margin: 0 4px;" alt="G${lvl}">`).join(' ');
 
     if (hito.isBoss && hito.bossStats.image) {
       bossImgHTML = `<div style="width: 100%; max-width: 261px; max-height: 373px; aspect-ratio: 2.5/3.5; background-image: url('${hito.bossStats.image}'); background-size: cover; background-position: center; border-radius: 10px; border: 2px solid #9d4edd; box-shadow: 0 0 20px rgba(157,78,221,0.5); margin: 0 auto;"></div>`;
@@ -2001,14 +2001,14 @@ function showHitoRuleNotification(hitoObj) {
 
     let gobsHTML = '';
     if (hitoObj.isBoss) {
-      const bossImg = hitoObj.bossStats && hitoObj.bossStats.image ? hitoObj.bossStats.image : 'assets/Monstruos/05.jpg';
+      const bossImg = hitoObj.bossStats && hitoObj.bossStats.image ? hitoObj.bossStats.image : 'assets/Monstruos/05.webp';
       gobsHTML = `<div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
         <span style="color: var(--accent-red); font-weight: bold; font-family: 'Cinzel', serif; letter-spacing: 1px; font-size: 0.9rem;">JEFE DE LA SENDA</span>
         <img src="${bossImg}" style="height: 120px; border-radius: 8px; border: 2px solid var(--accent-red); box-shadow: 0 0 15px rgba(230, 57, 70, 0.4);" alt="Jefe">
       </div>`;
     } else if (hitoObj.goblins && hitoObj.goblins.length > 0) {
       gobsHTML = hitoObj.goblins.map(lvl => 
-        `<img src="assets/g${lvl}.png" style="height: 60px; vertical-align: middle; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); margin: 0 5px;" alt="G${lvl}">`
+        `<img src="assets/g${lvl}.webp" style="height: 60px; vertical-align: middle; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); margin: 0 5px;" alt="G${lvl}">`
       ).join('');
     }
     goblinsContainer.innerHTML = gobsHTML;
@@ -2738,7 +2738,7 @@ function renderMarket() {
   potionsDeck.className = 'deck';
   const isUnlocked = gameState.battlefield.waveLevel >= 3;
 
-  const imgUrl = isUnlocked ? 'assets/Pociones/Pociones.jpg' : 'assets/Pociones/bloqueo_pociones.jpg';
+  const imgUrl = isUnlocked ? 'assets/Pociones/Pociones.webp' : 'assets/Pociones/bloqueo_pociones.webp';
   potionsDeck.style.backgroundImage = `url('${imgUrl}')`;
 
   if (!isUnlocked) {
@@ -3611,7 +3611,7 @@ function renderGameWon() {
   const phrase = DB.victoryPhrases ? DB.victoryPhrases[Math.floor(Math.random() * DB.victoryPhrases.length)] : "¡Habéis limpiado la senda y la gloria es vuestra!";
 
   desc.innerHTML = `
-    <img src="assets/victoria.jpg" style="width: 100%; max-height: 500px; object-fit: cover; border-radius: 8px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.5);" onerror="this.src='assets/final.jpg'">
+    <img src="assets/victoria.webp" style="width: 100%; max-height: 500px; object-fit: cover; border-radius: 8px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.5);" onerror="this.src='assets/final.webp'">
     <div style="font-size: 1.5rem; margin-bottom: 20px; color: #fff;">¡El Jefe ha caído!</div>
     <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.3);">
       <p style="margin-bottom: 10px;">Completasteis la <strong>${gameState.activeSenda.replace('_', ' ').toUpperCase()}</strong></p>
@@ -3641,7 +3641,7 @@ function renderGameOver() {
   const phrase = DB.gameOverPhrases[Math.floor(Math.random() * DB.gameOverPhrases.length)];
 
   desc.innerHTML = `
-    <img src="assets/final.jpg" style="width: 100%; max-height: 300px; object-fit: cover; border-radius: 8px; margin-bottom: 20px; border: 1px solid rgba(230, 57, 70, 0.5);">
+    <img src="assets/final.webp" style="width: 100%; max-height: 300px; object-fit: cover; border-radius: 8px; margin-bottom: 20px; border: 1px solid rgba(230, 57, 70, 0.5);">
     <div style="font-size: 1.5rem; margin-bottom: 20px; color: #fff;">¡Habéis sido derrotados!</div>
     <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(230, 57, 70, 0.3);">
       <p style="margin-bottom: 10px;">Llegasteis hasta la <strong>Oleada ${gameState.battlefield.waveLevel}</strong></p>
@@ -4567,6 +4567,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 });
+
 
 
 
