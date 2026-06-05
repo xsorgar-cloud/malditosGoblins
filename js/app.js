@@ -3611,7 +3611,7 @@ function renderGameWon() {
   const phrase = DB.victoryPhrases ? DB.victoryPhrases[Math.floor(Math.random() * DB.victoryPhrases.length)] : "¡Habéis limpiado la senda y la gloria es vuestra!";
 
   desc.innerHTML = `
-    <img src="assets/victoria.jpg" style="width: 100%; max-height: 500px; object-fit: cover; border-radius: 8px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.5); pointer-events: none; -webkit-user-drag: none; user-select: none;" onerror="this.src='assets/final.webp'">
+    <img src="assets/victoria.jpg" style="width: 100%; max-height: 500px; object-fit: cover; border-radius: 8px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.5); pointer-events: none; -webkit-user-drag: none; user-select: none;" onerror="this.src='assets/final.jpg'">
     <div style="font-size: 1.5rem; margin-bottom: 20px; color: #fff;">¡El Jefe ha caído!</div>
     <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(212, 175, 55, 0.3);">
       <p style="margin-bottom: 10px;">Completasteis la <strong>${gameState.activeSenda.replace('_', ' ').toUpperCase()}</strong></p>
