@@ -1,4 +1,4 @@
-﻿function renderCombatOverlay() {
+function renderCombatOverlay() {
   if (window.combatDieOnEquipHandler) {
     document.removeEventListener('dd:die-on-equip', window.combatDieOnEquipHandler);
     document.removeEventListener('dd:die-on-combat-role', window.combatDieOnCombatRoleHandler);
@@ -19,6 +19,13 @@
     if (dieData.type === 'silver') {
       alert("Los dados plateados solo pueden fusionarse con otros dados de la reserva.");
       return;
+    }
+
+    if (gameState.activeSenda === 'cazador' && dieData.value < 4) {
+      if (doesEquipmentDealDamage(eq, 6, {dieId: dieData.id, value: 6})) {
+        alert("Camuflaje y Reflejos: Solo puedes asignar un 4, 5 o 6 a cartas de ataque.");
+        return;
+      }
     }
 
     if (!gameState.isValidDieForEquipment(dieData.value, eq)) return;

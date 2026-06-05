@@ -559,7 +559,7 @@ main {
   box-shadow: 0 0 15px #00d2ff, inset 0 0 10px rgba(0, 210, 255, 0.5);
   animation: roleReadyPulse 2s infinite ease-in-out !important;
   cursor: pointer;
-  transition: transform 0.2s, box-shadow 0.2s, border-color 0.2s !important;
+  transition: transform 0.2s !important;
 }
 
 .player-role.role-ready:hover,
@@ -728,7 +728,7 @@ main {
   background-size: auto 100%;
   background-position: left center;
   flex-shrink: 1;
-  transition: all 0.3s ease;
+  transition: transform 0.3s ease, min-width 0.3s ease;
   position: relative;
   transform: translateZ(0);
   backface-visibility: hidden;

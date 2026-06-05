@@ -1,4 +1,4 @@
-﻿const DB = {
+const DB = {
   // CONFIGURACIÓN DE NIVELES DEL JUGADOR
   playerLevels: [
     { level: 1, maxHp: 10, pexNeeded: 2, blocks: 6, extraDice: null },
@@ -123,6 +123,13 @@
       { id: 3, name: "El Prestamista", goblins: [1, 3], isBoss: false, ruleDesc: "Al final de cada acción, si el Nivel 3 sigue vivo, debes pagar 1mo o sufres 1 Daño Directo." },
       { id: 4, name: "La Banda del Saco", goblins: [1, 2, 3], isBoss: false, ruleDesc: "Mientras algún Nivel 1 siga vivo, el Nivel 3 y el Nivel 2 son Invulnerables." },
       { id: 5, name: "Gran Recaudador", goblins: [5], isBoss: true, bossStats: { hpMultiplier: 30, regen: 5, dice: ['2d6', '+2'], image: 'assets/Monstruos/Jefes/Gran-Recaudador.webp', attacks: { 1: ['Daño Directo'], 2: ['Rotura no esquivable'], 3: ['Curación Boss 5 PV'], 4: ['1 tembleque'], 5: ['2 escozor'], 6: ['Invocación goblin Nivel 1'] } }, ruleDesc: "Jefe Final. Armadura de monedas: Resta 1 al daño en cada carta de ataque. Por cada equipo que dañe obtienes 1 mo." }
+    ],
+    cazador: [
+      { id: 1, name: "Exploradores", goblins: [1, 1], isBoss: false },
+      { id: 2, name: "Los Tramperos", goblins: [1, 2], isBoss: false, ruleDesc: "El Goblin de Nivel 2 es Invulnerable mientras esté acompañado." },
+      { id: 3, name: "Nido de Víboras", goblins: [1, 1, 1], isBoss: false, ruleDesc: "Cada vez que derrotes a uno de estos Goblins, invoca un Goblin de nivel 1." },
+      { id: 4, name: "Emboscada", goblins: [2, 2], isBoss: false, ruleDesc: "Sufres inmediatamente el efecto de Represalia al desplegar el hito." },
+      { id: 5, name: "El Cazador", goblins: [5], isBoss: true, bossStats: { hpMultiplier: 25, regen: 5, dice: ['2d6'], image: 'assets/Monstruos/Jefes/El-Cazador.webp', attacks: { 1: ['Aplica pierde 1d6 NEGRO'], 2: ['Rotura no esquivable', '1 tembleque'], 3: ['Daño Directo'], 4: ['Invulnerable a todo el daño en este ataque'], 5: ['Invocación goblin Nivel 1'], 6: ['Rotura no esquivable', 'Invocación goblin Nivel 1'] } }, ruleDesc: "Jefe Final. Aura de Toxinas: Recibes 1 de Daño Directo al iniciar un combate contra él." }
     ]
   },
 
@@ -148,6 +155,10 @@
     recaudador: [
       { name: "· Escudo de Oro", desc: "Cuando recibes Daño, automáticamente pierdes 1 mo y evita 1 punto de daño. Si NO tienes Oro sufres el daño normal y añades +1 Daño Extra." },
       { name: "· Saqueo Experto", desc: "Cada vez que mates a un Goblin ganas +1 mo EXTRA." }
+    ],
+    cazador: [
+      { name: "· Camuflaje y Reflejos", desc: "Los Goblins tienen grandes reflejos y son difíciles de alcanzar. NO puedes asignar un dado de combate a una carta de ataque con valor de 1, 2 o 3." },
+      { name: "· Toxina Goblin", desc: "La senda está cubierta de una toxina nociva que no te deja respirar. Al final de tu turno (fase Post-Acción), recibes 1 Daño por cada Goblin vivo en la mesa." }
     ]
   },
 

@@ -837,6 +837,7 @@ function showSendaTooltipForValue(selectedValue, targetEl) {
     rey_brujo: "Senda de El Rey Brujo",
     recaudador: "Senda de El Gran Recaudador",
     piromante: "Senda de El Piromante",
+    cazador: "Senda de El Cazador",
     la_madre: "Senda de La Madre"
   };
   const pathName = names[selectedValue] || selectedValue;
@@ -1394,6 +1395,7 @@ function initSendaSelectionScreen() {
     { value: 'rey_brujo', name: 'Senda de El Rey Brujo', stars: '★★★', bossImg: 'assets/Monstruos/Jefes/Rey-Brujo.webp', rulesImg: 'assets/Monstruos/Jefes/reglas_Rey-Brujo.webp' },
     { value: 'recaudador', name: 'Senda de El Gran Recaudador', stars: '★★★', bossImg: 'assets/Monstruos/Jefes/Gran-Recaudador.webp', rulesImg: 'assets/Monstruos/Jefes/reglas_Gran-Recaudador.webp' },
     { value: 'piromante', name: 'Senda de El Piromante', stars: '★★★★', bossImg: 'assets/Monstruos/Jefes/El-Piromante.webp', rulesImg: 'assets/Monstruos/Jefes/reglas_El-Piromante.webp' },
+    { value: 'cazador', name: 'Senda de El Cazador', stars: '★★★★', bossImg: 'assets/Monstruos/Jefes/El-Cazador.webp', rulesImg: 'assets/Monstruos/Jefes/reglas_El-Cazador.webp' },
     { value: 'la_madre', name: 'Senda de La Madre', stars: '★★★★★', bossImg: 'assets/Monstruos/Jefes/La-Madre.webp', rulesImg: 'assets/Monstruos/Jefes/reglas_La-Madre.webp' }
   ];
 
@@ -1905,6 +1907,7 @@ function openHitosModal() {
       rey_brujo: "Senda de El Rey Brujo",
       recaudador: "Senda de El Gran Recaudador",
       piromante: "Senda de El Piromante",
+      cazador: "Senda de El Cazador",
       la_madre: "Senda de La Madre"
     };
     const sendaName = sendaNames[gameState.activeSenda] || "Senda de Iniciaci\u00F3n";
@@ -3173,6 +3176,11 @@ function renderBattlefield() {
 
 function doesEquipmentDealDamage(eq, value, asg) {
   if (!eq) return false;
+  
+  if (typeof gameState !== 'undefined' && gameState.activeSenda === 'cazador' && value < 4) {
+    return false;
+  }
+  
   const effectStr = (eq.isBroken && eq.broken ? eq.broken.effect : eq.effect).toLowerCase();
   
   if (eq.id === 'corazon_elastico') {

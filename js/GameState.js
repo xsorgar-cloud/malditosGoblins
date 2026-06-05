@@ -1,4 +1,4 @@
-﻿class GameState {
+class GameState {
   constructor() {
     this.players = [];
     this.currentPlayerIndex = 0;
@@ -245,6 +245,14 @@
       }
     }
 
+    if (this.activeSenda === 'cazador') {
+      // Hito 2: Los Tramperos. El Nivel 2 es Invulnerable mientras esté acompañado.
+      if (this.currentHito === 3 && goblin.level === 2 && goblin.isHito) {
+        let lowerExists = this.battlefield.goblins.some(g => g.currentHp > 0 && !g.isDying && g.uid !== goblin.uid);
+        if (lowerExists) return true;
+      }
+    }
+
     return false;
   }
 
@@ -313,6 +321,30 @@
         this.addLog(`🔮 <strong>Efecto Rey Brujo:</strong> Pierdes ${removedCount} dado(s) <span style="color:#ef233c">ROJO(S)</span> por la maldición.`);
       }
       p.statusEffects.eliminaRojo = 0; // Se consume el efecto
+    }
+
+    // Aura de toxinas (Jefe El Cazador)
+    if (this.activeSenda === 'cazador' && validGoblins.some(g => g.isBoss)) {
+      p.hp = Math.max(0, p.hp - 1);
+      this.addLog(`☣️ <strong>Aura de toxinas:</strong> Sufres <span style="color:#ff4d4d"><strong>1 Daño Directo</strong></span> al realizar un ataque contra El Cazador. (HP: ${p.hp}/${p.maxHp})`);
+      this.checkGameOver();
+    }
+
+    // Efecto "Elimina un d6 NEGRO" de El Cazador
+    if (p.statusEffects.eliminaNegro && p.statusEffects.eliminaNegro > 0) {
+      let countToRemove = p.statusEffects.eliminaNegro;
+      let removedCount = 0;
+      for (let i = 0; i < countToRemove; i++) {
+        let blackIdx = dicePoolToRoll.findIndex(d => d.type === 'black');
+        if (blackIdx !== -1) {
+          dicePoolToRoll.splice(blackIdx, 1);
+          removedCount++;
+        }
+      }
+      if (removedCount > 0) {
+        this.addLog(`🌑 <strong>El Cazador:</strong> Pierdes ${removedCount} dado(s) <span style="color:#555">NEGRO(S)</span> en este ataque por su veneno.`);
+      }
+      p.statusEffects.eliminaNegro = 0; // Se consume el efecto
     }
 
     let combatData = {
@@ -394,7 +426,6 @@
       p.statusEffects.tembleque -= count;
     }
 
-    // 2. Prioridad: ESCOZOR (Marca el dado pero no cambia valor)
     // 2. Prioridad: ESCOZOR (Marca el dado pero no cambia valor)
     // Solo se aplica a dados rojos que no tengan ya Tembleque
     if (p.statusEffects.escozor > 0) {
@@ -671,6 +702,27 @@
               this.addLog(`🔮 <strong>Campo de Fuerza:</strong> El Rey Brujo lanzó un <strong>${forceFieldRoll}</strong> en 1d6. El ataque atraviesa el escudo.`);
             }
           }
+          
+          if (targetGoblin.isBoss && this.activeSenda === 'cazador') {
+            let bossDice = c.dice.green[targetGoblin.uid];
+            if (bossDice && bossDice.details) {
+              let goblinInterceptions = interceptions ? (interceptions[targetUid] || interceptions[String(targetUid)] || []) : [];
+              let naturalDieIdx = 0;
+              let invulnerableActivated = false;
+              bossDice.details.forEach(d => {
+                 if (d.type === 'die') {
+                    let isIntercepted = goblinInterceptions.some(asg => Number(asg.goblinDieIndex) === Number(naturalDieIdx));
+                    if (d.val === 4 && !isIntercepted) {
+                        invulnerableActivated = true;
+                    }
+                    naturalDieIdx++;
+                 }
+              });
+              if (invulnerableActivated) {
+                damageNegated = true;
+              }
+            }
+          }
 
           if (damageNegated) {
             msgParts.push(`ataque anulado por Campo de Fuerza`);
@@ -910,6 +962,17 @@
                   directDmg += damageDealt;
                   p.statusEffects.escozor = (p.statusEffects.escozor || 0) + 1;
                   this.addLog(`🔥 <strong>El Piromante (Dado 4):</strong> Sufres <span style="color:#ff4d4d"><strong>${damageDealt} Daño Directo</strong></span> (2 PV por cada uno de tus ${escozorCount} Escozor) y recibes <span style="color:#ff6600">1 Escozor</span>.`);
+                }
+              } else if (effLow.includes('aplica pierde 1d6 negro')) {
+                if (!isIntercepted) {
+                  applied = true;
+                  p.statusEffects.eliminaNegro = (p.statusEffects.eliminaNegro || 0) + 1;
+                  this.addLog(`🌑 <strong>El Cazador (Dado 1):</strong> En tu próximo ataque tirarás un dado NEGRO menos.`);
+                }
+              } else if (effLow.includes('invulnerable a todo el daño en este ataque')) {
+                if (!isIntercepted) {
+                  applied = true;
+                  this.addLog(`🛡️ <strong>El Cazador (Dado 4):</strong> ¡Se ha vuelto invulnerable a todo el daño en este asalto!`);
                 }
               } else if (isUnskippable || (!isIntercepted && (isNormalBreak || isStatus))) {
                 applied = true;
@@ -1190,6 +1253,20 @@
     this.battlefield.goblins.forEach(g => {
       if (g.currentHp <= 0 && !g.isDying) {
         g.isDying = true;
+        
+        // Nido de Víboras (Hito 3, Senda Cazador)
+        if (this.activeSenda === 'cazador' && this.currentHito === 4 && g.isHito && g.level === 1) {
+          this.battlefield.goblins.push({
+            ...DB.goblins[1],
+            uid: Date.now() + Math.random(),
+            currentHp: DB.goblins[1].hp,
+            isInvocacion: true,
+            mo: 0,
+            image: 'assets/Monstruos/invocacion_01.webp'
+          });
+          this.addLog(`🐍 <strong>Nido de Víboras:</strong> Al morir un goblin del nido, aparece 1 Invocación Nivel 1.`);
+        }
+        
         // El goblin da recompensa si es Hito o si su nivel >= nivel de los jugadores
         const pObj = this.players[this.currentPlayerIndex];
         if (g.isHito || g.level >= pObj.level) {
@@ -1424,6 +1501,16 @@
     if (previousPlayer) {
       const color = this.getPlayerColor(previousPlayer);
       this.addLog(`<span style="color: ${color};">🔄<<< <strong>${previousPlayer.name}</strong> ha finalizado su turno.</span>`);
+      
+      // Toxina Goblin (Senda Cazador)
+      if (this.activeSenda === 'cazador') {
+        let activeGobs = this.battlefield.goblins.filter(g => g.currentHp > 0 && !g.isDying).length;
+        if (activeGobs > 0) {
+          previousPlayer.hp = Math.max(0, previousPlayer.hp - activeGobs);
+          this.addLog(`☣️ <strong>Toxina Goblin:</strong> Al finalizar tu turno sufres <span style="color:#ff4d4d"><strong>${activeGobs} Daño Directo</strong></span> por las toxinas. (HP: ${previousPlayer.hp}/${previousPlayer.maxHp})`);
+          this.checkGameOver();
+        }
+      }
     }
 
     if (this.players[this.currentPlayerIndex]) {
@@ -1728,6 +1815,16 @@ Daño directo: Sufres ${brokenCount} de daño.`);
           this.addLog(`💥 <strong>La Chispa:</strong> <strong>${p.name}</strong> recibe inmediatamente <span style="color:#ff6600">1 Escozor</span>.`);
         }
       });
+    }
+
+    // Hito 4: Emboscada (Senda Cazador)
+    if (this.activeSenda === 'cazador' && this.currentHito === 5) {
+      let hitosGobs = this.battlefield.goblins.filter(g => g.isHito && !g.isDying && g.currentHp > 0);
+      if (hitosGobs.length > 0) {
+        this.addLog(`⚠️ <strong>Emboscada:</strong> Sufres inmediatamente el efecto de Represalia.`);
+        this.retaliationQueue = [...hitosGobs];
+        this.isRetaliationPhase = true;
+      }
     }
 
     return true;
