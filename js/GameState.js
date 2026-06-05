@@ -1,4 +1,4 @@
-class GameState {
+﻿class GameState {
   constructor() {
     this.players = [];
     this.currentPlayerIndex = 0;
@@ -686,7 +686,7 @@ class GameState {
                 currentHp: DB.goblins[1].hp,
                 isInvocacion: true,
                 mo: 0,
-                image: 'assets/Monstruos/invocacion_01.jpg'
+                image: 'assets/Monstruos/invocacion_01.webp'
               });
               msgParts.push(`🥚 <span style="color:#f54281">Defensa del Nido: Aparece 1 Invocación Nivel 1</span>`);
             }
@@ -726,7 +726,7 @@ class GameState {
                 uid: Date.now() + Math.random(),
                 currentHp: DB.goblins[1].hp,
                 isInvocacion: true, mo: 0,
-                image: 'assets/Monstruos/invocacion_01.jpg'
+                image: 'assets/Monstruos/invocacion_01.webp'
               });
             }
             this.addLog(`🥚 <span style="color:#f54281"><strong>Efecto de La Madre (Dado ${rollVal}):</strong> Aparecen 2 Invocaciones Nivel 1.</span>`);
@@ -739,7 +739,7 @@ class GameState {
             } else {
               for(let i=0; i<2; i++){
                 this.battlefield.goblins.push({
-                  ...DB.goblins[1], uid: Date.now() + Math.random(), currentHp: DB.goblins[1].hp, isInvocacion: true, mo: 0, image: 'assets/Monstruos/invocacion_01.jpg'
+                  ...DB.goblins[1], uid: Date.now() + Math.random(), currentHp: DB.goblins[1].hp, isInvocacion: true, mo: 0, image: 'assets/Monstruos/invocacion_01.webp'
                 });
               }
               this.addLog(`🥚 <span style="color:#f54281"><strong>Efecto de La Madre (Dado ${rollVal}):</strong> Sin Goblins en mesa, invoca 2 Goblins de Nivel 1.</span>`);
@@ -800,7 +800,7 @@ class GameState {
                 uid: Date.now() + Math.random(),
                 currentHp: DB.goblins[2].hp,
                 isInvocacion: true, mo: 0,
-                image: 'assets/Monstruos/invocacion_02.jpg'
+                image: 'assets/Monstruos/invocacion_02.webp'
               });
               this.addLog(`🥚 <span style="color:#f54281"><strong>Efecto de La Madre (Dado 6):</strong> Sin parejas en mesa, invoca 1 Goblin de Nivel 2.</span>`);
             }
@@ -963,7 +963,7 @@ class GameState {
                     currentHp: DB.goblins[1].hp,
                     mo: 0,
                     isInvocacion: true,
-                    image: 'assets/Monstruos/invocacion_01.jpg'
+                    image: 'assets/Monstruos/invocacion_01.webp'
                   });
                   this.addLog(`🔮 <strong>Invocación:</strong> ¡${targetGoblin.name} invoca un Goblin de Nivel 1 (sin recompensa de oro)!`);
                 }
@@ -1684,7 +1684,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
         name: hito.name,
         dice: hito.bossStats.dice,
         attacks: hito.bossStats.attacks || DB.goblins[5].attacks,
-        image: hito.bossStats.image || 'assets/Monstruos/Jefes/Inicicion.jpg'
+        image: hito.bossStats.image || 'assets/Monstruos/Jefes/Inicicion.webp'
       });
     } else {
       if ((this.activeSenda === 'guerrero' || this.activeSenda === 'rey_brujo') && this.currentHito === 1) {
@@ -1703,7 +1703,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
             let extraProps = {};
             if (this.activeSenda === 'la_madre' && this.currentHito === 3) {
               extraProps.mo = 0;
-              extraProps.image = 'assets/Monstruos/nomo_01.jpg';
+              extraProps.image = 'assets/Monstruos/nomo_01.webp';
             }
             this.battlefield.goblins.push({
               ...DB.goblins[lvl],
@@ -1922,7 +1922,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
         res = findAndMerge(g => g.isHito && !g.isInvocacion, 'hito', `<span style="color:#a545d1">Hito G${lvl}</span> + <span style="color:#a545d1">Hito G${lvl}</span> --> <span style="color:#a545d1">Hito G${lvl + 1}</span>`, { isHito: true });
         if (res) return res;
 
-        res = findAndMerge(g => g.isInvocacion, 'invocacion', `<span style="color:#4cc9f0">Invocación G${lvl}</span> + <span style="color:#4cc9f0">Invocación G${lvl}</span> --> <span style="color:#4cc9f0">Invocación G${lvl + 1}</span>`, { isInvocacion: true, mo: 0, image: 'assets/Monstruos/invocacion_0' + (lvl + 1) + '.jpg' });
+        res = findAndMerge(g => g.isInvocacion, 'invocacion', `<span style="color:#4cc9f0">Invocación G${lvl}</span> + <span style="color:#4cc9f0">Invocación G${lvl}</span> --> <span style="color:#4cc9f0">Invocación G${lvl + 1}</span>`, { isInvocacion: true, mo: 0, image: 'assets/Monstruos/invocacion_0' + (lvl + 1) + '.webp' });
         if (res) return res;
 
         // 2. Clases Mixtas (si no hay puras)
@@ -1948,7 +1948,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
 
         if (invocaciones.length >= 1 && hitos.length >= 1) {
           this.battlefield.goblins = this.battlefield.goblins.filter(g => g.uid !== invocaciones[0].uid && g.uid !== hitos[0].uid);
-          let newGob = { ...DB.goblins[lvl + 1], uid: Date.now() + Math.random(), currentHp: DB.goblins[lvl + 1].hp, isMutated: true, isInvocacion: true, mo: 0, image: 'assets/Monstruos/invocacion_0' + (lvl + 1) + '.jpg' };
+          let newGob = { ...DB.goblins[lvl + 1], uid: Date.now() + Math.random(), currentHp: DB.goblins[lvl + 1].hp, isMutated: true, isInvocacion: true, mo: 0, image: 'assets/Monstruos/invocacion_0' + (lvl + 1) + '.webp' };
           this.battlefield.goblins.push(newGob);
           this.addLog(`🧬 <span style="color:#f54281"><strong>Mutación Mixta:</strong></span> <span style="color:#4cc9f0">Invocación G${lvl}</span> + <span style="color:#a545d1">Hito G${lvl}</span> --> <span style="color:#4cc9f0">Invocación G${lvl + 1}</span>`);
           return { type: 'mutation', uidsToRemove: [invocaciones[0].uid, hitos[0].uid], newGoblin: newGob };
@@ -2612,3 +2612,4 @@ Daño directo: Sufres ${brokenCount} de daño.`);
     });
   }
 }
+
