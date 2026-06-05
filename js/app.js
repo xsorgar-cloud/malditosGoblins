@@ -77,7 +77,7 @@ const TutorialManager = {
       title: "Tablero Principal",
       body: `
       <div style="text-align: center; margin-bottom: 15px;">
-        <img src="assets/logo.webp" style="height: 50px; filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.4));">
+        <img src="assets/logo.png" style="height: 50px; filter: drop-shadow(0 0 10px rgba(212, 175, 55, 0.4));">
       </div>
       <ul>
         <li>La pantalla principal se divide en 3 zonas diferenciadas.</li>
