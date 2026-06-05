@@ -60,7 +60,7 @@ const showInterceptionError = (val) => {
 
 // --- SISTEMA DE TUTORIAL ---
 const TutorialManager = {
-  enabled: localStorage.getItem('tutorialEnabled') !== 'false',
+  enabled: localStorage.getItem('tutorialEnabled') === 'true',
   seen: JSON.parse(localStorage.getItem('tutorialSeen') || '{}'),
   currentSituation: null,
 
