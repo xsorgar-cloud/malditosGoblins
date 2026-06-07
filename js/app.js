@@ -1,6 +1,8 @@
 let lastWaveLevel = 0;
 let lastActionCount = 0;
 const gameState = new GameState();
+const botManager = typeof BotManager !== 'undefined' ? new BotManager(gameState) : null;
+window.botManager = botManager;
 const COIN_SVG = `<svg viewBox="0 0 24 24" width="18" height="18" style="vertical-align: middle; margin-right: 3px;"><circle cx="12" cy="12" r="10" fill="#ffd700" stroke="#c79a32" stroke-width="2"/><circle cx="12" cy="12" r="7" fill="none" stroke="#e6c200" stroke-width="1" stroke-dasharray="2,2"/><path d="M12 7v10" stroke="#c79a32" stroke-width="2" stroke-linecap="round"/></svg>`;
 const SACK_SVG = `<svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align: middle; margin-right: 3px;"><path d="M9 3C8.5 3 8 4 8.5 5.5C9 7 9 7 9 7C6 8 4 12 4 18C4 20.5 6 21 12 21C18 21 20 20.5 20 18C20 12 18 8 15 7C15 7 15 7 15.5 5.5C16 4 15.5 3 15 3C13 3 11 3.5 9 3Z" fill="#ffffff" stroke="#000000" stroke-width="1.8" stroke-linejoin="round"/><rect x="8" y="6.5" width="8" height="2.5" rx="1" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"/><path d="M13 9C13 11 12 12 12 12C12 12 14 11 14 9Z" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"/><path d="M11 9C11 11 12 12 12 12C12 12 10 11 10 9Z" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"/></svg>`;
 const SHIELD_SVG = `<svg viewBox="0 0 24 24" width="18" height="18" style="vertical-align: middle;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="var(--accent-blue)" stroke="#023e8a" stroke-width="2" stroke-linejoin="round"/><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="url(#shieldGrad)" stroke="none"/><defs><linearGradient id="shieldGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="rgba(255,255,255,0.4)"/><stop offset="50%" stop-color="rgba(255,255,255,0)"/></linearGradient></defs></svg>`;
@@ -230,8 +232,8 @@ if (document.readyState === 'loading') {
   TutorialManager.init();
 }
 // Variables Globales para Sistema de Respaldo Táctil (Tap-to-Select)
-let activeSelectedDieId = null;
-let activeSelectedEquipId = null;
+var activeSelectedDieId = null;
+var activeSelectedEquipId = null;
 
 // Sobrescribir window.alert nativo por un modal inmersivo del juego
 window.alert = function (messageText, callback = null) {
@@ -512,6 +514,7 @@ const roleSelectionContainer = document.getElementById('role-selection-container
 const playersContainer = document.getElementById('players-container');
 
 let selectedSetupRoles = ['guerrero', null, null, null];
+let selectedSetupBots = [false, true, true, true];
 let justSelectedRole = null;
 
 function renderRoleSelection() {
@@ -538,16 +541,73 @@ function renderRoleSelection() {
       row.style.borderColor = 'rgba(244, 211, 94, 0.2)';
     }
 
+    let leftCol = document.createElement('div');
+    leftCol.style.width = '120px';
+    leftCol.style.display = 'flex';
+    leftCol.style.flexDirection = 'column';
+    leftCol.style.alignItems = 'center';
+    leftCol.style.justifyContent = 'center';
+    leftCol.style.gap = '8px';
+
     let label = document.createElement('label');
-    label.style.width = '100px';
     label.style.fontWeight = 'bold';
     label.style.fontSize = '1.1rem';
-    label.innerText = `Jugador ${i + 1}:`;
-    row.appendChild(label);
+    label.innerText = `Jugador ${i + 1}`;
+    leftCol.appendChild(label);
+
+      let aiToggle = document.createElement('div');
+      aiToggle.style.display = 'flex';
+      aiToggle.style.alignItems = 'center';
+      aiToggle.style.justifyContent = 'center';
+      aiToggle.style.gap = '6px';
+      aiToggle.style.cursor = 'pointer';
+      aiToggle.style.padding = '4px 10px';
+      aiToggle.style.borderRadius = '20px';
+      aiToggle.style.transition = 'all 0.3s ease';
+      aiToggle.style.userSelect = 'none';
+      
+      let aiIcon = document.createElement('span');
+      aiIcon.innerText = '🤖'; // Puedes cambiarlo por una imagen <img>
+      aiIcon.style.fontSize = '1.2rem';
+      
+      let aiText = document.createElement('span');
+      aiText.innerText = 'IA';
+      aiText.style.fontWeight = 'bold';
+      aiText.style.fontSize = '0.85rem';
+      aiText.style.letterSpacing = '1px';
+
+      if (selectedSetupBots[i]) {
+        aiToggle.style.background = 'rgba(212, 175, 55, 0.15)';
+        aiToggle.style.border = '1px solid var(--gold)';
+        aiToggle.style.boxShadow = '0 0 10px rgba(212, 175, 55, 0.3) inset';
+        aiIcon.style.filter = 'drop-shadow(0 0 5px rgba(255, 215, 0, 0.8))';
+        aiText.style.color = 'var(--gold)';
+        aiText.style.textShadow = '0 0 5px rgba(255, 215, 0, 0.6)';
+      } else {
+        aiToggle.style.background = 'rgba(255, 255, 255, 0.05)';
+        aiToggle.style.border = '1px solid rgba(255, 255, 255, 0.1)';
+        aiToggle.style.boxShadow = 'none';
+        aiIcon.style.filter = 'grayscale(100%) opacity(0.5)';
+        aiText.style.color = '#666';
+        aiText.style.textShadow = 'none';
+      }
+      
+      aiToggle.appendChild(aiIcon);
+      aiToggle.appendChild(aiText);
+      
+      aiToggle.onclick = () => {
+         selectedSetupBots[i] = !selectedSetupBots[i];
+         renderRoleSelection();
+      };
+      
+      leftCol.appendChild(aiToggle);
+
+    row.appendChild(leftCol);
 
     let optionsDiv = document.createElement('div');
     optionsDiv.style.display = 'flex';
-    optionsDiv.style.gap = '10px';
+    optionsDiv.style.gap = '6px'; // Reducir un poco el espacio para evitar que desplace elementos
+    optionsDiv.style.flexWrap = 'nowrap';
 
     DB.roles.forEach(r => {
       let img = document.createElement('div');
@@ -597,6 +657,48 @@ function renderRoleSelection() {
       optionsDiv.appendChild(img);
     });
 
+    // Botón para seleccionar un rol aleatorio
+    let randomBtn = document.createElement('div');
+    randomBtn.className = 'role-option';
+    randomBtn.style.display = 'flex';
+    randomBtn.style.alignItems = 'center';
+    randomBtn.style.justifyContent = 'center';
+    randomBtn.style.fontSize = '1.2rem';
+    randomBtn.style.fontWeight = 'bold';
+    randomBtn.style.color = '#fff';
+    randomBtn.style.textShadow = '0 0 5px rgba(255,255,255,0.5)';
+    randomBtn.style.background = 'linear-gradient(135deg, rgba(80,80,80,0.4), rgba(40,40,40,0.6))';
+    randomBtn.style.border = '2px dashed rgba(255,255,255,0.3)';
+    randomBtn.style.width = '35px'; // Aún más estrecho para que encaje bien
+    randomBtn.innerText = '?';
+    randomBtn.title = 'Rol Aleatorio';
+    
+    randomBtn.onclick = () => {
+      const randomIndex = Math.floor(Math.random() * DB.roles.length);
+      const randomRole = DB.roles[randomIndex];
+      selectedSetupRoles[i] = randomRole.id;
+      justSelectedRole = { playerIndex: i, roleId: randomRole.id };
+      renderRoleSelection();
+    };
+
+    randomBtn.onmouseenter = () => {
+      const previewName = document.getElementById('setup-role-name');
+      const previewCard = document.getElementById('setup-role-card');
+      const previewEffect = document.getElementById('setup-role-effect');
+      if (previewName && previewCard && previewEffect) {
+        previewName.innerText = 'ALEATORIO';
+        previewCard.style.backgroundImage = 'none';
+        previewCard.style.backgroundColor = '#1a1a1a';
+        previewEffect.innerText = 'El sistema elegirá un rol al azar para este jugador.';
+      }
+    };
+    randomBtn.onmouseleave = () => {
+      const previewCard = document.getElementById('setup-role-card');
+      if (previewCard) previewCard.style.backgroundColor = '';
+    };
+
+    optionsDiv.appendChild(randomBtn);
+
     row.appendChild(optionsDiv);
     roleSelectionContainer.appendChild(row);
   }
@@ -604,7 +706,7 @@ function renderRoleSelection() {
 }
 
 
-let selectedGoblins = [];
+var selectedGoblins = [];
 
 // Initial render
 renderRoleSelection();
@@ -1628,7 +1730,14 @@ document.getElementById('btn-save-settings').addEventListener('click', () => {
 });
 
 btnStartGame.addEventListener('click', () => {
-  const finalRoles = selectedSetupRoles.filter(r => r !== null);
+  const finalRoles = [];
+  const finalBots = [];
+  for (let i = 0; i < 4; i++) {
+    if (selectedSetupRoles[i] !== null) {
+      finalRoles.push(selectedSetupRoles[i]);
+      finalBots.push(selectedSetupBots[i]);
+    }
+  }
 
   if (finalRoles.length === 0) {
     alert("Debes seleccionar al menos un rol para un jugador.");
@@ -1671,7 +1780,7 @@ btnStartGame.addEventListener('click', () => {
   lastWaveLevel = initWave - 1; // Force wave announcement on start
   lastActionCount = -1; // Force action announcement on start
 
-  gameState.setupPlayers(numPlayers, finalRoles, { hp: initHp, maxHp: initMaxHp, energy: initEnergy, mo: initGold, hito: initHito, level: initLevel, wave: initWave, senda: initSenda, difficulty: initDifficulty });
+  gameState.setupPlayers(numPlayers, finalRoles, { hp: initHp, maxHp: initMaxHp, energy: initEnergy, mo: initGold, hito: initHito, level: initLevel, wave: initWave, senda: initSenda, difficulty: initDifficulty }, finalBots);
   setupModal.classList.add('hidden');
   const versionBadge = document.getElementById('game-version-badge');
   if (versionBadge) versionBadge.style.display = 'none';
@@ -2329,6 +2438,23 @@ if (btnToggleMenu) {
   });
 }
 
+window.botsPaused = false;
+const btnToggleBots = document.getElementById('btn-toggle-bots');
+if (btnToggleBots) {
+  btnToggleBots.addEventListener('click', () => {
+    window.botsPaused = !window.botsPaused;
+    if (window.botsPaused) {
+      btnToggleBots.innerHTML = '▶️ Bots';
+      btnToggleBots.style.borderColor = '#ff3366';
+      btnToggleBots.style.color = '#ff3366';
+    } else {
+      btnToggleBots.innerHTML = '⏸️ Bots';
+      btnToggleBots.style.borderColor = 'rgba(212, 175, 55, 0.3)';
+      btnToggleBots.style.color = '';
+      if (window.botManager) window.botManager.handleGameState();
+    }
+  });
+}
 document.getElementById('btn-toggle-log').addEventListener('click', () => {
   if (logPanel.style.display === 'none' || logPanel.style.display === '') {
     logPanel.style.display = 'flex';
@@ -2338,10 +2464,52 @@ document.getElementById('btn-toggle-log').addEventListener('click', () => {
   }
 });
 
+const btnExportLog = document.getElementById('btn-export-log');
+if (btnExportLog) {
+  btnExportLog.addEventListener('click', () => {
+    if (!gameState || !gameState.logs) return;
+    
+    const logsHtml = gameState.logs.map(log => `<div class="log-entry">${log}</div>`).join('');
+    
+    const fullHtml = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Historial de Partida - Malditos Goblins</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1a1a24; color: #eee; padding: 20px; line-height: 1.5; }
+    .container { max-width: 900px; margin: 0 auto; background: #232333; padding: 30px; border-radius: 12px; box-shadow: 0 8px 30px rgba(0,0,0,0.8); border: 1px solid #d4af37; }
+    h1 { color: #d4af37; text-align: center; font-family: 'Georgia', serif; border-bottom: 2px solid #d4af37; padding-bottom: 15px; margin-bottom: 25px; }
+    .log-entry { margin-bottom: 8px; border-bottom: 1px solid rgba(255,255,255,0.05); padding-bottom: 8px; font-size: 0.95rem; }
+    strong { color: #fff; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Historial de Partida - Malditos Goblins</h1>
+    <p style="text-align: center; color: #aaa; margin-top: -15px; margin-bottom: 30px;">Exportado el ${new Date().toLocaleString()}</p>
+    ${logsHtml}
+  </div>
+</body>
+</html>`;
+
+    const blob = new Blob([fullHtml], { type: 'text/html' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `historial_goblins_${new Date().getTime()}.html`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+}
+
 function renderLogs() {
   logContent.innerHTML = gameState.logs.map(log => `<div style="border-bottom: 1px solid rgba(255,255,255,0.1); padding-bottom: 3px;">${log}</div>`).join('');
   logContent.scrollTop = logContent.scrollHeight; // Auto-scroll al final
 }
+window.renderLogs = renderLogs;
 
 function showWaveAnnouncement(wave, triggerAction = false) {
   const overlay = document.getElementById('wave-announcement');
@@ -2466,7 +2634,55 @@ async function processWaveSequence() {
 }
 
 // Render Functions
+window.updateBotBubble = function(playerIndex, text) {
+  const combatOverlay = document.getElementById('combat-overlay');
+  const isCombatActive = combatOverlay && !combatOverlay.classList.contains('hidden');
+
+  const bubble = document.getElementById(`bot-bubble-${playerIndex}`);
+  const bubbleText = document.getElementById(`bot-bubble-text-${playerIndex}`);
+  const combatBubble = document.getElementById(`combat-bot-bubble-${playerIndex}`);
+  
+  if (isCombatActive) {
+      if (combatBubble) {
+          if (text) {
+              combatBubble.innerHTML = text;
+              combatBubble.style.display = 'block';
+          } else {
+              combatBubble.style.display = 'none';
+          }
+      }
+      if (bubble) {
+          bubble.style.opacity = '0';
+          bubble.style.transform = 'translateX(-50%) translateY(10px)';
+      }
+  } else {
+      if (bubble && bubbleText) {
+          if (text) {
+              bubbleText.innerHTML = text;
+              bubble.style.opacity = '1';
+              bubble.style.transform = 'translateX(-50%) translateY(0)';
+          } else {
+              bubble.style.opacity = '0';
+              bubble.style.transform = 'translateX(-50%) translateY(10px)';
+          }
+      }
+      if (combatBubble) {
+          combatBubble.style.display = 'none';
+      }
+  }
+};
+
 function updateUI() {
+  // Asegurar que botDNA está inicializado antes de cualquier renderizado
+  if (gameState && gameState.players) {
+      gameState.players.forEach(p => {
+          if (p.isBot && !p.botDNA) {
+              const personalities = ['Agresivo', 'Conservador', 'Cooperativo'];
+              p.botDNA = personalities.sort(() => Math.random() - 0.5);
+          }
+      });
+  }
+
   if (gameState && gameState.assignGoblinLetters) gameState.assignGoblinLetters();
   // 1. Siempre renderizamos primero para que el estado visual refleje los últimos cambios (ej: 0 HP)
   renderMarket();
@@ -2486,6 +2702,11 @@ function updateUI() {
   
   // Asegurarnos de desbloquear siempre
   document.body.style.pointerEvents = 'auto';
+
+  // Evaluar heurísticas de la IA para actualizar bocadillos
+  if (botManager) {
+      botManager.evaluateState();
+  }
 
   if (gameState.pendingCorrosionChoice) {
     // Retrasar si hay animaciones activas (muerte de Goblins o rotura de equipo)
@@ -2590,6 +2811,11 @@ function updateUI() {
 
   checkLevelUpChoice();
   TutorialManager.evaluateSituation();
+
+  // Activar turno automático de Bot (si es el jugador actual y no hay animaciones/bloqueos)
+  if (window.botManager) {
+      window.botManager.handleGameState();
+  }
 }
 
 // Botones de acción
@@ -2624,7 +2850,7 @@ btnConfirmAttack.addEventListener('click', () => {
   }
 });
 
-function animateCardPurchase(sourceEl, onComplete) {
+window.animateCardPurchase = function(sourceEl, onComplete) {
   const rect = sourceEl.getBoundingClientRect();
   const clone = sourceEl.cloneNode(true);
   
@@ -3198,8 +3424,8 @@ function doesEquipmentDealDamage(eq, value, asg) {
   return effectStr.includes('daño');
 }
 
-let currentAssignments = {};
-let interceptionAssignments = {};
+var currentAssignments = {};
+var interceptionAssignments = {};
 
 function showElasticModal(dieId, dieValue, eqId, onConfirm) {
   const modal = document.getElementById('elastic-modal');
@@ -3377,6 +3603,7 @@ function triggerCombatDiceRoll() {
     intervals.forEach(clearInterval);
     isRollingCombatDice = false;
     renderCombatOverlay();
+    if (window.botManager) window.botManager.handleGameState();
   }, 300);
 }
 

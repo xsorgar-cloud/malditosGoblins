@@ -1628,11 +1628,61 @@ function renderPlayer() {
         </button>`;
     }
 
+    let botBubbleHTML = '';
+    if (p.isBot) {
+        botBubbleHTML = `
+            <div id="bot-bubble-${index}" class="bot-bubble" style="
+                position: absolute;
+                bottom: 150px;
+                left: 50%;
+                transform: translateX(-50%) translateY(10px);
+                background: rgba(245, 245, 250, 0.95);
+                border: 4px solid var(--gold);
+                border-radius: 12px;
+                padding: 14px 20px;
+                color: #222;
+                font-family: 'Outfit', sans-serif;
+                font-size: 0.95rem;
+                font-weight: 500;
+                z-index: 9999999;
+                box-shadow: 0 8px 25px rgba(0,0,0,0.5), 0 0 15px rgba(212,175,55,0.2);
+                backdrop-filter: blur(5px);
+                width: 300px;
+                text-align: center;
+                pointer-events: none;
+                opacity: 0;
+                transition: opacity 0.4s ease, transform 0.4s ease;
+            ">
+               <div id="bot-bubble-text-${index}" style="line-height: 1.4;"></div>
+               <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 10px solid var(--gold);"></div>
+               <div style="position: absolute; bottom: -7px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent; border-top: 7px solid rgba(245, 245, 250, 0.95);"></div>
+            </div>
+        `;
+    }
+
+    let dnaHTML = '';
+    if (p.isBot && p.botDNA && p.botDNA.length >= 2) {
+        const getPColor = (p) => {
+            if (p === 'Agresivo') return '#d62828'; // Rojo
+            if (p === 'Conservador') return '#888888'; // Gris oscuro (para que se lea en el panel negro)
+            if (p === 'Cooperativo') return '#00b4d8'; // Azul
+            if (p === 'Explorador') return '#2a9d8f'; // Verde
+            return '#fff';
+        };
+        const c1 = getPColor(p.botDNA[0]);
+        const c2 = getPColor(p.botDNA[1]);
+        const mainDNA = p.botDNA[0].substring(0, 3).toUpperCase();
+        const secDNA = p.botDNA[1].substring(0, 3).toUpperCase();
+        dnaHTML = `<div style="font-size: 0.65rem; color: #a5a5a5; background: rgba(0,0,0,0.6); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--gold); display: flex; align-items: center; justify-content: center; cursor: help;" title="ADN Bot:&#10;1. ${p.botDNA[0]}&#10;2. ${p.botDNA[1]}&#10;3. ${p.botDNA[2]}">&#129302; &nbsp;<span style="color:${c1}; font-weight:bold;">${mainDNA}</span>-<span style="color:${c2}; font-weight:bold;">${secDNA}</span></div>`;
+    }
+
     const panelHTML = `
-      <div class="player-panel ${isCurrent ? 'active-turn' : ''} ${isDead ? 'player-dead' : ''}">
+      <div class="player-panel ${isCurrent ? 'active-turn' : ''} ${isDead ? 'player-dead' : ''}" style="position: relative;">
+        ${botBubbleHTML}
         <div class="player-hud-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 8px; margin-bottom: 8px; gap: 10px;">
-            <div style="display: flex; align-items: center; gap: 15px;">
-                <h3 class="player-name-hover" data-player-index="${index}" style="font-size: 1.2rem; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 80px; max-width: 140px; cursor: pointer;">${p.name}</h3>
+            <div style="display: flex; align-items: center; gap: 10px;">
+                <h3 class="player-name-hover" data-player-index="${index}" style="font-size: 1.2rem; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 60px; max-width: 120px; cursor: pointer;">${p.name}</h3>
+                ${dnaHTML}
                 <div class="status-effects-container">${statusHTML}</div>
             </div>
             <div class="stats">

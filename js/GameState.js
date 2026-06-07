@@ -65,9 +65,13 @@ class GameState {
   addLog(message) {
     const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
     
-    // Mantener un límite razonable para no consumir memoria
-    if (this.logs.length >= 50) this.logs.shift();
+    // Mantener un límite razonable para no consumir memoria (ampliado a 5000 para poder exportar historiales largos)
+    if (this.logs.length >= 5000) this.logs.shift();
     this.logs.push(`[${time}] ${message}`);
+    
+    if (typeof window.renderLogs === 'function') {
+      window.renderLogs();
+    }
 
     // Recolector de Habilidades de Jefe para el Alert final de Combate
     if (this.currentCombat && this.lastCombatBossEffects !== undefined) {
@@ -1411,7 +1415,7 @@ class GameState {
     }
   }
 
-  setupPlayers(numPlayers, selectedRoles = [], customSettings = { hp: 10, maxHp: 10, energy: 0, mo: 2, hito: 1, level: 1, senda: 'iniciacion', difficulty: 'facil' }) {
+  setupPlayers(numPlayers, selectedRoles = [], customSettings = { hp: 10, maxHp: 10, energy: 0, mo: 2, hito: 1, level: 1, senda: 'iniciacion', difficulty: 'facil' }, selectedBots = []) {
     this.currentHito = customSettings.hito !== undefined ? customSettings.hito : 1;
     this.activeSenda = customSettings.senda || 'iniciacion';
     this.difficulty = customSettings.difficulty || 'facil';
@@ -1436,6 +1440,7 @@ class GameState {
         mo: customSettings.mo,
         pex: basePex,
         level: initLvl,
+        isBot: selectedBots[i] || false,
         shield: 0,
         role: roleObj,
         energy: customSettings.energy,
@@ -2231,9 +2236,22 @@ Daño directo: Sufres ${brokenCount} de daño.`);
     if (this.isMarketPhase) return false;
     this.lastActionWasCombat = false;
     let p = this.players[this.currentPlayerIndex];
-    let fill = p.role.energyPerAction;
-    p.energy += fill;
-    this.addLog(`<strong>${p.name}</strong> rellenó su Rol (+${fill} Energía).`);
+    
+    // Simular tirada de dados para coger el valor que dé más energía
+    let bestEnergy = 0;
+    let bestDieVal = 1;
+    
+    p.dicePool.forEach(d => {
+      let val = Math.floor(Math.random() * d.faces) + 1;
+      let energyGain = p.role.energyRates[val - 1] || 0;
+      if (energyGain > bestEnergy) {
+        bestEnergy = energyGain;
+        bestDieVal = val;
+      }
+    });
+
+    p.energy += bestEnergy;
+    this.addLog(`🔷 <strong>${p.name}</strong> usó la acción Rellenar Rol. Sacó un ${bestDieVal} y ganó ${bestEnergy} Energía.`);
     this.consumeAction();
     return true;
   }
