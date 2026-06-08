@@ -1,5 +1,6 @@
 class BotManager {
-    constructor(gameState) {
+    // Constructor del BotManager: inicializa el estado del juego y las variables de control
+constructor(gameState) {
         this.gameState = gameState;
         this.activeBots = [];
         this.isActing = false;
@@ -7,7 +8,8 @@ class BotManager {
 
     // --- AUTOMATIZACIÓN DE TURNOS ---
 
-    handleGameState() {
+    // Gestiona el estado actual del juego y delega la acción correspondiente al bot
+handleGameState() {
         console.log("[BotManager] handleGameState called. isActing:", this.isActing);
         if (this.gameState.isGameOver || this.gameState.isGameWon) {
             console.log("[BotManager] Game over or won. Aborting.");
@@ -73,7 +75,8 @@ class BotManager {
         }
     }
 
-    triggerAction(type, target = null, reason = "") {
+    // Ejecuta la acción especificada (comprar, atacar, etc.) y actualiza la UI
+triggerAction(type, target = null, reason = "") {
         if (type === 'gold') {
             this.gameState.performActionGold();
             window.updateUI();
@@ -82,6 +85,9 @@ class BotManager {
             window.updateUI();
         } else if (type === 'role') {
             this.gameState.performActionRole();
+            window.updateUI();			
+		} else if (type === 'uso-role') {
+            //this.gameState.useRoleAbility();
             window.updateUI();
         } else if (type === 'hito') {
             this.gameState.deployHito();
@@ -103,6 +109,7 @@ class BotManager {
             setTimeout(() => {
                 window.updateUI();
                 this.isActing = false;
+                this.handleGameState();
             }, 500);
             return;
         } else if (type === 'buy-potion') {
@@ -115,6 +122,7 @@ class BotManager {
             setTimeout(() => {
                 window.updateUI();
                 this.isActing = false;
+                this.handleGameState();
             }, 500);
             return;
         } else if (type === 'explore-market') {
@@ -129,6 +137,7 @@ class BotManager {
             setTimeout(() => {
                 window.updateUI();
                 this.isActing = false;
+                this.handleGameState();
             }, 500);
             return;
         } else if (type === 'combat') {
@@ -154,34 +163,42 @@ class BotManager {
         setTimeout(() => { this.isActing = false; this.handleGameState(); }, 500);
     }
 
-    evaluateSurvivalOverride(bot) {
+    // Comprueba si el bot necesita priorizar la supervivencia (curación o energía) antes de cualquier otra acción
+evaluateSurvivalOverride(bot) {
         if (bot.hp > bot.maxHp * 0.30) return false; // Solo actúa si HP <= 30%
 
-        // Prioridad 1: Si el sanador necesita energía para curar, recargar rol
-        if (bot.role.id === 'sanador' && bot.energy < 3) {
-            this.showBubble(this.gameState.currentPlayerIndex, `<strong style="color: red;">[Supervivencia]</strong> ¡Necesito energía para curarme!`);
-            this.triggerAction('role');
+        // Prioridad 1: Si el sanador tiene energía, usa el rol para curarse
+        if (bot.role.id === 'sanador' && bot.energy > 0) {
+            this.showBubble(this.gameState.currentPlayerIndex, `<strong style="color: red;"></strong> ¡Usaria el Rol para curarme pero no se hacerlo aún!`);
+            this.triggerAction('uso-role');
             return true;
         }
+		
+		//Prioridad 2: Comprar pocion
+		if (this.gameState.battlefield.waveLevel >= 3) {
+			this.showBubble(this.gameState.currentPlayerIndex, `<strong style="color: red;"></strong> ¡Intentaré comprar una poción pero no sé si sabré hacerlo aún!`);
+            //this.triggerAction('buy-potion');
+            return false;
+		}
 
         // Prioridad 2: ¿Cobrar oro tiene sentido? Solo si con 1-2 monedas más podrá comprar curación
         const canAffordHealingSoon = (() => {
             // Comprobar pociones (oleada 3+)
-            if (this.gameState.battlefield.waveLevel >= 3 && typeof DB !== 'undefined' && DB.equipment && DB.equipment.pociones) {
+            /*if (this.gameState.battlefield.waveLevel >= 3 && typeof DB !== 'undefined' && DB.equipment && DB.equipment.pociones) {
                 const cheapestPotion = DB.equipment.pociones.reduce((min, p) => p.cost < min ? p.cost : min, Infinity);
                 if (bot.mo + 1 >= cheapestPotion || bot.mo + 2 >= cheapestPotion) return true;
-            }
+            }*/
             // Comprobar equipo de curación en mercado
-            const healMarket = this.gameState.market && this.gameState.market['curacion'];
+            /*const healMarket = this.gameState.market && this.gameState.market['curacion'];
             if (healMarket && healMarket.length > 0) {
                 const healCost = healMarket[0].cost;
                 if (bot.mo + 1 >= healCost || bot.mo + 2 >= healCost) return true;
-            }
+            }*/
             return false;
         })();
 
         if (canAffordHealingSoon) {
-            this.showBubble(this.gameState.currentPlayerIndex, `<strong style="color: red;">[Supervivencia]</strong> ¡Estoy muy malherido! Necesito reunir oro para curarme.`);
+            this.showBubble(this.gameState.currentPlayerIndex, `<strong style="color: red;"></strong> ¡Estoy muy malherido! Necesito reunir oro para curarme.`);
             this.triggerAction('gold');
             return true;
         }
@@ -191,7 +208,8 @@ class BotManager {
         return false;
     }
 
-    calculateCombatScore(bot, goblins) {
+    // Calcula una puntuación de combate basada en armas, escudos, HP y recompensas esperadas
+calculateCombatScore(bot, goblins) {
         if (goblins.length === 0) return 0;
         
         let score = 0;
@@ -228,12 +246,13 @@ class BotManager {
 
         const personality = this.getPersonalityForDecision(bot);
         if (personality === 'Agresivo') score += 10;
-        else if (personality === 'Conservador') score -= 5;
+// Conservador removed
         
         return score;
     }
 
-    performMainTurn(bot) {
+    // Decide la acción principal del bot (combatir, desplegar hito, comprar oro, etc.) y muestra la burbuja informativa
+performMainTurn(bot) {
         try {
             if (this.evaluateSurvivalOverride(bot)) return;
 
@@ -268,76 +287,29 @@ class BotManager {
             // Calculamos objetivos de combate de forma inteligente
             const potentialTargets = this.getSafeCombatTargets(bot, goblinsEnMesa, currentPersonality);
 
-            if (currentPersonality === 'Agresivo') {
-                if (potentialTargets.length > 0) {
-                    chosenAction = 'combat';
-                    decisionText = "¡A por ellos! No dejaré a ni uno vivo.";
-                    targetForCombat = potentialTargets;
-                } else if (canDeployHito && safeToDeployHito) {
-                    chosenAction = 'hito';
-                    decisionText = "El camino está libre. ¡Avancemos rápido!";
-                } else {
-                    // Not recommended to deploy Hito or cannot deploy
-                    if (shortfall === 1 || shortfall === 2) {
-                        if (bot.hp > 1) {
-                            chosenAction = shortfall === 2 ? 'gold-dmg' : 'gold';
-                            decisionText = "Me faltan pocas monedas para esa arma. " + (shortfall === 2 ? "Un poco de sangre valdrá la pena." : "Aseguraré una moneda.");
+                if (currentPersonality === 'Agresivo') {
+                    if (potentialTargets.length > 0) {
+                        chosenAction = 'combat';
+                        decisionText = "¡A por ellos! No dejaré a ni uno vivo.";
+                        targetForCombat = potentialTargets;
+                    } else if (safeToDeployHito) {
+                        chosenAction = 'hito';
+                        decisionText = "El camino está libre. ¡Avancemos rápido!";
+                    } else {
+                        // Not recommended to deploy Hito or cannot deploy
+                        if (shortfall === 1 || shortfall === 2) {
+                            if (bot.hp > 1) {
+                                chosenAction = shortfall === 2 ? 'gold-dmg' : 'gold';
+                                decisionText = "Me faltan pocas monedas para esa arma. " + (shortfall === 2 ? "Un poco de sangre valdrá la pena." : "Aseguraré una moneda.");
+                            } else {
+                                chosenAction = 'role';
+                                decisionText = "Me falta oro pero estoy al límite de vida. Mejor recargo mi habilidad.";
+                            }
                         } else {
                             chosenAction = 'role';
-                            decisionText = "Me falta oro pero estoy al límite de vida. Mejor recargo mi habilidad.";
-                        }
-                    } else {
-                        chosenAction = 'role';
-                        decisionText = "No hay compras claras ni puedo avanzar. Mejor recargar mi habilidad.";
-                    }
-                }
-            } 
-            else if (currentPersonality === 'Conservador') {
-                if (potentialTargets.length > 0) {
-                    chosenAction = 'combat';
-                    decisionText = potentialTargets.length > 1 ? "Mi equipo me permite soportar el combate. Atacaré a varios." : "Podemos con ellos de forma segura. Me centraré en un objetivo.";
-                    targetForCombat = potentialTargets;
-                } else if (canDeployHito && safeToDeployHito && goblinsEnMesa.length === 0) {
-                    chosenAction = 'hito';
-                    decisionText = "El camino es seguro. Avancemos con precaución.";
-                } else {
-                    // Prioritize Gold or Role
-                    if (bot.energy < 3) {
-                        chosenAction = 'role';
-                        decisionText = "Necesitamos estar preparados. Recargo mi habilidad.";
-                    } else {
-                        chosenAction = 'gold';
-                        decisionText = "No me arriesgaré. Tomo una moneda segura para equipo.";
-                    }
-                }
-            } 
-            else if (currentPersonality === 'Cooperativo') {
-                if (potentialTargets.length > 0) {
-                    chosenAction = 'combat';
-                    decisionText = allyInDanger ? "¡Resistid! Yo me encargo de ellos." : "Quitaré estos Goblins de en medio para ayudar al grupo.";
-                    targetForCombat = potentialTargets;
-                } else if (bot.energy < 4) {
-                    chosenAction = 'role';
-                    decisionText = "Cargaré mi habilidad para asistir al grupo cuando lo necesiten.";
-                } else if (canDeployHito && safeToDeployHito && goblinsEnMesa.length === 0) {
-                    chosenAction = 'hito';
-                    decisionText = "El grupo está listo. Abriré el siguiente obstáculo.";
-                } else {
-                    chosenAction = 'gold';
-                    decisionText = "Tomaré algo de oro para poder ayudar más adelante.";
-                }
-            }
-            else {
-                // Fallback for missing/other personality
-                if (potentialTargets.length > 0) {
-                    chosenAction = 'combat';
-                    targetForCombat = potentialTargets;
-                    decisionText = "¡Al combate!";
-                } else {
-                    chosenAction = 'gold';
-                    decisionText = "Tomaré una moneda.";
-                }
-            }
+						}
+					}
+				}
 
             this.showBubble(this.gameState.currentPlayerIndex, `<strong style="color: ${pColor};">[${currentPersonality}]</strong> ${decisionText}`);
             this.gameState.addLog(`🤖 <strong>${bot.name} (${currentPersonality}):</strong> "${decisionText}"`);
@@ -353,13 +325,14 @@ class BotManager {
                     this.triggerAction(chosenAction);
                 }, 3500);
             }
-        } catch(e) {
+        }catch(e) {
             console.error("Error in performMainTurn", e);
             this.isActing = false;
         }
     }
 
-    performMarketTurn(bot) {
+    // Gestiona la fase de mercado: decide qué comprar o explorar según la personalidad del bot
+performMarketTurn(bot) {
         try {
             const currentPersonality = this.getPersonalityForDecision(bot);
             const pColor = this.getPersonalityColor(currentPersonality);
@@ -488,7 +461,7 @@ class BotManager {
                         
                         bought = true;
                     }
-                } else if (currentPersonality === 'Conservador') {
+// Conservador branch removed
                     bought = buyIfPossible('escudos') || buyIfPossible('curacion');
                     if (!bought && bot.mo < 3) {
                         advice = "Mejor guardo el oro para una buena armadura o poción.";
@@ -497,14 +470,9 @@ class BotManager {
                     }
                     
                     if (bought && !advice) {
-                        advice = "Hay que ir sobre seguro. Este equipo me protegerá.";
-                    }
-                } else if (currentPersonality === 'Cooperativo') {
-                    bought = buyIfPossible('escudos') || buyIfPossible('curacion') || buyIfPossible('ataque');
-                    if (bought && !advice) {
-                        advice = "Este equipo nos ayudará a sobrevivir como grupo.";
+                        advice = `Hay que ir sobre seguro. Este equipo me protegerá.`;
                     } else if (!bought && bot.mo < 3) {
-                        advice = "Guardaré este oro para cuando realmente nos haga falta.";
+                        advice = `Guardaré este oro para cuando realmente nos haga falta.`;
                     } else if (!bought) {
                         const types = ['ataque', 'escudos', 'curacion'];
                         const rType = types[Math.floor(Math.random() * types.length)];
@@ -562,7 +530,8 @@ class BotManager {
         }
     }
 
-    performCombatTurn(bot) {
+    // Ejecuta la lógica de asignación de dados durante el combate, incluyendo interceptaciones y decisiones agresivas
+performCombatTurn(bot) {
         console.log("[BotManager] performCombatTurn started for bot:", bot.id);
         try {
             const currentPersonality = this.getPersonalityForDecision(bot);
@@ -623,14 +592,10 @@ class BotManager {
             let advice = "";
             if (currentPersonality === 'Agresivo') {
                 advice = "¡Acabemos rápido con esto! Poned dados en las armas más fuertes.";
-            } else if (currentPersonality === 'Conservador') {
+// Conservador branch removed
                 advice = "Cubríos bien las espaldas. Activad los escudos primero.";
             } else if (currentPersonality === 'Cooperativo') {
                 advice = "Yo me encargo de apoyar donde haga falta. ¡Usad vuestros mejores ataques!";
-            } else if (currentPersonality === 'Egoista') {
-                advice = "Mis dados son para mis cosas. No esperéis que os salve el pellejo.";
-            } else if (currentPersonality === 'Caotico') {
-                advice = "¡A la carga! A ver qué sale.";
             }
             
             let delay = availableDice.length === totalNonCramped ? 2500 : 800;
@@ -777,17 +742,14 @@ class BotManager {
                 }
 
                 // Helper variables
-                const brokenEquipsToRepair = (bot.mo >= 1) ? bot.equipped.filter(eq => eq.isBroken && this.canAcceptDie(die, eq)) : [];
+                const brokenEquipsToRepair = bot.equipped.filter(eq => eq.isBroken && this.canAcceptDie(die, eq));
                 const weapons = bot.equipped.filter(eq => eq.isActive && !eq.isBroken && this.isWeapon(eq) && this.canAcceptDie(die, eq));
                 const shields = bot.equipped.filter(eq => eq.isActive && !eq.isBroken && this.isShield(eq) && this.canAcceptDie(die, eq));
                 
                 const fallbackToRole = (reason) => {
                     let eGain = bot.role && bot.role.energyRates ? bot.role.energyRates[die.value - 1] : 0;
                     if (eGain === 0) {
-                        if (brokenEquipsToRepair.length > 0) {
-                            this.assignDieToEquip(die, brokenEquipsToRepair[0], bot, "Rol da 0 energía, usando equipo roto por descarte");
-                            return;
-                        } else if (weapons.length > 0) {
+                        if (weapons.length > 0) {
                             this.assignDieToEquip(die, weapons[0], bot, "Rol da 0 energía, usando arma por descarte");
                             return;
                         } else if (shields.length > 0) {
@@ -798,56 +760,19 @@ class BotManager {
                     this.assignDieToRole(die, bot, reason);
                 };
 
-                // Assign based on personality
+                // Simplified assignment for Aggressive personality only.
                 if (!roleOverrideAssigned) {
-                    if (brokenEquipsToRepair.length > 0) {
-                        this.assignDieToEquip(die, brokenEquipsToRepair[0], bot, "Asignando a equipo roto para prepararlo para reparación");
-                    } else if (forceAttack) {
-                        if (weapons.length > 0) {
-                            this.assignDieToEquip(die, weapons[0], bot, "Puedo eliminar a la amenaza y sobrevivir. Priorizo atacar.");
-                        } else if (shields.length > 0 && (incomingNormalDmg > 0 || this.getDamageForDieInEquip(die.value, shields[0]) > 0)) {
-                            this.assignDieToEquip(die, shields[0], bot, "Sin armas disponibles, usando escudo alternativo");
-                        } else {
-                            fallbackToRole("Sin armas ni escudos útiles, recargando Rol");
-                        }
-                    } else if (currentPersonality === 'Agresivo') {
-                        if (weapons.length > 0) {
-                            this.assignDieToEquip(die, weapons[0], bot, "Prioridad de ataque por personalidad Agresiva");
-                        } else if (shields.length > 0 && (incomingNormalDmg > 0 || this.getDamageForDieInEquip(die.value, shields[0]) > 0)) {
-                            this.assignDieToEquip(die, shields[0], bot, "Sin armas disponibles, usando escudo alternativo");
-                        } else {
-                            fallbackToRole("Sin armas ni escudos útiles, recargando Rol");
-                        }
-                    } else if (currentPersonality === 'Conservador') {
-                        if (shields.length > 0 && (incomingNormalDmg > 0 || this.getDamageForDieInEquip(die.value, shields[0]) > 0)) {
-                            this.assignDieToEquip(die, shields[0], bot, "Prioridad defensiva por personalidad Conservadora");
-                        } else if (weapons.length > 0) {
-                            let reason = incomingNormalDmg === 0 && shields.length > 0 ? "El daño entrante es nulo, priorizando ataque" : "Sin escudos disponibles, priorizando ataque";
-                            this.assignDieToEquip(die, weapons[0], bot, reason);
-                        } else {
-                            fallbackToRole("Sin armas ni escudos útiles, recargando Rol");
-                        }
-                    } else if (currentPersonality === 'Cooperativo') {
-                        let energyGain = bot.role && bot.role.energyRates ? bot.role.energyRates[die.value - 1] : 0;
-                        if (bot.energy < 2 && energyGain >= 2) {
-                            this.assignDieToRole(die, bot, "Priorizando recargar Rol para apoyar al equipo");
-                        } else {
-                            if (weapons.length > 0) {
-                                this.assignDieToEquip(die, weapons[0], bot, "Atacando para reducir la amenaza del grupo");
-                            } else if (shields.length > 0 && (incomingNormalDmg > 0 || this.getDamageForDieInEquip(die.value, shields[0]) > 0)) {
-                                this.assignDieToEquip(die, shields[0], bot, "Sin armas, usando escudo para mitigar daño");
-                            } else {
-                                fallbackToRole("Asignación estándar por descarte");
-                            }
-                        }
+                    if (forceAttack && weapons.length > 0) {
+                        this.assignDieToEquip(die, weapons[0], bot, "Force‑attack: elimino al goblin con este dado.");
+                    } else if (weapons.length > 0) {
+                        this.assignDieToEquip(die, weapons[0], bot, "Asignación agresiva a arma.");
+                    } else if (shields.length > 0 && (incomingNormalDmg > 0 || this.getDamageForDieInEquip(die.value, shields[0]) > 0)) {
+                        this.assignDieToEquip(die, shields[0], bot, "Sin armas, asigno a escudo para mitigar daño.");
                     } else {
-                        // Fallback for any other personality
-                        if (weapons.length > 0) {
-                            this.assignDieToEquip(die, weapons[0], bot, "Asignación estándar");
-                        } else if (shields.length > 0 && (incomingNormalDmg > 0 || this.getDamageForDieInEquip(die.value, shields[0]) > 0)) {
-                            this.assignDieToEquip(die, shields[0], bot, "Sin armas, asignación estándar a escudo");
+                        if (brokenEquipsToRepair.length > 0) {
+                            this.assignDieToEquip(die, brokenEquipsToRepair[0], bot, "Equipo roto como último recurso.");
                         } else {
-                            fallbackToRole("Asignación estándar a Rol");
+                            fallbackToRole("Asignación a rol como último recurso.");
                         }
                     }
                 }
@@ -867,7 +792,8 @@ class BotManager {
         }
     }
 
-    calculateEquipPower(eq, bot) {
+    // Calcula el poder mínimo y máximo que puede aportar un equipamiento dado al bot
+calculateEquipPower(eq, bot) {
         if (!eq) return { min: 0, max: 0 };
         let maxVal = 0;
         let minVal = 999;
@@ -926,6 +852,7 @@ class BotManager {
         };
     }
 
+// Obtiene el perfil de daño del goblin (daño normal y directo)
     getGoblinDamageProfile(gob) {
         if (!gob || !gob.dice) return { normal: gob.level, direct: 0 };
         let totalDmg = 0;
@@ -950,6 +877,7 @@ class BotManager {
         }
     }
 
+// Determina los objetivos de combate seguros según el bot, los goblins presentes y la personalidad
     getSafeCombatTargets(bot, goblinsEnMesa, currentPersonality) {
         if (!goblinsEnMesa || goblinsEnMesa.length === 0) return [];
         
@@ -977,11 +905,9 @@ class BotManager {
         let targets = [...goblinsEnMesa];
         
         // Ajuste por personalidad
-        if (currentPersonality === 'Conservador') {
+        if (currentPersonality !== 'Agresivo') {
+            // For non‑aggressive personalities keep only the first viable goblin
             targets = targets.slice(0, 1);
-        } else if (currentPersonality === 'Cooperativo') {
-            const bufferGoblins = targets.filter(g => g.skill && (g.skill.includes('inmune') || g.skill.includes('protege')));
-            targets = bufferGoblins.length > 0 ? bufferGoblins : targets.slice(0, 1);
         }
 
         // 2. Riesgo y Supervivencia
@@ -1038,24 +964,28 @@ class BotManager {
         return targets;
     }
 
+// Verifica si el equipamiento es un arma (contiene la palabra 'daño')
     isWeapon(eq) {
         let effectStr = ((eq.isBroken && eq.broken ? eq.broken.effect : eq.effect) || '').toLowerCase();
         let extraStr = ((eq.isBroken && eq.broken ? eq.broken.extra : eq.extra) || '').toLowerCase();
         return effectStr.includes('daño') || extraStr.includes('daño');
     }
 
+// Verifica si el equipamiento es un escudo o armadura
     isShield(eq) {
         let effectStr = ((eq.isBroken && eq.broken ? eq.broken.effect : eq.effect) || '').toLowerCase();
         let extraStr = ((eq.isBroken && eq.broken ? eq.broken.extra : eq.extra) || '').toLowerCase();
-        return effectStr.includes('escudo') || extraStr.includes('escudo') || effectStr.includes('armadura');
+        return effectStr.includes('escudo') || effectStr.includes('escudo') || effectStr.includes('armadura');
     }
 
+// Verifica si el equipamiento proporciona curación
     isHeal(eq) {
         let effectStr = ((eq.isBroken && eq.broken ? eq.broken.effect : eq.effect) || '').toLowerCase();
         let extraStr = ((eq.isBroken && eq.broken ? eq.broken.extra : eq.extra) || '').toLowerCase();
-        return effectStr.includes('cura') || extraStr.includes('cura');
+        return effectStr.includes('cura') || effectStr.includes('cura');
     }
 
+// Calcula el daño que un dado aporta al equipamiento dado
     getDamageForDieInEquip(val, eq) {
         if (!this.gameState.isValidDieForEquipment(val, eq)) return 0;
         let effectStr = (eq.isBroken && eq.broken ? eq.broken.effect : eq.effect).toLowerCase();
@@ -1098,21 +1028,24 @@ class BotManager {
         return dmg;
     }
 
+// Decide si debe volver a lanzar un dado negro según su utilidad actual
     shouldRerollBlackDie(die, bot) {
         if (die.type !== 'black' || die.rerolled) return false;
 
         let bestCurrentPower = 0;
         let isSpecialActivated = false;
         
-        // Obtenemos solo el equipo al que se puede asignar este dado
-        const allEquip = bot.equipped.filter(eq => eq.isActive && !eq.isBroken && this.canAcceptDie(die, eq));
+        // Obtenemos equipo al que se puede asignar este dado (incluyendo roto, que puede prepararse sin coste)
+        const allEquip = bot.equipped.filter(eq => eq.isActive && (eq.isBroken || (!eq.isBroken && this.canAcceptDie(die, eq))));
+        // Filtramos solo los que realmente pueden aceptar el dado
+        const usableEquip = allEquip.filter(eq => this.canAcceptDie(die, eq));
 
-        if (allEquip.length === 0) {
-            // Si el dado actual es completamente inválido para todo nuestro equipo, relanzar es la única opción de darle uso en equipo (además de asignar al Rol)
+        if (usableEquip.length === 0) {
+            // Si el dado actual es completamente inválido para todo nuestro equipo, relanzar es la única opción
             return true;
         }
 
-        for (let eq of allEquip) {
+        for (let eq of usableEquip) {
             let effectMax = 6;
             if (eq.effect && eq.effect.toUpperCase().includes('MAX')) {
                  let match = eq.effect.toUpperCase().match(/MAX\s*(\d+)/);
@@ -1158,6 +1091,7 @@ class BotManager {
         return false;
     }
 
+// Intenta interceptar un dado peligroso de un goblin, priorizando la reparación si es necesario
     tryInterceptDangerousDie(die, bot) {
         if (!this.gameState.currentCombat || this.gameState.currentCombat.isCrampPhase) return false;
         
@@ -1229,6 +1163,7 @@ class BotManager {
         return false;
     }
 
+// Verifica si el equipamiento puede aceptar el dado (límites de usos y validez)
     canAcceptDie(die, eq) {
         if (!this.gameState.isValidDieForEquipment(die.value, eq)) return false;
         const extra = (eq.extra || '').toLowerCase();
@@ -1238,6 +1173,7 @@ class BotManager {
         return currentlyAssigned < maxUses;
     }
 
+// Asigna un dado al equipamiento especificado, registrando la razón y objetivo
     assignDieToEquip(die, eq, bot, reason = "") {
         if (!currentAssignments[eq.id]) currentAssignments[eq.id] = [];
         let targetUid = null;
@@ -1264,6 +1200,7 @@ class BotManager {
         }
     }
 
+// Asigna un dado a la habilidad de rol del bot, con razón opcional
     assignDieToRole(die, bot, reason = "") {
         if (!currentAssignments['role']) currentAssignments['role'] = [];
         currentAssignments['role'].push({ dieId: die.id, value: die.value, isRole: true });
@@ -1274,6 +1211,7 @@ class BotManager {
         }
     }
 
+// Ejecuta el turno de represalia, eligiendo el jugador con mayor vida para recibir daño
     performRetaliationTurn() {
         try {
             if (this.gameState.retaliationQueue.length === 0) {
@@ -1289,7 +1227,7 @@ class BotManager {
             this.gameState.players.forEach((p, index) => {
                 if (p.isDead) return;
                 
-                // Evaluamos según el % de vida restante o la vida actual.
+                // 
                 // Usaremos la vida actual para ser directos.
                 const score = p.hp;
                 
@@ -1307,8 +1245,6 @@ class BotManager {
                     const currentPersonality = this.getPersonalityForDecision(botConf);
                     const pColor = this.getPersonalityColor(currentPersonality);
                     let advice = "Aguantaré este golpe por el equipo.";
-                    if (currentPersonality === 'Agresivo') advice = "¡Un rasguño! Yo lo recibo.";
-                    if (currentPersonality === 'Conservador') advice = "Tengo salud de sobra, yo me encargo.";
                     this.showBubble(bestPlayerIndex, `<strong style="color: ${pColor};">[${currentPersonality}]</strong> ${advice}`);
                     this.gameState.addLog(`🤖 <strong>${botConf.name} (${currentPersonality}):</strong> "${advice}"`);
                 }
@@ -1337,6 +1273,7 @@ class BotManager {
         }
     }
 
+// Gestiona la fase de eventos globales o decisiones de corrosión para el bot
     performEventTurn(bot) {
         try {
             if (this.gameState.pendingCorrosionChoice) {
@@ -1369,10 +1306,6 @@ class BotManager {
                             const pColor = this.getPersonalityColor(currentPersonality);
                             
                             let choiceIndex = 0;
-                            if (buttons.length > 1) {
-                                if (currentPersonality === 'Conservador') choiceIndex = buttons.length - 1;
-                                else if (currentPersonality === 'Agresivo') choiceIndex = 0;
-                            }
 
                             this.showBubble(this.gameState.currentPlayerIndex, `<strong style="color: ${pColor};">[${currentPersonality}]</strong> Tomaré esta decisión por nosotros.`);
                             this.gameState.addLog(`🤖 <strong>${bot.name} (${currentPersonality}):</strong> "Tomaré esta decisión por nosotros."`);
@@ -1398,6 +1331,7 @@ class BotManager {
         }
     }
 
+// Devuelve el color asociado al rol del jugador para los bocadillos UI
     getRoleColor(roleId) {
         const colors = {
             'guerrero': '#e63946',   // Rojo
@@ -1411,6 +1345,7 @@ class BotManager {
     }
 
     // Se llama periódicamente o en eventos clave para evaluar si los bots deben hablar
+// Evalúa el estado del juego y decide si los bots deben emitir consejos o acciones
     evaluateState() {
         if (!this.gameState || this.gameState.isGameOver) return;
         
@@ -1420,8 +1355,8 @@ class BotManager {
         // Asegurar que todos los bots tienen su ADN generado
         this.activeBots.forEach(bot => {
             if (!bot.botDNA) {
-                const personalities = ['Agresivo', 'Conservador', 'Cooperativo'];
-                bot.botDNA = personalities.sort(() => Math.random() - 0.5);
+                const personalities = ['Agresivo'];
+                // 
             }
         });
 
@@ -1449,6 +1384,7 @@ class BotManager {
         }
     }
 
+// Oculta todos los bocadillos de los bots en la UI
     hideAllBubbles() {
         this.activeBots.forEach(bot => {
             const pIndex = this.gameState.players.findIndex(p => p.id === bot.id);
@@ -1456,6 +1392,7 @@ class BotManager {
         });
     }
 
+// Muestra un bocadillo sobre el jugador indicado con el texto especificado
     showBubble(playerIndex, text) {
         if (window.updateBotBubble) {
             window.updateBotBubble(playerIndex, text);
@@ -1478,146 +1415,42 @@ class BotManager {
         }
     }
 
+// Obtiene la personalidad del bot para tomar decisiones (solo 'Agresivo')
     getPersonalityForDecision(bot) {
-        if (!bot || !bot.botDNA) return 'Agresivo';
-        
-        // Cascada del 80%
-        for (let i = 0; i < bot.botDNA.length - 1; i++) {
-            const roll = Math.floor(Math.random() * 100) + 1;
-            if (roll <= 80) {
-                return bot.botDNA[i];
-            }
-        }
-        // Fallo total de las 3 primeras, actúa como la última
-        return bot.botDNA[bot.botDNA.length - 1];
+        // All bots now use the Aggressive personality exclusively.
+        return 'Agresivo';
     }
 
+// Devuelve el color de la burbuja según la personalidad (neutral en versión simplificada)
     getPersonalityColor(personality) {
-        const colors = {
-            'Agresivo': '#d62828',    // Rojo
-            'Conservador': '#000000', // Negro
-            'Cooperativo': '#0077b6'  // Azul
-        };
-        return colors[personality] || '#333';
+        // Neutral bubble colour for all bots (no personality distinction).
+        return '#333333'; // Dark neutral tone.
     }
 
     // --- HEURÍSTICAS DE FASES COMPARTIDAS ---
 
+// (Sin uso) Maneja los consejos de mercado en la versión simplificada
     handleMarketAdvice() {
-        return; // CONSEJOS DESACTIVADOS TEMPORALMENTE
-        this.activeBots.forEach((bot) => {
-            const pIndex = this.gameState.players.findIndex(p => p.id === bot.id);
-            const currentPersonality = this.getPersonalityForDecision(bot);
-            let advice = "";
-            
-            const isLowHp = bot.hp <= (bot.maxHp * 0.3);
-            const hasBrokenEquip = bot.equipped.some(eq => eq.isBroken);
-            
-            if (currentPersonality === 'Agresivo') {
-                advice = "Comprad armas o equipo que sume dados. ¡Las pociones son para los débiles!";
-            } else if (currentPersonality === 'Conservador') {
-                advice = "Buscad escudos, armaduras y pociones. Hay que sobrevivir a toda costa.";
-            } else if (currentPersonality === 'Cooperativo') {
-                advice = "Mirad el equipo de todos. Si a alguien le falta de algo, le ayudamos.";
-            }
-
-            // Contextos extremos (sobrescribe un poco la recomendación genérica)
-            if (isLowHp && currentPersonality !== 'Agresivo') {
-                advice = "¡Estoy en las últimas! 🩸 Deberíamos priorizar una poción curativa o equipo protector.";
-            } else if (hasBrokenEquip && bot.mo > 0) {
-                advice = "Tengo equipo roto 🛠️. Deberíamos reservar dinero para repararlo.";
-            }
-
-            const pColor = this.getPersonalityColor(currentPersonality);
-            this.showBubble(pIndex, `<strong style="color: ${pColor};">[${currentPersonality}]</strong> ${advice}`);
-        });
+        // Market advice is not needed in the simplified Aggressive-only version.
+        return;
     }
-
+    
+// (Sin uso) Maneja los consejos de represalia en la versión simplificada
     handleRetaliationAdvice() {
-        this.activeBots.forEach((bot) => {
-            const pIndex = this.gameState.players.findIndex(p => p.id === bot.id);
-            const currentPersonality = this.getPersonalityForDecision(bot);
-            let advice = "";
-            
-            const isLowHp = bot.hp <= (bot.maxHp * 0.3);
-            const isHealthy = bot.hp >= (bot.maxHp * 0.8);
-
-            if (currentPersonality === 'Agresivo') {
-                advice = "¡A mí no me miréis! Que se coma este daño el que tenga más defensa.";
-            } else if (currentPersonality === 'Conservador') {
-                if (isHealthy) advice = "Estoy casi intacto, podría asumir algo de daño si os sirve.";
-                else advice = "¡No pienso asumir este daño sin mis escudos a tope!";
-            } else if (currentPersonality === 'Cooperativo') {
-                advice = "Si alguien corre peligro mortal, decídmelo y levantaré yo la mano.";
-                if (isHealthy) advice = "💪 Estoy en plenas facultades. ¡Dejadme asumir este golpe para protegeros!";
-            }
-
-            if (isLowHp && currentPersonality !== 'Cooperativo') {
-                advice = "⚠️ ¡Estoy crítico! Si recibo más daño caeré inconsciente. Que alguien más lo reciba, por favor.";
-            }
-
-            const pColor = this.getPersonalityColor(currentPersonality);
-            this.showBubble(pIndex, `<strong style="color: ${pColor};">[${currentPersonality}]</strong> ${advice}`);
-        });
+        // Retaliation advice is not needed in the simplified Aggressive-only version.
+        return;
     }
-
+    
+// (Sin uso) Maneja los consejos de combate en la versión simplificada
     handleCombatAdvice() {
-        this.activeBots.forEach((bot) => {
-            const pIndex = this.gameState.players.findIndex(p => p.id === bot.id);
-            const currentPersonality = this.getPersonalityForDecision(bot);
-            let advice = "";
-            
-            const isBotInCombat = this.gameState.currentCombat && this.gameState.players[this.gameState.currentPlayerIndex].id === bot.id;
-            const unusedDice = isBotInCombat ? this.gameState.currentCombat.playerDice.filter(d => !d.assignedTo) : [];
-            const roleReady = bot.energy > 0;
-            const hasActiveEquip = bot.equipped.some(eq => eq.isActive && !eq.isBroken);
-
-            if (currentPersonality === 'Agresivo') {
-                if (unusedDice.length > 0) advice = "¡Tengo dados libres! Asignadlos al arma que haga más daño contra el nivel más alto.";
-                else advice = "¡Matadlos a todos! No dejéis ninguno vivo.";
-            } else if (currentPersonality === 'Conservador') {
-                if (unusedDice.length > 0) advice = "Aseguraos de poner dados primero en mis escudos, por si algo sale mal.";
-                else advice = "Concéntrate en eliminar a los Goblins que hagan más daño, no quiero que me toquen.";
-            } else if (currentPersonality === 'Cooperativo') {
-                if (roleReady && unusedDice.length > 0) advice = `⚡ ¡Tengo mi habilidad de rol lista y un dado libre! Úsala si nos beneficia.`;
-                else if (unusedDice.length > 0) advice = "Tengo dados libres. Si te faltan valores altos, arrástralos a tu lado.";
-                else advice = "¡Confiamos en tu estrategia para ganar este combate!";
-            }
-
-            const pColor = this.getPersonalityColor(currentPersonality);
-            this.showBubble(pIndex, `<strong style="color: ${pColor};">[${currentPersonality}]</strong> ${advice}`);
-        });
+        // Combat advice is not needed in the simplified Aggressive-only version.
+        return;
     }
-
+    
+// (Sin uso) Maneja los consejos para el turno del jugador humano en la versión simplificada
     handlePlayerTurnAdvice() {
-        const activePlayer = this.gameState.getCurrentPlayer();
-        if (!activePlayer || activePlayer.isBot) return;
-
-        const goblinsEnMesa = this.gameState.battlefield.goblins.length;
-        const activeLowHp = activePlayer.hp <= (activePlayer.maxHp * 0.35);
-        const activeNoEnergy = activePlayer.energy === 0;
-
-        this.activeBots.forEach((bot) => {
-            const pIndex = this.gameState.players.findIndex(p => p.id === bot.id);
-            const currentPersonality = this.getPersonalityForDecision(bot);
-            let advice = "";
-            
-            if (currentPersonality === 'Agresivo') {
-                if (goblinsEnMesa >= 1) advice = "¡Entra en Combate! No dejes que esos asquerosos Goblins respiren.";
-                else advice = "La mesa está limpia. ¡Avanza para encontrar más enemigos rápido!";
-            } else if (currentPersonality === 'Conservador') {
-                if (activeLowHp) advice = "¡Cuidado con tu vida! Deberías usar tu acción para curarte con algo o cobrar oro seguro.";
-                else if (goblinsEnMesa >= 3) advice = "Mucha presión en la mesa... Prioriza limpiar Goblins antes de que sea tarde.";
-                else advice = "Mantente a salvo. Si cobras oro, asegúrate de no sufrir daño.";
-            } else if (currentPersonality === 'Cooperativo') {
-                if (activeLowHp && bot.role.id === 'sanador' && bot.energy >= 2) advice = "¡Estás fatal! Si aguantas, podré usar mi curación en mi turno.";
-                else if (activeNoEnergy) advice = "Tener tu habilidad lista nos salva de apuros. Deberías Rellenar Rol.";
-                else advice = "Recuerda que si combates, puedes invitarme a mí o a otros para ayudar.";
-            }
-
-            const pColor = this.getPersonalityColor(currentPersonality);
-            this.showBubble(pIndex, `<strong style="color: ${pColor};">[${currentPersonality}]</strong> ${advice}`);
-        });
+        // Player‑turn advice is not needed in the simplified Aggressive‑only version.
+        return;
     }
 }
 

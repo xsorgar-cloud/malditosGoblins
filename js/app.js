@@ -4726,9 +4726,14 @@ window.updateDebugCombatModalData = function() {
 
 if (btnDebugCombat) {
   btnDebugCombat.addEventListener('click', () => {
-    window.updateDebugCombatModalData();
     const debugCombatModal = document.getElementById('debug-combat-modal');
-    if (debugCombatModal) debugCombatModal.classList.remove('hidden');
+    if (debugCombatModal && !debugCombatModal.classList.contains('hidden')) {
+      const closeBtn = document.getElementById('btn-close-debug-modal');
+      if (closeBtn) closeBtn.click();
+    } else {
+      window.updateDebugCombatModalData();
+      if (debugCombatModal) debugCombatModal.classList.remove('hidden');
+    }
   });
 }
 // Make debug modal draggable

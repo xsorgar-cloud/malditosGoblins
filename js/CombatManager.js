@@ -1,3 +1,4 @@
+// Renderiza la superposición del combate y gestiona los listeners de eventos
 function renderCombatOverlay() {
   if (window.combatDieOnEquipHandler) {
     document.removeEventListener('dd:die-on-equip', window.combatDieOnEquipHandler);
@@ -8,7 +9,8 @@ function renderCombatOverlay() {
     document.removeEventListener('dd:equip-unassign', window.combatEquipUnassignHandler);
   }
 
-    window.combatDieOnEquipHandler = (e) => {
+    // Maneja la asignación de dados a equipamiento cuando se hace click en un dado
+window.combatDieOnEquipHandler = (e) => {
     const dieId = e.detail.dieId;
     const eqId = e.detail.targetId;
     if (gameState.currentCombat && gameState.currentCombat.isCrampPhase) return;
@@ -16,40 +18,47 @@ function renderCombatOverlay() {
     let dieData = gameState.currentCombat.playerDice.find(d => d.id === dieId);
     if (!eq || !dieData) return;
 
-    if (dieData.type === 'silver') {
+    // Si el dado es de tipo plateado, solo puede fusionarse desde la reserva
+if (dieData.type === 'silver') {
       alert("Los dados plateados solo pueden fusionarse con otros dados de la reserva.");
       return;
     }
 
-    if (gameState.activeSenda === 'cazador' && dieData.value < 4) {
+    // Restricción de asignación de dado en modo cazador: solo valores >=4
+if (gameState.activeSenda === 'cazador' && dieData.value < 4) {
       if (doesEquipmentDealDamage(eq, 6, {dieId: dieData.id, value: 6})) {
         alert("Camuflaje y Reflejos: Solo puedes asignar un 4, 5 o 6 a cartas de ataque.");
         return;
       }
     }
 
-    if (!gameState.isValidDieForEquipment(dieData.value, eq)) return;
+    // Verifica que el dado sea válido para el equipamiento seleccionado
+if (!gameState.isValidDieForEquipment(dieData.value, eq)) return;
 
     const extra = (eq.extra || '').toLowerCase();
     const isReusable = extra.includes('reutilizable');
     const maxUses = extra.includes('x3') ? 3 : (isReusable ? 6 : 1);
 
-    if (maxUses === 1 && currentAssignments[eq.id] && currentAssignments[eq.id].length > 0) {
+    // Si el equipamiento solo permite un uso y ya tiene un dado asignado, reemplazamos el anterior
+if (maxUses === 1 && currentAssignments[eq.id] && currentAssignments[eq.id].length > 0) {
       const oldDieId = currentAssignments[eq.id][0].dieId;
       const oldDieData = gameState.currentCombat.playerDice.find(d => d.id === oldDieId);
       if (oldDieData && oldDieData.isCramped) {
         alert("No puedes sustituir un dado con Calambre.");
         return;
       }
-      clearDieAssignment(oldDieId);
+      // Liberamos el dado previamente asignado antes de asignar el nuevo
+clearDieAssignment(oldDieId);
     }
 
-    if (currentAssignments[eq.id] && currentAssignments[eq.id].length >= maxUses) return;
+    // Si el equipamiento ya ha alcanzado su número máximo de usos, abortamos la asignación
+if (currentAssignments[eq.id] && currentAssignments[eq.id].length >= maxUses) return;
     
     clearDieAssignment(dieId);
     if (!currentAssignments[eq.id]) currentAssignments[eq.id] = [];
 
-    if (eq.id === 'corazon_elastico') {
+    // Caso especial: el equipamiento 'corazón elástico' permite elegir daño elástico
+if (eq.id === 'corazon_elastico') {
       const curDieId = dieId;
       const curDieVal = dieData.value;
       showElasticModal(curDieId, curDieVal, eq.id, (damageChosen) => {
@@ -60,24 +69,29 @@ function renderCombatOverlay() {
       return;
     }
 
-    currentAssignments[eq.id].push({ dieId: dieId, value: dieData.value, targetUid: null, elasticDamage: null });
+    // Asignamos el dado al equipamiento (sin daño elástico)
+currentAssignments[eq.id].push({ dieId: dieId, value: dieData.value, targetUid: null, elasticDamage: null });
     dieData.assignedTo = eq.id;
     renderCombatOverlay();
   };
 
-  window.combatDieOnGoblinHandler = (e) => {
+  // Maneja la asignación de dados a goblins (interceptación) durante el combate
+window.combatDieOnGoblinHandler = (e) => {
     const dieId = e.detail.dieId;
     const gobUid = e.detail.targetId;
     if (gameState.currentCombat && gameState.currentCombat.isCrampPhase) return;
     let gob = gameState.currentCombat.goblins.find(g => String(g.uid) === String(gobUid));
     let dieData = gameState.currentCombat.playerDice.find(d => d.id === dieId);
     if (!gob || !dieData) return;
-    if (dieData.type === 'silver') { alert("Los dados plateados solo pueden fusionarse con otros dados de la reserva."); return; }
-    if (gob.isBoss && (gameState.activeSenda === 'la_madre' || gob.name === 'La Madre')) {
+    // Los dados plateados no pueden usarse para interceptar goblins
+if (dieData.type === 'silver') { alert("Los dados plateados solo pueden fusionarse con otros dados de la reserva."); return; }
+    // Los ataques del jefe 'La Madre' son ininterceptables
+if (gob.isBoss && (gameState.activeSenda === 'la_madre' || gob.name === 'La Madre')) {
       alert('🛡️ Los ataques de La Madre son Ininterceptables.');
       return;
     }
-    if (dieData.isCramped && !gameState.currentCombat.isCrampPhase) return;
+    // No permitir interceptar con dados que tienen calambre fuera de la fase de calambre
+if (dieData.isCramped && !gameState.currentCombat.isCrampPhase) return;
 
     if (gob.isBoss && gob.name.includes("La Madre")) {
       if (typeof gameState !== 'undefined' && gameState.addLog) {
@@ -86,11 +100,14 @@ function renderCombatOverlay() {
       return;
     }
 
-    const playerDieVal = dieData.value;
+    // Valor del dado del jugador que intenta interceptar
+const playerDieVal = dieData.value;
     const goblinDice = gameState.currentCombat.dice.green[gob.uid].details.filter(d => d.type === 'die');
-    if (!interceptionAssignments[gob.uid]) interceptionAssignments[gob.uid] = [];
+    // Inicializar la lista de interceptaciones para este goblin si no existe
+if (!interceptionAssignments[gob.uid]) interceptionAssignments[gob.uid] = [];
     let targetDieIndex = -1;
-    for (let i = 0; i < goblinDice.length; i++) {
+    // Recorrer los dados del goblin para encontrar una coincidencia exacta
+for (let i = 0; i < goblinDice.length; i++) {
       const alreadyIntercepted = interceptionAssignments[gob.uid].some(asg => Number(asg.goblinDieIndex) === Number(i));
       if (!alreadyIntercepted && goblinDice[i].val === playerDieVal) {
         targetDieIndex = i;
@@ -99,7 +116,8 @@ function renderCombatOverlay() {
     }
     if (targetDieIndex !== -1) {
       clearDieAssignment(dieId);
-      clearInterception(dieId);
+      // Eliminar cualquier asignación previa de interceptación para este dado
+clearInterception(dieId);
       if (!interceptionAssignments[gob.uid]) interceptionAssignments[gob.uid] = [];
       interceptionAssignments[gob.uid].push({
         dieId: dieId,
@@ -113,7 +131,8 @@ function renderCombatOverlay() {
     }
   };
 
-    window.combatEquipOnGoblinHandler = (e) => {
+    // Asigna equipamiento a un goblin cuando se hace click en un equipamiento sobre un goblin
+window.combatEquipOnGoblinHandler = (e) => {
     const eqId = e.detail.equipId;
     const gobUid = e.detail.targetId;
     if (gameState.currentCombat && gameState.currentCombat.isCrampPhase) return;
@@ -134,7 +153,8 @@ function renderCombatOverlay() {
     }
   };
 
-  window.combatEquipUnassignHandler = (e) => {
+  // Desasigna equipamiento del goblin o del jugador
+window.combatEquipUnassignHandler = (e) => {
     const eqId = e.detail.eqId;
     if (gameState.currentCombat && gameState.currentCombat.isCrampPhase) return;
     
@@ -150,7 +170,8 @@ function renderCombatOverlay() {
     }
   };
 
-  window.combatDieFusionHandler = (e) => {
+  // Fusiona dos dados (uno rojo/negro con otro) para crear un dado plateado
+window.combatDieFusionHandler = (e) => {
      let dieId = e.detail.dieId;
      let targetId = e.detail.targetId;
      if(dieId === targetId) return;
@@ -172,7 +193,8 @@ function renderCombatOverlay() {
      renderCombatOverlay();
   };
 
-  window.combatDieOnCombatRoleHandler = (e) => {
+  // Asigna un dado al rol de combate (ej. ataque especial) del jugador
+window.combatDieOnCombatRoleHandler = (e) => {
       const dieId = e.detail.dieId;
       if (gameState.currentCombat && gameState.currentCombat.isCrampPhase) return;
       let dieData = gameState.currentCombat.playerDice.find(d => d.id === dieId);
@@ -218,7 +240,8 @@ function renderCombatOverlay() {
   const isCrampPhase = c.needsCrampResolution;
 
   // Render Player Stats Header
-  const statsContainer = document.getElementById('combat-player-stats');
+  // Contenedor para mostrar estadísticas del jugador durante el combate
+const statsContainer = document.getElementById('combat-player-stats');
   const expReq = {
     1: 2 * gameState.players.length,
     2: 6 * gameState.players.length,
