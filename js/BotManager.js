@@ -905,7 +905,11 @@ performMarketTurn(bot) {
                                 advice = "Este equipo me ayudará a resistir.";
                             } else {
                                 if (bot.mo < 3) {
-                                    advice = "Guardaré este oro para cuando realmente nos haga falta.";
+									 if (bot.mo > 0) {
+										advice = "Guardaré este oro para cuando realmente nos haga falta.";
+									 }else{
+										 advice = "Sin oro poca cosa podré hacer.";
+									 }
                                 } else {
                                     // Si tiene más de 6 mo y no le convence el arma actual, explora el mercado de ataque
                                     if (bot.mo > 6 && topWeapon) {
@@ -1923,6 +1927,10 @@ calculateEquipPower(eq, bot) {
             this.isActing = false;
             return;
         }
+        if (this.gameState.isGameOver || this.gameState.isGameWon) {
+            this.isActing = false;
+            return;
+        }
         try {
             if (this.gameState.retaliationQueue.length === 0) {
                 this.isActing = false;
@@ -1968,11 +1976,16 @@ calculateEquipPower(eq, bot) {
                     if (typeof window.updateUI === 'function') {
                         window.updateUI();
                     }
-                    if (typeof renderRetaliationModal === 'function') {
-                        renderRetaliationModal();
+                    
+                    if (!this.gameState.isGameOver) {
+                        if (typeof renderRetaliationModal === 'function') {
+                            renderRetaliationModal();
+                        }
+                        this.isActing = false;
+                        this.handleGameState();
+                    } else {
+                        this.isActing = false;
                     }
-                    this.isActing = false;
-                    this.handleGameState();
                 }, 3500);
             } else {
                 this.isActing = false;
