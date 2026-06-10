@@ -687,8 +687,8 @@ function renderRoleSelection() {
       const previewEffect = document.getElementById('setup-role-effect');
       if (previewName && previewCard && previewEffect) {
         previewName.innerText = 'ALEATORIO';
-        previewCard.style.backgroundImage = 'none';
-        previewCard.style.backgroundColor = '#1a1a1a';
+        previewCard.style.backgroundImage = "url('assets/Roles/back_rol.webp')";
+        previewCard.style.backgroundColor = '';
         previewEffect.innerText = 'El sistema elegirá un rol al azar para este jugador.';
       }
     };

@@ -57,8 +57,7 @@
 
 
         <!-- POPUP HISTORIAL DESPLEGABLE -->
-        <div id="log-panel"
-            style="display: none; position: absolute; top: calc(100% + 5px); right: 0; width: 630px; max-height: 400px; background: rgba(10, 10, 15, 0.95); border: 2px solid var(--gold); border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.9); flex-direction: column; z-index: 10000;">
+        <div id="log-panel" style="display: none; position: absolute; top: calc(100% + 5px); right: 0; width: 630px; height: 300px; min-height: 100px; resize: vertical; overflow-y: auto; background: rgba(10, 10, 15, 0.95); border: 2px solid var(--gold); border-radius: 8px; box-shadow: 0 5px 20px rgba(0,0,0,0.9); flex-direction: column; z-index: 10000;">
             <div style="padding: 8px 12px; border-bottom: 1px solid rgba(212, 175, 55, 0.4); display: flex; justify-content: space-between; align-items: center; background: rgba(0,0,0,0.3);">
                 <span style="color: var(--gold); font-family: 'Cinzel', serif; font-weight: bold; font-size: 0.9rem; letter-spacing: 1px;">Historial de Acciones</span>
                 <button id="btn-export-log" class="btn secondary" style="font-size: 0.75rem; padding: 4px 10px; height: auto; border-radius: 15px; border: 1px solid rgba(212, 175, 55, 0.5);">💾 Exportar HTML</button>
