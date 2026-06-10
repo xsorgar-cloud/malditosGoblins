@@ -325,6 +325,175 @@ triggerAction(type, target = null, reason = "") {
         }, 600);
     }
 
+    getPlayerMaxPowerPerAction(player) {
+        // Filtra las armas activas (tanto rotas como no rotas)
+        const weapons = player.equipped.filter(eq => eq.isActive && this.isWeapon(eq));
+        let slots = [];
+        
+        weapons.forEach(w => {
+            // Calcula el daño máximo que puede infligir un único dado válido (valores de 6 a 1)
+            let maxDmg = 0;
+            for (let val = 6; val >= 1; val--) {
+                if (this.gameState.isValidDieForEquipment(val, w)) {
+                    let dmg = this.getDamageForDieInEquip(val, w);
+                    if (dmg > maxDmg) maxDmg = dmg;
+                }
+            }
+            
+            // Determina la cantidad máxima de usos del arma (huecos)
+            const extra = (w.extra || '').toLowerCase();
+            const isReusable = extra.includes('reutilizable');
+            const maxUses = extra.includes('x3') ? 3 : (isReusable ? 6 : 1);
+            
+            for (let i = 0; i < maxUses; i++) {
+                slots.push(maxDmg);
+            }
+        });
+        
+        // Ordena los daños de los huecos de mayor a menor
+        slots.sort((a, b) => b - a);
+        
+        // Determina los dados disponibles reales (reducidos por estados de escozor, calambre y tembleque)
+        let numDice = player.dicePool ? player.dicePool.length : 2;
+        if (player.statusEffects) {
+            let totalEffects = (player.statusEffects.escozor || 0) + (player.statusEffects.calambre || 0) + (player.statusEffects.tembleque || 0);
+            numDice = Math.max(0, numDice - totalEffects);
+        }
+        
+        // Suma los mejores Math.min(numDice, slots.length) huecos de daño
+        let maxPower = 0;
+        const limit = Math.min(numDice, slots.length);
+        for (let i = 0; i < limit; i++) {
+            maxPower += slots[i];
+        }
+        
+        return maxPower;
+    }
+
+    getHitoSpawnedHp() {
+        if (this.gameState.currentHito > 5) return 0;
+        
+        const sendaHitos = DB.hitos[this.gameState.activeSenda] || DB.hitos.iniciacion;
+        let hito = sendaHitos[this.gameState.currentHito - 1];
+        if (!hito) return 0;
+        
+        let totalHp = 0;
+        const numPlayers = this.gameState.players.length;
+        
+        if (hito.isBoss) {
+            totalHp += hito.bossStats.hpMultiplier * numPlayers;
+        } else {
+            if ((this.gameState.activeSenda === 'guerrero' || this.gameState.activeSenda === 'rey_brujo') && this.gameState.currentHito === 1) {
+                totalHp += DB.goblins[1].hp;
+            } else {
+                for (let p = 0; p < numPlayers; p++) {
+                    for (let lvl of hito.goblins) {
+                        totalHp += DB.goblins[lvl].hp;
+                    }
+                }
+            }
+        }
+        return totalHp;
+    }
+
+    canClearTableAfterDeployingHito() {
+        let currentGoblinHp = this.gameState.battlefield.goblins.filter(g => !g.isDying).reduce((sum, g) => sum + g.currentHp, 0);
+        let hitoSpawnedHp = this.getHitoSpawnedHp();
+        let totalProjectedHp = currentGoblinHp + hitoSpawnedHp;
+        
+        let totalMaxTeamDamage = 0;
+        this.gameState.players.forEach((p, idx) => {
+            if (p.hp <= 0) return; // Jugador muerto no aporta daño
+            
+            let maxPower = this.getPlayerMaxPowerPerAction(p);
+            let actionsRemaining = 0;
+            
+            if (idx === this.gameState.currentPlayerIndex) {
+                // Desplegar Hito es una acción libre, por tanto no reduce sus acciones de combate restantes
+                actionsRemaining = Math.max(0, 3 - this.gameState.battlefield.actionCount);
+            } else if (idx < this.gameState.currentPlayerIndex) {
+                actionsRemaining = Math.max(0, 2 - this.gameState.battlefield.actionCount);
+            } else {
+                actionsRemaining = Math.max(0, 3 - this.gameState.battlefield.actionCount);
+            }
+            
+            totalMaxTeamDamage += maxPower * actionsRemaining;
+        });
+        
+        return totalMaxTeamDamage >= totalProjectedHp;
+    }
+
+    canClearTableWithoutCurrentAction() {
+        let currentGoblinHp = this.gameState.battlefield.goblins.filter(g => !g.isDying).reduce((sum, g) => sum + g.currentHp, 0);
+        
+        let totalMaxTeamDamage = 0;
+        this.gameState.players.forEach((p, idx) => {
+            if (p.hp <= 0) return;
+            
+            let maxPower = this.getPlayerMaxPowerPerAction(p);
+            let actionsRemaining = 0;
+            
+            if (idx === this.gameState.currentPlayerIndex) {
+                // Si el jugador activo realiza otra acción principal (oro/rol), se reduce en 1 su capacidad de combatir
+                actionsRemaining = Math.max(0, (3 - this.gameState.battlefield.actionCount) - 1);
+            } else if (idx < this.gameState.currentPlayerIndex) {
+                actionsRemaining = Math.max(0, 2 - this.gameState.battlefield.actionCount);
+            } else {
+                actionsRemaining = Math.max(0, 3 - this.gameState.battlefield.actionCount);
+            }
+            
+            totalMaxTeamDamage += maxPower * actionsRemaining;
+        });
+        
+        return totalMaxTeamDamage >= currentGoblinHp;
+    }
+
+    isWellEquipped(player) {
+        const nonStarting = player.equipped.filter(eq => eq.type !== 'inicial');
+        const weapons = nonStarting.filter(eq => this.isWeapon(eq)).length;
+        const heals = nonStarting.filter(eq => this.isHeal(eq)).length;
+        const shields = nonStarting.filter(eq => this.isShield(eq)).length;
+
+        if (player.level === 2) {
+            return weapons >= 1 || heals >= 1;
+        } else if (player.level === 3) {
+            return weapons >= 1 && heals >= 1;
+        } else if (player.level >= 4) {
+            const option1 = weapons >= 2 && heals >= 1 && shields >= 1;
+            const option2 = weapons >= 2 && heals >= 2;
+            const option3 = weapons >= 2 && shields >= 2;
+            return option1 || option2 || option3;
+        }
+        return true; // Nivel 1 no tiene requisitos mínimos
+    }
+
+    getMissingEquipmentType(player) {
+        const nonStarting = player.equipped.filter(eq => eq.type !== 'inicial');
+        const weapons = nonStarting.filter(eq => this.isWeapon(eq)).length;
+        const heals = nonStarting.filter(eq => this.isHeal(eq)).length;
+        const shields = nonStarting.filter(eq => this.isShield(eq)).length;
+
+        if (player.level === 2) {
+            if (weapons === 0 && heals === 0) return 'ataque'; // prioriza ataque por defecto
+        } else if (player.level === 3) {
+            if (weapons === 0) return 'ataque';
+            if (heals === 0) return 'curacion';
+        } else if (player.level >= 4) {
+            if (weapons < 2) return 'ataque';
+            if (heals < 1 && shields < 1) {
+                return 'curacion';
+            }
+            if (heals >= 1 && shields === 0 && heals < 2) {
+                return 'escudos';
+            }
+            if (shields >= 1 && heals === 0 && shields < 2) {
+                return 'curacion';
+            }
+        }
+        return null;
+    }
+
+
     // Calcula una puntuación de combate basada en armas, escudos, HP y recompensas esperadas
 calculateCombatScore(bot, goblins) {
         if (goblins.length === 0) return 0;
@@ -389,58 +558,60 @@ performMainTurn(bot) {
             const pColor = this.getPersonalityColor(currentPersonality);
             const goblinsEnMesa = this.gameState.battlefield.goblins.filter(g => !g.isDying);
             const hitoBtn = document.getElementById('btn-deploy-hito');
-            const canDeployHito = hitoBtn && !hitoBtn.disabled && goblinsEnMesa.length === 0;
             
-            // Si es la última acción de la oleada, no queremos abrir un Hito para evitar 
-            // que los enemigos generados ataquen (represalia) y muten de inmediato al cerrar la oleada.
-            const isLastAction = typeof this.gameState.battlefield.actionCount !== 'undefined' && this.gameState.battlefield.actionCount >= 2;
-            const safeToDeployHito = canDeployHito && !isLastAction;
-
-            const combatScore = this.calculateCombatScore(bot, goblinsEnMesa);
             let chosenAction = null;
             let decisionText = "";
             let targetForCombat = [];
 
-            // Helper to determine if we should fight
-            const asequible = combatScore >= 15;
-            const hasRewards = goblinsEnMesa.some(g => (g.pexReward && g.pexReward > 0) || (g.moReward && g.moReward > 0) || g.type === 'minijefe' || g.type === 'jefe');
-            const isLastResort = this.gameState.players.filter(p => !p.isDead && p.isBot).length === 1 && this.gameState.players.filter(p => !p.isDead).length === 1;
-            const allyInDanger = this.gameState.players.some(p => !p.isDead && p.id !== bot.id && p.hp <= p.maxHp * 0.35);
-            const bufferGoblins = goblinsEnMesa.filter(g => g.skill && (g.skill.includes('inmune') || g.skill.includes('protege')));
+            // Fase 3: Estado del Hito
+            const waveLevel = this.gameState.battlefield.waveLevel;
+            const hitoLevel = this.gameState.currentHito;
+            const canDeployHito = hitoBtn && !hitoBtn.disabled && !this.gameState.battlefield.goblins.some(g => g.isHito);
 
-            // Check desired item shortfall for Agresivo
-            const attackMarket = this.gameState.market && this.gameState.market['ataque'];
-            const topAttackCard = attackMarket && attackMarket.length > 0 ? attackMarket[0] : null;
-            const shortfall = topAttackCard ? topAttackCard.cost - bot.mo : 0;
-            
-            // Calculamos objetivos de combate de forma inteligente
-            const potentialTargets = this.getSafeCombatTargets(bot, goblinsEnMesa, currentPersonality);
+            if (waveLevel >= 2 * hitoLevel && canDeployHito && this.canClearTableAfterDeployingHito()) {
+                chosenAction = 'hito';
+                decisionText = `El nivel de la oleada (${waveLevel}) es al menos el doble del hito (${hitoLevel}) y podemos limpiar la mesa. ¡Desplegando hito!`;
+            }
 
-                if (currentPersonality === 'Agresivo') {
-                    if (potentialTargets.length > 0) {
-                        chosenAction = 'combat';
-                        decisionText = "¡A por ellos! No dejaré a ni uno vivo.";
-                        targetForCombat = potentialTargets;
-                    } else if (safeToDeployHito) {
-                        chosenAction = 'hito';
-                        decisionText = "El camino está libre. ¡Avancemos rápido!";
+            // Fase 4: Estado del Campo de Batalla (Combate u Oro Inteligente)
+            if (!chosenAction) {
+                const potentialTargets = this.getSafeCombatTargets(bot, goblinsEnMesa, currentPersonality);
+                
+                // Determinar si le falta dinero para compra necesaria
+                const missingType = this.getMissingEquipmentType(bot) || 'ataque';
+                const marketDecks = this.gameState.market && this.gameState.market[missingType];
+                const topCard = marketDecks && marketDecks.length > 0 ? marketDecks[0] : null;
+                const shortfall = topCard ? topCard.cost - bot.mo : 0;
+
+                const tableCanBeClearedAnyway = this.canClearTableWithoutCurrentAction();
+
+                if (tableCanBeClearedAnyway && (shortfall === 1 || shortfall === 2)) {
+                    // Conseguir 1 o 2 monedas
+                    if (shortfall === 2 && bot.hp > 1) {
+                        chosenAction = 'gold-dmg';
+                        decisionText = `Mis compañeros pueden limpiar la mesa. Conseguiré 2 monedas de oro para comprar ${topCard.name}.`;
                     } else {
-                        // Not recommended to deploy Hito or cannot deploy
-                        if (shortfall === 1 || shortfall === 2) {
-                            if (bot.hp > 1) {
-                                chosenAction = shortfall === 2 ? 'gold-dmg' : 'gold';
-                                decisionText = "Me faltan pocas monedas para esa arma. " + (shortfall === 2 ? "Un poco de sangre valdrá la pena." : "Aseguraré una moneda.");
-                            } else {
-                                chosenAction = 'role';
-                                decisionText = "Me falta oro pero estoy al límite de vida. Mejor recargo mi habilidad.";
-                            }
-                        } else {
-                            chosenAction = 'role';
-						}
-					}
-				}
+                        chosenAction = 'gold';
+                        decisionText = `Mis compañeros pueden limpiar la mesa. Conseguiré 1 moneda de oro para comprar ${topCard.name}.`;
+                    }
+                } else if (potentialTargets.length > 0) {
+                    chosenAction = 'combat';
+                    targetForCombat = potentialTargets;
+                    decisionText = "¡A por ellos! No dejaré a ni uno vivo.";
+                } else {
+                    // Fallback si no hay objetivos seguros de combate
+                    if (shortfall > 0) {
+                        chosenAction = 'gold';
+                        decisionText = "No hay objetivos de combate seguros. Conseguiré oro para equiparme.";
+                    } else {
+                        chosenAction = 'role';
+                        decisionText = "No hay objetivos de combate seguros. Recargaré mi habilidad de rol.";
+                    }
+                }
+            }
 
-            this.showBubble(this.gameState.currentPlayerIndex, `<strong style="color: ${pColor};">[${currentPersonality}]</strong> ${decisionText}`);
+            const pIndex = this.gameState.players.indexOf(bot);
+            this.showBubble(pIndex, `<strong style="color: ${pColor};">[${currentPersonality}]</strong> ${decisionText}`);
             this.gameState.addLog(`🤖 <strong>${bot.name} (${currentPersonality}):</strong> "${decisionText}"`);
 
             if (chosenAction === 'combat') {
@@ -454,7 +625,7 @@ performMainTurn(bot) {
                     this.triggerAction(chosenAction);
                 }, 3500);
             }
-        }catch(e) {
+        } catch(e) {
             console.error("Error in performMainTurn", e);
             this.isActing = false;
         }
