@@ -1063,11 +1063,10 @@ performCombatTurn(bot) {
 
 
             let advice = "";
-			advice = "¡Acabemos rápido con esto! Poned dados en las armas más fuertes.";
-            
             let delay = 500;
 
-            if (advice && availableDice.length === totalNonCramped) {
+            if (availableDice.length === totalNonCramped) {
+                advice = this.getCombatDialogue(availableDice, bot);
                 console.log("[BotManager] Showing combat advice:", advice);
                 this.showBubble(this.gameState.currentPlayerIndex, `${advice}`);
                 this.gameState.addLog(`🤖 "${advice}"`);
@@ -2110,6 +2109,213 @@ calculateEquipPower(eq, bot) {
             const pIndex = this.gameState.players.findIndex(p => p.id === bot.id);
             if (window.updateBotBubble) window.updateBotBubble(pIndex, null);
         });
+    }
+
+    // Analiza las tiradas y la situación de combate para sugerir un diálogo dinámico
+    getCombatDialogue(availableDice, bot) {
+        const roleId = bot.role ? bot.role.id : '';
+        const goblins = this.gameState.currentCombat ? this.gameState.currentCombat.goblins : [];
+        const planResult = this.planWeaponAssignments(availableDice, goblins, bot);
+        const plannedKills = planResult.goblinsKilled;
+        
+        // 1. Calambres (Cramped)
+        const crampedCount = this.gameState.currentCombat.playerDice.filter(d => d.isCramped).length;
+        if (crampedCount > 0) {
+            if (roleId === 'guerrero') {
+                return "¡Uff! Con estos calambres apenas puedo blandir mi espada...";
+            } else if (roleId === 'mago') {
+                return "¡Mis calambres interfieren con la concentración mágica!";
+            } else if (roleId === 'protector') {
+                return "¡Mis músculos se agarrotan! Sostener el escudo es un reto...";
+            } else if (roleId === 'sanador') {
+                return "¡Qué dolor! Con estos calambres me cuesta concentrarme para curar.";
+            } else if (roleId === 'curandero') {
+                return "¡Ay! ¡Menudo calambre! Mis ungüentos no alivian esto de inmediato.";
+            } else if (roleId === 'ladron') {
+                return "¡Maldición, mis reflejos! Estos calambres me ralentizan.";
+            }
+            return "¡Ay! ¡Qué calambres! Apenas puedo moverme...";
+        }
+
+        // 2. Tirada letal (mata a todos los goblins activos)
+        const totalGoblins = goblins.filter(g => !g.isDying).length;
+        if (plannedKills >= totalGoblins && totalGoblins > 0) {
+            if (roleId === 'guerrero') {
+                return "¡Excelente tirada! ¡Mi acero los cortará a todos en pedazos!";
+            } else if (roleId === 'mago') {
+                return "¡Carga mágica al máximo! ¡Desataré una explosión devastadora!";
+            } else if (roleId === 'protector') {
+                return "¡Sí! ¡Incluso mi escudo va a arrollar a todos los goblins hoy!";
+            } else if (roleId === 'sanador') {
+                return "¡Maravilloso! Con estos dados podemos limpiar la zona sin sufrir.";
+            } else if (roleId === 'curandero') {
+                return "¡La fuerza de la naturaleza los consumirá! ¡Tirada perfecta!";
+            } else if (roleId === 'ladron') {
+                return "¡Una oportunidad de oro! ¡Acabaré con todos y me llevaré el botín!";
+            }
+            return "¡Qué gran tirada! ¡No va a quedar ni un solo goblin en pie!";
+        }
+
+        // 3. Matar al menos a uno
+        if (plannedKills > 0) {
+            if (roleId === 'guerrero') {
+                return "¡Ese goblin de ahí no pasa de este turno! ¡A por él!";
+            } else if (roleId === 'mago') {
+                return "¡He fijado mi objetivo! Ese goblin será desintegrado.";
+            } else if (roleId === 'protector') {
+                return "¡Nos quitaremos de encima a un enemigo! ¡Golpe definitivo!";
+            } else if (roleId === 'sanador') {
+                return "¡Reducir sus filas es prioritario! Ayudaré a abatir a ese goblin.";
+            } else if (roleId === 'curandero') {
+                return "¡Ese enemigo volverá a la tierra hoy! ¡Ataque enfocado!";
+            } else if (roleId === 'ladron') {
+                return "¡Le he visto el punto débil! ¡Ese cae seguro!";
+            }
+            return "¡Centraré mis ataques en eliminar a uno para reducir sus filas!";
+        }
+
+        // Calcular daño entrante normal y directo
+        let incomingNormalDmg = 0;
+        let incomingDirectDmg = 0;
+        goblins.forEach(gob => {
+            let greenDiceResult = this.gameState.currentCombat.dice && this.gameState.currentCombat.dice.green ? this.gameState.currentCombat.dice.green[gob.uid] : null;
+            if (greenDiceResult && greenDiceResult.details) {
+                let goblinInterceptions = window.interceptionAssignments[gob.uid] || [];
+                let naturalDieIdx = 0;
+                for (let rawIdx = 0; rawIdx < greenDiceResult.details.length; rawIdx++) {
+                    let detail = greenDiceResult.details[rawIdx];
+                    if (detail.type === 'die') {
+                        const currentIdx = naturalDieIdx++;
+                        const isIntercepted = goblinInterceptions.some(asg => Number(asg.goblinDieIndex) === Number(currentIdx));
+                        if (isIntercepted) continue;
+                        
+                        let dieDmg = detail.val;
+                        let nextDetail = greenDiceResult.details[rawIdx + 1];
+                        if (nextDetail && nextDetail.type === 'mod') dieDmg += nextDetail.val;
+                        
+                        let gobDB = gob.attacks ? gob : (typeof DB !== 'undefined' && DB.goblins ? DB.goblins[gob.level] : null);
+                        let isDirect = false;
+                        if (gobDB && gobDB.attacks) {
+                            let attacks = gobDB.attacks[detail.val] || [];
+                            isDirect = attacks.some(a => {
+                                let lower = a.toLowerCase();
+                                return lower.includes('daño directo') || lower.includes('verdadero') || lower.includes('veneno') || lower.includes('toxina');
+                            });
+                        }
+                        if (isDirect) incomingDirectDmg += dieDmg;
+                        else incomingNormalDmg += dieDmg;
+                    }
+                }
+            } else {
+                let profile = this.getGoblinDamageProfile(gob);
+                incomingNormalDmg += profile.normal;
+                incomingDirectDmg += profile.direct;
+            }
+        });
+
+        // 4. Decisión de Escudo / Defensa (recibe daño normal importante y tiene escudo)
+        const activeShields = bot.equipped.filter(eq => eq.isActive && !eq.isBroken && this.isShield(eq));
+        if (activeShields.length > 0 && incomingNormalDmg >= 3) {
+            if (roleId === 'protector') {
+                return "¡Nadie pasará! ¡Sostengo el escudo y protejo al grupo!";
+            } else if (roleId === 'guerrero') {
+                return "¡Menudo golpe se avecina! Me cubriré temporalmente.";
+            } else if (roleId === 'mago') {
+                return "¡Levantando defensas! La magia física nos protegerá.";
+            } else if (roleId === 'sanador') {
+                return "¡Demasiado daño entrante! Debo protegerme para poder curaros.";
+            } else if (roleId === 'curandero') {
+                return "¡Bajo la corteza del escudo aguantaré la embestida!";
+            } else if (roleId === 'ladron') {
+                return "¡Uy! Ese ataque viene con fuerza. ¡A cubierto!";
+            }
+            return "¡El ataque enemigo es fuerte! Me cubro tras mi escudo.";
+        }
+
+        // 5. Decisión de Rol / Energía (dado alto con ganancia de energía sustancial y sin peligro inminente de muerte)
+        const highestDie = availableDice[availableDice.length - 1];
+        const energyGain = bot.role && bot.role.energyRates ? bot.role.energyRates[highestDie.value - 1] : (highestDie.value >= 5 ? 3 : 0);
+        if (energyGain >= 3 && bot.hp >= 4) {
+            if (roleId === 'guerrero') {
+                return "¡Siento la ira de batalla! Recargaré mi energía de combate.";
+            } else if (roleId === 'mago') {
+                return "¡El flujo de maná es óptimo! Canalizaré esta energía.";
+            } else if (roleId === 'protector') {
+                return "¡Fortaleceré mi devoción! Preparando mi poder divino.";
+            } else if (roleId === 'sanador') {
+                return "¡Acumularé gracia divina! La curación requerirá esta energía.";
+            } else if (roleId === 'curandero') {
+                return "¡Sintonizando con el bosque! Extraeré energía de la naturaleza.";
+            } else if (roleId === 'ladron') {
+                return "¡Hora de preparar algunos trucos! Esta energía me vendrá genial.";
+            }
+            return "¡Canalizaré mis fuerzas! Esta energía nos vendrá de perlas.";
+        }
+
+        // 6. Mala tirada en general (todos dados bajos)
+        const maxVal = highestDie ? highestDie.value : 0;
+        if (maxVal <= 2) {
+            if (roleId === 'mago') {
+                return "¡El flujo de magia es inestable! Tendré que improvisar...";
+            } else if (roleId === 'guerrero') {
+                return "¡Vaya porquería de dados! ¡Lucharé con rabia pura igualmente!";
+            } else if (roleId === 'ladron') {
+                return "¡Vaya mala racha! Espero que no me pillen con la guardia baja...";
+            }
+            return "¡Vaya tirada más desastrosa! Tendré que apañármelas como pueda...";
+        }
+
+        // 7. Genérico con sabor del rol
+        if (roleId === 'guerrero') {
+            const list = [
+                "¡Por mi honor! ¡Ningún goblin quedará impune!",
+                "¡Al ataque! ¡Hagámosles morder el polvo!",
+                "¡Mi espada está lista para la batalla!"
+            ];
+            return list[Math.floor(Math.random() * list.length)];
+        } else if (roleId === 'mago') {
+            const list = [
+                "¡La magia elemental guiará mis golpes!",
+                "Fórmula de ataque calculada. ¡Fuego!",
+                "¡Sentid el poder de lo arcano!"
+            ];
+            return list[Math.floor(Math.random() * list.length)];
+        } else if (roleId === 'protector') {
+            const list = [
+                "¡Yo soy el escudo de la alianza!",
+                "¡Manteneos firmes! Defenderé esta posición.",
+                "¡Ninguno caerá bajo mi guardia!"
+            ];
+            return list[Math.floor(Math.random() * list.length)];
+        } else if (roleId === 'sanador') {
+            const list = [
+                "¡No temáis! Manteneos firmes, yo os sanaré.",
+                "¡La luz nos guía en este combate!",
+                "Combatid con cuidado, vigilaré vuestra salud."
+            ];
+            return list[Math.floor(Math.random() * list.length)];
+        } else if (roleId === 'curandero') {
+            const list = [
+                "¡Las plantas nos brindarán su auxilio!",
+                "Alineando las energías naturales para el combate.",
+                "El bosque vigila y castiga a los intrusos."
+            ];
+            return list[Math.floor(Math.random() * list.length)];
+        } else if (roleId === 'ladron') {
+            const list = [
+                "¡Ojo al parche! ¡A ver qué puedo sisar de aquí!",
+                "Atacaré desde las sombras. ¡No se lo esperarán!",
+                "¡Más oro para el saco! ¡Vamos!"
+            ];
+            return list[Math.floor(Math.random() * list.length)];
+        }
+
+        const fallbackGeneric = [
+            "¡A por ellos! ¡No les demos ni un segundo de respiro!",
+            "¡Por el equipo! ¡Asegurad vuestros objetivos!",
+            "¡Vamos allá! Mantened la concentración en el combate."
+        ];
+        return fallbackGeneric[Math.floor(Math.random() * fallbackGeneric.length)];
     }
 
 // Muestra un bocadillo sobre el jugador indicado con el texto especificado
