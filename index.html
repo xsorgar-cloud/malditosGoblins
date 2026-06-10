@@ -158,6 +158,32 @@
                 style="width: 250px; flex-shrink: 0; display: flex; flex-direction: column; border-right: 1px solid rgba(212, 175, 55, 0.3); padding-right: 20px; justify-content: space-between;">
                 <div>
                     <h2 style="margin-bottom: 20px; font-size: 1.5rem;">Fase de Combate</h2>
+                    
+                    <!-- Contenedor para bocadillos de bot en combate -->
+                    <div id="combat-bot-bubbles-container" style="position: relative; margin-bottom: 20px; width: 100%;">
+                        <!-- Bocadillos de combate para hasta 4 jugadores -->
+                        <div id="combat-bot-bubble-0" class="combat-bot-bubble" style="display: none;">
+                            <div id="combat-bot-bubble-text-0" style="line-height: 1.4;"></div>
+                            <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 10px solid var(--gold); transition: border-top-color 0.3s;"></div>
+                            <div style="position: absolute; bottom: -7px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent; border-top: 7px solid rgba(245, 245, 250, 0.95);"></div>
+                        </div>
+                        <div id="combat-bot-bubble-1" class="combat-bot-bubble" style="display: none;">
+                            <div id="combat-bot-bubble-text-1" style="line-height: 1.4;"></div>
+                            <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 10px solid var(--gold); transition: border-top-color 0.3s;"></div>
+                            <div style="position: absolute; bottom: -7px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent; border-top: 7px solid rgba(245, 245, 250, 0.95);"></div>
+                        </div>
+                        <div id="combat-bot-bubble-2" class="combat-bot-bubble" style="display: none;">
+                            <div id="combat-bot-bubble-text-2" style="line-height: 1.4;"></div>
+                            <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 10px solid var(--gold); transition: border-top-color 0.3s;"></div>
+                            <div style="position: absolute; bottom: -7px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent; border-top: 7px solid rgba(245, 245, 250, 0.95);"></div>
+                        </div>
+                        <div id="combat-bot-bubble-3" class="combat-bot-bubble" style="display: none;">
+                            <div id="combat-bot-bubble-text-3" style="line-height: 1.4;"></div>
+                            <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 10px solid var(--gold); transition: border-top-color 0.3s;"></div>
+                            <div style="position: absolute; bottom: -7px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent; border-top: 7px solid rgba(245, 245, 250, 0.95);"></div>
+                        </div>
+                    </div>
+
                     <div id="combat-player-stats"
                         style="display: flex; flex-direction: column; gap: 10px; text-align: left;"></div>
                 </div>
@@ -209,7 +235,7 @@
 
                 <div id="game-version-badge"
                     style="position: absolute; top: 28px; left: 70px; z-index: 10; font-family: 'Cinzel', serif; font-size: 0.85rem; font-weight: bold; color: var(--gold); background: rgba(10, 10, 15, 0.8); padding: 4px 12px; border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); backdrop-filter: blur(5px); letter-spacing: 1px;">
-                    v.3.1
+                    v.3.2
                 </div>
 
                 <h2 class="setup-title" style="margin-top: 0; margin-bottom: 10px; font-size: 2.2rem; text-align: center;">Configura tu Grupo</h2>

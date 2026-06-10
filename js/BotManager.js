@@ -550,16 +550,19 @@ triggerAction(type, target = null, reason = "") {
     }
 
     isWellEquipped(player) {
+        const targetLevel = Math.max(player.level, this.gameState.battlefield.waveLevel);
         const nonStarting = player.equipped.filter(eq => eq.type !== 'inicial');
         const weapons = nonStarting.filter(eq => this.isWeapon(eq)).length;
         const heals = nonStarting.filter(eq => this.isHeal(eq)).length;
         const shields = nonStarting.filter(eq => this.isShield(eq)).length;
 
-        if (player.level === 2) {
-            return weapons >= 1 || heals >= 1;
-        } else if (player.level === 3) {
+        if (targetLevel === 2) {
+            const hasWeapon = weapons >= 1;
+            const hasDamageHeal = player.equipped.some(eq => eq.type !== 'inicial' && this.isHeal(eq) && this.canDealDamage(eq));
+            return hasWeapon || hasDamageHeal;
+        } else if (targetLevel === 3) {
             return weapons >= 1 && heals >= 1;
-        } else if (player.level >= 4) {
+        } else if (targetLevel >= 4) {
             const option1 = weapons >= 2 && heals >= 1 && shields >= 1;
             const option2 = weapons >= 2 && heals >= 2;
             const option3 = weapons >= 2 && shields >= 2;
@@ -569,17 +572,22 @@ triggerAction(type, target = null, reason = "") {
     }
 
     getMissingEquipmentType(player) {
+        const targetLevel = Math.max(player.level, this.gameState.battlefield.waveLevel);
         const nonStarting = player.equipped.filter(eq => eq.type !== 'inicial');
         const weapons = nonStarting.filter(eq => this.isWeapon(eq)).length;
         const heals = nonStarting.filter(eq => this.isHeal(eq)).length;
         const shields = nonStarting.filter(eq => this.isShield(eq)).length;
 
-        if (player.level === 2) {
-            if (weapons === 0 && heals === 0) return 'ataque'; // prioriza ataque por defecto
-        } else if (player.level === 3) {
+        if (targetLevel === 2) {
+            const hasWeapon = weapons >= 1;
+            const hasDamageHeal = player.equipped.some(eq => eq.type !== 'inicial' && this.isHeal(eq) && this.canDealDamage(eq));
+            if (!hasWeapon && !hasDamageHeal) {
+                return 'ataque'; // prioriza ataque si no tiene ninguno de los dos
+            }
+        } else if (targetLevel === 3) {
             if (weapons === 0) return 'ataque';
             if (heals === 0) return 'curacion';
-        } else if (player.level >= 4) {
+        } else if (targetLevel >= 4) {
             if (weapons < 2) return 'ataque';
             if (heals < 1 && shields < 1) {
                 return 'curacion';
@@ -592,6 +600,14 @@ triggerAction(type, target = null, reason = "") {
             }
         }
         return null;
+    }
+
+    canDealDamage(eq) {
+        if (!eq) return false;
+        if (this.isWeapon(eq)) return true;
+        let effectStr = ((eq.isBroken && eq.broken ? eq.broken.effect : eq.effect) || '').toLowerCase();
+        let extraStr = ((eq.isBroken && eq.broken ? eq.broken.extra : eq.extra) || '').toLowerCase();
+        return effectStr.includes('daño') || extraStr.includes('daño');
     }
 
 
@@ -676,7 +692,7 @@ performMainTurn(bot) {
 
             if (canDeployHito && canClearTable) {
                 chosenAction = 'hito';
-                decisionText = `El nivel de la oleada (${waveLevel}) es al menos el nivel del hito (${hitoLevel}) y podemos limpiar la mesa. ¡Desplegando hito!`;
+                decisionText = `Estamos preparados para poder limpiar la mesa. ¡Desplegando hito!`;
             }
 
             // Fase 4: Estado del Campo de Batalla (Combate u Oro Inteligente)
@@ -848,50 +864,69 @@ performMarketTurn(bot) {
                 if (bought) advice = "Necesito equipo curativo para lo que se avecina.";
             }
 
-            // Si no está en emergencia o no pudo comprar pociones, prosigue con compras de personalidad
+            // Si no está en emergencia o no pudo comprar pociones, prosigue con compras de personalidad e IA de equipamiento
             if (!bought && !emergencyHealing) {
-				// 1. Intentar comprar un arma
-				const topWeapon = this.gameState.market['ataque'] && this.gameState.market['ataque'].length > 0 ? this.gameState.market['ataque'][0] : null;
-				const hasBoughtWeapon = bot.equipped.some(eq => eq.type !== 'inicial' && this.isWeapon(eq));
-				
-				if (topWeapon && bot.mo >= topWeapon.cost) {
-					bought = buyIfPossible('ataque');
-					if (bought) advice = "¡Poder! Dame todo el poder para aplastar goblins.";
-				}
-				
-				// 2. Si no ha comprado arma
-				if (!bought) {
-					if (!hasBoughtWeapon && topWeapon) {
-						// Si no tiene ningún arma comprada, ahorra para ella
-						advice = `Ahorraré para un arma mejor (necesito ${topWeapon.cost} mo).`;
-					} else {
-						// Si ya tiene arma comprada (o no hay armas en el mazo), puede comprar escudos o curación
-						bought = buyIfPossible('escudos') || buyIfPossible('curacion');
-						if (bought) {
-							advice = "Este equipo me ayudará a resistir.";
-						} else {
-							if (bot.mo < 3) {
-								advice = "Guardaré este oro para cuando realmente nos haga falta.";
-							} else {
-								// Si tiene más de 6 mo y no le convence el arma actual, explora el mercado de ataque
-								if (bot.mo > 6 && topWeapon) {
-									chosenAction = 'explore-market';
-									chosenTarget = 'ataque';
-									advice = "No me gusta esta arma. Pagaré por ver la siguiente.";
-									
-									if (bot.equipped.some(eq => eq.id === topWeapon.id)) {
-										actionReason = `Ya tiene una copia de ${topWeapon.name}.`;
-									} else {
-										actionReason = `Prefiere buscar algo más destructivo.`;
-									}
-									bought = true;
-								} else {
-									advice = "Guardaré este oro para cuando realmente nos haga falta.";
-								}
-							}
-						}
-					}
-				}
+                const isWellEq = this.isWellEquipped(bot);
+                const missingType = this.getMissingEquipmentType(bot);
+
+                if (!isWellEq && missingType) {
+                    // Si no va bien equipado, PRIORIZA el tipo de equipo que le falta
+                    const topCard = this.gameState.market[missingType] && this.gameState.market[missingType].length > 0 ? this.gameState.market[missingType][0] : null;
+                    if (topCard && bot.mo >= topCard.cost) {
+                        bought = buyIfPossible(missingType);
+                        if (bought) {
+                            advice = `Necesito mejorar mi equipo para la oleada. Compraré una carta de ${missingType}.`;
+                            this.gameState.addLog(`🤖 <strong>${bot.name}</strong> prioriza la compra de <strong>${topCard.name}</strong> (${missingType}) porque no va bien equipado para el nivel/oleada.`);
+                        }
+                    } else if (topCard) {
+                        // Ahorrar para este equipo que le falta
+                        advice = `Ahorraré para un equipo de ${missingType} (necesito ${topCard.cost} mo para ${topCard.name}).`;
+                        bought = true; // Simula que tomamos una decisión (ahorrar) para no avanzar a otra compra
+                    }
+                }
+
+                // Si ya va bien equipado o no pudo/necesitó comprar lo que le faltaba
+                if (!bought) {
+                    // Lógica por defecto: intentar comprar ataque, luego escudos/curacion
+                    const topWeapon = this.gameState.market['ataque'] && this.gameState.market['ataque'].length > 0 ? this.gameState.market['ataque'][0] : null;
+                    const hasBoughtWeapon = bot.equipped.some(eq => eq.type !== 'inicial' && this.isWeapon(eq));
+                    
+                    if (topWeapon && bot.mo >= topWeapon.cost) {
+                        bought = buyIfPossible('ataque');
+                        if (bought) advice = "¡Poder! Dame todo el poder para aplastar goblins.";
+                    }
+                    
+                    if (!bought) {
+                        if (!hasBoughtWeapon && topWeapon) {
+                            advice = `Ahorraré para un arma mejor (necesito ${topWeapon.cost} mo).`;
+                        } else {
+                            bought = buyIfPossible('escudos') || buyIfPossible('curacion');
+                            if (bought) {
+                                advice = "Este equipo me ayudará a resistir.";
+                            } else {
+                                if (bot.mo < 3) {
+                                    advice = "Guardaré este oro para cuando realmente nos haga falta.";
+                                } else {
+                                    // Si tiene más de 6 mo y no le convence el arma actual, explora el mercado de ataque
+                                    if (bot.mo > 6 && topWeapon) {
+                                        chosenAction = 'explore-market';
+                                        chosenTarget = 'ataque';
+                                        advice = "No me gusta esta arma. Pagaré por ver la siguiente.";
+                                        
+                                        if (bot.equipped.some(eq => eq.id === topWeapon.id)) {
+                                            actionReason = `Ya tiene una copia de ${topWeapon.name}.`;
+                                        } else {
+                                            actionReason = `Prefiere buscar algo más destructivo.`;
+                                        }
+                                        bought = true;
+                                    } else {
+                                        advice = "Guardaré este oro para cuando realmente nos haga falta.";
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
             }
 
             if (bought || advice) {
@@ -979,18 +1014,25 @@ performCombatTurn(bot) {
             const totalNonCramped = this.gameState.currentCombat.playerDice.filter(d => !d.isCramped).length;
             // Excluir el dado plateado (silver) de la asignación directa
             const availableDice = this.gameState.currentCombat.playerDice.filter(d => !d.assignedTo && !d.isCramped && d.type !== 'silver');
-            availableDice.sort((a, b) => b.value - a.value);
+            availableDice.sort((a, b) => a.value - b.value);
             
             console.log(`[BotManager] availableDice: ${availableDice.length}/${totalNonCramped}`);
             if (availableDice.length === 0) {
-                console.log("[BotManager] No more dice to assign. Resolving combat.");
-                const btnResolve = document.getElementById('btn-resolve-combat');
-                this.isActing = false;
-                if (btnResolve && !btnResolve.disabled) {
-                    btnResolve.click();
-                } else {
-                    console.log("[BotManager] Cannot click resolve button. Either missing or disabled.");
-                }
+                console.log("[BotManager] No more dice to assign. Scheduling combat resolution in 5s.");
+                this.isActing = true;
+                setTimeout(() => {
+                    if (window.botsPaused) {
+                        this.isActing = false;
+                        return;
+                    }
+                    const btnResolve = document.getElementById('btn-resolve-combat');
+                    this.isActing = false;
+                    if (btnResolve && !btnResolve.disabled) {
+                        btnResolve.click();
+                    } else {
+                        console.log("[BotManager] Cannot click resolve button. Either missing or disabled.");
+                    }
+                }, 5000);
                 return;
             }
 
@@ -1013,7 +1055,7 @@ performCombatTurn(bot) {
                     }
                     this.isActing = false;
                     this.handleGameState();
-                }, 1500);
+                }, 500);
                 return;
             }
 
@@ -1023,7 +1065,7 @@ performCombatTurn(bot) {
             let advice = "";
 			advice = "¡Acabemos rápido con esto! Poned dados en las armas más fuertes.";
             
-            let delay = availableDice.length === totalNonCramped ? 2500 : 800;
+            let delay = 500;
 
             if (advice && availableDice.length === totalNonCramped) {
                 console.log("[BotManager] Showing combat advice:", advice);
@@ -1042,9 +1084,36 @@ performCombatTurn(bot) {
                 }
                 console.log("[BotManager] Assigning die:", die.id);
                 
-                // Intento de intercepción de ataques peligrosos
-                if (this.tryInterceptDangerousDie(die, bot)) {
+                // Planificación óptima de asignaciones a armas
+                const planResult = this.planWeaponAssignments(availableDice, this.gameState.currentCombat.goblins, bot);
+                const plannedAssignments = planResult.assignments;
+                const plannedKills = planResult.goblinsKilled;
+
+                // Intento de intercepción de ataques peligrosos (respetando si el dado es necesario para matar goblins)
+                if (this.tryInterceptDangerousDie(die, bot, plannedAssignments, plannedKills)) {
                     console.log("[BotManager] Die used for interception. Updating UI.");
+                    if (typeof window.renderCombatOverlay === 'function') {
+                        window.renderCombatOverlay();
+                    }
+                    this.isActing = false;
+                    this.handleGameState();
+                    return;
+                }
+
+                let plannedWeaponAssigned = false;
+                if (plannedKills > 0) {
+                    if (plannedAssignments[die.id]) {
+                        const plan = plannedAssignments[die.id];
+                        const plannedWeapon = bot.equipped.find(eq => eq.id === plan.weaponId);
+                        if (plannedWeapon) {
+                            this.assignDieToEquip(die, plannedWeapon, bot, "Planificado: eliminar goblin", plan.targetUid);
+                            plannedWeaponAssigned = true;
+                        }
+                    }
+                }
+
+                if (plannedWeaponAssigned) {
+                    console.log("[BotManager] Die assigned via plan. Updating UI.");
                     if (typeof window.renderCombatOverlay === 'function') {
                         window.renderCombatOverlay();
                     }
@@ -1151,8 +1220,6 @@ performCombatTurn(bot) {
                             if (potentialRemainingDmg >= remainingHpToKill) {
                                 canKillGoblin = true;
                             }
-                        } else {
-                            canKillGoblin = true;
                         }
                     });
                 }
@@ -1173,8 +1240,25 @@ performCombatTurn(bot) {
                 }
 
                 // Helper variables
+                const allGoblinsDead = this.gameState.currentCombat && this.gameState.currentCombat.goblins && this.gameState.currentCombat.goblins.every(gob => {
+                    let assignedDmg = 0;
+                    for (let eqId in window.currentAssignments) {
+                        let eq = bot.equipped.find(e => e.id === eqId);
+                        if (eq && this.isWeapon(eq)) {
+                            let asgs = window.currentAssignments[eqId];
+                            const asgsArr = Array.isArray(asgs) ? asgs : [asgs];
+                            for (let asg of asgsArr) {
+                                if (!asg.isRole && (asg.targetUid === gob.uid || this.gameState.currentCombat.goblins.length === 1)) {
+                                    assignedDmg += this.getDamageForDieInEquip(asg.value, eq);
+                                }
+                            }
+                        }
+                    }
+                    return gob.currentHp - assignedDmg <= 0;
+                });
+
                 const brokenEquipsToRepair = bot.equipped.filter(eq => eq.isBroken && this.canAcceptDie(die, eq));
-                const weapons = bot.equipped.filter(eq => eq.isActive && !eq.isBroken && this.isWeapon(eq) && this.canAcceptDie(die, eq));
+                const weapons = (plannedKills > 0 && !plannedAssignments[die.id]) ? [] : (allGoblinsDead ? [] : bot.equipped.filter(eq => eq.isActive && !eq.isBroken && this.isWeapon(eq) && this.canAcceptDie(die, eq)));
                 const shields = bot.equipped.filter(eq => eq.isActive && !eq.isBroken && this.isShield(eq) && this.canAcceptDie(die, eq));
                 
                 const fallbackToRole = (reason) => {
@@ -1555,12 +1639,17 @@ calculateEquipPower(eq, bot) {
         return false;
     }
 
-// Intenta interceptar un dado peligroso de un goblin, priorizando la reparación si es necesario
-    tryInterceptDangerousDie(die, bot) {
+// Intenta interceptar un dado peligroso de un goblin, respetando la planificación del combate
+    tryInterceptDangerousDie(die, bot, plannedAssignments = {}, plannedKills = 0) {
         if (!this.gameState.currentCombat || this.gameState.currentCombat.isCrampPhase) return false;
         
         const goblins = this.gameState.currentCombat.goblins;
         if (!goblins || goblins.length === 0) return false;
+
+        // Si el dado es necesario para matar a los goblins en el plan de ataque, no lo usamos para interceptar
+        if (plannedKills > 0 && plannedAssignments[die.id]) {
+            return false;
+        }
 
         for (let gob of goblins) {
             // Bosses like "La Madre" are uninterceptable
@@ -1584,30 +1673,15 @@ calculateEquipPower(eq, bot) {
                     const isIntercepted = goblinInterceptions.some(asg => Number(asg.goblinDieIndex) === Number(currentIdx));
                     if (isIntercepted) continue;
 
-                    // Evaluate if the attack is dangerous
+                    // Evaluar si el ataque tiene algún efecto especial (es decir, la lista no está vacía)
                     let gobDB = gob.attacks ? gob : (typeof DB !== 'undefined' && DB.goblins ? DB.goblins[gob.level] : null);
                     if (!gobDB || !gobDB.attacks) continue;
 
                     let attacks = gobDB.attacks[detail.val] || [];
-                    let isDangerous = attacks.some(a => {
-                        let lower = a.toLowerCase();
-                        return lower.includes('daño directo') || lower.includes('verdadero') || lower.includes('veneno') || lower.includes('toxina') || lower.includes('rompe') || lower.includes('escozor') || lower.includes('calambre') || lower.includes('tembleque');
-                    });
+                    let isDangerous = attacks.length > 0;
 
                     if (isDangerous) {
-                        // Check if we want to repair a broken item instead
-                        let wantsToRepair = false;
-                        if (bot && bot.mo >= 1) {
-                            const brokenItems = bot.equipped.filter(eq => eq.isBroken && this.canAcceptDie(die, eq));
-                            if (brokenItems.length > 0) {
-                                wantsToRepair = true;
-                            }
-                        }
-
-                        if (wantsToRepair) {
-                            return false; // Skip interception to allow assignment to broken item later
-                        }
-                        // Perform interception
+                        // Realizar la intercepción
                         if (!window.interceptionAssignments[gob.uid]) window.interceptionAssignments[gob.uid] = [];
                         window.interceptionAssignments[gob.uid].push({
                             dieId: die.id,
@@ -1627,6 +1701,122 @@ calculateEquipPower(eq, bot) {
         return false;
     }
 
+    // Planifica asignaciones óptimas a armas para derrotar goblins minimizando dados y valores asignados
+    planWeaponAssignments(availableDice, goblins, bot) {
+        const weapons = bot.equipped.filter(eq => eq.isActive && !eq.isBroken && this.isWeapon(eq));
+        const aliveGoblins = goblins.filter(g => g.currentHp > 0 && !g.isDying);
+        if (weapons.length === 0 || aliveGoblins.length === 0 || availableDice.length === 0) {
+            return { assignments: {}, goblinsKilled: 0 };
+        }
+
+        let bestConfig = {
+            assignments: {},
+            goblinsKilled: 0,
+            diceUsed: 0,
+            savedValueSum: 0
+        };
+        let bestScore = -Infinity;
+
+        const diceCount = availableDice.length;
+        const weaponCount = weapons.length;
+        const goblinCount = aliveGoblins.length;
+
+        const optionsPerDie = 1 + weaponCount * goblinCount;
+        const totalPermutations = Math.pow(optionsPerDie, diceCount);
+
+        if (totalPermutations > 10000) {
+            return { assignments: {}, goblinsKilled: 0 };
+        }
+
+        for (let i = 0; i < totalPermutations; i++) {
+            let temp = i;
+            let currentAssignments = {};
+            let diceUsedCount = 0;
+            let savedValueSum = 0;
+
+            let gobDamage = {};
+            aliveGoblins.forEach(g => { gobDamage[g.uid] = 0; });
+
+            let weaponDiceCounts = {};
+            weapons.forEach(w => { weaponDiceCounts[w.id] = 0; });
+
+            let validPermutation = true;
+
+            for (let dIdx = 0; dIdx < diceCount; dIdx++) {
+                const die = availableDice[dIdx];
+                const option = temp % optionsPerDie;
+                temp = Math.floor(temp / optionsPerDie);
+
+                if (option === 0) {
+                    savedValueSum += die.value;
+                } else {
+                    const choiceIdx = option - 1;
+                    const wIdx = Math.floor(choiceIdx / goblinCount);
+                    const gIdx = choiceIdx % goblinCount;
+
+                    const weapon = weapons[wIdx];
+                    const goblin = aliveGoblins[gIdx];
+
+                    const extra = ((weapon.isBroken && weapon.broken ? weapon.broken.extra : weapon.extra) || '').toLowerCase();
+                    const isReusable = extra.includes('reutilizable');
+                    const maxUses = extra.includes('x3') ? 3 : (isReusable ? 3 : 1);
+
+                    if (weaponDiceCounts[weapon.id] >= maxUses || !this.canAcceptDie(die, weapon)) {
+                        validPermutation = false;
+                        break;
+                    }
+
+                    weaponDiceCounts[weapon.id]++;
+                    diceUsedCount++;
+
+                    let dmg = this.getDamageForDieInEquip(die.value, weapon);
+                    gobDamage[goblin.uid] += dmg;
+
+                    currentAssignments[die.id] = {
+                        weaponId: weapon.id,
+                        targetUid: goblin.uid
+                    };
+                }
+            }
+
+            if (!validPermutation) continue;
+
+            let goblinsKilledCount = 0;
+            aliveGoblins.forEach(g => {
+                if (g.currentHp - gobDamage[g.uid] <= 0) {
+                    goblinsKilledCount++;
+                }
+            });
+
+            let damageScore = 0;
+            aliveGoblins.forEach(g => {
+                let remainingHp = g.currentHp - gobDamage[g.uid];
+                if (remainingHp <= 0) {
+                    damageScore += remainingHp * 10;
+                } else {
+                    damageScore += gobDamage[g.uid];
+                }
+            });
+
+            let score = (goblinsKilledCount * 1000000) - (diceUsedCount * 10000) + (savedValueSum * 100) + damageScore;
+
+            if (score > bestScore) {
+                bestScore = score;
+                bestConfig = {
+                    assignments: currentAssignments,
+                    goblinsKilled: goblinsKilledCount,
+                    diceUsed: diceUsedCount,
+                    savedValueSum: savedValueSum
+                };
+            }
+        }
+
+        return {
+            assignments: bestConfig.assignments,
+            goblinsKilled: bestConfig.goblinsKilled
+        };
+    }
+
 // Verifica si el equipamiento puede aceptar el dado (límites de usos y validez)
     canAcceptDie(die, eq) {
         if (!this.gameState.isValidDieForEquipment(die.value, eq)) return false;
@@ -1638,13 +1828,19 @@ calculateEquipPower(eq, bot) {
     }
 
 // Asigna un dado al equipamiento especificado, registrando la razón y objetivo
-    assignDieToEquip(die, eq, bot, reason = "") {
+    assignDieToEquip(die, eq, bot, reason = "", forcedTargetUid = null) {
         if (!currentAssignments[eq.id]) currentAssignments[eq.id] = [];
-        let targetUid = null;
+        let targetUid = forcedTargetUid;
         let targetName = null;
         const goblins = this.gameState.currentCombat ? this.gameState.currentCombat.goblins : [];
+        
+        if (targetUid) {
+            const tgtGob = goblins.find(g => g.uid === targetUid);
+            if (tgtGob) targetName = tgtGob.name || `G${tgtGob.level}`;
+        }
+        
         let dealsDamage = this.getDamageForDieInEquip(die.value, eq) > 0;
-        if (goblins.length > 0 && (!this.isShield(eq) || dealsDamage)) {
+        if (!targetUid && goblins.length > 0 && (!this.isShield(eq) || dealsDamage)) {
             // Lógica inteligente de selección de objetivos de combate
             let goblinDamage = {};
             goblins.forEach(g => {
@@ -1924,16 +2120,29 @@ calculateEquipPower(eq, bot) {
             const player = this.gameState.players[playerIndex];
             if (!player || !player.role) return;
 
-            // Aplicar color personalizado al borde del bocadillo según el rol
+            const color = this.getRoleColor(player.role.id);
+
+            // Aplicar color personalizado al borde del bocadillo según el rol (mapa)
             const bubble = document.getElementById(`bot-bubble-${playerIndex}`);
             if (bubble) {
-                const color = this.getRoleColor(player.role.id);
                 bubble.style.borderColor = color;
                 
                 // Actualizar el color del triángulo inferior (la "flecha" del bocadillo)
                 const arrow = bubble.children[1]; // El primer div absoluto que hace de borde
                 if (arrow) {
                     arrow.style.borderTopColor = color;
+                }
+            }
+
+            // Aplicar color personalizado al borde del bocadillo según el rol (combate)
+            const combatBubble = document.getElementById(`combat-bot-bubble-${playerIndex}`);
+            if (combatBubble) {
+                combatBubble.style.borderColor = color;
+                
+                // Actualizar el color del triángulo inferior (la "flecha" del bocadillo)
+                const combatArrow = combatBubble.children[1];
+                if (combatArrow) {
+                    combatArrow.style.borderTopColor = color;
                 }
             }
         }

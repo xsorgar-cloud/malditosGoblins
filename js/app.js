@@ -2640,15 +2640,26 @@ window.updateBotBubble = function(playerIndex, text) {
 
   const bubble = document.getElementById(`bot-bubble-${playerIndex}`);
   const bubbleText = document.getElementById(`bot-bubble-text-${playerIndex}`);
+  
   const combatBubble = document.getElementById(`combat-bot-bubble-${playerIndex}`);
+  const combatBubbleText = document.getElementById(`combat-bot-bubble-text-${playerIndex}`);
   
   if (isCombatActive) {
-      if (combatBubble) {
+      if (combatBubble && combatBubbleText) {
           if (text) {
-              combatBubble.innerHTML = text;
+              combatBubbleText.innerHTML = text;
               combatBubble.style.display = 'block';
+              // Trigger reflow/animation
+              setTimeout(() => {
+                  combatBubble.classList.add('show');
+              }, 10);
           } else {
-              combatBubble.style.display = 'none';
+              combatBubble.classList.remove('show');
+              setTimeout(() => {
+                  if (!combatBubble.classList.contains('show')) {
+                      combatBubble.style.display = 'none';
+                  }
+              }, 300);
           }
       }
       if (bubble) {
@@ -2667,6 +2678,7 @@ window.updateBotBubble = function(playerIndex, text) {
           }
       }
       if (combatBubble) {
+          combatBubble.classList.remove('show');
           combatBubble.style.display = 'none';
       }
   }
