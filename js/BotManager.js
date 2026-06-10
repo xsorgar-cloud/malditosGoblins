@@ -70,13 +70,20 @@ handleGameState() {
             
             if (!this.gameState.actionConsumed) {
                 this.isActing = true;
-                setTimeout(() => this.performMainTurn(activePlayer), 1500);
+                setTimeout(() => {
+                    if (window.botsPaused) { this.isActing = false; return; }
+                    this.performMainTurn(activePlayer);
+                }, 1500);
             }
         }
     }
 
     // Ejecuta la acción especificada (comprar, atacar, etc.) y actualiza la UI
 triggerAction(type, target = null, reason = "") {
+        if (window.botsPaused) {
+            this.isActing = false;
+            return;
+        }
         if (type === 'gold') {
             this.gameState.performActionGold();
             window.updateUI();
@@ -95,7 +102,10 @@ triggerAction(type, target = null, reason = "") {
         } else if (type === 'end-turn') {
             this.gameState.nextTurn();
             window.updateUI();
-            setTimeout(() => { this.isActing = false; this.handleGameState(); }, 500);
+            setTimeout(() => { 
+                if (window.botsPaused) { this.isActing = false; return; }
+                this.isActing = false; this.handleGameState(); 
+            }, 500);
             return;
         } else if (type === 'buy') {
             const types = ['ataque', 'escudos', 'curacion'];
@@ -107,6 +117,7 @@ triggerAction(type, target = null, reason = "") {
                 if (deckEls && deckEls[deckIdx]) window.animateCardPurchase(deckEls[deckIdx]);
             }
             setTimeout(() => {
+                if (window.botsPaused) { this.isActing = false; return; }
                 window.updateUI();
                 this.isActing = false;
                 this.handleGameState();
@@ -117,6 +128,7 @@ triggerAction(type, target = null, reason = "") {
             this.animatePotionPurchase(target, pIndex);
             this.gameState.buyPotion(target);
             setTimeout(() => {
+                if (window.botsPaused) { this.isActing = false; return; }
                 window.updateUI();
                 this.isActing = false;
                 this.handleGameState();
@@ -132,6 +144,7 @@ triggerAction(type, target = null, reason = "") {
                 this.gameState.addLog(`🔄 <strong>${p.name}</strong> gastó 1 mo en explorar el mercado, descartando <strong>${removedCard.name}</strong>.${reasonText}`);
             }
             setTimeout(() => {
+                if (window.botsPaused) { this.isActing = false; return; }
                 window.updateUI();
                 this.isActing = false;
                 this.handleGameState();
@@ -153,11 +166,17 @@ triggerAction(type, target = null, reason = "") {
                     window.updateUI();
                 }
             }
-            setTimeout(() => { this.isActing = false; this.handleGameState(); }, 500);
+            setTimeout(() => { 
+                if (window.botsPaused) { this.isActing = false; return; }
+                this.isActing = false; this.handleGameState(); 
+            }, 500);
             return;
         }
         
-        setTimeout(() => { this.isActing = false; this.handleGameState(); }, 500);
+        setTimeout(() => { 
+            if (window.botsPaused) { this.isActing = false; return; }
+            this.isActing = false; this.handleGameState(); 
+        }, 500);
     }
 
     // Comprueba si el bot necesita priorizar la supervivencia (curación o energía) antes de cualquier otra acción
@@ -214,12 +233,15 @@ triggerAction(type, target = null, reason = "") {
                 if (typeof window.updateUI === 'function') window.updateUI();
             }
 
-            const pColor = this.getRoleColor(bot.role.id);
             const message = `¡Mi vida es crítica! Compraré una ${bestPotion.name} para curarme.`;
-            this.showBubble(pIndex, `<strong style="color: ${pColor};">[Supervivencia]</strong> ${message}`);
+            this.showBubble(pIndex, `${message}`);
             this.gameState.addLog(`🤖 <strong>${bot.name}</strong> decide comprar una poción para curarse.`);
 
             setTimeout(() => {
+                if (window.botsPaused) {
+                    this.isActing = false;
+                    return;
+                }
                 this.hideAllBubbles();
                 this.triggerAction('buy-potion', bestPotion.id);
             }, 2000);
@@ -237,6 +259,10 @@ triggerAction(type, target = null, reason = "") {
                     this.showBubble(pIndex, `<strong style="color: red;">[Crítico]</strong> Buscaré un combate fácil para usar mi curación.`);
                     this.gameState.addLog(`🤖 <strong>${bot.name}</strong> está en estado crítico de PV, tiene equipo de curación y decide iniciar combate contra objetivos asequibles para curarse.`);
                     setTimeout(() => {
+                        if (window.botsPaused) {
+                            this.isActing = false;
+                            return;
+                        }
                         this.hideAllBubbles();
                         this.triggerAction('combat', potentialTargets);
                     }, 3500);
@@ -341,9 +367,9 @@ triggerAction(type, target = null, reason = "") {
             }
             
             // Determina la cantidad máxima de usos del arma (huecos)
-            const extra = (w.extra || '').toLowerCase();
+            const extra = ((w.isBroken && w.broken ? w.broken.extra : w.extra) || '').toLowerCase();
             const isReusable = extra.includes('reutilizable');
-            const maxUses = extra.includes('x3') ? 3 : (isReusable ? 6 : 1);
+            const maxUses = extra.includes('x3') ? 3 : (isReusable ? 3 : 1);
             
             for (let i = 0; i < maxUses; i++) {
                 slots.push(maxDmg);
@@ -396,12 +422,61 @@ triggerAction(type, target = null, reason = "") {
         return totalHp;
     }
 
+    getProjectedGoblinsAfterHito() {
+        let projected = [];
+        
+        // 1. Goblins actuales
+        this.gameState.battlefield.goblins.forEach(g => {
+            if (!g.isDying) {
+                projected.push({
+                    level: g.level,
+                    currentHp: g.currentHp
+                });
+            }
+        });
+        
+        // 2. Goblins del Hito
+        if (this.gameState.currentHito <= 5) {
+            const sendaHitos = DB.hitos[this.gameState.activeSenda] || DB.hitos.iniciacion;
+            let hito = sendaHitos[this.gameState.currentHito - 1];
+            if (hito) {
+                const numPlayers = this.gameState.players.length;
+                if (hito.isBoss) {
+                    let bossHp = hito.bossStats.hpMultiplier * numPlayers;
+                    projected.push({
+                        level: 5,
+                        currentHp: bossHp
+                    });
+                } else {
+                    if ((this.gameState.activeSenda === 'guerrero' || this.gameState.activeSenda === 'rey_brujo') && this.gameState.currentHito === 1) {
+                        let totalGobs = hito.goblins.length * numPlayers;
+                        for (let i = 0; i < totalGobs; i++) {
+                            projected.push({
+                                level: 1,
+                                currentHp: DB.goblins[1].hp
+                            });
+                        }
+                    } else {
+                        for (let p = 0; p < numPlayers; p++) {
+                            for (let lvl of hito.goblins) {
+                                projected.push({
+                                    level: lvl,
+                                    currentHp: DB.goblins[lvl].hp
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        return projected;
+    }
+
     canClearTableAfterDeployingHito() {
-        let currentGoblinHp = this.gameState.battlefield.goblins.filter(g => !g.isDying).reduce((sum, g) => sum + g.currentHp, 0);
-        let hitoSpawnedHp = this.getHitoSpawnedHp();
-        let totalProjectedHp = currentGoblinHp + hitoSpawnedHp;
+        let projectedGoblins = this.getProjectedGoblinsAfterHito();
         
         let totalMaxTeamDamage = 0;
+        let debugDetails = [];
         this.gameState.players.forEach((p, idx) => {
             if (p.hp <= 0) return; // Jugador muerto no aporta daño
             
@@ -418,9 +493,35 @@ triggerAction(type, target = null, reason = "") {
             }
             
             totalMaxTeamDamage += maxPower * actionsRemaining;
+            debugDetails.push(`${p.name}: power=${maxPower}, actions=${actionsRemaining}`);
         });
         
-        return totalMaxTeamDamage >= totalProjectedHp;
+        // Ordenar goblins proyectados por ratio Nivel/Vida de forma descendente para minimizar la represalia
+        projectedGoblins.sort((a, b) => {
+            let ratioA = a.level / a.currentHp;
+            let ratioB = b.level / b.currentHp;
+            return ratioB - ratioA;
+        });
+        
+        let remainingDamage = totalMaxTeamDamage;
+        let survivingGoblins = [];
+        projectedGoblins.forEach(g => {
+            if (remainingDamage >= g.currentHp) {
+                remainingDamage -= g.currentHp;
+            } else {
+                survivingGoblins.push(g);
+                remainingDamage = 0;
+            }
+        });
+        
+        let totalRetaliationDmg = survivingGoblins.reduce((sum, g) => sum + g.level, 0);
+        let totalPlayersHp = this.gameState.players.reduce((sum, p) => sum + (p.hp > 0 ? p.hp : 0), 0);
+        
+        const safe = totalRetaliationDmg < totalPlayersHp;
+        
+        this.gameState.addLog(`DEBUG canClearTableAfterDeployingHito: totalMaxTeamDamage=${totalMaxTeamDamage}, totalPlayersHp=${totalPlayersHp}, projectedRetaliation=${totalRetaliationDmg} (Safe: ${safe}) [${debugDetails.join(' | ')}]`);
+        
+        return safe;
     }
 
     canClearTableWithoutCurrentAction() {
@@ -539,6 +640,10 @@ calculateCombatScore(bot, goblins) {
 
     // Decide la acción principal del bot (combatir, desplegar hito, comprar oro, etc.) y muestra la burbuja informativa
 performMainTurn(bot) {
+        if (window.botsPaused) {
+            this.isActing = false;
+            return;
+        }
         try {
             // Fase 1: Uso del rol al inicio de turno (Ladrón consume energía para obtener monedas)
             if (bot.role && bot.role.id === 'ladron' && bot.energy > 0) {
@@ -554,8 +659,6 @@ performMainTurn(bot) {
 
             if (this.evaluateSurvivalOverride(bot)) return;
 
-            const currentPersonality = this.getPersonalityForDecision(bot);
-            const pColor = this.getPersonalityColor(currentPersonality);
             const goblinsEnMesa = this.gameState.battlefield.goblins.filter(g => !g.isDying);
             const hitoBtn = document.getElementById('btn-deploy-hito');
             
@@ -568,13 +671,17 @@ performMainTurn(bot) {
             const hitoLevel = this.gameState.currentHito;
             const canDeployHito = hitoBtn && !hitoBtn.disabled && !this.gameState.battlefield.goblins.some(g => g.isHito);
 
-            if (waveLevel >= 2 * hitoLevel && canDeployHito && this.canClearTableAfterDeployingHito()) {
+            const canClearTable = this.canClearTableAfterDeployingHito();
+            this.gameState.addLog(`DEBUG Hito: waveLevel=${waveLevel}, hitoLevel=${hitoLevel}, canDeployHito=${canDeployHito}, canClearTable=${canClearTable}`);
+
+            if (canDeployHito && canClearTable) {
                 chosenAction = 'hito';
-                decisionText = `El nivel de la oleada (${waveLevel}) es al menos el doble del hito (${hitoLevel}) y podemos limpiar la mesa. ¡Desplegando hito!`;
+                decisionText = `El nivel de la oleada (${waveLevel}) es al menos el nivel del hito (${hitoLevel}) y podemos limpiar la mesa. ¡Desplegando hito!`;
             }
 
             // Fase 4: Estado del Campo de Batalla (Combate u Oro Inteligente)
             if (!chosenAction) {
+                const currentPersonality = this.getPersonalityForDecision(bot);
                 const potentialTargets = this.getSafeCombatTargets(bot, goblinsEnMesa, currentPersonality);
                 
                 // Determinar si le falta dinero para compra necesaria
@@ -611,16 +718,24 @@ performMainTurn(bot) {
             }
 
             const pIndex = this.gameState.players.indexOf(bot);
-            this.showBubble(pIndex, `<strong style="color: ${pColor};">[${currentPersonality}]</strong> ${decisionText}`);
-            this.gameState.addLog(`🤖 <strong>${bot.name} (${currentPersonality}):</strong> "${decisionText}"`);
+            this.showBubble(pIndex, `${decisionText}`);
+            this.gameState.addLog(`🤖 "${decisionText}"`);
 
             if (chosenAction === 'combat') {
                 setTimeout(() => {
+                    if (window.botsPaused) {
+                        this.isActing = false;
+                        return;
+                    }
                     this.hideAllBubbles();
                     this.triggerAction('combat', targetForCombat);
                 }, 3500);
             } else {
                 setTimeout(() => {
+                    if (window.botsPaused) {
+                        this.isActing = false;
+                        return;
+                    }
                     this.hideAllBubbles();
                     this.triggerAction(chosenAction);
                 }, 3500);
@@ -633,10 +748,11 @@ performMainTurn(bot) {
 
     // Gestiona la fase de mercado: decide qué comprar o explorar según la personalidad del bot
 performMarketTurn(bot) {
+        if (window.botsPaused) {
+            this.isActing = false;
+            return;
+        }
         try {
-            const currentPersonality = this.getPersonalityForDecision(bot);
-            const pColor = this.getPersonalityColor(currentPersonality);
-            
             let chosenAction = null;
             let chosenTarget = null;
             let actionReason = "";
@@ -680,7 +796,10 @@ performMarketTurn(bot) {
 
             // Guerrero/Mago override for healing
             if (isGuerreroOrMago && !bot.equipped.some(eq => eq.type === 'curacion' || eq.id.includes('pocion'))) {
-                needsHealing = true; // Force them to look for healing if they have none
+                const hasBoughtWeapon = bot.equipped.some(eq => eq.type !== 'inicial' && this.isWeapon(eq));
+                if (hasBoughtWeapon) {
+                    needsHealing = true;
+                }
             }
 
             const canBuyPotion = () => {
@@ -731,85 +850,54 @@ performMarketTurn(bot) {
 
             // Si no está en emergencia o no pudo comprar pociones, prosigue con compras de personalidad
             if (!bought && !emergencyHealing) {
-                if (currentPersonality === 'Agresivo') {
-                    bought = buyIfPossible('ataque');
-                    if (!bought && bot.mo < 3) {
-                        advice = "Ahorraré para un arma mejor.";
-                    } else if (!bought) {
-                        bought = buyIfPossible('escudos') || buyIfPossible('curacion');
-                    }
-                    
-                    if (bought && !advice) {
-                        advice = "¡Poder! Dame todo el poder para aplastar goblins.";
-                    } else if (!bought && bot.mo > 6 && this.gameState.market['ataque'] && this.gameState.market['ataque'].length > 0) {
-                        chosenAction = 'explore-market';
-                        chosenTarget = 'ataque';
-                        advice = "No me gusta esta arma. Pagaré por ver la siguiente.";
-                        
-                        const topCard = this.gameState.market['ataque'][0];
-                        if (bot.mo < topCard.cost) {
-                            if (topCard.cost >= 5) {
-                                actionReason = `El coste de ${topCard.cost} mo es bastante caro.`;
-                            } else {
-                                actionReason = `Aún le faltan monedas para los ${topCard.cost} mo que cuesta.`;
-                            }
-                        } else if (bot.equipped.some(eq => eq.id === topCard.id)) {
-                            actionReason = `Ya tiene una copia de ${topCard.name}.`;
-                        } else {
-                            actionReason = `Prefiere buscar algo más destructivo.`;
-                        }
-                        
-                        bought = true;
-                    }
-// Conservador branch removed
-                    bought = buyIfPossible('escudos') || buyIfPossible('curacion');
-                    if (!bought && bot.mo < 3) {
-                        advice = "Mejor guardo el oro para una buena armadura o poción.";
-                    } else if (!bought) {
-                        bought = buyIfPossible('ataque');
-                    }
-                    
-                    if (bought && !advice) {
-                        advice = `Hay que ir sobre seguro. Este equipo me protegerá.`;
-                    } else if (!bought && bot.mo < 3) {
-                        advice = `Guardaré este oro para cuando realmente nos haga falta.`;
-                    } else if (!bought) {
-                        const types = ['ataque', 'escudos', 'curacion'];
-                        const rType = types[Math.floor(Math.random() * types.length)];
-                        const threshold = rType === 'curacion' ? 4 : 6;
-                        
-                        if (bot.mo > threshold) {
-                            chosenAction = 'explore-market';
-                            chosenTarget = rType;
-                            advice = "Limpiaré el mercado de chatarra para el próximo.";
-                            
-                            if (this.gameState.market[rType] && this.gameState.market[rType].length > 0) {
-                                const topCard = this.gameState.market[rType][0];
-                                if (bot.mo < topCard.cost) {
-                                    if (topCard.cost >= 5) {
-                                        actionReason = `El coste de ${topCard.cost} mo por ${topCard.name} es muy elevado.`;
-                                    } else {
-                                        actionReason = `No tiene suficiente oro para los ${topCard.cost} mo de ${topCard.name}.`;
-                                    }
-                                } else if (bot.equipped.some(eq => eq.id === topCard.id)) {
-                                    actionReason = `Ya posee una copia de ${topCard.name}.`;
-                                } else if (isProtector && rType === 'escudos') {
-                                    actionReason = `Su rol le limita el uso de equipo defensivo adicional.`;
-                                } else {
-                                    actionReason = `Considera que ${topCard.name} no es útil para el equipo actualmente.`;
-                                }
-                            }
-                            
-                            bought = true;
-                        }
-                    }
-                }
+				// 1. Intentar comprar un arma
+				const topWeapon = this.gameState.market['ataque'] && this.gameState.market['ataque'].length > 0 ? this.gameState.market['ataque'][0] : null;
+				const hasBoughtWeapon = bot.equipped.some(eq => eq.type !== 'inicial' && this.isWeapon(eq));
+				
+				if (topWeapon && bot.mo >= topWeapon.cost) {
+					bought = buyIfPossible('ataque');
+					if (bought) advice = "¡Poder! Dame todo el poder para aplastar goblins.";
+				}
+				
+				// 2. Si no ha comprado arma
+				if (!bought) {
+					if (!hasBoughtWeapon && topWeapon) {
+						// Si no tiene ningún arma comprada, ahorra para ella
+						advice = `Ahorraré para un arma mejor (necesito ${topWeapon.cost} mo).`;
+					} else {
+						// Si ya tiene arma comprada (o no hay armas en el mazo), puede comprar escudos o curación
+						bought = buyIfPossible('escudos') || buyIfPossible('curacion');
+						if (bought) {
+							advice = "Este equipo me ayudará a resistir.";
+						} else {
+							if (bot.mo < 3) {
+								advice = "Guardaré este oro para cuando realmente nos haga falta.";
+							} else {
+								// Si tiene más de 6 mo y no le convence el arma actual, explora el mercado de ataque
+								if (bot.mo > 6 && topWeapon) {
+									chosenAction = 'explore-market';
+									chosenTarget = 'ataque';
+									advice = "No me gusta esta arma. Pagaré por ver la siguiente.";
+									
+									if (bot.equipped.some(eq => eq.id === topWeapon.id)) {
+										actionReason = `Ya tiene una copia de ${topWeapon.name}.`;
+									} else {
+										actionReason = `Prefiere buscar algo más destructivo.`;
+									}
+									bought = true;
+								} else {
+									advice = "Guardaré este oro para cuando realmente nos haga falta.";
+								}
+							}
+						}
+					}
+				}
             }
 
             if (bought || advice) {
                 if (!advice) advice = "He terminado mis compras.";
-                this.showBubble(this.gameState.currentPlayerIndex, `<strong style="color: ${pColor};">[${currentPersonality}]</strong> ${advice}`);
-                this.gameState.addLog(`🤖 <strong>${bot.name} (${currentPersonality}):</strong> "${advice}"`);
+                this.showBubble(this.gameState.currentPlayerIndex, `${advice}`);
+                this.gameState.addLog(`🤖 "${advice}"`);
             }
             
             if (!bought) {
@@ -818,6 +906,10 @@ performMarketTurn(bot) {
             
             if (chosenAction) {
                 setTimeout(() => {
+                    if (window.botsPaused) {
+                        this.isActing = false;
+                        return;
+                    }
                     this.hideAllBubbles();
                     this.triggerAction(chosenAction, chosenTarget, actionReason);
                 }, 3500);
@@ -832,11 +924,12 @@ performMarketTurn(bot) {
 
     // Ejecuta la lógica de asignación de dados durante el combate, incluyendo interceptaciones y decisiones agresivas
 performCombatTurn(bot) {
+        if (window.botsPaused) {
+            this.isActing = false;
+            return;
+        }
         console.log("[BotManager] performCombatTurn started for bot:", bot.id);
         try {
-            const currentPersonality = this.getPersonalityForDecision(bot);
-            const pColor = this.getPersonalityColor(currentPersonality);
-            
             if (typeof window.currentAssignments === 'undefined') {
                 console.error("[BotManager] currentAssignments not available globally.");
                 this.isActing = false;
@@ -880,6 +973,10 @@ performCombatTurn(bot) {
                 
                 // Salimos del turno y dejamos que se reevalúe el nuevo valor
                 setTimeout(() => {
+                    if (window.botsPaused) {
+                        this.isActing = false;
+                        return;
+                    }
                     this.isActing = false;
                     this.handleGameState();
                 }, 1500);
@@ -890,16 +987,14 @@ performCombatTurn(bot) {
 
 
             let advice = "";
-            if (currentPersonality === 'Agresivo') {
-                advice = "¡Acabemos rápido con esto! Poned dados en las armas más fuertes.";
-            }
+			advice = "¡Acabemos rápido con esto! Poned dados en las armas más fuertes.";
             
             let delay = availableDice.length === totalNonCramped ? 2500 : 800;
 
             if (advice && availableDice.length === totalNonCramped) {
                 console.log("[BotManager] Showing combat advice:", advice);
-                this.showBubble(this.gameState.currentPlayerIndex, `<strong style="color: ${pColor};">[${currentPersonality}]</strong> ${advice}`);
-                this.gameState.addLog(`🤖 <strong>${bot.name} (${currentPersonality}):</strong> "${advice}"`);
+                this.showBubble(this.gameState.currentPlayerIndex, `${advice}`);
+                this.gameState.addLog(`🤖 "${advice}"`);
             }
 
             if (typeof window.renderCombatOverlay === 'function') {
@@ -907,6 +1002,10 @@ performCombatTurn(bot) {
             }
             
             setTimeout(() => {
+                if (window.botsPaused) {
+                    this.isActing = false;
+                    return;
+                }
                 console.log("[BotManager] Assigning die:", die.id);
                 
                 // Intento de intercepción de ataques peligrosos
@@ -1132,7 +1231,7 @@ calculateEquipPower(eq, bot) {
         
         const extra = ((eq.isBroken && eq.broken ? eq.broken.extra : eq.extra) || '').toLowerCase();
         const isReusable = extra.includes('reutilizable');
-        const maxUses = extra.includes('x3') ? 3 : (isReusable ? 6 : 1);
+        const maxUses = extra.includes('x3') ? 3 : (isReusable ? 3 : 1);
         
         let availableDice = bot && bot.dicePool ? bot.dicePool.length : 2;
         if (bot && bot.statusEffects) {
@@ -1200,11 +1299,29 @@ calculateEquipPower(eq, bot) {
         // 1. Añadir todos los objetivos posibles inicialmente
         let targets = [...goblinsEnMesa];
         
-        // Ajuste por personalidad
-        if (currentPersonality !== 'Agresivo') {
-            // For non‑aggressive personalities keep only the first viable goblin
-            targets = targets.slice(0, 1);
+        // Limitar por la capacidad real del bot de asignar dados a armas/cartas de daño
+        let numDice = bot.dicePool ? bot.dicePool.length : 2;
+        if (bot.statusEffects) {
+            let totalEffects = (bot.statusEffects.escozor || 0) + (bot.statusEffects.calambre || 0) + (bot.statusEffects.tembleque || 0);
+            numDice = Math.max(0, numDice - totalEffects);
         }
+
+        let totalWeaponSlots = 0;
+        const activeWeapons = bot.equipped.filter(eq => eq.isActive && this.isWeapon(eq));
+        activeWeapons.forEach(w => {
+            const extra = ((w.isBroken && w.broken ? w.broken.extra : w.extra) || '').toLowerCase();
+            const isReusable = extra.includes('reutilizable');
+            const maxUses = extra.includes('x3') ? 3 : (isReusable ? 3 : 1);
+            totalWeaponSlots += maxUses;
+        });
+
+        const maxTargetableGoblins = Math.min(numDice, totalWeaponSlots);
+        if (targets.length > maxTargetableGoblins) {
+            targets = targets.slice(0, maxTargetableGoblins);
+        }
+        
+        // Ajuste por personalidad
+        targets = targets.slice(0, 1);
 
         // 2. Riesgo y Supervivencia
         let isSafe = false;
@@ -1248,7 +1365,7 @@ calculateEquipPower(eq, bot) {
         }, { normal: 0, direct: 0 });
         const finalDmgSum = finalDmgProfile.normal + finalDmgProfile.direct;
         
-        let logMsg = `🤖 <strong>${bot.name} (${currentPersonality})</strong> evalúa el combate: Poder Ofensivo Máx. (${totalMaxDamage}${isGuerreroOrMago ? ' + ' + bot.energy + ' de rol' : ''}) vs PV Enemigos (${finalHpSum}). Defensa Máx. (${totalMaxDefense}) vs Daño Enemigo Estimado (${finalDmgSum}).`;
+        let logMsg = `🤖 evalúa el combate: Poder Ofensivo Máx. (${totalMaxDamage}${isGuerreroOrMago ? ' + ' + bot.energy + ' de rol' : ''}) vs PV Enemigos (${finalHpSum}). Defensa Máx. (${totalMaxDefense}) vs Daño Enemigo Estimado (${finalDmgSum}).`;
         
         if (targets.length === 0) {
             logMsg += ` <span style="color:var(--dmg-color);">Evita el combate por considerarlo suicida (Déficit de PV: ${deficitDefense}).</span>`;
@@ -1464,7 +1581,7 @@ calculateEquipPower(eq, bot) {
         if (!this.gameState.isValidDieForEquipment(die.value, eq)) return false;
         const extra = (eq.extra || '').toLowerCase();
         const isReusable = extra.includes('reutilizable');
-        const maxUses = extra.includes('x3') ? 3 : (isReusable ? 6 : 1);
+        const maxUses = extra.includes('x3') ? 3 : (isReusable ? 3 : 1);
         const currentlyAssigned = window.currentAssignments && window.currentAssignments[eq.id] ? window.currentAssignments[eq.id].length : 0;
         return currentlyAssigned < maxUses;
     }
@@ -1477,9 +1594,56 @@ calculateEquipPower(eq, bot) {
         const goblins = this.gameState.currentCombat ? this.gameState.currentCombat.goblins : [];
         let dealsDamage = this.getDamageForDieInEquip(die.value, eq) > 0;
         if (goblins.length > 0 && (!this.isShield(eq) || dealsDamage)) {
-            let targetGoblin = goblins[Math.floor(Math.random() * goblins.length)];
-            targetUid = targetGoblin.uid;
-            targetName = targetGoblin.name || `G${targetGoblin.level}`;
+            // Lógica inteligente de selección de objetivos de combate
+            let goblinDamage = {};
+            goblins.forEach(g => {
+                goblinDamage[g.uid] = 0;
+            });
+            
+            for (let eqId in currentAssignments) {
+                let assignedEq = bot.equipped.find(e => e.id === eqId);
+                if (assignedEq && this.isWeapon(assignedEq)) {
+                    let asgs = currentAssignments[eqId];
+                    const asgsArr = Array.isArray(asgs) ? asgs : [asgs];
+                    asgsArr.forEach(asg => {
+                        if (!asg.isRole && asg.targetUid) {
+                            goblinDamage[asg.targetUid] += this.getDamageForDieInEquip(asg.value, assignedEq);
+                        }
+                    });
+                }
+            }
+            
+            let aliveGoblins = goblins.filter(g => {
+                let remainingHp = g.currentHp - (goblinDamage[g.uid] || 0);
+                return remainingHp > 0;
+            });
+            
+            let targetGoblin = null;
+            let dmg = this.getDamageForDieInEquip(die.value, eq);
+            
+            if (aliveGoblins.length > 0) {
+                // Intentar rematar a un goblin (0 < remainingHp <= dmg)
+                let killableGoblins = aliveGoblins.filter(g => {
+                    let remainingHp = g.currentHp - (goblinDamage[g.uid] || 0);
+                    return remainingHp <= dmg;
+                });
+                
+                if (killableGoblins.length > 0) {
+                    let sortedKillable = [...killableGoblins].sort((a, b) => b.level - a.level);
+                    targetGoblin = sortedKillable[0];
+                } else {
+                    let sortedAlive = [...aliveGoblins].sort((a, b) => b.level - a.level);
+                    targetGoblin = sortedAlive[0];
+                }
+            } else {
+                let sortedGoblins = [...goblins].sort((a, b) => b.currentHp - a.currentHp);
+                targetGoblin = sortedGoblins[0];
+            }
+            
+            if (targetGoblin) {
+                targetUid = targetGoblin.uid;
+                targetName = targetGoblin.name || `G${targetGoblin.level}`;
+            }
         }
         currentAssignments[eq.id].push({ 
             dieId: die.id, 
@@ -1509,6 +1673,10 @@ calculateEquipPower(eq, bot) {
 
 // Ejecuta el turno de represalia, eligiendo el jugador con mayor vida para recibir daño
     performRetaliationTurn() {
+        if (window.botsPaused) {
+            this.isActing = false;
+            return;
+        }
         try {
             if (this.gameState.retaliationQueue.length === 0) {
                 this.isActing = false;
@@ -1538,14 +1706,16 @@ calculateEquipPower(eq, bot) {
                 const botConf = this.activeBots.find(b => b.id === p.id);
                 // Mostrar bocadillo
                 if (botConf) {
-                    const currentPersonality = this.getPersonalityForDecision(botConf);
-                    const pColor = this.getPersonalityColor(currentPersonality);
                     let advice = "Aguantaré este golpe por el equipo.";
-                    this.showBubble(bestPlayerIndex, `<strong style="color: ${pColor};">[${currentPersonality}]</strong> ${advice}`);
-                    this.gameState.addLog(`🤖 <strong>${botConf.name} (${currentPersonality}):</strong> "${advice}"`);
+                    this.showBubble(bestPlayerIndex, `${advice}`);
+                    this.gameState.addLog(`🤖 "${advice}"`);
                 }
 
                 setTimeout(() => {
+                    if (window.botsPaused) {
+                        this.isActing = false;
+                        return;
+                    }
                     // Asignamos daño
                     this.gameState.assignRetaliationDamage(goblin.uid, bestPlayerIndex);
                     
@@ -1571,6 +1741,10 @@ calculateEquipPower(eq, bot) {
 
 // Gestiona la fase de eventos globales o decisiones de corrosión para el bot
     performEventTurn(bot) {
+        if (window.botsPaused) {
+            this.isActing = false;
+            return;
+        }
         try {
             if (this.gameState.pendingCorrosionChoice) {
                 const playerToChoose = this.gameState.pendingCorrosionChoice.player;
@@ -1597,15 +1771,15 @@ calculateEquipPower(eq, bot) {
                 if (container && overlay && !overlay.classList.contains('hidden')) {
                     const buttons = container.querySelectorAll('button:not(:disabled)');
                     if (buttons.length > 0) {
-                        if (this.gameState.getCurrentPlayer().id === bot.id) {
-                            const currentPersonality = this.getPersonalityForDecision(bot);
-                            const pColor = this.getPersonalityColor(currentPersonality);
-                            
+                        if (this.gameState.getCurrentPlayer().id === bot.id) {                            
                             let choiceIndex = 0;
-
-                            this.showBubble(this.gameState.currentPlayerIndex, `<strong style="color: ${pColor};">[${currentPersonality}]</strong> Tomaré esta decisión por nosotros.`);
-                            this.gameState.addLog(`🤖 <strong>${bot.name} (${currentPersonality}):</strong> "Tomaré esta decisión por nosotros."`);
+                            this.showBubble(this.gameState.currentPlayerIndex, `Tomaré esta decisión por nosotros.`);
+                            this.gameState.addLog(`🤖 <strong>${bot.name} (</strong> "Tomaré esta decisión por nosotros."`);
                             setTimeout(() => {
+                                if (window.botsPaused) {
+                                    this.isActing = false;
+                                    return;
+                                }
                                 buttons[choiceIndex].click();
                                 this.isActing = false;
                                 this.handleGameState();
@@ -1617,6 +1791,10 @@ calculateEquipPower(eq, bot) {
             }
 
             setTimeout(() => {
+                if (window.botsPaused) {
+                    this.isActing = false;
+                    return;
+                }
                 this.isActing = false;
                 this.handleGameState();
             }, 1000);

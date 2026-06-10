@@ -1685,18 +1685,7 @@ function renderPlayer() {
 
     let dnaHTML = '';
     if (p.isBot && p.botDNA && p.botDNA.length >= 2) {
-        const getPColor = (p) => {
-            if (p === 'Agresivo') return '#d62828'; // Rojo
-            if (p === 'Conservador') return '#888888'; // Gris oscuro (para que se lea en el panel negro)
-            if (p === 'Cooperativo') return '#00b4d8'; // Azul
-            if (p === 'Explorador') return '#2a9d8f'; // Verde
-            return '#fff';
-        };
-        const c1 = getPColor(p.botDNA[0]);
-        const c2 = getPColor(p.botDNA[1]);
-        const mainDNA = p.botDNA[0].substring(0, 3).toUpperCase();
-        const secDNA = p.botDNA[1].substring(0, 3).toUpperCase();
-        dnaHTML = `<div style="font-size: 0.65rem; color: #a5a5a5; background: rgba(0,0,0,0.6); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--gold); display: flex; align-items: center; justify-content: center; cursor: help;" title="ADN Bot:&#10;1. ${p.botDNA[0]}&#10;2. ${p.botDNA[1]}&#10;3. ${p.botDNA[2]}">&#129302; &nbsp;<span style="color:${c1}; font-weight:bold;">${mainDNA}</span>-<span style="color:${c2}; font-weight:bold;">${secDNA}</span></div>`;
+        dnaHTML = `<div style="font-size: 0.65rem; color: #a5a5a5; background: rgba(0,0,0,0.6); padding: 2px 5px; border-radius: 4px; border: 1px solid var(--gold); display: flex; align-items: center; justify-content: center; cursor: help;" title="ADN Bot:&#10;1. ${p.botDNA[0]}&#10;2. ${p.botDNA[1]}&#10;3. ${p.botDNA[2]}">&#129302;</div>`;
     }
 
     const panelHTML = `
