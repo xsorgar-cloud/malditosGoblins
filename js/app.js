@@ -2637,12 +2637,18 @@ async function processWaveSequence() {
 window.updateBotBubble = function(playerIndex, text) {
   const combatOverlay = document.getElementById('combat-overlay');
   const isCombatActive = combatOverlay && !combatOverlay.classList.contains('hidden');
+  
+  const retaliationOverlay = document.getElementById('global-event-overlay');
+  const isRetaliationActive = retaliationOverlay && !retaliationOverlay.classList.contains('hidden') && gameState.isRetaliationPhase;
 
   const bubble = document.getElementById(`bot-bubble-${playerIndex}`);
   const bubbleText = document.getElementById(`bot-bubble-text-${playerIndex}`);
   
   const combatBubble = document.getElementById(`combat-bot-bubble-${playerIndex}`);
   const combatBubbleText = document.getElementById(`combat-bot-bubble-text-${playerIndex}`);
+  
+  const retaliationBubble = document.getElementById(`retaliation-bot-bubble-${playerIndex}`);
+  const retaliationBubbleText = document.getElementById(`retaliation-bot-bubble-text-${playerIndex}`);
   
   if (isCombatActive) {
       if (combatBubble && combatBubbleText) {
@@ -2666,6 +2672,36 @@ window.updateBotBubble = function(playerIndex, text) {
           bubble.style.opacity = '0';
           bubble.style.transform = 'translateX(-50%) translateY(10px)';
       }
+      if (retaliationBubble) {
+          retaliationBubble.classList.remove('show');
+          retaliationBubble.style.display = 'none';
+      }
+  } else if (isRetaliationActive) {
+      if (retaliationBubble && retaliationBubbleText) {
+          if (text) {
+              retaliationBubbleText.innerHTML = text;
+              retaliationBubble.style.display = 'block';
+              // Trigger reflow/animation
+              setTimeout(() => {
+                  retaliationBubble.classList.add('show');
+              }, 10);
+          } else {
+              retaliationBubble.classList.remove('show');
+              setTimeout(() => {
+                  if (!retaliationBubble.classList.contains('show')) {
+                      retaliationBubble.style.display = 'none';
+                  }
+              }, 300);
+          }
+      }
+      if (bubble) {
+          bubble.style.opacity = '0';
+          bubble.style.transform = 'translateX(-50%) translateY(10px)';
+      }
+      if (combatBubble) {
+          combatBubble.classList.remove('show');
+          combatBubble.style.display = 'none';
+      }
   } else {
       if (bubble && bubbleText) {
           if (text) {
@@ -2680,6 +2716,10 @@ window.updateBotBubble = function(playerIndex, text) {
       if (combatBubble) {
           combatBubble.classList.remove('show');
           combatBubble.style.display = 'none';
+      }
+      if (retaliationBubble) {
+          retaliationBubble.classList.remove('show');
+          retaliationBubble.style.display = 'none';
       }
   }
 };
@@ -3692,7 +3732,19 @@ function renderRetaliationModal() {
       if (p.hp <= 0) zone.classList.add('is-dead');
       zone.title = "Arrastra un orbe aquí o haz clic si tienes orbes seleccionados";
 
+      let botBubbleHTML = '';
+      if (p.isBot) {
+        botBubbleHTML = `
+          <div id="retaliation-bot-bubble-${idx}" class="retaliation-bot-bubble" style="display: none;">
+            <div id="retaliation-bot-bubble-text-${idx}" style="line-height: 1.4;"></div>
+            <div style="position: absolute; bottom: -10px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 10px solid transparent; border-right: 10px solid transparent; border-top: 10px solid var(--gold); transition: border-top-color 0.3s;"></div>
+            <div style="position: absolute; bottom: -7px; left: 50%; transform: translateX(-50%); width: 0; height: 0; border-left: 7px solid transparent; border-right: 7px solid transparent; border-top: 7px solid rgba(245, 245, 250, 0.95);"></div>
+          </div>
+        `;
+      }
+
       zone.innerHTML = `
+        ${botBubbleHTML}
         <h4>${p.name}</h4>
         <div class="hp-info">HP Actual: ${p.hp}</div>
       `;

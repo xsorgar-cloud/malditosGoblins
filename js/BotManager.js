@@ -2364,6 +2364,18 @@ calculateEquipPower(eq, bot) {
                     combatArrow.style.borderTopColor = color;
                 }
             }
+
+            // Aplicar color personalizado al borde del bocadillo según el rol (represalia)
+            const retaliationBubble = document.getElementById(`retaliation-bot-bubble-${playerIndex}`);
+            if (retaliationBubble) {
+                retaliationBubble.style.borderColor = color;
+                
+                // Actualizar el color del triángulo inferior (la "flecha" del bocadillo)
+                const retaliationArrow = retaliationBubble.children[1];
+                if (retaliationArrow) {
+                    retaliationArrow.style.borderTopColor = color;
+                }
+            }
         }
     }
 
