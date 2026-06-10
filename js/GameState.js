@@ -291,6 +291,9 @@ class GameState {
     });
 
     let p = this.players[this.currentPlayerIndex];
+    if (p.isBot && window.botManager) {
+      window.botManager.executePreCombatRoleAbilities(p, validGoblins);
+    }
     let originalStatusSnapshot = { ...p.statusEffects };
 
     // RETROFIT: Ensure level 4+ players have their silver die if they didn't get it
@@ -1499,10 +1502,13 @@ class GameState {
   }
 
   nextTurn() {
+    let previousPlayer = this.getCurrentPlayer();
+    if (previousPlayer && previousPlayer.isBot && window.botManager) {
+      window.botManager.executeEndTurnRoleAbilities(previousPlayer);
+    }
+
     this.isMarketPhase = false;
     this.lastActionWasCombat = false;  
-
-    let previousPlayer = this.getCurrentPlayer();
     
     const continueNextTurn = () => {
       if (this.players[this.currentPlayerIndex]) {
@@ -2266,28 +2272,34 @@ Daño directo: Sufres ${brokenCount} de daño.`);
     }
 
     let isSelf = (targetId === 'self' || targetId === playerIndex);
+    let actualEnergyCost = energyCost;
+    let equipIndex = null;
 
-    // Si no se pasa el coste, lo calculamos (1 propio, 2 ajeno - excepto ataques que valen 1)
-    if (energyCost === null) {
-      const roleId = p.role.id;
-      if (roleId === 'guerrero' || roleId === 'mago') {
-        energyCost = damageAmount;
-      } else {
-        energyCost = isSelf ? 1 : 2;
+    if (roleId === 'curandero') {
+      // Para Curandero, el tercer parámetro de la UI es el equipIndex
+      equipIndex = energyCost;
+      actualEnergyCost = isSelf ? 1 : 2;
+    } else {
+      if (actualEnergyCost === null) {
+        if (roleId === 'guerrero' || roleId === 'mago') {
+          actualEnergyCost = damageAmount;
+        } else {
+          actualEnergyCost = isSelf ? 1 : 2;
+        }
       }
     }
 
-    if (p.energy < energyCost) return false;
+    if (p.energy < actualEnergyCost) return false;
 
     if (roleId === 'ladron') {
       let targetP = isSelf ? p : (typeof targetId === 'number' ? this.players[targetId] : null);
       if (targetP && !isSelf) {
-        p.energy -= energyCost;
+        p.energy -= actualEnergyCost;
         targetP.mo += 1;
         this.addLog(`🔷 <strong>${p.name}</strong> usó su rol (Ladrón) para dar 1 mo a ${targetP.name}.`);
         return true;
       } else {
-        p.energy -= energyCost;
+        p.energy -= actualEnergyCost;
         p.mo += 1;
         this.addLog(`🔷 <strong>${p.name}</strong> usó su rol (Ladrón) para obtener 1 mo.`);
         return true;
@@ -2309,7 +2321,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
           const wasFought = (p.goblinsFoughtThisTurn && p.goblinsFoughtThisTurn.includes(gob.uid)) || isInCombat;
           if (!wasFought) return false;
         }
-        p.energy -= energyCost;
+        p.energy -= actualEnergyCost;
         let damageNegated = false;
         if (gob.isBoss && (this.activeSenda === 'rey_brujo' || gob.name.includes("Rey Brujo"))) {
           let forceFieldRoll = this.rollDice(6);
@@ -2368,7 +2380,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
     else if (roleId === 'sanador') {
       let targetP = isSelf ? p : (typeof targetId === 'number' ? this.players[targetId] : null);
       if (targetP && targetP.hp < targetP.maxHp) {
-        p.energy -= energyCost;
+        p.energy -= actualEnergyCost;
         targetP.hp += 1;
         this.addLog(`🔷 <strong>${p.name}</strong> usó su rol (Sanador) para curar 1 PV a ${targetP.name}.`);
         return true;
@@ -2377,7 +2389,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
     else if (roleId === 'protector') {
       let targetP = isSelf ? p : (typeof targetId === 'number' ? this.players[targetId] : null);
       if (targetP) {
-        p.energy -= energyCost;
+        p.energy -= actualEnergyCost;
         targetP.shield = (targetP.shield || 0) + 1;
         this.addLog(`🔷 <strong>${p.name}</strong> usó su rol (Protector) para dar 1 Escudo a ${targetP.name}.`);
         return true;
@@ -2386,12 +2398,40 @@ Daño directo: Sufres ${brokenCount} de daño.`);
     else if (roleId === 'curandero') {
       let targetP = isSelf ? p : (typeof targetId === 'number' ? this.players[targetId] : null);
       if (targetP) {
-        const brokenItems = targetP.equipped.filter(e => e.isBroken);
-        if (brokenItems.length > 0) {
-          p.energy -= energyCost;
-          brokenItems.forEach(e => { e.isBroken = false; e.brokenAnimationPlayed = false; });
-          this.addLog(`🔷 <strong>${p.name}</strong> usó su rol (Curandero) para <span style="color:#2a9d8f">REPARAR</span> el equipo de ${targetP.name}.`);
-          return true;
+        if (equipIndex !== null && targetP.equipped[equipIndex]) {
+          let eq = targetP.equipped[equipIndex];
+          if (eq.isBroken) {
+            p.energy -= actualEnergyCost;
+            eq.isBroken = false;
+            eq.brokenAnimationPlayed = false;
+            this.addLog(`🔷 <strong>${p.name}</strong> usó su rol (Curandero) para <span style="color:#2a9d8f">REPARAR</span> la carta <strong>${eq.name}</strong> de ${targetP.name}.`);
+            return true;
+          }
+        } else {
+          // Si no se especifica equipIndex, reparamos una única carta rota de mayor a menor prioridad
+          const brokenItems = targetP.equipped.filter(e => e.isBroken);
+          if (brokenItems.length > 0) {
+            // Criterio de prioridad: 1. Espada/Armas, 2. Curaciones, 3. Escudo/Escudos, 4. Otros
+            const getPriority = (eq) => {
+              const effectStr = (eq.effect || '').toLowerCase();
+              const extraStr = (eq.extra || '').toLowerCase();
+              const isWeapon = effectStr.includes('daño') || extraStr.includes('daño');
+              const isHeal = effectStr.includes('cura') || extraStr.includes('cura');
+              const isShield = effectStr.includes('escudo') || effectStr.includes('armadura');
+              
+              if (isWeapon) return 3;
+              if (isHeal) return 2;
+              if (isShield) return 1;
+              return 0;
+            };
+            brokenItems.sort((a, b) => getPriority(b) - getPriority(a));
+            let eq = brokenItems[0];
+            p.energy -= actualEnergyCost;
+            eq.isBroken = false;
+            eq.brokenAnimationPlayed = false;
+            this.addLog(`🔷 <strong>${p.name}</strong> usó su rol (Curandero) para <span style="color:#2a9d8f">REPARAR</span> la carta <strong>${eq.name}</strong> de ${targetP.name}.`);
+            return true;
+          }
         }
       }
     }

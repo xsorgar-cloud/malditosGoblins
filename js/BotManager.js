@@ -943,8 +943,42 @@ performCombatTurn(bot) {
                 return;
             }
 
+            // Fusionar dados plateados disponibles al inicio del combate del bot
+            const unassignedSilverDice = this.gameState.currentCombat.playerDice.filter(d => d.type === 'silver' && !d.assignedTo);
+            if (unassignedSilverDice.length > 0) {
+                const targetDice = this.gameState.currentCombat.playerDice.filter(d => 
+                    (d.type === 'red' || d.type === 'black') && 
+                    !d.silverDieId && 
+                    !d.assignedTo && 
+                    !d.isCramped
+                );
+                
+                // Priorizar dados rojos sobre negros, y de mayor a menor valor
+                targetDice.sort((a, b) => {
+                    if (a.type === 'red' && b.type !== 'red') return -1;
+                    if (a.type !== 'red' && b.type === 'red') return 1;
+                    return b.value - a.value;
+                });
+                
+                for (let sDie of unassignedSilverDice) {
+                    if (targetDice.length > 0) {
+                        let tDie = targetDice.shift();
+                        sDie.assignedTo = tDie.id;
+                        tDie.silverDieId = sDie.id;
+                        tDie.originalValue = tDie.value;
+                        tDie.value += sDie.value;
+                        tDie.isSilver = true;
+                        this.gameState.addLog(`🎲 <strong>${bot.name}</strong> fusionó su <strong>Dado Plateado (d3: ${sDie.value})</strong> con su dado ${tDie.type === 'red' ? 'rojo' : 'negro'} (valor: ${tDie.originalValue}). ¡Nuevo valor: <span style="color:#c0c0c0; font-weight:bold">${tDie.value}</span>!`);
+                    } else {
+                        sDie.assignedTo = 'discarded';
+                        this.gameState.addLog(`🎲 <strong>${bot.name}</strong> no tiene dados válidos para fusionar su dado plateado y lo descarta.`);
+                    }
+                }
+            }
+
             const totalNonCramped = this.gameState.currentCombat.playerDice.filter(d => !d.isCramped).length;
-            const availableDice = this.gameState.currentCombat.playerDice.filter(d => !d.assignedTo && !d.isCramped);
+            // Excluir el dado plateado (silver) de la asignación directa
+            const availableDice = this.gameState.currentCombat.playerDice.filter(d => !d.assignedTo && !d.isCramped && d.type !== 'silver');
             availableDice.sort((a, b) => b.value - a.value);
             
             console.log(`[BotManager] availableDice: ${availableDice.length}/${totalNonCramped}`);
@@ -1131,7 +1165,9 @@ performCombatTurn(bot) {
                 let roleOverrideAssigned = false;
                 let energyGain = bot.role && bot.role.energyRates ? bot.role.energyRates[die.value - 1] : (die.value >= 5 ? 3 : 0);
                 
-                if (!forceAttack && incomingNormalDmg > 0 && incomingNormalDmg <= 2 && energyGain >= 3 && bot.hp >= 5) {
+                const hasRoleDie = window.currentAssignments && window.currentAssignments['role'] && window.currentAssignments['role'].length > 0;
+
+                if (!hasRoleDie && !forceAttack && incomingNormalDmg > 0 && incomingNormalDmg <= 2 && energyGain >= 3 && bot.hp >= 5) {
                     this.assignDieToRole(die, bot, `Daño entrante trivial (${incomingNormalDmg}), es más rentable ganar ${energyGain} de energía en el Rol`);
                     roleOverrideAssigned = true;
                 }
@@ -1151,6 +1187,21 @@ performCombatTurn(bot) {
                             this.assignDieToEquip(die, shields[0], bot, "Rol da 0 energía, usando escudo por descarte");
                             return;
                         }
+                    }
+
+                    const hasRoleDieInner = window.currentAssignments && window.currentAssignments['role'] && window.currentAssignments['role'].length > 0;
+                    if (hasRoleDieInner) {
+                        if (weapons.length > 0) {
+                            this.assignDieToEquip(die, weapons[0], bot, "Rol ya tiene dado, usando arma por descarte");
+                        } else if (shields.length > 0) {
+                            this.assignDieToEquip(die, shields[0], bot, "Rol ya tiene dado, usando escudo por descarte");
+                        } else if (brokenEquipsToRepair.length > 0) {
+                            this.assignDieToEquip(die, brokenEquipsToRepair[0], bot, "Rol ya tiene dado, usando equipo roto por descarte");
+                        } else {
+                            this.gameState.addLog(`🎲 <strong>${bot.name}</strong> descarta el dado <strong>${die.value}</strong> ya que el Rol ya tiene un dado asignado.`);
+                            die.assignedTo = 'discarded';
+                        }
+                        return;
                     }
                     this.assignDieToRole(die, bot, reason);
                 };
@@ -1924,6 +1975,257 @@ calculateEquipPower(eq, bot) {
     handlePlayerTurnAdvice() {
         // Player‑turn advice is not needed in the simplified Aggressive‑only version.
         return;
+    }
+
+    // --- HEURÍSTICAS DE ENERGÍA Y HABILIDADES DE ROL ---
+
+    // Retorna la defensa/escudo que aporta un valor de dado asignado a una pieza de equipo
+    getShieldForDieInEquip(val, eq) {
+        if (!this.gameState.isValidDieForEquipment(val, eq)) return 0;
+        const effectStr = (eq.isBroken && eq.broken ? eq.broken.effect : eq.effect).toLowerCase();
+        
+        let shield = 0;
+        if (eq.id === 'reforzado_pinchos') {
+            if (val % 2 !== 0) {
+                shield = val;
+            }
+            return shield;
+        }
+
+        if (effectStr.includes('escudo')) {
+            if (effectStr.includes('dado')) {
+                shield = val;
+                if (effectStr.includes('-1')) shield -= 1;
+                if (effectStr.includes('+1')) shield += 1;
+                if (effectStr.includes('x2')) shield *= 2;
+            } else {
+                let match = effectStr.match(/escudo\s+(\d+)/);
+                if (match) shield = parseInt(match[1]);
+            }
+            if (effectStr.includes('max')) {
+                let maxMatch = effectStr.match(/max\s+(\d+)/);
+                if (maxMatch) shield = Math.min(shield, parseInt(maxMatch[1]));
+            }
+            if (effectStr.includes('min')) {
+                let minMatch = effectStr.match(/min\s+(\d+)/);
+                if (minMatch) shield = Math.max(shield, parseInt(minMatch[1]));
+            }
+        }
+        return shield;
+    }
+
+    // Ejecuta las habilidades de rol precombate (Fase 5)
+    executePreCombatRoleAbilities(bot, targetGoblins) {
+        if (!bot || !bot.role) return;
+        const rId = bot.role.id;
+        const pIndex = this.gameState.players.indexOf(bot);
+        if (pIndex === -1) return;
+
+        if (rId === 'protector') {
+            let expectedNormalDamage = 0;
+            targetGoblins.forEach(g => {
+                expectedNormalDamage += this.getGoblinDamageProfile(g).normal;
+            });
+
+            let numDice = bot.dicePool ? bot.dicePool.length : 2;
+            if (bot.statusEffects) {
+                let totalEffects = (bot.statusEffects.escozor || 0) + (bot.statusEffects.calambre || 0) + (bot.statusEffects.tembleque || 0);
+                numDice = Math.max(0, numDice - totalEffects);
+            }
+
+            let weaponSlots = 0;
+            const activeWeapons = bot.equipped.filter(eq => eq.isActive && !eq.isBroken && this.isWeapon(eq));
+            activeWeapons.forEach(w => {
+                const extra = (w.extra || '').toLowerCase();
+                const isReusable = extra.includes('reutilizable');
+                const maxUses = extra.includes('x3') ? 3 : (isReusable ? 3 : 1);
+                weaponSlots += maxUses;
+            });
+
+            let remainingDiceForShields = Math.max(0, numDice - weaponSlots);
+
+            const activeShields = bot.equipped.filter(eq => eq.isActive && !eq.isBroken && this.isShield(eq));
+            let shieldSlots = 0;
+            activeShields.forEach(s => {
+                const extra = (s.extra || '').toLowerCase();
+                const isReusable = extra.includes('reutilizable');
+                const maxUses = extra.includes('x3') ? 3 : (isReusable ? 3 : 1);
+                shieldSlots += maxUses;
+            });
+
+            let shieldDiceCount = Math.min(remainingDiceForShields, shieldSlots);
+            let estimatedShieldDefense = 0;
+
+            if (shieldDiceCount > 0 && activeShields.length > 0) {
+                activeShields.forEach(s => {
+                    let sum = 0;
+                    let count = 0;
+                    for (let val = 1; val <= 6; val++) {
+                        if (this.gameState.isValidDieForEquipment(val, s)) {
+                            sum += this.getShieldForDieInEquip(val, s);
+                            count++;
+                        }
+                    }
+                    s.avgShield = count > 0 ? (sum / count) : 0;
+                });
+                activeShields.sort((a, b) => b.avgShield - a.avgShield);
+
+                let assignedDice = 0;
+                for (let s of activeShields) {
+                    const extra = (s.extra || '').toLowerCase();
+                    const isReusable = extra.includes('reutilizable');
+                    const maxUses = extra.includes('x3') ? 3 : (isReusable ? 3 : 1);
+                    for (let u = 0; u < maxUses; u++) {
+                        if (assignedDice < shieldDiceCount) {
+                            estimatedShieldDefense += s.avgShield;
+                            assignedDice++;
+                        }
+                    }
+                }
+            }
+
+            let currentShield = bot.shield || 0;
+            let shieldDeficit = Math.max(0, expectedNormalDamage - estimatedShieldDefense - currentShield);
+            let energyToSpend = Math.min(bot.energy, Math.ceil(shieldDeficit));
+
+            if (energyToSpend > 0) {
+                this.gameState.addLog(`🤖 <strong>${bot.name}</strong> estima un daño entrante de ${expectedNormalDamage}, defensa de escudos equipados de ~${estimatedShieldDefense.toFixed(1)} (déficit: ${shieldDeficit.toFixed(1)}). Usa su rol para ganar ${energyToSpend} de Escudo.`);
+                for (let i = 0; i < energyToSpend; i++) {
+                    this.gameState.useRoleAbility(pIndex, 'self');
+                }
+            }
+        } 
+        else if (rId === 'mago') {
+            const validTargets = targetGoblins
+                .map(g => this.gameState.battlefield.goblins.find(bg => bg.uid === g.uid))
+                .filter(g => g && g.currentHp > 0);
+
+            for (let gob of validTargets) {
+                if (bot.energy <= 0) break;
+                let maxDmg = gob.currentHp - 1;
+                let dmgToApply = Math.min(bot.energy, maxDmg);
+                if (dmgToApply > 0) {
+                    this.gameState.addLog(`🤖 <strong>${bot.name}</strong> usa su rol de Mago para infligir ${dmgToApply} de daño directo a ${gob.name || ('G' + gob.level)} antes del combate.`);
+                    for (let i = 0; i < dmgToApply; i++) {
+                        this.gameState.useRoleAbility(pIndex, gob.uid, 1, 1);
+                    }
+                }
+            }
+        }
+        else if (rId === 'curandero') {
+            // Criterio de prioridad: 1. Espada/Armas, 2. Curaciones, 3. Escudo/Escudos, 4. Otros
+            const getPriority = (eq) => {
+                const effectStr = (eq.effect || '').toLowerCase();
+                const extraStr = (eq.extra || '').toLowerCase();
+                const isWeapon = effectStr.includes('daño') || extraStr.includes('daño');
+                const isHeal = effectStr.includes('cura') || extraStr.includes('cura');
+                const isShield = effectStr.includes('escudo') || effectStr.includes('armadura');
+                
+                if (isWeapon) return 3;
+                if (isHeal) return 2;
+                if (isShield) return 1;
+                return 0;
+            };
+
+            let brokenItems = bot.equipped.filter(e => e.isBroken);
+            brokenItems.sort((a, b) => getPriority(b) - getPriority(a));
+
+            for (let eq of brokenItems) {
+                if (bot.energy >= 1 && eq.isBroken) {
+                    const eqIndex = bot.equipped.indexOf(eq);
+                    if (eqIndex !== -1) {
+                        this.gameState.useRoleAbility(pIndex, 'self', eqIndex);
+                    }
+                }
+            }
+        }
+        if (typeof window.updateUI === 'function') window.updateUI();
+    }
+
+    // Ejecuta las habilidades de rol de fin de turno (Fase 7)
+    executeEndTurnRoleAbilities(bot) {
+        if (!bot || !bot.role) return;
+        const rId = bot.role.id;
+        const pIndex = this.gameState.players.indexOf(bot);
+        if (pIndex === -1) return;
+
+        if (rId === 'ladron') {
+            if (bot.energy > 0) {
+                this.gameState.addLog(`🤖 <strong>${bot.name}</strong> usa su rol de Ladrón antes de finalizar el turno para convertir ${bot.energy} de energía en monedas.`);
+                let energyToUse = bot.energy;
+                for (let i = 0; i < energyToUse; i++) {
+                    this.gameState.useRoleAbility(pIndex, 'self');
+                }
+            }
+        }
+        else if (rId === 'curandero') {
+            const getPriority = (eq) => {
+                const effectStr = (eq.effect || '').toLowerCase();
+                const extraStr = (eq.extra || '').toLowerCase();
+                const isWeapon = effectStr.includes('daño') || extraStr.includes('daño');
+                const isHeal = effectStr.includes('cura') || extraStr.includes('cura');
+                const isShield = effectStr.includes('escudo') || effectStr.includes('armadura');
+                
+                if (isWeapon) return 3;
+                if (isHeal) return 2;
+                if (isShield) return 1;
+                return 0;
+            };
+
+            // Repararse a sí mismo primero
+            let brokenSelf = bot.equipped.filter(e => e.isBroken);
+            brokenSelf.sort((a, b) => getPriority(b) - getPriority(a));
+
+            for (let eq of brokenSelf) {
+                if (bot.energy >= 1 && eq.isBroken) {
+                    const eqIndex = bot.equipped.indexOf(eq);
+                    if (eqIndex !== -1) {
+                        this.gameState.useRoleAbility(pIndex, 'self', eqIndex);
+                    }
+                }
+            }
+
+            // Reparar a compañeros después
+            for (let otherIdx = 0; otherIdx < this.gameState.players.length; otherIdx++) {
+                if (bot.energy < 2) break;
+                if (otherIdx === pIndex) continue;
+                let otherP = this.gameState.players[otherIdx];
+                let brokenOther = otherP.equipped.filter(e => e.isBroken);
+                brokenOther.sort((a, b) => getPriority(b) - getPriority(a));
+
+                for (let eq of brokenOther) {
+                    if (bot.energy >= 2 && eq.isBroken) {
+                        const eqIndex = otherP.equipped.indexOf(eq);
+                        if (eqIndex !== -1) {
+                            this.gameState.useRoleAbility(pIndex, otherIdx, eqIndex);
+                        }
+                    }
+                }
+            }
+        }
+        else if (rId === 'guerrero') {
+            let survivingGobs = this.gameState.battlefield.goblins.filter(g => 
+                g.currentHp > 0 && 
+                !g.isDying && 
+                bot.goblinsFoughtThisTurn && 
+                bot.goblinsFoughtThisTurn.includes(g.uid)
+            );
+            
+            survivingGobs.sort((a, b) => a.currentHp - b.currentHp);
+            
+            for (let gob of survivingGobs) {
+                if (bot.energy <= 0) break;
+                let neededDmg = gob.currentHp;
+                if (bot.energy >= neededDmg) {
+                    this.gameState.addLog(`🤖 <strong>${bot.name}</strong> usa su rol de Guerrero para rematar a ${gob.name || ('G' + gob.level)} con ${neededDmg} de daño.`);
+                    this.gameState.useRoleAbility(pIndex, gob.uid, neededDmg, neededDmg);
+                } else {
+                    // No tiene energía suficiente para matarlo, y dado que están ordenados ascendentemente, no puede matar a ninguno más.
+                    break;
+                }
+            }
+        }
+        if (typeof window.updateUI === 'function') window.updateUI();
     }
 }
 
