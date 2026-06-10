@@ -113,17 +113,14 @@ triggerAction(type, target = null, reason = "") {
             }, 500);
             return;
         } else if (type === 'buy-potion') {
-            const result = this.gameState.buyPotion(target);
-            if (result) {
-                const decks = document.querySelectorAll('.deck');
-                const pDeck = Array.from(decks).find(d => d.style.backgroundImage.includes('Pociones.webp'));
-                if (pDeck) window.animateCardPurchase(pDeck);
-            }
+            const pIndex = this.gameState.currentPlayerIndex;
+            this.animatePotionPurchase(target, pIndex);
+            this.gameState.buyPotion(target);
             setTimeout(() => {
                 window.updateUI();
                 this.isActing = false;
                 this.handleGameState();
-            }, 500);
+            }, 800);
             return;
         } else if (type === 'explore-market') {
             const p = this.gameState.getCurrentPlayer();
@@ -164,48 +161,168 @@ triggerAction(type, target = null, reason = "") {
     }
 
     // Comprueba si el bot necesita priorizar la supervivencia (curación o energía) antes de cualquier otra acción
-evaluateSurvivalOverride(bot) {
-        if (bot.hp > bot.maxHp * 0.30) return false; // Solo actúa si HP <= 30%
+    evaluateSurvivalOverride(bot) {
+        let isCritical = bot.hp < bot.maxHp * 0.40;
+        if (!isCritical) return false;
 
-        // Prioridad 1: Si el sanador tiene energía, usa el rol para curarse
-        if (bot.role.id === 'sanador' && bot.energy > 0) {
-            this.showBubble(this.gameState.currentPlayerIndex, `<strong style="color: red;"></strong> ¡Usaria el Rol para curarme pero no se hacerlo aún!`);
-            this.triggerAction('uso-role');
-            return true;
-        }
-		
-		//Prioridad 2: Comprar pocion
-		if (this.gameState.battlefield.waveLevel >= 3) {
-			this.showBubble(this.gameState.currentPlayerIndex, `<strong style="color: red;"></strong> ¡Intentaré comprar una poción pero no sé si sabré hacerlo aún!`);
-            //this.triggerAction('buy-potion');
-            return false;
-		}
+        const pIndex = this.gameState.players.indexOf(bot);
+        if (pIndex === -1) return false;
 
-        // Prioridad 2: ¿Cobrar oro tiene sentido? Solo si con 1-2 monedas más podrá comprar curación
-        const canAffordHealingSoon = (() => {
-            // Comprobar pociones (oleada 3+)
-            /*if (this.gameState.battlefield.waveLevel >= 3 && typeof DB !== 'undefined' && DB.equipment && DB.equipment.pociones) {
-                const cheapestPotion = DB.equipment.pociones.reduce((min, p) => p.cost < min ? p.cost : min, Infinity);
-                if (bot.mo + 1 >= cheapestPotion || bot.mo + 2 >= cheapestPotion) return true;
-            }*/
-            // Comprobar equipo de curación en mercado
-            /*const healMarket = this.gameState.market && this.gameState.market['curacion'];
-            if (healMarket && healMarket.length > 0) {
-                const healCost = healMarket[0].cost;
-                if (bot.mo + 1 >= healCost || bot.mo + 2 >= healCost) return true;
-            }*/
-            return false;
-        })();
-
-        if (canAffordHealingSoon) {
-            this.showBubble(this.gameState.currentPlayerIndex, `<strong style="color: red;"></strong> ¡Estoy muy malherido! Necesito reunir oro para curarme.`);
-            this.triggerAction('gold');
-            return true;
+        // 1. Sanador: si tiene energía, usar rol para curarse
+        if (bot.role && bot.role.id === 'sanador' && bot.energy > 0) {
+            let healNeeded = bot.maxHp - bot.hp;
+            let energyToUse = Math.min(bot.energy, healNeeded);
+            if (energyToUse > 0) {
+                this.gameState.addLog(`🔷 <strong>${bot.name}</strong> está en estado crítico de PV y usa su rol de Sanador para curarse.`);
+                for (let i = 0; i < energyToUse; i++) {
+                    this.gameState.useRoleAbility(pIndex, 'self');
+                }
+                if (typeof window.updateUI === 'function') window.updateUI();
+                isCritical = bot.hp < bot.maxHp * 0.40;
+            }
         }
 
-        // Si no puede comprar curación pronto con oro, NO cobrar oro (sería inútil).
-        // Dejar que performMainTurn decida con su lógica normal (combate, rol, etc.)
+        // 2. Compra de pociones (Oleada 3 o superior)
+        let hpShortfall = bot.maxHp - bot.hp;
+        let availableCoins = bot.mo + (bot.role && bot.role.id === 'ladron' ? bot.energy : 0);
+        let bestPotion = null;
+        let bestScore = -Infinity;
+
+        if (this.gameState.battlefield.waveLevel >= 3 && typeof DB !== 'undefined' && DB.equipment && DB.equipment.pociones) {
+            const affordablePotions = DB.equipment.pociones.filter(p => availableCoins >= p.cost);
+            if (affordablePotions.length > 0) {
+                affordablePotions.forEach(poc => {
+                    let avgHeal = this.getPotionAverageHealing(poc.id);
+                    let covered = Math.min(avgHeal, hpShortfall);
+                    let waste = Math.max(0, avgHeal - hpShortfall);
+                    let score = covered - (waste * 0.5) - (poc.cost * 0.2);
+                    if (score > bestScore) {
+                        bestScore = score;
+                        bestPotion = poc;
+                    }
+                });
+            }
+        }
+
+        if (bestPotion) {
+            // Si es Ladrón y necesita monedas virtuales, hacer la conversión real primero
+            if (bot.role && bot.role.id === 'ladron' && bot.mo < bestPotion.cost) {
+                let needed = bestPotion.cost - bot.mo;
+                for (let i = 0; i < needed; i++) {
+                    this.gameState.useRoleAbility(pIndex, 'self');
+                }
+                if (typeof window.updateUI === 'function') window.updateUI();
+            }
+
+            const pColor = this.getRoleColor(bot.role.id);
+            const message = `¡Mi vida es crítica! Compraré una ${bestPotion.name} para curarme.`;
+            this.showBubble(pIndex, `<strong style="color: ${pColor};">[Supervivencia]</strong> ${message}`);
+            this.gameState.addLog(`🤖 <strong>${bot.name}</strong> decide comprar una poción para curarse.`);
+
+            setTimeout(() => {
+                this.hideAllBubbles();
+                this.triggerAction('buy-potion', bestPotion.id);
+            }, 2000);
+
+            return true; // Indicamos que se ha tomado una acción principal (asíncrona)
+        }
+
+        // 3. Combate de supervivencia: si tiene equipo de curación y hay objetivos asequibles
+        if (isCritical) {
+            let hasHealingEquip = bot.equipped.some(eq => eq.isActive && !eq.isBroken && this.isHeal(eq));
+            if (hasHealingEquip) {
+                const goblinsEnMesa = this.gameState.battlefield.goblins.filter(g => !g.isDying);
+                const potentialTargets = this.getSafeCombatTargets(bot, goblinsEnMesa, 'Agresivo');
+                if (potentialTargets.length > 0) {
+                    this.showBubble(pIndex, `<strong style="color: red;">[Crítico]</strong> Buscaré un combate fácil para usar mi curación.`);
+                    this.gameState.addLog(`🤖 <strong>${bot.name}</strong> está en estado crítico de PV, tiene equipo de curación y decide iniciar combate contra objetivos asequibles para curarse.`);
+                    setTimeout(() => {
+                        this.hideAllBubbles();
+                        this.triggerAction('combat', potentialTargets);
+                    }, 3500);
+                    return true; // Consume la acción principal
+                }
+            }
+        }
+
+        // Si sigue crítico pero no tiene opciones, mostramos burbuja de peligro pero continuamos el turno normal
+        if (isCritical) {
+            this.showBubble(pIndex, `<strong style="color: red;">[Peligro]</strong> ¡Estoy al límite de vida y sin opciones de curación!`);
+            this.gameState.addLog(`⚠️ <strong>${bot.name}</strong> está en estado crítico de PV (${bot.hp}/${bot.maxHp}) pero no tiene opciones disponibles de curación.`);
+        }
+
         return false;
+    }
+
+    getPotionAverageHealing(potionId) {
+        if (potionId === 'pocion_vida_menor') return 2.5;
+        if (potionId === 'pocion_vida_mediana') return 5.5;
+        if (potionId === 'pocion_vida_mayor') return 9;
+        if (potionId === 'pocion_vida_suprema') return 12;
+        return 0;
+    }
+
+    animatePotionPurchase(potionId, playerIndex) {
+        if (typeof DB === 'undefined' || !DB.equipment || !DB.equipment.pociones) return;
+        const potionData = DB.equipment.pociones.find(p => p.id === potionId);
+        if (!potionData) return;
+
+        // Buscar el mazo de pociones como punto de partida
+        const decks = document.querySelectorAll('.deck');
+        const pDeck = Array.from(decks).find(d => d.style.backgroundImage.includes('Pociones.webp'));
+        if (!pDeck) return;
+
+        const rect = pDeck.getBoundingClientRect();
+
+        // Crear elemento temporal con la imagen de la poción
+        const tempEl = document.createElement('div');
+        tempEl.style.position = 'fixed';
+        tempEl.style.left = rect.left + 'px';
+        tempEl.style.top = rect.top + 'px';
+        tempEl.style.width = rect.width + 'px';
+        tempEl.style.height = rect.height + 'px';
+        tempEl.style.backgroundImage = `url('${potionData.image}')`;
+        tempEl.style.backgroundSize = 'cover';
+        tempEl.style.backgroundPosition = 'center';
+        tempEl.style.margin = '0';
+        tempEl.style.zIndex = '9999';
+        tempEl.style.borderRadius = '8px';
+        tempEl.style.border = '2px solid var(--gold)';
+        tempEl.style.transition = 'all 0.6s cubic-bezier(0.25, 1, 0.5, 1)';
+        tempEl.style.pointerEvents = 'none';
+        tempEl.style.boxShadow = '0 0 30px var(--gold)';
+
+        document.body.appendChild(tempEl);
+
+        // Destino: panel de equipamiento del jugador correspondiente
+        const panels = document.querySelectorAll('.player-panel');
+        const equipmentContainer = panels[playerIndex] ? panels[playerIndex].querySelector('.player-equipment') : null;
+        let targetRect = { left: window.innerWidth / 2, top: window.innerHeight / 2, width: rect.width * 0.5, height: rect.height * 0.5 };
+
+        if (equipmentContainer) {
+            const dummy = document.createElement('div');
+            dummy.className = 'equipment-card';
+            dummy.style.visibility = 'hidden';
+            dummy.style.margin = '0';
+            equipmentContainer.appendChild(dummy);
+            targetRect = dummy.getBoundingClientRect();
+            dummy.remove();
+        }
+
+        // Forzar reflow
+        tempEl.getBoundingClientRect();
+
+        // Mover y escalar
+        tempEl.style.left = targetRect.left + 'px';
+        tempEl.style.top = targetRect.top + 'px';
+        const scaleX = targetRect.width / rect.width;
+        const scaleY = targetRect.height / rect.height;
+        tempEl.style.transform = `scale(${Math.min(scaleX, scaleY)})`;
+        tempEl.style.transformOrigin = 'top left';
+
+        setTimeout(() => {
+            tempEl.remove();
+        }, 600);
     }
 
     // Calcula una puntuación de combate basada en armas, escudos, HP y recompensas esperadas
@@ -254,6 +371,18 @@ calculateCombatScore(bot, goblins) {
     // Decide la acción principal del bot (combatir, desplegar hito, comprar oro, etc.) y muestra la burbuja informativa
 performMainTurn(bot) {
         try {
+            // Fase 1: Uso del rol al inicio de turno (Ladrón consume energía para obtener monedas)
+            if (bot.role && bot.role.id === 'ladron' && bot.energy > 0) {
+                const pIndex = this.gameState.players.indexOf(bot);
+                if (pIndex !== -1) {
+                    let energyToUse = bot.energy;
+                    for (let i = 0; i < energyToUse; i++) {
+                        this.gameState.useRoleAbility(pIndex, 'self');
+                    }
+                    if (typeof window.updateUI === 'function') window.updateUI();
+                }
+            }
+
             if (this.evaluateSurvivalOverride(bot)) return;
 
             const currentPersonality = this.getPersonalityForDecision(bot);
@@ -592,10 +721,6 @@ performCombatTurn(bot) {
             let advice = "";
             if (currentPersonality === 'Agresivo') {
                 advice = "¡Acabemos rápido con esto! Poned dados en las armas más fuertes.";
-// Conservador branch removed
-                advice = "Cubríos bien las espaldas. Activad los escudos primero.";
-            } else if (currentPersonality === 'Cooperativo') {
-                advice = "Yo me encargo de apoyar donde haga falta. ¡Usad vuestros mejores ataques!";
             }
             
             let delay = availableDice.length === totalNonCramped ? 2500 : 800;
@@ -1355,8 +1480,7 @@ calculateEquipPower(eq, bot) {
         // Asegurar que todos los bots tienen su ADN generado
         this.activeBots.forEach(bot => {
             if (!bot.botDNA) {
-                const personalities = ['Agresivo'];
-                // 
+                bot.botDNA = ['Agresivo', 'Agresivo', 'Agresivo'];
             }
         });
 

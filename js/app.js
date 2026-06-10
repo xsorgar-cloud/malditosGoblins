@@ -2677,8 +2677,7 @@ function updateUI() {
   if (gameState && gameState.players) {
       gameState.players.forEach(p => {
           if (p.isBot && !p.botDNA) {
-              const personalities = ['Agresivo', 'Conservador', 'Cooperativo'];
-              p.botDNA = personalities.sort(() => Math.random() - 0.5);
+              p.botDNA = ['Agresivo', 'Agresivo', 'Agresivo'];
           }
       });
   }
