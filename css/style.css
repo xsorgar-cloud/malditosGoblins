@@ -3533,6 +3533,86 @@ main {
     box-shadow: 0 0 5px rgba(0,0,0,0.8);
 }
 
+/* ====== ANIMACIÓN DE MONEDAS AL DERROTAR GOBLINS ====== */
+@keyframes goldPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.3); filter: brightness(1.3); }
+  100% { transform: scale(1); }
+}
+.gold-pulse {
+  animation: goldPulse 0.3s ease-out !important;
+}
+
+@keyframes coinSpin {
+  0% { transform: rotateX(25deg) rotateY(0deg); }
+  100% { transform: rotateX(25deg) rotateY(360deg); }
+}
+
+.flying-coin {
+  position: fixed;
+  width: 48px;
+  height: 48px;
+  z-index: 10000;
+  pointer-events: none;
+  transform-origin: center center;
+  perspective: 800px;
+}
+
+.coin-inner {
+  width: 100%;
+  height: 100%;
+  background-image: url('../assets/mo.png');
+  background-size: cover;
+  background-position: center;
+  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.45));
+  animation: coinSpin 0.4s linear infinite;
+  transform-style: preserve-3d;
+}
+
+/* EFECTO DE PULSO AL RECIBIR PEX */
+@keyframes pexPulse {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.15) rotate(2deg); filter: brightness(1.3) drop-shadow(0 0 15px rgba(0, 229, 255, 0.6)); }
+  100% { transform: scale(1); }
+}
+.pex-pulse {
+  animation: pexPulse 0.3s ease-out !important;
+}
+
+/* ESTRELLA DE PEX VOLADORA */
+.flying-star {
+  position: fixed;
+  width: 48px;
+  height: 48px;
+  z-index: 10000;
+  pointer-events: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  user-select: none;
+  filter: drop-shadow(0 0 8px rgba(0, 229, 255, 0.8));
+  transform-origin: center center;
+  perspective: 800px;
+}
+
+.star-inner {
+  width: 100%;
+  height: 100%;
+  color: #00e5ff;
+  transform-style: preserve-3d;
+  animation: starRotate 0.5s linear infinite;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+@keyframes starRotate {
+  0% { transform: rotateX(25deg) rotateZ(0deg) rotateY(0deg); }
+  100% { transform: rotateX(25deg) rotateZ(360deg) rotateY(360deg); }
+}
+
+
 
 
 

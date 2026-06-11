@@ -2975,6 +2975,166 @@ window.animateCardPurchase = function(sourceEl, onComplete) {
   }, 480);
 }
 
+window.animateGoldDrop = function(sourceEl, coinCount) {
+  if (!sourceEl || !coinCount || coinCount <= 0) return;
+
+  const rect = sourceEl.getBoundingClientRect();
+  const startX = rect.left + rect.width / 2;
+  const startY = rect.top + rect.height / 2;
+
+  // Buscar el indicador de oro del jugador activo
+  const destEl = document.querySelector('.player-panel.active-turn .stat.gold') || 
+                 document.querySelector('.player-panel.active-turn .gold') ||
+                 document.querySelector('.stat.gold');
+                 
+  let destX = window.innerWidth * 0.9;
+  let destY = window.innerHeight * 0.9;
+
+  if (destEl) {
+    const destRect = destEl.getBoundingClientRect();
+    destX = destRect.left + destRect.width / 2;
+    destY = destRect.top + destRect.height / 2;
+  }
+
+  // Generar monedas
+  for (let i = 0; i < coinCount; i++) {
+    const coin = document.createElement('div');
+    coin.className = 'flying-coin';
+    
+    // Crear el elemento interior que contiene la animación 3D de giro (coinSpin en CSS)
+    const coinInner = document.createElement('div');
+    coinInner.className = 'coin-inner';
+    coin.appendChild(coinInner);
+    
+    // Posición inicial: centro del goblin
+    coin.style.left = (startX - 24) + 'px';
+    coin.style.top = (startY - 24) + 'px';
+    
+    // Estado inicial de la transformación
+    coin.style.setProperty('transform', 'translate(0, 0) scale(0.5)', 'important');
+    coin.style.setProperty('opacity', '0', 'important');
+    coin.style.setProperty('transition', 'transform 0.4s cubic-bezier(0.1, 0.8, 0.3, 1), opacity 0.3s ease-out', 'important');
+    
+    document.body.appendChild(coin);
+
+    // Calcular dirección y fuerza de dispersión aleatoria
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 40 + Math.random() * 50;
+    const scatterX = Math.cos(angle) * distance;
+    // Añadimos una fuerza vertical hacia arriba para simular que saltan
+    const scatterY = Math.sin(angle) * distance - 30;
+
+    // Ejecutar la fase de explosión inicial en un setTimeout
+    setTimeout(() => {
+      coin.style.setProperty('transform', `translate(${scatterX}px, ${scatterY}px) scale(1.2)`, 'important');
+      coin.style.setProperty('opacity', '1', 'important');
+    }, 10 + i * 50); // Ligeramente escalonado para mayor dinamismo
+
+    // Fase 2: Vuelo hacia el HUD
+    setTimeout(() => {
+      // Nueva transición acelerada hacia el destino
+      coin.style.setProperty('transition', 'transform 0.5s cubic-bezier(0.6, -0.28, 0.735, 0.045), opacity 0.5s ease-in', 'important');
+      
+      const deltaX = destX - startX;
+      const deltaY = destY - startY;
+      
+      coin.style.setProperty('transform', `translate(${deltaX}px, ${deltaY}px) scale(0.6)`, 'important');
+      coin.style.setProperty('opacity', '0.2', 'important');
+    }, 350 + i * 50);
+
+    // Fase 3: Impacto y destrucción
+    setTimeout(() => {
+      coin.remove();
+      
+      // Activar efecto visual en el indicador del HUD
+      if (destEl) {
+        destEl.classList.remove('gold-pulse');
+        void destEl.offsetWidth; // Forzar reflow para reiniciar la animación
+        destEl.classList.add('gold-pulse');
+      }
+    }, 850 + i * 50);
+  }
+};
+
+window.animatePexDrop = function(sourceEl, pexCount) {
+  if (!sourceEl || !pexCount || pexCount <= 0) return;
+
+  const rect = sourceEl.getBoundingClientRect();
+  const startX = rect.left + rect.width / 2;
+  const startY = rect.top + rect.height / 2;
+
+  // Buscar el indicador de PEX de grupo (esquina superior izquierda)
+  const destEl = document.querySelector('.group-info');
+                 
+  let destX = window.innerWidth * 0.1;
+  let destY = window.innerHeight * 0.1;
+
+  if (destEl) {
+    const destRect = destEl.getBoundingClientRect();
+    destX = destRect.left + destRect.width / 2;
+    destY = destRect.top + destRect.height / 2;
+  }
+
+  // Generar estrellas
+  for (let i = 0; i < pexCount; i++) {
+    const star = document.createElement('div');
+    star.className = 'flying-star';
+    
+    // Crear el elemento interior que contiene la animación 3D de giro (starRotate en CSS)
+    const starInner = document.createElement('div');
+    starInner.className = 'star-inner';
+    starInner.textContent = '✨';
+    star.appendChild(starInner);
+    
+    // Posición inicial: centro del goblin (48px de tamaño / 2 = 24 de offset)
+    star.style.left = (startX - 24) + 'px';
+    star.style.top = (startY - 24) + 'px';
+    
+    // Estado inicial de la transformación
+    star.style.setProperty('transform', 'translate(0, 0) scale(0.3)', 'important');
+    star.style.setProperty('opacity', '0', 'important');
+    star.style.setProperty('transition', 'transform 0.4s cubic-bezier(0.1, 0.8, 0.3, 1.45), opacity 0.3s ease-out', 'important');
+    
+    document.body.appendChild(star);
+
+    // Calcular dirección y fuerza de dispersión aleatoria flotante
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 40 + Math.random() * 50;
+    const scatterX = Math.cos(angle) * distance;
+    const scatterY = Math.sin(angle) * distance - 40; // Mayor flotación hacia arriba
+
+    // Ejecutar la fase de explosión inicial en un setTimeout
+    setTimeout(() => {
+      star.style.setProperty('transform', `translate(${scatterX}px, ${scatterY}px) scale(1.2)`, 'important');
+      star.style.setProperty('opacity', '1', 'important');
+    }, 10 + i * 50); // Ligeramente escalonado para mayor dinamismo
+
+    // Fase 2: Vuelo hacia el HUD
+    setTimeout(() => {
+      // Transición suave hacia el destino
+      star.style.setProperty('transition', 'transform 0.6s cubic-bezier(0.25, 0.46, 0.45, 0.94), opacity 0.6s ease-in', 'important');
+      
+      const deltaX = destX - startX;
+      const deltaY = destY - startY;
+      
+      star.style.setProperty('transform', `translate(${deltaX}px, ${deltaY}px) scale(0.4)`, 'important');
+      star.style.setProperty('opacity', '0.4', 'important');
+    }, 450 + i * 50);
+
+    // Fase 3: Impacto y destrucción
+    setTimeout(() => {
+      star.remove();
+      
+      // Activar efecto visual en el indicador del HUD
+      if (destEl) {
+        destEl.classList.remove('pex-pulse');
+        void destEl.offsetWidth; // Forzar reflow para reiniciar la animación
+        destEl.classList.add('pex-pulse');
+      }
+    }, 1050 + i * 50);
+  }
+};
+
 function renderMarket() {
   marketDecks.innerHTML = '';
   const types = ['ataque', 'escudos', 'curacion'];
@@ -3342,6 +3502,34 @@ function renderBattlefield() {
     if (goblin.isDying) {
       gobEl.classList.add(goblin.gaveReward ? 'dying-reward' : 'dying');
       gobEl.innerHTML = `<div class="goblin-hp" style="background: var(--accent-red); color: white;">0</div>`;
+      
+      // Trigger coin and PEX explosion animations if the goblin gave reward and it hasn't played yet
+      if (goblin.gaveReward && !goblin.goldAnimationPlayed) {
+        goblin.goldAnimationPlayed = true;
+        const activePlayer = gameState.getCurrentPlayer();
+        const isNormalReward = (goblin.isHito || (activePlayer && goblin.level >= activePlayer.level));
+        
+        // Oro (hacia el HUD a la derecha)
+        const baseMo = isNormalReward ? (goblin.mo || 0) : 0;
+        const extraMo = (gameState.activeSenda === 'recaudador') ? 1 : 0;
+        const coinsToSpawn = baseMo + extraMo;
+        
+        if (coinsToSpawn > 0) {
+          // Delay ligeramente para que comience después de iniciar la opacidad de muerte
+          setTimeout(() => {
+            window.animateGoldDrop(gobEl, coinsToSpawn);
+          }, 150);
+        }
+
+        // PEX (hacia el panel de grupo a la izquierda)
+        const pexToSpawn = isNormalReward ? (goblin.pex || 0) : 0;
+        if (pexToSpawn > 0) {
+          // Ligeramente desfasado del oro para un flujo dinámico secuencial
+          setTimeout(() => {
+            window.animatePexDrop(gobEl, pexToSpawn);
+          }, 250);
+        }
+      }
     } else {
       const isInvulnerable = gameState.isGoblinInvulnerable(goblin);
       if (isInvulnerable) {
