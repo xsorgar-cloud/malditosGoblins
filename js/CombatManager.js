@@ -229,6 +229,9 @@ window.combatDieOnCombatRoleHandler = (e) => {
   const c = gameState.currentCombat;
   if (!c) {
     overlay.classList.add('hidden');
+    if (typeof window.drawCombatArrows === 'function') {
+      window.drawCombatArrows();
+    }
     return;
   }
   overlay.classList.remove('hidden');
@@ -757,6 +760,7 @@ const statsContainer = document.getElementById('combat-player-stats');
     // Goblin card
     let gobCard = document.createElement('div');
     gobCard.className = 'goblin-card';
+    gobCard.id = `goblin-card-${gob.uid}`;
     let imageUrl = gob.image;
     if (gob.isHito) {
       gobCard.classList.add('goblin-hito');
@@ -1505,6 +1509,223 @@ const statsContainer = document.getElementById('combat-player-stats');
       }
     });
   }, 100);
+
+  // Dibujar flechas de asignación y objetivos
+  if (typeof window.drawCombatArrows === 'function') {
+    window.drawCombatArrows();
+    setTimeout(() => {
+      if (typeof window.drawCombatArrows === 'function') window.drawCombatArrows();
+    }, 50);
+    setTimeout(() => {
+      if (typeof window.drawCombatArrows === 'function') window.drawCombatArrows();
+    }, 150);
+  }
+}
+
+// ============================================================================
+// DIBUJADO DINÁMICO DE FLECHAS DE COMBATE (ASIGNACIONES DE DADOS Y OBJETIVOS)
+// ============================================================================
+window.drawCombatArrows = function() {
+  const overlay = document.getElementById('combat-overlay');
+  if (!overlay || overlay.classList.contains('hidden')) {
+    const svg = document.getElementById('combat-arrows-svg');
+    if (svg) {
+      const defs = svg.querySelector('defs');
+      svg.innerHTML = '';
+      if (defs) svg.appendChild(defs);
+    }
+    return;
+  }
+
+  const svg = document.getElementById('combat-arrows-svg');
+  if (!svg) return;
+
+  // Limpiar paths anteriores manteniendo las definiciones
+  const defs = svg.querySelector('defs');
+  svg.innerHTML = '';
+  if (defs) svg.appendChild(defs);
+
+  const overlayRect = overlay.getBoundingClientRect();
+
+  function getCenter(element) {
+    if (!element) return null;
+    const rect = element.getBoundingClientRect();
+    if (rect.width === 0 || rect.height === 0) return null;
+    return {
+      x: rect.left - overlayRect.left + rect.width / 2,
+      y: rect.top - overlayRect.top + rect.height / 2,
+      rect: rect
+    };
+  }
+
+  function drawArrow(startX, startY, endX, endY, type, isCurved = false) {
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    
+    let d = '';
+    let startOffset = 20; // Radio del dado / margen
+    let endOffset = 25;   // Margen del objetivo (deja espacio para el marcador de punta de flecha)
+    
+    if (isCurved) {
+      const midX = (startX + endX) / 2;
+      const midY = (startY + endY) / 2;
+      
+      const dx = endX - startX;
+      const dy = endY - startY;
+      const dist = Math.hypot(dx, dy);
+      if (dist < 10) return;
+
+      // Desplazamiento perpendicular de la curva para dar efecto arqueado
+      const curveAmount = 45;
+      const px = (-dy / dist) * curveAmount;
+      const py = (dx / dist) * curveAmount;
+      
+      const controlX = midX + px;
+      const controlY = midY + py;
+      
+      // Ajuste de los extremos basándose en la tangente para que salgan y entren limpios
+      const dxStart = controlX - startX;
+      const dyStart = controlY - startY;
+      const distStart = Math.hypot(dxStart, dyStart);
+      const sX = startX + (dxStart / distStart) * startOffset;
+      const sY = startY + (dyStart / distStart) * startOffset;
+      
+      const dxEnd = endX - controlX;
+      const dyEnd = endY - controlY;
+      const distEnd = Math.hypot(dxEnd, dyEnd);
+      const eX = endX - (dxEnd / distEnd) * endOffset;
+      const eY = endY - (dyEnd / distEnd) * endOffset;
+      
+      d = `M ${sX} ${sY} Q ${controlX} ${controlY} ${eX} ${eY}`;
+    } else {
+      const dx = endX - startX;
+      const dy = endY - startY;
+      const dist = Math.hypot(dx, dy);
+      if (dist < 10) return;
+      
+      const sX = startX + (dx / dist) * startOffset;
+      const sY = startY + (dy / dist) * startOffset;
+      const eX = endX - (dx / dist) * endOffset;
+      const eY = endY - (dy / dist) * endOffset;
+      
+      d = `M ${sX} ${sY} L ${eX} ${eY}`;
+    }
+    
+    path.setAttribute('d', d);
+    
+    let colorClass = '';
+    let markerId = '';
+    let strokeColor = '';
+    
+    switch (type) {
+      case 'equip':
+        colorClass = 'dash-flow-equip';
+        markerId = 'arrowhead-gold';
+        strokeColor = '#d4af37';
+        break;
+      case 'role':
+        colorClass = 'dash-flow-role';
+        markerId = 'arrowhead-blue';
+        strokeColor = '#00d2ff';
+        break;
+      case 'intercept':
+        colorClass = 'dash-flow-intercept';
+        markerId = 'arrowhead-green';
+        strokeColor = '#33cc33';
+        break;
+      case 'target':
+        colorClass = 'dash-flow-target';
+        markerId = 'arrowhead-red';
+        strokeColor = '#ff4d4d';
+        break;
+    }
+    
+    path.setAttribute('class', `combat-arrow-path ${colorClass}`);
+    path.setAttribute('marker-end', `url(#${markerId})`);
+    path.setAttribute('stroke', strokeColor);
+    svg.appendChild(path);
+  }
+
+  // 1. Dibujar flechas desde los dados a los slots de equipamiento o rol
+  for (let eqId in currentAssignments) {
+    const asgData = currentAssignments[eqId];
+    const asgList = Array.isArray(asgData) ? asgData : [asgData];
+    
+    asgList.forEach(asg => {
+      const dieEl = document.getElementById(asg.dieId);
+      if (!dieEl) return;
+      
+      const centerStart = getCenter(dieEl);
+      if (!centerStart) return;
+      
+      if (eqId === 'role') {
+        const slotEl = document.getElementById('equip-slot-role');
+        const centerEnd = getCenter(slotEl);
+        if (centerEnd) {
+          drawArrow(centerStart.x, centerStart.y, centerEnd.x, centerEnd.y, 'role');
+        }
+      } else {
+        const slotEl = document.getElementById(`equip-slot-${eqId}`);
+        const centerEnd = getCenter(slotEl);
+        if (centerEnd) {
+          drawArrow(centerStart.x, centerStart.y, centerEnd.x, centerEnd.y, 'equip');
+        }
+      }
+    });
+  }
+
+  // 2. Dibujar flechas desde los dados a los Goblins (intercepciones)
+  for (let gobUid in interceptionAssignments) {
+    const asgData = interceptionAssignments[gobUid];
+    const asgList = Array.isArray(asgData) ? asgData : [asgData];
+    
+    asgList.forEach(asg => {
+      const dieEl = document.getElementById(asg.dieId);
+      if (!dieEl) return;
+      
+      const centerStart = getCenter(dieEl);
+      if (!centerStart) return;
+      
+      // Intentar apuntar al dado verde específico primero, o a la carta de goblin en su defecto
+      const targetDieEl = document.getElementById(`green-die-${gobUid}-${asg.goblinDieIndex}`);
+      const goblinCardEl = document.getElementById(`goblin-card-${gobUid}`);
+      
+      const centerEnd = getCenter(targetDieEl) || getCenter(goblinCardEl);
+      if (centerEnd) {
+        drawArrow(centerStart.x, centerStart.y, centerEnd.x, centerEnd.y, 'intercept');
+      }
+    });
+  }
+
+  // 3. Dibujar flechas desde el equipamiento a los Goblins (objetivos de ataque)
+  for (let eqId in currentAssignments) {
+    if (eqId === 'role') continue;
+    
+    const asgData = currentAssignments[eqId];
+    const asgList = Array.isArray(asgData) ? asgData : [asgData];
+    
+    const firstAsg = asgList[0];
+    if (firstAsg && firstAsg.targetUid) {
+      const slotEl = document.getElementById(`equip-slot-${eqId}`);
+      const goblinCardEl = document.getElementById(`goblin-card-${firstAsg.targetUid}`);
+      
+      const centerStart = getCenter(slotEl);
+      const centerEnd = getCenter(goblinCardEl);
+      
+      if (centerStart && centerEnd) {
+        drawArrow(centerStart.x, centerStart.y, centerEnd.x, centerEnd.y, 'target', true);
+      }
+    }
+  }
+};
+
+// Registrar el listener de redimensionado solo una vez
+if (!window.combatArrowsResizeRegistered) {
+  window.addEventListener('resize', () => {
+    if (typeof window.drawCombatArrows === 'function') {
+      window.drawCombatArrows();
+    }
+  });
+  window.combatArrowsResizeRegistered = true;
 }
 
 // El control de btn-cancel-combat y btn-resolve-combat se gestiona íntegramente

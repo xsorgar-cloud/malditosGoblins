@@ -68,6 +68,7 @@ main {
 }
 
 footer {
+  position: relative;
   background: var(--panel-bg);
   backdrop-filter: blur(10px);
   border: 1px solid rgba(212, 175, 55, 0.3);
@@ -904,6 +905,53 @@ main {
 .retaliation-bot-bubble.show {
   opacity: 1;
   transform: translateX(-50%) translateY(0);
+}
+
+/* ANIMACIÓN DE FLUJO EN FLECHAS DE COMBATE */
+.combat-arrow-path {
+  stroke-width: 5;
+  stroke-dasharray: 8, 6;
+  fill: none;
+  opacity: 0.85;
+  filter: drop-shadow(0px 0px 3px rgba(0,0,0,0.6));
+  pointer-events: none;
+  transition: d 0.2s ease;
+}
+
+.dash-flow-equip {
+  animation: dashEquip 1.5s linear infinite;
+}
+.dash-flow-role {
+  animation: dashRole 1.5s linear infinite;
+}
+.dash-flow-intercept {
+  animation: dashIntercept 1.5s linear infinite;
+}
+.dash-flow-target {
+  animation: dashTarget 1.5s linear infinite;
+  stroke-width: 7;
+  stroke-dasharray: 10, 6;
+}
+
+@keyframes dashEquip {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+@keyframes dashRole {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+@keyframes dashIntercept {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+@keyframes dashTarget {
+  to {
+    stroke-dashoffset: -32;
+  }
 }
 
 .combat-panel {
@@ -2404,6 +2452,11 @@ main {
     overflow: visible !important;
     height: auto !important;
     flex: 0 0 auto !important;
+    position: relative !important;
+  }
+
+  footer {
+    z-index: 600 !important;
   }
 
 
@@ -2544,8 +2597,7 @@ main {
   /* --- ZONA DE JUGADORES --- */
   .players-container {
     flex-direction: column !important;
-    overflow-y: visible !important;
-    overflow-x: hidden !important;
+    overflow: visible !important;
     gap: 15px !important;
   }
 

@@ -4155,7 +4155,7 @@ function openDuplicateWarningModal(type, card) {
 
   title.innerText = "¡OBJETO DUPLICADO!";
   title.style.color = "var(--accent-red)";
-  desc.innerHTML = `Ya tienes un <strong>${card.name}</strong> equipado.<br><br>-+Deseas comprar otra copia para guardarla en el almacén de tu mochila?<br><br><em>(Podras intercambiarlos cuando quieras si alguno se rompe o para gestionar tu peso)</em>`;
+  desc.innerHTML = `Ya tienes un <strong>${card.name}</strong> equipado.<br><br>¿Deseas comprar otra copia para guardarla en el almacén de tu mochila?<br><br><em>(Podras intercambiarlos cuando quieras si alguno se rompe o para gestionar tu peso)</em>`;
 
   container.innerHTML = '';
   // Añadimos un marcador para que checkLevelUpChoice no cierre el modal
@@ -4229,7 +4229,7 @@ function openActionLossWarningModal(onConfirm) {
 
   title.innerText = "¡ACCIÓN PENDIENTE!";
   title.style.color = "var(--gold)";
-  desc.innerHTML = `Aún tienes la oportunidad de realizar tu acción básica de este turno (Atacar, Cobrar o Rellenar Rol).<br><br>Si continúas con la compra, <strong>perderás la oportunidad</strong> de realizar tu acción de este turno.<br><br>-+Deseas continuar con la compra de todos modos?`;
+  desc.innerHTML = `Aún tienes la oportunidad de realizar tu acción básica de este turno (Atacar, Cobrar o Rellenar Rol).<br><br>Si continúas con la compra, <strong>perderás la oportunidad</strong> de realizar tu acción de este turno.<br><br>¿Deseas continuar con la compra de todos modos?`;
 
   container.innerHTML = '';
   // Añadimos un marcador para evitar cierres accidentales
