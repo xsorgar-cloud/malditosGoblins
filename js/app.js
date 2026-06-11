@@ -617,21 +617,26 @@ function renderRoleSelection() {
       img.onclick = () => {
         // Toggle: si ya estaba seleccionado, lo quitamos (excepto para el Jugador 1)
         if (selectedSetupRoles[i] === r.id) {
-          if (i !== 0) selectedSetupRoles[i] = null;
+          if (i !== 0) {
+            selectedSetupRoles[i] = null;
+            justSelectedRole = { playerIndex: i, roleId: null, wasDeselected: r.id };
+          } else {
+            return;
+          }
         } else {
           selectedSetupRoles[i] = r.id;
           justSelectedRole = { playerIndex: i, roleId: r.id };
         }
         
-        // Animación de giro en el icono circular seleccionado
-        img.classList.remove('card-spin-horizontal');
-        void img.offsetWidth; // Forzar reflow para reiniciar la animación
-        img.classList.add('card-spin-horizontal');
+        // Animación de giro en el icono circular (Primera mitad: 0 a 90 grados)
+        img.classList.remove('card-spin-first-half');
+        void img.offsetWidth; // Forzar reflow
+        img.classList.add('card-spin-first-half');
         
-        // Retrasamos el renderizado para que se vea el giro completo del icono
+        // Renderizamos la segunda mitad a los 300ms (mitad del movimiento)
         setTimeout(() => {
           renderRoleSelection();
-        }, 600);
+        }, 300);
       };
       img.onmouseenter = () => {
         const previewName = document.getElementById('setup-role-name');
@@ -645,22 +650,24 @@ function renderRoleSelection() {
         }
       };
 
-      // Si este rol acaba de ser seleccionado, mostramos un cartel momentáneo sobre él
-      if (justSelectedRole && justSelectedRole.playerIndex === i && justSelectedRole.roleId === r.id) {
-        let toast = document.createElement('span');
-        toast.className = 'role-option-toast';
-        toast.style.setProperty('--text-len', r.name.length);
-        toast.innerText = r.name.toUpperCase();
+      // Si este rol acaba de ser seleccionado (o deseleccionado), mostramos la segunda mitad del giro y el cartel
+      if (justSelectedRole && justSelectedRole.playerIndex === i && (justSelectedRole.roleId === r.id || justSelectedRole.wasDeselected === r.id)) {
+        img.classList.add('card-spin-second-half');
         
-        img.appendChild(toast);
-        
-        setTimeout(() => {
-          if (toast.parentNode) {
-            toast.parentNode.removeChild(toast);
-          }
-        }, 1500);
-        
-        justSelectedRole = null; // resetear para el siguiente renderizado
+        if (justSelectedRole.roleId !== null) {
+          let toast = document.createElement('span');
+          toast.className = 'role-option-toast';
+          toast.style.setProperty('--text-len', r.name.length);
+          toast.innerText = r.name.toUpperCase();
+          
+          img.appendChild(toast);
+          
+          setTimeout(() => {
+            if (toast.parentNode) {
+              toast.parentNode.removeChild(toast);
+            }
+          }, 1500);
+        }
       }
 
       optionsDiv.appendChild(img);
@@ -686,7 +693,7 @@ function renderRoleSelection() {
       const randomIndex = Math.floor(Math.random() * DB.roles.length);
       const randomRole = DB.roles[randomIndex];
       selectedSetupRoles[i] = randomRole.id;
-      justSelectedRole = { playerIndex: i, roleId: randomRole.id };
+      justSelectedRole = { playerIndex: i, roleId: randomRole.id, isRandom: true };
       
       // Actualizar visor inmediatamente al elegir aleatorio (sin animación en la carta)
       const previewName = document.getElementById('setup-role-name');
@@ -699,14 +706,15 @@ function renderRoleSelection() {
         previewEffect.innerText = randomRole.effect;
       }
       
-      // Animación de giro en el botón de aleatorio
-      randomBtn.classList.remove('card-spin-horizontal');
+      // Animación de giro en el botón de aleatorio (Primera mitad: 0 a 90 grados)
+      randomBtn.classList.remove('card-spin-first-half');
       void randomBtn.offsetWidth; // Forzar reflow
-      randomBtn.classList.add('card-spin-horizontal');
+      randomBtn.classList.add('card-spin-first-half');
       
+      // Renderizamos la segunda mitad a los 300ms (mitad del movimiento)
       setTimeout(() => {
         renderRoleSelection();
-      }, 600);
+      }, 300);
     };
 
     randomBtn.onmouseenter = () => {
@@ -724,12 +732,20 @@ function renderRoleSelection() {
       const previewCard = document.getElementById('setup-role-card');
       if (previewCard) previewCard.style.backgroundColor = '';
     };
+    
+    // Si este botón de aleatorio acaba de ser seleccionado, mostramos la segunda mitad del giro
+    if (justSelectedRole && justSelectedRole.playerIndex === i && justSelectedRole.isRandom) {
+      randomBtn.classList.add('card-spin-second-half');
+    }
 
     optionsDiv.appendChild(randomBtn);
 
     row.appendChild(optionsDiv);
     roleSelectionContainer.appendChild(row);
   }
+  
+  // Limpiar justSelectedRole al final de toda la selección
+  justSelectedRole = null;
   TutorialManager.evaluateSituation();
 }
 

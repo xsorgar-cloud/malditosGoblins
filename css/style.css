@@ -3626,6 +3626,34 @@ main {
   animation: cardSpinHorizontal 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
 }
 
+/* GIRO HORIZONTAL EN DOS MITADES (PARA ACTUALIZACIONES A MITAD DE CAMBIO) */
+@keyframes cardSpinFirstHalf {
+  0% {
+    transform: perspective(800px) rotateY(0deg);
+  }
+  100% {
+    transform: perspective(800px) rotateY(90deg);
+  }
+}
+
+@keyframes cardSpinSecondHalf {
+  0% {
+    transform: perspective(800px) rotateY(270deg);
+  }
+  100% {
+    transform: perspective(800px) rotateY(360deg);
+  }
+}
+
+.card-spin-first-half {
+  animation: cardSpinFirstHalf 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
+}
+
+.card-spin-second-half {
+  animation: cardSpinSecondHalf 0.3s cubic-bezier(0, 0, 0.2, 1) forwards;
+}
+
+
 
 
 
