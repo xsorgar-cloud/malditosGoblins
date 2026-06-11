@@ -2902,8 +2902,10 @@ btnConfirmAttack.addEventListener('click', () => {
 });
 
 window.animateCardPurchase = function(sourceEl, onComplete) {
+  console.log("animateCardPurchase called", { sourceEl, onComplete });
   const rect = sourceEl.getBoundingClientRect();
   const clone = sourceEl.cloneNode(true);
+  console.log("Source rect:", rect);
   
   clone.style.position = 'fixed';
   clone.style.left = rect.left + 'px';
@@ -2912,13 +2914,19 @@ window.animateCardPurchase = function(sourceEl, onComplete) {
   clone.style.height = rect.height + 'px';
   clone.style.margin = '0';
   clone.style.zIndex = '9999';
-  clone.style.transition = 'all 0.4s cubic-bezier(0.25, 1, 0.5, 1)';
   clone.style.pointerEvents = 'none';
   clone.style.boxShadow = '0 0 30px var(--gold)';
   
+  // Configurar la animación de forma limpia usando solo transformaciones e !important
+  clone.style.setProperty('transform', 'translate(0, 0) scale(1)', 'important');
+  clone.style.setProperty('transform-origin', 'top left', 'important');
+  clone.style.setProperty('transition', 'transform 0.45s cubic-bezier(0.25, 1, 0.5, 1)', 'important');
+  
   document.body.appendChild(clone);
+  console.log("Clone appended to body", clone);
   
   const equipmentContainer = document.querySelector('.player-panel.active-turn .player-equipment');
+  console.log("Equipment container found:", equipmentContainer);
   let targetRect = { left: window.innerWidth / 2, top: window.innerHeight / 2, width: rect.width * 0.5, height: rect.height * 0.5 };
   
   if (equipmentContainer) {
@@ -2929,27 +2937,42 @@ window.animateCardPurchase = function(sourceEl, onComplete) {
     dummy.style.margin = '0';
     equipmentContainer.appendChild(dummy);
     targetRect = dummy.getBoundingClientRect();
+    console.log("Dummy rect (destination):", targetRect);
     dummy.remove();
+  } else {
+    console.warn("No equipment container found for active player!");
   }
   
   // Force reflow
   clone.getBoundingClientRect();
 
-  // Calcular la posición exacta de destino
-  clone.style.left = targetRect.left + 'px';
-  clone.style.top = targetRect.top + 'px';
-  
-  // Escalar para que encaje en el hueco de equipment-card
-  const scaleX = targetRect.width / rect.width;
-  const scaleY = targetRect.height / rect.height;
-  clone.style.transform = `scale(${Math.min(scaleX, scaleY)})`;
-  clone.style.transformOrigin = 'top left';
-  clone.style.opacity = '1'; // No desvanecer
+  // Animación asíncrona para que se registre la posición inicial en el siguiente tick del navegador
+  setTimeout(() => {
+    const deltaX = targetRect.left - rect.left;
+    const deltaY = targetRect.top - rect.top;
+    const scaleX = targetRect.width / rect.width;
+    const scaleY = targetRect.height / rect.height;
+    const scale = Math.min(scaleX, scaleY);
+    
+    console.log("setTimeout animating clone with transform:", { deltaX, deltaY, scale });
+    clone.style.setProperty('transform', `translate(${deltaX}px, ${deltaY}px) scale(${scale})`, 'important');
+  }, 20);
   
   setTimeout(() => {
+    console.log("Removing clone and completing purchase animation");
     clone.remove();
+    // Limpiar flag _justBoughtId para que la carta se dibuje visible de inmediato al llamar a updateUI
+    if (gameState && gameState.players) {
+      gameState.players.forEach(p => {
+        if (p.equipped) {
+          p.equipped.forEach(eq => {
+            delete eq._justBoughtId;
+          });
+        }
+      });
+    }
     if (onComplete) onComplete();
-  }, 400);
+  }, 480);
 }
 
 function renderMarket() {
@@ -2963,6 +2986,7 @@ function renderMarket() {
       const topCard = deck[0];
       const deckEl = document.createElement('div');
       deckEl.className = 'deck';
+      deckEl.setAttribute('data-deck-type', type);
       deckEl.style.backgroundImage = `url('${topCard.image}')`;
       deckEl.innerHTML = '';
 
@@ -2983,12 +3007,21 @@ function renderMarket() {
         if (player.mo < topCard.cost) return;
 
         const executeBuy = () => {
+          // Temporarily bypass synchronous updateUI during the purchase operation
+          // to prevent nextTurn() from changing the active turn panel in the DOM mid-animation
+          const originalUpdateUI = window.updateUI;
+          window.updateUI = () => {};
+          
           const result = gameState.buyFromMarket(type);
+          
+          window.updateUI = originalUpdateUI; // Restore immediately
+          
           if (result === "OVERWEIGHT") {
             alert(`¡DEMASIADO PESO! No puedes llevar más de ${DB.playerLevels[player.level - 1].blocks} bloques de equipo. Sube de nivel para aumentar tu capacidad.`);
           } else if (result) {
-            animateCardPurchase(deckEl);
-            updateUI();
+            animateCardPurchase(deckEl, () => {
+              updateUI();
+            });
           }
         };
 
@@ -2996,7 +3029,7 @@ function renderMarket() {
 
         const promptBuy = () => {
           if (hasCard) {
-            openDuplicateWarningModal(type, topCard);
+            openDuplicateWarningModal(type, topCard, executeBuy);
           } else {
             openPurchaseConfirmationModal(topCard, executeBuy);
           }
@@ -3659,6 +3692,16 @@ function triggerCombatDiceRoll() {
 }
 
 function renderRetaliationModal() {
+  if (!gameState.isRetaliationPhase || !gameState.retaliationQueue || gameState.retaliationQueue.length === 0) {
+    const overlay = document.getElementById('global-event-overlay');
+    if (overlay) overlay.classList.add('hidden');
+    const modal = document.querySelector('.event-modal');
+    if (modal) modal.classList.remove('retaliation-theme');
+    const container = document.getElementById('event-choices-container');
+    if (container) container.classList.remove('retaliation-layout');
+    return;
+  }
+
   const overlay = document.getElementById('global-event-overlay');
   const title = document.getElementById('event-modal-title');
   const desc = document.getElementById('event-modal-desc');
@@ -4147,7 +4190,7 @@ function updateNarrowStates() {
 // Observador para cambios de tamaño en ventana
 window.addEventListener('resize', updateNarrowStates);
 
-function openDuplicateWarningModal(type, card) {
+function openDuplicateWarningModal(type, card, onConfirm) {
   const overlay = document.getElementById('global-event-overlay');
   const title = document.getElementById('event-modal-title');
   const desc = document.getElementById('event-modal-desc');
@@ -4168,9 +4211,13 @@ function openDuplicateWarningModal(type, card) {
   btnYes.style.marginRight = '10px';
   btnYes.innerText = "SÍ, COMPRAR Y ALMACENAR";
   btnYes.onclick = () => {
-    gameState.buyFromMarket(type);
     overlay.classList.add('hidden');
-    updateUI();
+    if (onConfirm) {
+      onConfirm();
+    } else {
+      gameState.buyFromMarket(type);
+      updateUI();
+    }
   };
 
   const btnNo = document.createElement('button');

@@ -108,13 +108,19 @@ triggerAction(type, target = null, reason = "") {
             }, 500);
             return;
         } else if (type === 'buy') {
-            const types = ['ataque', 'escudos', 'curacion'];
-            const deckIdx = types.indexOf(target);
-            const deckEls = document.querySelectorAll('#market-decks .deck');
+            const deckEl = document.querySelector(`#market-decks .deck[data-deck-type="${target}"]`);
+            
+            // Temporarily bypass synchronous updateUI during the purchase operation
+            // to prevent nextTurn() from changing the active turn panel in the DOM mid-animation
+            const originalUpdateUI = window.updateUI;
+            window.updateUI = () => {};
             
             const result = this.gameState.buyFromMarket(target);
+            
+            window.updateUI = originalUpdateUI; // Restore immediately
+            
             if (result && result !== "OVERWEIGHT") {
-                if (deckEls && deckEls[deckIdx]) window.animateCardPurchase(deckEls[deckIdx]);
+                if (deckEl) window.animateCardPurchase(deckEl);
             }
             setTimeout(() => {
                 if (window.botsPaused) { this.isActing = false; return; }
@@ -1155,7 +1161,7 @@ performCombatTurn(bot) {
                                         let attacks = gobDB.attacks[detail.val] || [];
                                         isDirect = attacks.some(a => {
                                             let lower = a.toLowerCase();
-                                            return lower.includes('daño directo') || lower.includes('verdadero') || lower.includes('veneno') || lower.includes('toxina');
+                                            return lower.includes('daño directo') || lower.includes('dano directo') || lower.includes('direct') || lower.includes('verdadero') || lower.includes('veneno') || lower.includes('toxina');
                                         });
                                     }
                                     
@@ -1260,9 +1266,16 @@ performCombatTurn(bot) {
                     return gob.currentHp - assignedDmg <= 0;
                 });
 
-                const brokenEquipsToRepair = bot.equipped.filter(eq => eq.isBroken && this.canAcceptDie(die, eq));
+                const brokenEquipsToRepair = bot.equipped.filter(eq => {
+                    if (!eq.isBroken || !this.canAcceptDie(die, eq)) return false;
+                    if (this.isWeapon(eq)) return !allGoblinsDead;
+                    if (this.isShield(eq)) return !allGoblinsDead && (incomingNormalDmg > 0 || this.getDamageForDieInEquip(die.value, eq) > 0);
+                    if (this.isHeal(eq)) return bot.hp < bot.maxHp;
+                    return true;
+                });
                 const weapons = (plannedKills > 0 && !plannedAssignments[die.id]) ? [] : (allGoblinsDead ? [] : bot.equipped.filter(eq => eq.isActive && !eq.isBroken && this.isWeapon(eq) && this.canAcceptDie(die, eq)));
-                const shields = bot.equipped.filter(eq => eq.isActive && !eq.isBroken && this.isShield(eq) && this.canAcceptDie(die, eq));
+                const shields = allGoblinsDead ? [] : bot.equipped.filter(eq => eq.isActive && !eq.isBroken && this.isShield(eq) && this.canAcceptDie(die, eq) && (incomingNormalDmg > 0 || this.getDamageForDieInEquip(die.value, eq) > 0));
+                const heals = bot.equipped.filter(eq => eq.isActive && !eq.isBroken && this.isHeal(eq) && this.canAcceptDie(die, eq));
                 
                 const fallbackToRole = (reason) => {
                     let eGain = bot.role && bot.role.energyRates ? bot.role.energyRates[die.value - 1] : 0;
@@ -1273,6 +1286,9 @@ performCombatTurn(bot) {
                         } else if (shields.length > 0) {
                             this.assignDieToEquip(die, shields[0], bot, "Rol da 0 energía, usando escudo por descarte");
                             return;
+                        } else if (heals.length > 0) {
+                            this.assignDieToEquip(die, heals[0], bot, "Rol da 0 energía, usando curación por descarte");
+                            return;
                         }
                     }
 
@@ -1282,6 +1298,8 @@ performCombatTurn(bot) {
                             this.assignDieToEquip(die, weapons[0], bot, "Rol ya tiene dado, usando arma por descarte");
                         } else if (shields.length > 0) {
                             this.assignDieToEquip(die, shields[0], bot, "Rol ya tiene dado, usando escudo por descarte");
+                        } else if (heals.length > 0) {
+                            this.assignDieToEquip(die, heals[0], bot, "Rol ya tiene dado, usando curación por descarte");
                         } else if (brokenEquipsToRepair.length > 0) {
                             this.assignDieToEquip(die, brokenEquipsToRepair[0], bot, "Rol ya tiene dado, usando equipo roto por descarte");
                         } else {
@@ -1301,6 +1319,8 @@ performCombatTurn(bot) {
                         this.assignDieToEquip(die, weapons[0], bot, "Asignación agresiva a arma.");
                     } else if (shields.length > 0 && (incomingNormalDmg > 0 || this.getDamageForDieInEquip(die.value, shields[0]) > 0)) {
                         this.assignDieToEquip(die, shields[0], bot, "Sin armas, asigno a escudo para mitigar daño.");
+                    } else if (heals.length > 0 && bot.hp < bot.maxHp) {
+                        this.assignDieToEquip(die, heals[0], bot, "Asigno a curación para recuperar vida.");
                     } else {
                         if (brokenEquipsToRepair.length > 0) {
                             this.assignDieToEquip(die, brokenEquipsToRepair[0], bot, "Equipo roto como último recurso.");
@@ -1387,28 +1407,35 @@ calculateEquipPower(eq, bot) {
 
 // Obtiene el perfil de daño del goblin (daño normal y directo)
     getGoblinDamageProfile(gob) {
-        if (!gob || !gob.dice) return { normal: gob.level, direct: 0 };
-        let totalDmg = 0;
-        for (let part of gob.dice) {
-            if (part.includes('d')) {
-                let [numStr, facesStr] = part.split('d');
-                totalDmg += (parseInt(numStr) || 1) * parseInt(facesStr);
-            } else if (part.includes('+')) {
-                totalDmg += parseInt(part.replace('+', ''));
-            }
-        }
-        
-        let hasDirectDamage = false;
-        if (gob.attacks && Array.isArray(gob.attacks)) {
-            hasDirectDamage = gob.attacks.some(atk => atk.toLowerCase().includes('daño directo') || atk.toLowerCase().includes('verdadero') || atk.toLowerCase().includes('veneno') || atk.toLowerCase().includes('toxina'));
-        }
-        
-        if (hasDirectDamage) {
-            return { normal: 0, direct: totalDmg };
-        } else {
-            return { normal: totalDmg, direct: 0 };
-        }
-    }
+         if (!gob || !gob.dice) return { normal: gob.level, direct: 0 };
+         let totalDmg = 0;
+         for (let part of gob.dice) {
+             if (part.includes('d')) {
+                 let [numStr, facesStr] = part.split('d');
+                 totalDmg += (parseInt(numStr) || 1) * parseInt(facesStr);
+             } else if (part.includes('+')) {
+                 totalDmg += parseInt(part.replace('+', ''));
+             }
+         }
+         
+         let hasDirectDamage = false;
+         let attacksObj = gob.attacks || (typeof DB !== 'undefined' && DB.goblins && DB.goblins[gob.level] ? DB.goblins[gob.level].attacks : null);
+         if (attacksObj) {
+             hasDirectDamage = Object.values(attacksObj).some(arr => {
+                 if (!Array.isArray(arr)) return false;
+                 return arr.some(atk => {
+                     let lower = atk.toLowerCase();
+                     return lower.includes('daño directo') || lower.includes('dano directo') || lower.includes('direct') || lower.includes('verdadero') || lower.includes('veneno') || lower.includes('toxina');
+                 });
+             });
+         }
+         
+         if (hasDirectDamage) {
+             return { normal: 0, direct: totalDmg };
+         } else {
+             return { normal: totalDmg, direct: 0 };
+         }
+     }
 
 // Determina los objetivos de combate seguros según el bot, los goblins presentes y la personalidad
     getSafeCombatTargets(bot, goblinsEnMesa, currentPersonality) {
@@ -1517,23 +1544,35 @@ calculateEquipPower(eq, bot) {
 
 // Verifica si el equipamiento es un arma (contiene la palabra 'daño')
     isWeapon(eq) {
+        if (!eq) return false;
         let effectStr = ((eq.isBroken && eq.broken ? eq.broken.effect : eq.effect) || '').toLowerCase();
         let extraStr = ((eq.isBroken && eq.broken ? eq.broken.extra : eq.extra) || '').toLowerCase();
-        return effectStr.includes('daño') || extraStr.includes('daño');
+        const keywords = ['daño', 'dano', 'dañ', 'dan', 'ataque', 'damage'];
+        const matchesKeyword = keywords.some(k => effectStr.includes(k) || extraStr.includes(k));
+        const weaponIds = ['espada_inicial', 'daga', 'afilado', 'anadir_pinchos', 'cuchillo', 'serrado', 'oxidado'];
+        return matchesKeyword || weaponIds.includes(eq.id);
     }
 
 // Verifica si el equipamiento es un escudo o armadura
     isShield(eq) {
+        if (!eq) return false;
         let effectStr = ((eq.isBroken && eq.broken ? eq.broken.effect : eq.effect) || '').toLowerCase();
         let extraStr = ((eq.isBroken && eq.broken ? eq.broken.extra : eq.extra) || '').toLowerCase();
-        return effectStr.includes('escudo') || effectStr.includes('escudo') || effectStr.includes('armadura');
+        const keywords = ['escudo', 'armadura', 'shield', 'defense', 'doble_reforzado', 'reforzado'];
+        const matchesKeyword = keywords.some(k => effectStr.includes(k) || extraStr.includes(k));
+        const shieldIds = ['escudo_inicial', 'reforzado_pinchos', 'reforzado_hierro', 'rodela', 'doble_reforzado', 'reforzado_cuero', 'reforzado_placas'];
+        return matchesKeyword || shieldIds.includes(eq.id);
     }
 
 // Verifica si el equipamiento proporciona curación
     isHeal(eq) {
+        if (!eq) return false;
         let effectStr = ((eq.isBroken && eq.broken ? eq.broken.effect : eq.effect) || '').toLowerCase();
         let extraStr = ((eq.isBroken && eq.broken ? eq.broken.extra : eq.extra) || '').toLowerCase();
-        return effectStr.includes('cura') || effectStr.includes('cura');
+        const keywords = ['cura', 'heal', 'regenera'];
+        const matchesKeyword = keywords.some(k => effectStr.includes(k) || extraStr.includes(k));
+        const healIds = ['cristal_curacion', 'gema_regeneracion', 'corazon_elastico', 'vendaje', 'drenar', 'drenar_justo'];
+        return matchesKeyword || healIds.includes(eq.id);
     }
 
 // Calcula el daño que un dado aporta al equipamiento dado
@@ -1978,8 +2017,17 @@ calculateEquipPower(eq, bot) {
                     }
                     
                     if (!this.gameState.isGameOver) {
-                        if (typeof renderRetaliationModal === 'function') {
-                            renderRetaliationModal();
+                        if (this.gameState.isRetaliationPhase) {
+                            if (typeof renderRetaliationModal === 'function') {
+                                renderRetaliationModal();
+                            }
+                        } else {
+                            const overlay = document.getElementById('global-event-overlay');
+                            if (overlay) overlay.classList.add('hidden');
+                            const modal = document.querySelector('.event-modal');
+                            if (modal) modal.classList.remove('retaliation-theme');
+                            const container = document.getElementById('event-choices-container');
+                            if (container) container.classList.remove('retaliation-layout');
                         }
                         this.isActing = false;
                         this.handleGameState();
