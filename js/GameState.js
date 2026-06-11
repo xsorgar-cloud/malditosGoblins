@@ -841,8 +841,16 @@ class GameState {
                 gob1.currentHp = 0; gob1.isDying = true; gob1.gaveReward = true; // Para que no de recompensa en render
                 gob2.currentHp = 0; gob2.isDying = true; gob2.gaveReward = true;
                 
+                let extraProps = {};
+                if (gob1.isInvocacion && gob2.isInvocacion) {
+                  extraProps.isInvocacion = true;
+                  extraProps.mo = 0;
+                  extraProps.image = 'assets/Monstruos/invocacion_0' + (lvl + 1) + '.webp';
+                }
+                
                 this.battlefield.goblins.push({
                   ...DB.goblins[lvl + 1],
+                  ...extraProps,
                   uid: Date.now() + Math.random(),
                   currentHp: DB.goblins[lvl + 1].hp,
                   isMutated: true
@@ -1172,6 +1180,9 @@ class GameState {
           targetGoblin.gaveReward = true;
           let isNormalReward = (targetGoblin.isHito || targetGoblin.level >= p.level);
           let baseMo = isNormalReward ? targetGoblin.mo : 0;
+          if (targetGoblin.isInvocacion) {
+            baseMo = 0;
+          }
           let extraMo = (this.activeSenda === 'recaudador') ? 1 : 0;
           p.mo += (baseMo + extraMo);
           if (extraMo > 0) {
@@ -1180,16 +1191,18 @@ class GameState {
 
           if (isNormalReward) {
             this.ganarPex(targetGoblin.pex);
+            let moRewardText = targetGoblin.isInvocacion ? "0 mo (invocación)" : `${baseMo} mo`;
             if (extraMo > 0) {
-              this.addLog(`⚔️ <strong>${p.name}</strong> eliminó a G${targetGoblin.level}. Recompensa: ${baseMo} mo, ${targetGoblin.pex} PEX. <span style="color:#ffd700"><strong>+${extraMo} mo (Saqueo Experto)</strong></span>.`);
+              this.addLog(`⚔️ <strong>${p.name}</strong> eliminó a G${targetGoblin.level}. Recompensa: ${moRewardText}, ${targetGoblin.pex} PEX. <span style="color:#ffd700"><strong>+${extraMo} mo (Saqueo Experto)</strong></span>.`);
             } else {
-              this.addLog(`⚔️ <strong>${p.name}</strong> eliminó a G${targetGoblin.level}. Recompensa: ${baseMo} mo, ${targetGoblin.pex} PEX.`);
+              this.addLog(`⚔️ <strong>${p.name}</strong> eliminó a G${targetGoblin.level}. Recompensa: ${moRewardText}, ${targetGoblin.pex} PEX.`);
             }
           } else {
+            let reason = targetGoblin.isInvocacion ? 'por ser una invocación' : 'por diferencia de nivel';
             if (extraMo > 0) {
-              this.addLog(`⚔️ <strong>${p.name}</strong> eliminó a G${targetGoblin.level}. Sin recompensa por diferencia de nivel, pero obtiene <span style="color:#ffd700"><strong>+${extraMo} mo (Saqueo Experto)</strong></span>.`);
+              this.addLog(`⚔️ <strong>${p.name}</strong> eliminó a G${targetGoblin.level}. Sin recompensa de oro base ${reason}, pero obtiene <span style="color:#ffd700"><strong>+${extraMo} mo (Saqueo Experto)</strong></span>.`);
             } else {
-              this.addLog(`⚔️ <strong>${p.name}</strong> eliminó a G${targetGoblin.level}. Sin Recompensa.`);
+              this.addLog(`⚔️ <strong>${p.name}</strong> eliminó a G${targetGoblin.level}. Sin Recompensa ${reason}.`);
             }
           }
         }
@@ -2353,22 +2366,27 @@ Daño directo: Sufres ${brokenCount} de daño.`);
             this.checkSpawnNextHito1Goblin(gob);
             let isNormalReward = (gob.isHito || gob.level >= p.level);
             let baseMo = isNormalReward ? gob.mo : 0;
+            if (gob.isInvocacion) {
+              baseMo = 0;
+            }
             let extraMo = (this.activeSenda === 'recaudador') ? 1 : 0;
             p.mo += (baseMo + extraMo);
             gob.gaveReward = true;
 
             if (isNormalReward) {
               this.ganarPex(gob.pex);
+              let moRewardText = gob.isInvocacion ? "0 mo (invocación)" : `${baseMo} mo`;
               if (extraMo > 0) {
-                this.addLog(`⚔️ ¡El ataque de rol eliminó a ${gob.name}! (+${baseMo} mo, +${gob.pex} PEX) <span style="color:#ffd700"><strong>+${extraMo} mo (Saqueo Experto)</strong></span>.`);
+                this.addLog(`⚔️ ¡El ataque de rol eliminó a ${gob.name}! (+${moRewardText}, +${gob.pex} PEX) <span style="color:#ffd700"><strong>+${extraMo} mo (Saqueo Experto)</strong></span>.`);
               } else {
-                this.addLog(`⚔️ ¡El ataque de rol eliminó a ${gob.name}! (+${baseMo} mo, +${gob.pex} PEX).`);
+                this.addLog(`⚔️ ¡El ataque de rol eliminó a ${gob.name}! (+${moRewardText}, +${gob.pex} PEX).`);
               }
             } else {
+              let reason = gob.isInvocacion ? 'por ser una invocación' : 'por diferencia de nivel';
               if (extraMo > 0) {
-                this.addLog(`⚔️ ¡El ataque de rol eliminó a ${gob.name}! (Sin recompensa por diferencia de nivel, obtiene <span style="color:#ffd700"><strong>+${extraMo} mo (Saqueo Experto)</strong></span>).`);
+                this.addLog(`⚔️ ¡El ataque de rol eliminó a ${gob.name}! (Sin recompensa de oro base ${reason}, obtiene <span style="color:#ffd700"><strong>+${extraMo} mo (Saqueo Experto)</strong></span>).`);
               } else {
-                this.addLog(`⚔️ ¡El ataque de rol eliminó a ${gob.name}! (Sin recompensa por diferencia de nivel).`);
+                this.addLog(`⚔️ ¡El ataque de rol eliminó a ${gob.name}! (Sin recompensa ${reason}).`);
               }
             }
             this.subirNivel(p);

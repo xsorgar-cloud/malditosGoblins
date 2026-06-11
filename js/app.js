@@ -3510,7 +3510,10 @@ function renderBattlefield() {
         const isNormalReward = (goblin.isHito || (activePlayer && goblin.level >= activePlayer.level));
         
         // Oro (hacia el HUD a la derecha)
-        const baseMo = isNormalReward ? (goblin.mo || 0) : 0;
+        let baseMo = isNormalReward ? (goblin.mo || 0) : 0;
+        if (goblin.isInvocacion) {
+          baseMo = 0;
+        }
         const extraMo = (gameState.activeSenda === 'recaudador') ? 1 : 0;
         const coinsToSpawn = baseMo + extraMo;
         
