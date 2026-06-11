@@ -717,11 +717,6 @@ function renderRoleSelection() {
       if (previewCard) previewCard.style.backgroundColor = '';
     };
     
-    // Si este botón de aleatorio acaba de ser seleccionado, mostramos la segunda mitad del giro
-    if (justSelectedRole && justSelectedRole.playerIndex === i && justSelectedRole.isRandom) {
-      randomBtn.classList.add('card-spin-second-half');
-    }
-
     optionsDiv.appendChild(randomBtn);
 
     row.appendChild(optionsDiv);
