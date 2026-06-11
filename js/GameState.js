@@ -839,7 +839,11 @@ class GameState {
                 
                 // Mueren y mutan (no dan recompensas)
                 gob1.currentHp = 0; gob1.isDying = true; gob1.gaveReward = true; // Para que no de recompensa en render
+                gob1.rewardMo = 0;
+                gob1.rewardPex = 0;
                 gob2.currentHp = 0; gob2.isDying = true; gob2.gaveReward = true;
+                gob2.rewardMo = 0;
+                gob2.rewardPex = 0;
                 
                 let extraProps = {};
                 if (gob1.isInvocacion && gob2.isInvocacion) {
@@ -1183,6 +1187,9 @@ class GameState {
           if (targetGoblin.isInvocacion) {
             baseMo = 0;
           }
+          targetGoblin.rewardMo = baseMo;
+          targetGoblin.rewardPex = isNormalReward ? targetGoblin.pex : 0;
+          
           let extraMo = (this.activeSenda === 'recaudador') ? 1 : 0;
           p.mo += (baseMo + extraMo);
           if (extraMo > 0) {
@@ -1289,8 +1296,15 @@ class GameState {
         
         // El goblin da recompensa si es Hito o si su nivel >= nivel de los jugadores
         const pObj = this.players[this.currentPlayerIndex];
-        if (g.isHito || g.level >= pObj.level) {
+        let isNormal = g.isHito || g.level >= pObj.level;
+        if (isNormal) {
           g.gaveReward = true;
+        }
+        if (g.rewardMo === undefined) {
+          g.rewardMo = 0;
+        }
+        if (g.rewardPex === undefined) {
+          g.rewardPex = 0;
         }
 
         // Goblins Bomba: Cada vez que derrotes a un Goblin recibes una carga de Escozor.
@@ -2369,6 +2383,9 @@ Daño directo: Sufres ${brokenCount} de daño.`);
             if (gob.isInvocacion) {
               baseMo = 0;
             }
+            gob.rewardMo = baseMo;
+            gob.rewardPex = isNormalReward ? gob.pex : 0;
+
             let extraMo = (this.activeSenda === 'recaudador') ? 1 : 0;
             p.mo += (baseMo + extraMo);
             gob.gaveReward = true;

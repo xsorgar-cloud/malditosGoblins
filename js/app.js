@@ -3515,7 +3515,11 @@ function renderBattlefield() {
           baseMo = 0;
         }
         const extraMo = (gameState.activeSenda === 'recaudador') ? 1 : 0;
-        const coinsToSpawn = baseMo + extraMo;
+        
+        // Usar los valores precálculados si existen para evitar desincronizaciones al subir de nivel
+        const coinsToSpawn = (goblin.rewardMo !== undefined) 
+          ? (goblin.rewardMo + extraMo) 
+          : (baseMo + extraMo);
         
         if (coinsToSpawn > 0) {
           // Delay ligeramente para que comience después de iniciar la opacidad de muerte
@@ -3525,7 +3529,10 @@ function renderBattlefield() {
         }
 
         // PEX (hacia el panel de grupo a la izquierda)
-        const pexToSpawn = isNormalReward ? (goblin.pex || 0) : 0;
+        const pexToSpawn = (goblin.rewardPex !== undefined)
+          ? goblin.rewardPex
+          : (isNormalReward ? (goblin.pex || 0) : 0);
+          
         if (pexToSpawn > 0) {
           // Ligeramente desfasado del oro para un flujo dinámico secuencial
           setTimeout(() => {
