@@ -1050,22 +1050,48 @@ performCombatTurn(bot) {
             const dieToReroll = availableDice.find(d => d.type === 'black' && !d.rerolled && this.shouldRerollBlackDie(d, bot));
             if (dieToReroll) {
                 console.log("[BotManager] Decided to reroll black die:", dieToReroll.id);
-                this.gameState.rerollDie(dieToReroll.id);
-                this.gameState.addLog(`🎲 <strong>${bot.name}</strong> decide relanzar su dado negro buscando un mejor resultado para su equipo.`);
+                this.isActing = true;
                 
-                if (typeof window.renderCombatOverlay === 'function') {
-                    window.renderCombatOverlay();
+                const dieEl = document.getElementById(dieToReroll.id);
+                if (dieEl) {
+                    dieEl.classList.add('die-spin');
                 }
                 
-                // Salimos del turno y dejamos que se reevalúe el nuevo valor
+                this.gameState.addLog(`🎲 <strong>${bot.name}</strong> decide relanzar su dado negro buscando un mejor resultado para su equipo.`);
+                
+                // Animación y relanzamiento del dado
                 setTimeout(() => {
                     if (window.botsPaused) {
                         this.isActing = false;
                         return;
                     }
-                    this.isActing = false;
-                    this.handleGameState();
-                }, 500);
+                    
+                    const newVal = this.gameState.rerollDie(dieToReroll.id);
+                    if (newVal && dieEl) {
+                        dieEl.innerText = newVal;
+                    }
+                    
+                    setTimeout(() => {
+                        if (window.botsPaused) {
+                            this.isActing = false;
+                            return;
+                        }
+                        
+                        if (typeof window.renderCombatOverlay === 'function') {
+                            window.renderCombatOverlay();
+                        }
+                        
+                        // Pequeño desfase tras renderizar antes de que el bot continúe
+                        setTimeout(() => {
+                            if (window.botsPaused) {
+                                this.isActing = false;
+                                return;
+                            }
+                            this.isActing = false;
+                            this.handleGameState();
+                        }, 200);
+                    }, 300);
+                }, 300);
                 return;
             }
 
