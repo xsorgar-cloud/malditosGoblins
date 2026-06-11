@@ -1802,6 +1802,8 @@ btnStartGame.addEventListener('click', () => {
   const initWave = isNaN(rawWave) ? 1 : rawWave;
   lastWaveLevel = initWave - 1; // Force wave announcement on start
   lastActionCount = -1; // Force action announcement on start
+  focusButtonsHighlighted = false;
+  removeInitialFocusHighlights();
 
   gameState.setupPlayers(numPlayers, finalRoles, { hp: initHp, maxHp: initMaxHp, energy: initEnergy, mo: initGold, hito: initHito, level: initLevel, wave: initWave, senda: initSenda, difficulty: initDifficulty }, finalBots);
   setupModal.classList.add('hidden');
@@ -2593,10 +2595,13 @@ function showActionNotification(count) {
   overlay.classList.remove('hidden');
   overlay.style.opacity = '1';
 
-  if (count === 0) {
-    setTimeout(() => {
-      highlightInitialFocusButtons();
-    }, 1600); // Lanzar casi al final del hachazo
+  if (count === 0 && gameState && gameState.battlefield && gameState.battlefield.waveLevel === 1 && gameState.battlefield.actionCount === 0) {
+    const activePlayer = gameState.getCurrentPlayer();
+    if (activePlayer && !activePlayer.isBot) {
+      setTimeout(() => {
+        highlightInitialFocusButtons();
+      }, 1600); // Lanzar casi al final del hachazo
+    }
   }
 
   // Dar tiempo a la animación CSS de corte diagonal completo (1.8s)
@@ -5106,6 +5111,9 @@ document.addEventListener('DOMContentLoaded', () => {
 let focusButtonsHighlighted = false;
 function highlightInitialFocusButtons() {
   if (focusButtonsHighlighted) return;
+  const activePlayer = gameState.getCurrentPlayer();
+  if (activePlayer && activePlayer.isBot) return;
+
   focusButtonsHighlighted = true;
   const ids = ['btn-confirm-attack', 'btn-gold', 'btn-gold-dmg', 'btn-role'];
   ids.forEach((id, index) => {
