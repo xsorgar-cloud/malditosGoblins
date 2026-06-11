@@ -628,15 +628,7 @@ function renderRoleSelection() {
           justSelectedRole = { playerIndex: i, roleId: r.id };
         }
         
-        // Animación de giro en el icono circular (Primera mitad: 0 a 90 grados)
-        img.classList.remove('card-spin-first-half');
-        void img.offsetWidth; // Forzar reflow
-        img.classList.add('card-spin-first-half');
-        
-        // Renderizamos la segunda mitad a los 150ms (mitad del movimiento)
-        setTimeout(() => {
-          renderRoleSelection();
-        }, 150);
+        renderRoleSelection();
       };
       img.onmouseenter = () => {
         const previewName = document.getElementById('setup-role-name');
@@ -706,15 +698,7 @@ function renderRoleSelection() {
         previewEffect.innerText = randomRole.effect;
       }
       
-      // Animación de giro en el botón de aleatorio (Primera mitad: 0 a 90 grados)
-      randomBtn.classList.remove('card-spin-first-half');
-      void randomBtn.offsetWidth; // Forzar reflow
-      randomBtn.classList.add('card-spin-first-half');
-      
-      // Renderizamos la segunda mitad a los 150ms (mitad del movimiento)
-      setTimeout(() => {
-        renderRoleSelection();
-      }, 150);
+      renderRoleSelection();
     };
 
     randomBtn.onmouseenter = () => {
