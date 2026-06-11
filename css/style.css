@@ -3646,11 +3646,11 @@ main {
 }
 
 .card-spin-first-half {
-  animation: cardSpinFirstHalf 0.3s cubic-bezier(0.4, 0, 1, 1) forwards;
+  animation: cardSpinFirstHalf 0.15s cubic-bezier(0.4, 0, 1, 1) forwards;
 }
 
 .card-spin-second-half {
-  animation: cardSpinSecondHalf 0.3s cubic-bezier(0, 0, 0.2, 1) forwards;
+  animation: cardSpinSecondHalf 0.15s cubic-bezier(0, 0, 0.2, 1) forwards;
 }
 
 

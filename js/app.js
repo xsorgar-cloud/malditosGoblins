@@ -633,10 +633,10 @@ function renderRoleSelection() {
         void img.offsetWidth; // Forzar reflow
         img.classList.add('card-spin-first-half');
         
-        // Renderizamos la segunda mitad a los 300ms (mitad del movimiento)
+        // Renderizamos la segunda mitad a los 150ms (mitad del movimiento)
         setTimeout(() => {
           renderRoleSelection();
-        }, 300);
+        }, 150);
       };
       img.onmouseenter = () => {
         const previewName = document.getElementById('setup-role-name');
@@ -711,10 +711,10 @@ function renderRoleSelection() {
       void randomBtn.offsetWidth; // Forzar reflow
       randomBtn.classList.add('card-spin-first-half');
       
-      // Renderizamos la segunda mitad a los 300ms (mitad del movimiento)
+      // Renderizamos la segunda mitad a los 150ms (mitad del movimiento)
       setTimeout(() => {
         renderRoleSelection();
-      }, 300);
+      }, 150);
     };
 
     randomBtn.onmouseenter = () => {
