@@ -1031,8 +1031,8 @@ const statsContainer = document.getElementById('combat-player-stats');
     // Si es un dado plateado y ya está fusionado, no lo renderizamos en la reserva
     if (die.type === 'silver' && die.assignedTo && die.assignedTo.startsWith('die-')) return;
 
-    // En fase de calambre, ocultar dados rojos y dados negros que no tengan calambre
-    if (isCrampPhase && (die.type === 'red' || (die.type === 'black' && !die.isCramped))) return;
+    // En fase de calambre, ocultar cualquier dado que no tenga calambre (rojos, plateados, negros normales)
+    if (isCrampPhase && !die.isCramped) return;
 
     // Fuera de la fase de calambre, ocultar dados con calambre no asignados (dados perdidos)
     if (!isCrampPhase && die.isCramped && !die.assignedTo) return;
