@@ -622,6 +622,18 @@ function renderRoleSelection() {
           selectedSetupRoles[i] = r.id;
           justSelectedRole = { playerIndex: i, roleId: r.id };
         }
+        
+        // Animación de giro en el visor de la carta de rol
+        const previewCard = document.getElementById('setup-role-card');
+        if (previewCard) {
+          previewCard.classList.remove('card-spin-horizontal');
+          void previewCard.offsetWidth; // Forzar reflow para reiniciar la animación
+          previewCard.classList.add('card-spin-horizontal');
+          setTimeout(() => {
+            previewCard.classList.remove('card-spin-horizontal');
+          }, 600);
+        }
+        
         renderRoleSelection();
       };
       img.onmouseenter = () => {
@@ -678,6 +690,25 @@ function renderRoleSelection() {
       const randomRole = DB.roles[randomIndex];
       selectedSetupRoles[i] = randomRole.id;
       justSelectedRole = { playerIndex: i, roleId: randomRole.id };
+      
+      // Actualizar visor inmediatamente al elegir aleatorio
+      const previewName = document.getElementById('setup-role-name');
+      const previewCard = document.getElementById('setup-role-card');
+      const previewEffect = document.getElementById('setup-role-effect');
+      if (previewName && previewCard && previewEffect) {
+        previewName.innerText = randomRole.name.toUpperCase();
+        const miniImage = randomRole.image.replace('rol_', 'mini_rol_');
+        previewCard.style.backgroundImage = `url('${miniImage}')`;
+        previewEffect.innerText = randomRole.effect;
+        
+        previewCard.classList.remove('card-spin-horizontal');
+        void previewCard.offsetWidth; // Forzar reflow
+        previewCard.classList.add('card-spin-horizontal');
+        setTimeout(() => {
+          previewCard.classList.remove('card-spin-horizontal');
+        }, 600);
+      }
+      
       renderRoleSelection();
     };
 

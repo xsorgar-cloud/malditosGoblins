@@ -3612,6 +3612,21 @@ main {
   100% { transform: rotateX(25deg) rotateZ(360deg) rotateY(360deg); }
 }
 
+/* EFECTO DE GIRO HORIZONTAL 3D PARA CARTAS DE ROL */
+@keyframes cardSpinHorizontal {
+  0% {
+    transform: perspective(800px) rotateY(0deg);
+  }
+  100% {
+    transform: perspective(800px) rotateY(360deg);
+  }
+}
+
+.card-spin-horizontal {
+  animation: cardSpinHorizontal 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+}
+
+
 
 
 
