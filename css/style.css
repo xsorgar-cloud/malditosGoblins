@@ -3637,7 +3637,7 @@ main {
 }
 
 .card-spin-second-half {
-  animation: cardSpinSecondHalf 0.15s cubic-bezier(0, 0, 0.2, 1) forwards;
+  animation: cardSpinSecondHalf 0.3s cubic-bezier(0, 0, 0.2, 1) forwards;
 }
 
 
