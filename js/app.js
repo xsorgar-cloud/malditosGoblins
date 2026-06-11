@@ -623,18 +623,15 @@ function renderRoleSelection() {
           justSelectedRole = { playerIndex: i, roleId: r.id };
         }
         
-        // Animación de giro en el visor de la carta de rol
-        const previewCard = document.getElementById('setup-role-card');
-        if (previewCard) {
-          previewCard.classList.remove('card-spin-horizontal');
-          void previewCard.offsetWidth; // Forzar reflow para reiniciar la animación
-          previewCard.classList.add('card-spin-horizontal');
-          setTimeout(() => {
-            previewCard.classList.remove('card-spin-horizontal');
-          }, 600);
-        }
+        // Animación de giro en el icono circular seleccionado
+        img.classList.remove('card-spin-horizontal');
+        void img.offsetWidth; // Forzar reflow para reiniciar la animación
+        img.classList.add('card-spin-horizontal');
         
-        renderRoleSelection();
+        // Retrasamos el renderizado para que se vea el giro completo del icono
+        setTimeout(() => {
+          renderRoleSelection();
+        }, 600);
       };
       img.onmouseenter = () => {
         const previewName = document.getElementById('setup-role-name');
@@ -691,7 +688,7 @@ function renderRoleSelection() {
       selectedSetupRoles[i] = randomRole.id;
       justSelectedRole = { playerIndex: i, roleId: randomRole.id };
       
-      // Actualizar visor inmediatamente al elegir aleatorio
+      // Actualizar visor inmediatamente al elegir aleatorio (sin animación en la carta)
       const previewName = document.getElementById('setup-role-name');
       const previewCard = document.getElementById('setup-role-card');
       const previewEffect = document.getElementById('setup-role-effect');
@@ -700,16 +697,16 @@ function renderRoleSelection() {
         const miniImage = randomRole.image.replace('rol_', 'mini_rol_');
         previewCard.style.backgroundImage = `url('${miniImage}')`;
         previewEffect.innerText = randomRole.effect;
-        
-        previewCard.classList.remove('card-spin-horizontal');
-        void previewCard.offsetWidth; // Forzar reflow
-        previewCard.classList.add('card-spin-horizontal');
-        setTimeout(() => {
-          previewCard.classList.remove('card-spin-horizontal');
-        }, 600);
       }
       
-      renderRoleSelection();
+      // Animación de giro en el botón de aleatorio
+      randomBtn.classList.remove('card-spin-horizontal');
+      void randomBtn.offsetWidth; // Forzar reflow
+      randomBtn.classList.add('card-spin-horizontal');
+      
+      setTimeout(() => {
+        renderRoleSelection();
+      }, 600);
     };
 
     randomBtn.onmouseenter = () => {
