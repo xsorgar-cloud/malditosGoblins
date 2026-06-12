@@ -240,7 +240,7 @@ triggerAction(type, target = null, reason = "") {
             }
 
             const message = `¡Mi vida es crítica! Compraré una ${bestPotion.name} para curarme.`;
-            this.showBubble(pIndex, `${message}`);
+            this.showBubble(pIndex, `${message}`, 'gold');
             this.gameState.addLog(`🤖 <strong>${bot.name}</strong> decide comprar una poción para curarse.`);
 
             setTimeout(() => {
@@ -262,7 +262,7 @@ triggerAction(type, target = null, reason = "") {
                 const goblinsEnMesa = this.gameState.battlefield.goblins.filter(g => !g.isDying);
                 const potentialTargets = this.getSafeCombatTargets(bot, goblinsEnMesa, 'Agresivo');
                 if (potentialTargets.length > 0) {
-                    this.showBubble(pIndex, `<strong style="color: red;">[Crítico]</strong> Buscaré un combate fácil para usar mi curación.`);
+                    this.showBubble(pIndex, `<strong style="color: red;">[Crítico]</strong> Buscaré un combate fácil para usar mi curación.`, 'combat');
                     this.gameState.addLog(`🤖 <strong>${bot.name}</strong> está en estado crítico de PV, tiene equipo de curación y decide iniciar combate contra objetivos asequibles para curarse.`);
                     setTimeout(() => {
                         if (window.botsPaused) {
@@ -279,7 +279,7 @@ triggerAction(type, target = null, reason = "") {
 
         // Si sigue crítico pero no tiene opciones, mostramos burbuja de peligro pero continuamos el turno normal
         if (isCritical) {
-            this.showBubble(pIndex, `<strong style="color: red;">[Peligro]</strong> ¡Estoy al límite de vida y sin opciones de curación!`);
+            this.showBubble(pIndex, `<strong style="color: red;">[Peligro]</strong> ¡Estoy al límite de vida y sin opciones de curación!`, 'combat');
             this.gameState.addLog(`⚠️ <strong>${bot.name}</strong> está en estado crítico de PV (${bot.hp}/${bot.maxHp}) pero no tiene opciones disponibles de curación.`);
         }
 
@@ -740,7 +740,7 @@ performMainTurn(bot) {
             }
 
             const pIndex = this.gameState.players.indexOf(bot);
-            this.showBubble(pIndex, `${decisionText}`);
+            this.showBubble(pIndex, `${decisionText}`, chosenAction);
             this.gameState.addLog(`🤖 "${decisionText}"`);
 
             if (chosenAction === 'combat') {
@@ -941,7 +941,7 @@ performMarketTurn(bot) {
 
             if (bought || advice) {
                 if (!advice) advice = "He terminado mis compras.";
-                this.showBubble(this.gameState.currentPlayerIndex, `${advice}`);
+                this.showBubble(this.gameState.currentPlayerIndex, `${advice}`, 'gold');
                 this.gameState.addLog(`🤖 "${advice}"`);
             }
             
@@ -1104,7 +1104,7 @@ performCombatTurn(bot) {
             if (availableDice.length === totalNonCramped) {
                 advice = this.getCombatDialogue(availableDice, bot);
                 console.log("[BotManager] Showing combat advice:", advice);
-                this.showBubble(this.gameState.currentPlayerIndex, `${advice}`);
+                this.showBubble(this.gameState.currentPlayerIndex, `${advice}`, 'combat');
                 this.gameState.addLog(`🤖 "${advice}"`);
             }
 
@@ -2026,7 +2026,7 @@ calculateEquipPower(eq, bot) {
                 // Mostrar bocadillo
                 if (botConf) {
                     let advice = "Aguantaré este golpe por el equipo.";
-                    this.showBubble(bestPlayerIndex, `${advice}`);
+                    this.showBubble(bestPlayerIndex, `${advice}`, 'combat');
                     this.gameState.addLog(`🤖 "${advice}"`);
                 }
 
@@ -2106,7 +2106,7 @@ calculateEquipPower(eq, bot) {
                     if (buttons.length > 0) {
                         if (this.gameState.getCurrentPlayer().id === bot.id) {                            
                             let choiceIndex = 0;
-                            this.showBubble(this.gameState.currentPlayerIndex, `Tomaré esta decisión por nosotros.`);
+                            this.showBubble(this.gameState.currentPlayerIndex, `Tomaré esta decisión por nosotros.`, 'hito');
                             this.gameState.addLog(`🤖 <strong>${bot.name} (</strong> "Tomaré esta decisión por nosotros."`);
                             setTimeout(() => {
                                 if (window.botsPaused) {
@@ -2406,9 +2406,9 @@ calculateEquipPower(eq, bot) {
     }
 
 // Muestra un bocadillo sobre el jugador indicado con el texto especificado
-    showBubble(playerIndex, text) {
+    showBubble(playerIndex, text, actionType = null) {
         if (window.updateBotBubble) {
-            window.updateBotBubble(playerIndex, text);
+            window.updateBotBubble(playerIndex, text, actionType);
             
             const player = this.gameState.players[playerIndex];
             if (!player || !player.role) return;

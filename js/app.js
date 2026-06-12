@@ -2662,7 +2662,36 @@ async function processWaveSequence() {
 }
 
 // Render Functions
-window.updateBotBubble = function(playerIndex, text) {
+function getBotBubbleIcon(actionType, text) {
+  const type = (actionType || '').toLowerCase();
+  if (type === 'combat') return 'assets/ico_combat.png';
+  if (type === 'gold') return 'assets/ico_gold.png';
+  if (type === 'gold-dmg') return 'assets/ico_gold-dmg.png';
+  if (type === 'role') return 'assets/ico_role.png';
+  if (type === 'hito') return 'assets/ico_hito.png';
+  
+  // Fallback por palabras clave si no viene definido
+  const txt = (text || '').toLowerCase();
+  if (txt.includes('gold-dmg') || txt.includes('robar') || txt.includes('atacar y oro') || txt.includes('oro y daño') || txt.includes('monedas y daño')) {
+      return 'assets/ico_gold-dmg.png';
+  }
+  if (txt.includes('combat') || txt.includes('attack') || txt.includes('peligro') || txt.includes('crítico') || txt.includes('crítica') || txt.includes('combate') || txt.includes('atacar')) {
+      return 'assets/ico_combat.png';
+  }
+  if (txt.includes('gold') || txt.includes('moneda') || txt.includes('compr') || txt.includes('pocion') || txt.includes('poción') || txt.includes('sisar') || txt.includes('oro') || txt.includes('tienda') || txt.includes('mercado')) {
+      return 'assets/ico_gold.png';
+  }
+  if (txt.includes('role') || txt.includes('habilidad') || txt.includes('energ') || txt.includes('rol')) {
+      return 'assets/ico_role.png';
+  }
+  if (txt.includes('hito') || txt.includes('senda')) {
+      return 'assets/ico_hito.png';
+  }
+  
+  return 'assets/ico_combat.png'; // Fallback por defecto
+}
+
+window.updateBotBubble = function(playerIndex, text, actionType = null) {
   const combatOverlay = document.getElementById('combat-overlay');
   const isCombatActive = combatOverlay && !combatOverlay.classList.contains('hidden');
   
@@ -2733,7 +2762,13 @@ window.updateBotBubble = function(playerIndex, text) {
   } else {
       if (bubble && bubbleText) {
           if (text) {
-              bubbleText.innerHTML = text;
+              const iconPath = getBotBubbleIcon(actionType, text);
+              bubbleText.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 12px; text-align: left;">
+                  <img src="${iconPath}" style="width: 48px; height: 48px; flex-shrink: 0; border: none; box-shadow: none;" alt="Action Icon">
+                  <div style="flex-grow: 1; line-height: 1.4; font-size: 0.95rem;">${text}</div>
+                </div>
+              `;
               bubble.style.opacity = '1';
               bubble.style.transform = 'translateX(-50%) translateY(0)';
           } else {
