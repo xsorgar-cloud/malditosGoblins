@@ -2671,9 +2671,13 @@ function getBotBubbleIcon(actionType, text) {
   if (type === 'hito') return 'assets/ico_hito.png';
   if (type === 'pot' || type === 'potion' || type === 'pots') return 'assets/ico_pot.png';
   if (type === 'market' || type === 'mercado') return 'assets/ico_mercado.png';
+  if (type === 'think' || type === 'pensar') return 'assets/ico_pensar.png';
   
   // Fallback por palabras clave si no viene definido
   const txt = (text || '').toLowerCase();
+  if (txt.includes('ahorraré') || txt.includes('guardaré este oro') || txt.includes('sin oro poca cosa') || txt.includes('pensar') || txt.includes('think')) {
+      return 'assets/ico_pensar.png';
+  }
   if (txt.includes('pocion') || txt.includes('poción') || txt.includes('curar')) {
       return 'assets/ico_pot.png';
   }

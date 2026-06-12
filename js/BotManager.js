@@ -941,7 +941,11 @@ performMarketTurn(bot) {
 
             if (bought || advice) {
                 if (!advice) advice = "He terminado mis compras.";
-                this.showBubble(this.gameState.currentPlayerIndex, `${advice}`, 'market');
+                let actionType = 'market';
+                if (advice.includes("Ahorraré para un arma") || advice.includes("Guardaré este oro") || advice.includes("Sin oro poca cosa")) {
+                    actionType = 'think';
+                }
+                this.showBubble(this.gameState.currentPlayerIndex, `${advice}`, actionType);
                 this.gameState.addLog(`🤖 "${advice}"`);
             }
             
@@ -2308,11 +2312,11 @@ calculateEquipPower(eq, bot) {
             } else if (roleId === 'guerrero') {
                 return "¡Menudo golpe se avecina! Me cubriré temporalmente.";
             } else if (roleId === 'mago') {
-                return "¡Levantando defensas! La magia física nos protegerá.";
+                return "¡Levantando defensas! Espero salir aireado.";
             } else if (roleId === 'sanador') {
                 return "¡Demasiado daño entrante! Debo protegerme para poder curaros.";
             } else if (roleId === 'curandero') {
-                return "¡Bajo la corteza del escudo aguantaré la embestida!";
+                return "¡El escudo me ayudará a aguantar la embestida!";
             } else if (roleId === 'ladron') {
                 return "¡Uy! Ese ataque viene con fuerza. ¡A cubierto!";
             }
@@ -2332,11 +2336,11 @@ calculateEquipPower(eq, bot) {
             } else if (roleId === 'sanador') {
                 return "¡Acumularé gracia divina! La curación requerirá esta energía.";
             } else if (roleId === 'curandero') {
-                return "¡Sintonizando con el bosque! Extraeré energía de la naturaleza.";
+                return "¡Sintonizando! Extraeré energía necesaria.";
             } else if (roleId === 'ladron') {
                 return "¡Hora de preparar algunos trucos! Esta energía me vendrá genial.";
             }
-            return "¡Canalizaré mis fuerzas! Esta energía nos vendrá de perlas.";
+            return "¡Canalizaré mis energias! Esta energía nos vendrá de perlas.";
         }
 
         // 6. Mala tirada en general (todos dados bajos)
