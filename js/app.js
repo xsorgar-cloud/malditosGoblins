@@ -2669,16 +2669,24 @@ function getBotBubbleIcon(actionType, text) {
   if (type === 'gold-dmg') return 'assets/ico_gold-dmg.png';
   if (type === 'role') return 'assets/ico_role.png';
   if (type === 'hito') return 'assets/ico_hito.png';
+  if (type === 'pot' || type === 'potion' || type === 'pots') return 'assets/ico_pot.png';
+  if (type === 'market' || type === 'mercado') return 'assets/ico_mercado.png';
   
   // Fallback por palabras clave si no viene definido
   const txt = (text || '').toLowerCase();
+  if (txt.includes('pocion') || txt.includes('poción') || txt.includes('curar')) {
+      return 'assets/ico_pot.png';
+  }
+  if (txt.includes('compr') || txt.includes('tienda') || txt.includes('mercado') || txt.includes('compra')) {
+      return 'assets/ico_mercado.png';
+  }
   if (txt.includes('gold-dmg') || txt.includes('robar') || txt.includes('atacar y oro') || txt.includes('oro y daño') || txt.includes('monedas y daño')) {
       return 'assets/ico_gold-dmg.png';
   }
   if (txt.includes('combat') || txt.includes('attack') || txt.includes('peligro') || txt.includes('crítico') || txt.includes('crítica') || txt.includes('combate') || txt.includes('atacar')) {
       return 'assets/ico_combat.png';
   }
-  if (txt.includes('gold') || txt.includes('moneda') || txt.includes('compr') || txt.includes('pocion') || txt.includes('poción') || txt.includes('sisar') || txt.includes('oro') || txt.includes('tienda') || txt.includes('mercado')) {
+  if (txt.includes('gold') || txt.includes('moneda') || txt.includes('sisar') || txt.includes('oro')) {
       return 'assets/ico_gold.png';
   }
   if (txt.includes('role') || txt.includes('habilidad') || txt.includes('energ') || txt.includes('rol')) {

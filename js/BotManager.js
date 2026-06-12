@@ -240,7 +240,7 @@ triggerAction(type, target = null, reason = "") {
             }
 
             const message = `¡Mi vida es crítica! Compraré una ${bestPotion.name} para curarme.`;
-            this.showBubble(pIndex, `${message}`, 'gold');
+            this.showBubble(pIndex, `${message}`, 'pot');
             this.gameState.addLog(`🤖 <strong>${bot.name}</strong> decide comprar una poción para curarse.`);
 
             setTimeout(() => {
@@ -941,7 +941,7 @@ performMarketTurn(bot) {
 
             if (bought || advice) {
                 if (!advice) advice = "He terminado mis compras.";
-                this.showBubble(this.gameState.currentPlayerIndex, `${advice}`, 'gold');
+                this.showBubble(this.gameState.currentPlayerIndex, `${advice}`, 'market');
                 this.gameState.addLog(`🤖 "${advice}"`);
             }
             
