@@ -1,6 +1,7 @@
 let lastWaveLevel = 0;
 let lastActionCount = 0;
 let lastActivePlayerUid = null;
+let focusHighlightTimeouts = [];
 const gameState = new GameState();
 const botManager = typeof BotManager !== 'undefined' ? new BotManager(gameState) : null;
 window.botManager = botManager;
@@ -2906,6 +2907,12 @@ function updateUI() {
     }
   } else {
     lastActivePlayerUid = activePlayer ? activePlayer.uid : null;
+    removeInitialFocusHighlights();
+  }
+
+  // Si estamos en fases inactivas de botones (mercado o represalia), forzar limpieza de iluminación
+  if (gameState.isMarketPhase || gameState.isRetaliationPhase) {
+    removeInitialFocusHighlights();
   }
 
   checkLevelUpChoice();
@@ -5137,6 +5144,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function highlightInitialFocusButtons() {
+  // Cancelar timeouts pendientes de previas ejecuciones para evitar solapamientos
+  focusHighlightTimeouts.forEach(clearTimeout);
+  focusHighlightTimeouts = [];
+
   removeInitialFocusHighlights();
   const activePlayer = gameState.getCurrentPlayer();
   if (activePlayer && activePlayer.isBot) return;
@@ -5145,9 +5156,10 @@ function highlightInitialFocusButtons() {
   ids.forEach((id, index) => {
     const el = document.getElementById(id);
     if (el) {
-      setTimeout(() => {
+      const t = setTimeout(() => {
         el.classList.add('focus-highlight');
       }, index * 75); // Secuencial rapidísimo: cada 75ms
+      focusHighlightTimeouts.push(t);
     }
   });
 }
