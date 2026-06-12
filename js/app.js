@@ -1,5 +1,6 @@
 let lastWaveLevel = 0;
 let lastActionCount = 0;
+let lastActivePlayerUid = null;
 const gameState = new GameState();
 const botManager = typeof BotManager !== 'undefined' ? new BotManager(gameState) : null;
 window.botManager = botManager;
@@ -1802,7 +1803,7 @@ btnStartGame.addEventListener('click', () => {
   const initWave = isNaN(rawWave) ? 1 : rawWave;
   lastWaveLevel = initWave - 1; // Force wave announcement on start
   lastActionCount = -1; // Force action announcement on start
-  focusButtonsHighlighted = false;
+  lastActivePlayerUid = null;
   removeInitialFocusHighlights();
 
   gameState.setupPlayers(numPlayers, finalRoles, { hp: initHp, maxHp: initMaxHp, energy: initEnergy, mo: initGold, hito: initHito, level: initLevel, wave: initWave, senda: initSenda, difficulty: initDifficulty }, finalBots);
@@ -2595,13 +2596,11 @@ function showActionNotification(count) {
   overlay.classList.remove('hidden');
   overlay.style.opacity = '1';
 
-  if (count === 0 && gameState && gameState.battlefield && gameState.battlefield.waveLevel === 1 && gameState.battlefield.actionCount === 0) {
-    const activePlayer = gameState.getCurrentPlayer();
-    if (activePlayer && !activePlayer.isBot) {
-      setTimeout(() => {
-        highlightInitialFocusButtons();
-      }, 1600); // Lanzar casi al final del hachazo
-    }
+  const activePlayer = gameState.getCurrentPlayer();
+  if (activePlayer && !activePlayer.isBot) {
+    setTimeout(() => {
+      highlightInitialFocusButtons();
+    }, 1600); // Lanzar casi al final del hachazo
   }
 
   // Dar tiempo a la animación CSS de corte diagonal completo (1.8s)
@@ -2886,6 +2885,27 @@ function updateUI() {
       btnGoldDmg.disabled = false;
       btnRole.disabled = false;
     }
+  }
+
+  // Iluminar botones al inicio del turno del jugador activo humano si no hay overlays
+  const activePlayer = gameState.getCurrentPlayer();
+  if (activePlayer && !activePlayer.isBot) {
+    if (activePlayer.uid !== lastActivePlayerUid) {
+      lastActivePlayerUid = activePlayer.uid;
+
+      const actionOverlay = document.getElementById('action-notification');
+      const waveOverlay = document.getElementById('wave-announcement');
+      const isActionNotificationVisible = actionOverlay && !actionOverlay.classList.contains('hidden');
+      const isWaveAnnouncementVisible = waveOverlay && !waveOverlay.classList.contains('hidden');
+
+      if (!isActionNotificationVisible && !isWaveAnnouncementVisible) {
+        setTimeout(() => {
+          highlightInitialFocusButtons();
+        }, 300);
+      }
+    }
+  } else {
+    lastActivePlayerUid = activePlayer ? activePlayer.uid : null;
   }
 
   checkLevelUpChoice();
@@ -5116,13 +5136,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 });
 
-let focusButtonsHighlighted = false;
 function highlightInitialFocusButtons() {
-  if (focusButtonsHighlighted) return;
+  removeInitialFocusHighlights();
   const activePlayer = gameState.getCurrentPlayer();
   if (activePlayer && activePlayer.isBot) return;
 
-  focusButtonsHighlighted = true;
   const ids = ['btn-confirm-attack', 'btn-gold', 'btn-gold-dmg', 'btn-role'];
   ids.forEach((id, index) => {
     const el = document.getElementById(id);
