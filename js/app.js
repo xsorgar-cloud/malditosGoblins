@@ -3426,8 +3426,9 @@ function renderBattlefield() {
   goblinsContainer.innerHTML = '';
 
   const hasGoblinsAlive = gameState.battlefield.goblins.some(g => !g.isDying);
+  const showWarlordChoice = (gameState.activeSenda === 'guerrero' && !hasGoblinsAlive && !gameState.isMarketPhase && !gameState.isRetaliationPhase && !gameState.isGameOver);
 
-  if (gameState.activeSenda === 'guerrero' && !hasGoblinsAlive && !gameState.isMarketPhase && !gameState.isRetaliationPhase && !gameState.isGameOver) {
+  if (showWarlordChoice) {
     const choiceContainer = document.createElement('div');
     choiceContainer.style.cssText = 'display: flex; flex-direction: column; align-items: center; gap: 15px; grid-column: 1 / -1; width: 100%; max-width: 600px; margin: 20px auto; padding: 25px; background: rgba(0, 0, 0, 0.6); border: 2px solid var(--gold); border-radius: 15px; box-shadow: 0 0 30px rgba(212, 175, 55, 0.2); backdrop-filter: blur(10px); text-align: center;';
 
@@ -3505,6 +3506,13 @@ function renderBattlefield() {
 
     choiceContainer.appendChild(buttonsWrapper);
     goblinsContainer.appendChild(choiceContainer);
+  }
+
+  // Si no hay goblins en mesa y no se muestra la elección del Zeñor de la Guerra, pintar el dorso
+  if (gameState.battlefield.goblins.length === 0 && !showWarlordChoice) {
+    const backEl = document.createElement('div');
+    backEl.className = 'goblin-card goblin-card-back';
+    goblinsContainer.appendChild(backEl);
   }
 
   // Usamos el array original de la mesa para garantizar que el orden NO cambie
