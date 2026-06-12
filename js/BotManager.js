@@ -2711,7 +2711,7 @@ calculateEquipPower(eq, bot) {
 
         if (rId === 'ladron') {
             if (bot.energy > 0) {
-                this.gameState.addLog(`🤖 <strong>${bot.name}</strong> usa su rol de Ladrón antes de finalizar el turno para convertir ${bot.energy} de energía en monedas.`);
+                this.gameState.addLog(`🤖 <strong>${bot.name}</strong> usa su rol de Ladrón para convertir ${bot.energy} de energía en monedas.`);
                 let energyToUse = bot.energy;
                 for (let i = 0; i < energyToUse; i++) {
                     this.gameState.useRoleAbility(pIndex, 'self');

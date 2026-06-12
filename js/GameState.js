@@ -1425,6 +1425,11 @@ class GameState {
     p.shield = 0; // Limpiar escudo tras el combate
     this.currentCombat = null;
 
+    // Ejecutar habilidades de rol post-combate para bots (ej: rematar con Guerrero)
+    if (p.isBot && window.botManager && typeof window.botManager.executeEndTurnRoleAbilities === 'function') {
+      window.botManager.executeEndTurnRoleAbilities(p);
+    }
+
     if (hasCorrosion) {
       this.pendingCorrosionChoice = {
         player: p,
