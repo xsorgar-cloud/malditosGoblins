@@ -1034,14 +1034,56 @@ performCombatTurn(bot) {
             if (availableDice.length === 0) {
                 console.log("[BotManager] No more dice to assign. Scheduling combat resolution in 5s.");
                 this.isActing = true;
+                
+                if (window.botCombatIntervalId) {
+                    clearInterval(window.botCombatIntervalId);
+                }
+                
+                window.botCombatCountdownActive = true;
+                let secondsLeft = 5;
+                const isCramped = this.gameState.currentCombat && this.gameState.currentCombat.isCrampPhase;
+                const prefix = isCramped ? "Resolviendo calambres" : "Confirmando combate";
+                
+                const updateCountdown = () => {
+                    const el = document.getElementById('bot-combat-countdown');
+                    if (el) {
+                        el.innerText = `${prefix} en ${secondsLeft}s...`;
+                    }
+                };
+                updateCountdown();
+                
+                window.botCombatIntervalId = setInterval(() => {
+                    if (window.botsPaused) {
+                        clearInterval(window.botCombatIntervalId);
+                        window.botCombatIntervalId = null;
+                        window.botCombatCountdownActive = false;
+                        this.isActing = false;
+                        return;
+                    }
+                    secondsLeft--;
+                    updateCountdown();
+                    if (secondsLeft <= 0) {
+                        clearInterval(window.botCombatIntervalId);
+                        window.botCombatIntervalId = null;
+                    }
+                }, 1000);
+                
                 setTimeout(() => {
+                    if (window.botCombatIntervalId) {
+                        clearInterval(window.botCombatIntervalId);
+                        window.botCombatIntervalId = null;
+                    }
+                    window.botCombatCountdownActive = false;
+                    
                     if (window.botsPaused) {
                         this.isActing = false;
                         return;
                     }
                     const btnResolve = document.getElementById('btn-resolve-combat');
                     this.isActing = false;
-                    if (btnResolve && !btnResolve.disabled) {
+                    if (btnResolve) {
+                        // Temporalmente aseguramos que no esté deshabilitado ni invisible para el trigger
+                        btnResolve.disabled = false;
                         btnResolve.click();
                     } else {
                         console.log("[BotManager] Cannot click resolve button. Either missing or disabled.");

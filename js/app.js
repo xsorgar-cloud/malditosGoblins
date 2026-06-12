@@ -2673,6 +2673,7 @@ function getBotBubbleIcon(actionType, text) {
   if (type === 'market' || type === 'mercado') return 'assets/ico_mercado.png';
   if (type === 'think' || type === 'pensar') return 'assets/ico_pensar.png';
   
+  
   // Fallback por palabras clave si no viene definido
   const txt = (text || '').toLowerCase();
   if (txt.includes('ahorraré') || txt.includes('guardaré este oro') || txt.includes('sin oro poca cosa') || txt.includes('pensar') || txt.includes('think')) {

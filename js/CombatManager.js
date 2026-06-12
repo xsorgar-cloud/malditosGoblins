@@ -232,6 +232,11 @@ window.combatDieOnCombatRoleHandler = (e) => {
     if (typeof window.drawCombatArrows === 'function') {
       window.drawCombatArrows();
     }
+    if (window.botCombatIntervalId) {
+      clearInterval(window.botCombatIntervalId);
+      window.botCombatIntervalId = null;
+    }
+    window.botCombatCountdownActive = false;
     return;
   }
   overlay.classList.remove('hidden');
@@ -494,13 +499,35 @@ const statsContainer = document.getElementById('combat-player-stats');
 
   const btnResolve = document.getElementById('btn-resolve-combat');
   const btnCancel = document.getElementById('btn-cancel-combat');
+  const loaderEl = document.getElementById('bot-combat-loader');
 
   if (isRollingCombatDice) {
-    btnResolve.disabled = true;
-    btnCancel.disabled = true;
+    if (btnResolve) btnResolve.disabled = true;
+    if (btnCancel) btnCancel.disabled = true;
   } else {
-    btnResolve.disabled = false;
-    btnCancel.disabled = false;
+    if (btnResolve) btnResolve.disabled = false;
+    if (btnCancel) btnCancel.disabled = false;
+  }
+
+  const isBot = p && p.isBot;
+  if (isBot) {
+    if (btnResolve) btnResolve.style.display = 'none';
+    if (btnCancel) btnCancel.style.display = 'none';
+    if (loaderEl) {
+      loaderEl.style.display = 'flex';
+      loaderEl.classList.remove('hidden');
+      const textEl = document.getElementById('bot-combat-countdown');
+      if (textEl && !window.botCombatCountdownActive) {
+        textEl.innerText = "El bot está decidiendo...";
+      }
+    }
+  } else {
+    if (btnResolve) btnResolve.style.display = 'block';
+    if (btnCancel) btnCancel.style.display = 'block';
+    if (loaderEl) {
+      loaderEl.style.display = 'none';
+      loaderEl.classList.add('hidden');
+    }
   }
 
   if (isCrampPhase) {
