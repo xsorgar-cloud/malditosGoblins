@@ -1908,7 +1908,7 @@ calculateEquipPower(eq, bot) {
         }
         
         let dealsDamage = this.getDamageForDieInEquip(die.value, eq) > 0;
-        if (!targetUid && goblins.length > 0 && (!this.isShield(eq) || dealsDamage)) {
+        if (!targetUid && goblins.length > 0 && ((!this.isShield(eq) && !this.isHeal(eq)) || dealsDamage)) {
             // Lógica inteligente de selección de objetivos de combate
             let goblinDamage = {};
             goblins.forEach(g => {
