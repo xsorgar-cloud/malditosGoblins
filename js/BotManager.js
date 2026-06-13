@@ -1563,34 +1563,67 @@ calculateEquipPower(eq, bot) {
 
 // Obtiene el perfil de daño del goblin (daño normal y directo)
     getGoblinDamageProfile(gob) {
-         if (!gob || !gob.dice) return { normal: gob.level, direct: 0 };
-         let totalDmg = 0;
+         if (!gob) return { normal: 0, direct: 0 };
+         
+         // Fallback si no tiene propiedad de dados
+         if (!gob.dice || !Array.isArray(gob.dice)) {
+             return { normal: gob.level || 1, direct: 0 };
+         }
+         
+         // Parsear el array de dados para separar cada dado y su modificador
+         let diceList = [];
          for (let part of gob.dice) {
+             if (typeof part !== 'string') continue;
              if (part.includes('d')) {
                  let [numStr, facesStr] = part.split('d');
-                 totalDmg += (parseInt(numStr) || 1) * parseInt(facesStr);
-             } else if (part.includes('+')) {
-                 totalDmg += parseInt(part.replace('+', ''));
+                 let num = parseInt(numStr) || 1;
+                 let faces = parseInt(facesStr) || 4;
+                 for (let i = 0; i < num; i++) {
+                     diceList.push({ faces: faces, modifier: 0 });
+                 }
+             } else if (part.includes('+') || part.includes('-')) {
+                 let val = parseInt(part) || 0;
+                 if (diceList.length > 0) {
+                     diceList[diceList.length - 1].modifier += val;
+                 }
              }
          }
          
-         let hasDirectDamage = false;
+         if (diceList.length === 0) {
+             return { normal: gob.level || 1, direct: 0 };
+         }
+         
+         // Obtener el objeto de ataques para este goblin
          let attacksObj = gob.attacks || (typeof DB !== 'undefined' && DB.goblins && DB.goblins[gob.level] ? DB.goblins[gob.level].attacks : null);
-         if (attacksObj) {
-             hasDirectDamage = Object.values(attacksObj).some(arr => {
-                 if (!Array.isArray(arr)) return false;
-                 return arr.some(atk => {
+         
+         let totalMaxNormal = 0;
+         let totalMaxDirect = 0;
+         
+         for (let die of diceList) {
+             let dieMaxNormal = 0;
+             let dieMaxDirect = 0;
+             
+             for (let f = 1; f <= die.faces; f++) {
+                 let dmg = f + die.modifier;
+                 
+                 let faceAttacks = (attacksObj && attacksObj[f]) ? attacksObj[f] : [];
+                 let isFaceDirect = Array.isArray(faceAttacks) && faceAttacks.some(atk => {
                      let lower = atk.toLowerCase();
                      return lower.includes('daño directo') || lower.includes('dano directo') || lower.includes('direct') || lower.includes('verdadero') || lower.includes('veneno') || lower.includes('toxina');
                  });
-             });
+                 
+                 if (isFaceDirect) {
+                     dieMaxDirect = Math.max(dieMaxDirect, dmg);
+                 } else {
+                     dieMaxNormal = Math.max(dieMaxNormal, dmg);
+                 }
+             }
+             
+             totalMaxNormal += dieMaxNormal;
+             totalMaxDirect += dieMaxDirect;
          }
          
-         if (hasDirectDamage) {
-             return { normal: 0, direct: totalDmg };
-         } else {
-             return { normal: totalDmg, direct: 0 };
-         }
+         return { normal: totalMaxNormal, direct: totalMaxDirect };
      }
 
 // Determina los objetivos de combate seguros según el bot, los goblins presentes y la personalidad
