@@ -2785,7 +2785,7 @@ window.updateBotBubble = function(playerIndex, text, actionType = null) {
               const iconPath = getBotBubbleIcon(actionType, text);
               bubbleText.innerHTML = `
                 <div style="display: flex; align-items: center; gap: 12px; text-align: left;">
-                  <img src="${iconPath}" style="width: 48px; height: 48px; flex-shrink: 0; border: none; box-shadow: none;" alt="Action Icon">
+                  <img src="${iconPath}" style="width: 60px; height: 61px; flex-shrink: 0; border: none; box-shadow: none;" alt="Action Icon">
                   <div style="flex-grow: 1; line-height: 1.4; font-size: 0.95rem;">${text}</div>
                 </div>
               `;

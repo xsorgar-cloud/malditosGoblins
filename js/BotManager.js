@@ -38,6 +38,25 @@ handleGameState() {
             return;
         }
 
+        // Bloquear si el overlay de eventos globales está visible por un diálogo/alerta no perteneciente a una fase de decisión del bot
+        const overlay = document.getElementById('global-event-overlay');
+        if (overlay && !overlay.classList.contains('hidden')) {
+            const isBotRetaliation = this.gameState.isRetaliationPhase;
+            const isBotEvent = this.gameState.isGlobalEventActive;
+            const isBotCorrosion = this.gameState.pendingCorrosionChoice && this.gameState.pendingCorrosionChoice.player && this.gameState.pendingCorrosionChoice.player.id === activePlayer.id;
+            
+            if (!isBotRetaliation && !isBotEvent && !isBotCorrosion) {
+                console.log("[BotManager] Event overlay is open for non-bot action. Aborting handleGameState.");
+                return;
+            }
+        }
+
+        // Bloquear si algún jugador tiene una elección de subida de nivel pendiente
+        if (this.gameState.players.some(p => p.pendingLevelUpChoice)) {
+            console.log("[BotManager] A player has a pending level up choice. Aborting handleGameState.");
+            return;
+        }
+
         console.log("[BotManager] Bot's turn. currentCombat:", !!this.gameState.currentCombat);
         if (this.gameState.currentCombat) {
             console.log("[BotManager] Escenario C - Combat. Scheduling performCombatTurn.");
@@ -857,14 +876,19 @@ performMarketTurn(bot) {
 
             const isLowHp = bot.hp <= bot.maxHp * 0.5; // Ajustado a 50%
             const isHardCombat = this.gameState.battlefield.goblins.filter(g => !g.isDying).length >= 2;
-            let needsHealing = isHardCombat;
+            
+            // Solo considerar curación si el bot está herido (hp < maxHp) y estamos en combate difícil
+            let needsHealing = isHardCombat && (bot.hp < bot.maxHp * 0.85);
 
-            // Guerrero/Mago override for healing
+            // Si el bot es de Nivel 1, nunca prioriza curación a menos que sea una emergencia crítica
+            if (bot.level === 1) {
+                needsHealing = false;
+            }
+
+            // Guerrero/Mago override for healing: solo priorizan curación si ya tienen un arma comprada
             if (isGuerreroOrMago && !bot.equipped.some(eq => eq.type === 'curacion' || eq.id.includes('pocion'))) {
                 const hasBoughtWeapon = bot.equipped.some(eq => eq.type !== 'inicial' && this.isWeapon(eq));
-                if (hasBoughtWeapon) {
-                    needsHealing = true;
-                }
+                needsHealing = hasBoughtWeapon && needsHealing;
             }
 
             const canBuyPotion = () => {
@@ -2842,7 +2866,9 @@ calculateEquipPower(eq, bot) {
                 }
             }
         }
-        if (typeof window.updateUI === 'function') window.updateUI();
+        // No llamamos a updateUI() aquí si estamos dentro de la resolución de combate,
+        // para evitar que se disparen las animaciones y el flujo de la IA antes de que el jugador acepte el modal.
+        // nextTurn() ya llama a updateUI() al final de su ejecución de todas formas.
     }
 }
 

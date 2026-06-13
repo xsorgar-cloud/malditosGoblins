@@ -176,8 +176,11 @@
                 <div>
                     <h2 style="margin-bottom: 20px; font-size: 1.5rem;">Fase de Combate</h2>
                     
+					<div id="combat-player-stats"
+                        style="display: flex; flex-direction: column; gap: 10px; text-align: left;"></div>
+						
                     <!-- Contenedor para bocadillos de bot en combate -->
-                    <div id="combat-bot-bubbles-container" style="position: relative; margin-bottom: 20px; width: 100%;">
+                    <div id="combat-bot-bubbles-container" style="position: relative; margin-top: 20px; width: 100%;">
                         <!-- Bocadillos de combate para hasta 4 jugadores -->
                         <div id="combat-bot-bubble-0" class="combat-bot-bubble" style="display: none;">
                             <div id="combat-bot-bubble-text-0" style="line-height: 1.4;"></div>
@@ -201,8 +204,7 @@
                         </div>
                     </div>
 
-                    <div id="combat-player-stats"
-                        style="display: flex; flex-direction: column; gap: 10px; text-align: left;"></div>
+                    
                 </div>
                 <div style="display: flex; flex-direction: column; gap: 10px; margin-top: 20px;">
                     <button id="btn-cancel-combat" class="btn secondary">Cancelar Combate</button>

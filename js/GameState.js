@@ -500,9 +500,13 @@ class GameState {
   }
 
   resolveCombat(assignments, interceptions = {}) {
+    this.isResolvingCombat = true;
     this.lastActionWasCombat = true;
     const c = this.currentCombat;
-    if (!c) return;
+    if (!c) {
+      this.isResolvingCombat = false;
+      return;
+    }
 
     this.lastCombatBossEffects = []; // Limpiar recolector de habilidades de jefe
     this.lastCombatPiromanteBombs = 0; // Limpiar contador de bombas del piromante
@@ -1442,6 +1446,7 @@ class GameState {
       this.checkGameOver();
       this.postActionPhase();
     }
+    this.isResolvingCombat = false;
   }
 
   shuffleDecks() {
@@ -1575,7 +1580,9 @@ class GameState {
       
       // Forzar actualización de UI si venimos de un callback asíncrono
       if (typeof window !== 'undefined' && window.updateUI) {
-        window.updateUI();
+        if (!this.isResolvingCombat) {
+          window.updateUI();
+        }
       }
     };
 
