@@ -57,6 +57,9 @@ handleGameState() {
             return;
         }
 
+        // Optimizar equipamiento desde la mochila antes de cualquier decisión de turno
+        this.optimizeEquippedItems(activePlayer);
+
         console.log("[BotManager] Bot's turn. currentCombat:", !!this.gameState.currentCombat);
         if (this.gameState.currentCombat) {
             console.log("[BotManager] Escenario C - Combat. Scheduling performCombatTurn.");
@@ -2869,6 +2872,52 @@ calculateEquipPower(eq, bot) {
         // No llamamos a updateUI() aquí si estamos dentro de la resolución de combate,
         // para evitar que se disparen las animaciones y el flujo de la IA antes de que el jugador acepte el modal.
         // nextTurn() ya llama a updateUI() al final de su ejecución de todas formas.
+    }
+
+    optimizeEquippedItems(bot) {
+        if (!bot || !bot.equipped) return;
+
+        const maxBlocks = DB.playerLevels[bot.level - 1].blocks;
+        let changed = false;
+
+        // Priorizar: 1. Armas, 2. Escudos, 3. Curación, 4. Otros, ordenados por poder potencial máximo
+        const getPriority = (eq) => {
+            if (this.isWeapon(eq)) return 4;
+            if (this.isShield(eq)) return 3;
+            if (this.isHeal(eq)) return 2;
+            return 1;
+        };
+
+        const inactiveItems = bot.equipped.filter(eq => !eq.isActive);
+        if (inactiveItems.length === 0) return;
+
+        inactiveItems.sort((a, b) => {
+            const pA = getPriority(a);
+            const pB = getPriority(b);
+            if (pA !== pB) return pB - pA;
+
+            const powerA = this.calculateEquipPower(a, bot).max;
+            const powerB = this.calculateEquipPower(b, bot).max;
+            return powerB - powerA;
+        });
+
+        for (let eq of inactiveItems) {
+            // Verificar duplicado activo
+            const isDuplicateActive = bot.equipped.some(item => item.id === eq.id && item.isActive);
+            if (isDuplicateActive) continue;
+
+            // Verificar peso
+            const currentBlocks = bot.equipped.reduce((sum, item) => sum + (item.isActive ? (item.blocks || 0) : 0), 0);
+            if (currentBlocks + (eq.blocks || 0) <= maxBlocks) {
+                eq.isActive = true;
+                this.gameState.addLog(`🎒 <strong>${bot.name}</strong> (Bot) equipó automáticamente <strong>${eq.name}</strong> de su mochila.`);
+                changed = true;
+            }
+        }
+
+        if (changed && typeof window.updateUI === 'function') {
+            window.updateUI();
+        }
     }
 }
 
