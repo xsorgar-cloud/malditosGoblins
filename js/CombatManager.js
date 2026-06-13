@@ -2513,6 +2513,13 @@ function checkLevelUpChoice() {
   const playersWithChoice = gameState.players.filter(p => p.pendingLevelUpChoice);
 
   if (playersWithChoice.length > 0) {
+    if (typeof window.resetEventModalTransparency === 'function') {
+      window.resetEventModalTransparency();
+    }
+    const eyeBtn = document.getElementById('event-modal-eye-btn');
+    if (eyeBtn) {
+      eyeBtn.classList.remove('hidden');
+    }
     // Retrasar si hay animaciones activas (muerte de Goblins o rotura de equipo)
     const hasDyingGoblins = gameState.battlefield.goblins.some(g => g.isDying);
     const hasJustBrokenEquip = gameState.players.some(p => p.equipped.some(eq => eq.isBroken && !eq.brokenAnimationPlayed));
@@ -2589,6 +2596,9 @@ function checkLevelUpChoice() {
     // Esto evita cerrar otros modales como el de pociones o advertencias.
     if (container.querySelector('.level-up-card')) {
       overlay.classList.add('hidden');
+      if (typeof window.resetEventModalTransparency === 'function') {
+        window.resetEventModalTransparency();
+      }
     }
   }
 }

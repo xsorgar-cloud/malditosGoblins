@@ -556,6 +556,11 @@ triggerAction(type, target = null, reason = "") {
     }
 
     isWellEquipped(player) {
+        // Nuevos requisitos de daño potencial por nivel del bot
+        const offensivePotential = this.getPlayerOffensivePotential(player);
+        if (player.level === 2 && offensivePotential < 10) return false;
+        if (player.level === 3 && offensivePotential < 15) return false;
+
         const targetLevel = Math.max(player.level, this.gameState.battlefield.waveLevel);
         const nonStarting = player.equipped.filter(eq => eq.type !== 'inicial');
         const weapons = nonStarting.filter(eq => this.isWeapon(eq)).length;
@@ -578,6 +583,23 @@ triggerAction(type, target = null, reason = "") {
     }
 
     getMissingEquipmentType(player) {
+        const offensivePotential = this.getPlayerOffensivePotential(player);
+        const needsOffensive = (player.level === 2 && offensivePotential < 10) || (player.level === 3 && offensivePotential < 15);
+
+        if (needsOffensive) {
+            // Comprobamos si la carta superior de curación hace daño y nos la podemos permitir
+            const topCuracion = this.gameState.market['curacion'] && this.gameState.market['curacion'].length > 0 ? this.gameState.market['curacion'][0] : null;
+            if (topCuracion && this.canDealDamage(topCuracion) && player.mo >= topCuracion.cost) {
+                return 'curacion';
+            }
+            // Comprobamos si la de escudos hace daño (ej: reforzado de pinchos) y nos la podemos permitir
+            const topEscudos = this.gameState.market['escudos'] && this.gameState.market['escudos'].length > 0 ? this.gameState.market['escudos'][0] : null;
+            if (topEscudos && this.canDealDamage(topEscudos) && player.mo >= topEscudos.cost) {
+                return 'escudos';
+            }
+            return 'ataque';
+        }
+
         const targetLevel = Math.max(player.level, this.gameState.battlefield.waveLevel);
         const nonStarting = player.equipped.filter(eq => eq.type !== 'inicial');
         const weapons = nonStarting.filter(eq => this.isWeapon(eq)).length;
@@ -614,6 +636,27 @@ triggerAction(type, target = null, reason = "") {
         let effectStr = ((eq.isBroken && eq.broken ? eq.broken.effect : eq.effect) || '').toLowerCase();
         let extraStr = ((eq.isBroken && eq.broken ? eq.broken.extra : eq.extra) || '').toLowerCase();
         return effectStr.includes('daño') || extraStr.includes('daño');
+    }
+
+    getPlayerOffensivePotential(player) {
+        let total = 0;
+        const offensiveCards = player.equipped.filter(eq => this.canDealDamage(eq));
+        offensiveCards.forEach(eq => {
+            // Clonamos temporalmente para calcular el potencial óptimo (reparado)
+            const tempEq = { ...eq, isBroken: false };
+            let maxDmg = 0;
+            for (let val = 1; val <= 6; val++) {
+                if (this.gameState.isValidDieForEquipment(val, tempEq)) {
+                    let d = this.getDamageForDieInEquip(val, tempEq);
+                    if (d > maxDmg) maxDmg = d;
+                }
+            }
+            const extra = (tempEq.extra || '').toLowerCase();
+            const isReusable = extra.includes('reutilizable');
+            const maxUses = extra.includes('x3') ? 3 : (isReusable ? 3 : 1);
+            total += maxDmg * maxUses;
+        });
+        return total;
     }
 
 
@@ -873,21 +916,35 @@ performMarketTurn(bot) {
             // Si no está en emergencia o no pudo comprar pociones, prosigue con compras de personalidad e IA de equipamiento
             if (!bought && !emergencyHealing) {
                 const isWellEq = this.isWellEquipped(bot);
-                const missingType = this.getMissingEquipmentType(bot);
+                
+                // Si ya va bien equipado y la oleada es >= 3, ahorrar oro para pociones
+                if (isWellEq && this.gameState.battlefield.waveLevel >= 3) {
+                    if (bot.mo > 0) {
+                        advice = "Guardaré este oro para cuando realmente nos haga falta.";
+                    } else {
+                        advice = "Sin oro poca cosa podré hacer.";
+                    }
+                    bought = true;
+                    chosenAction = 'end-turn';
+                }
 
-                if (!isWellEq && missingType) {
-                    // Si no va bien equipado, PRIORIZA el tipo de equipo que le falta
-                    const topCard = this.gameState.market[missingType] && this.gameState.market[missingType].length > 0 ? this.gameState.market[missingType][0] : null;
-                    if (topCard && bot.mo >= topCard.cost) {
-                        bought = buyIfPossible(missingType);
-                        if (bought) {
-                            advice = `Necesito mejorar mi equipo para la oleada. Compraré una carta de ${missingType}.`;
-                            this.gameState.addLog(`🤖 <strong>${bot.name}</strong> prioriza la compra de <strong>${topCard.name}</strong> (${missingType}) porque no va bien equipado para el nivel/oleada.`);
+                if (!bought) {
+                    const missingType = this.getMissingEquipmentType(bot);
+                    if (!isWellEq && missingType) {
+                        // Si no va bien equipado, PRIORIZA el tipo de equipo que le falta
+                        const topCard = this.gameState.market[missingType] && this.gameState.market[missingType].length > 0 ? this.gameState.market[missingType][0] : null;
+                        if (topCard && bot.mo >= topCard.cost) {
+                            bought = buyIfPossible(missingType);
+                            if (bought) {
+                                advice = `Necesito mejorar mi equipo para la oleada. Compraré una carta de ${missingType}.`;
+                                this.gameState.addLog(`🤖 <strong>${bot.name}</strong> prioriza la compra de <strong>${topCard.name}</strong> (${missingType}) porque no va bien equipado para el nivel/oleada.`);
+                            }
+                        } else if (topCard) {
+                            // Ahorrar para este equipo que le falta
+                            advice = `Ahorraré para un equipo de ${missingType} (necesito ${topCard.cost} mo para ${topCard.name}).`;
+                            bought = true; // Simula que tomamos una decisión (ahorrar) para no avanzar a otra compra
+                            chosenAction = 'end-turn'; // Finalizar el turno tras decidir ahorrar
                         }
-                    } else if (topCard) {
-                        // Ahorrar para este equipo que le falta
-                        advice = `Ahorraré para un equipo de ${missingType} (necesito ${topCard.cost} mo para ${topCard.name}).`;
-                        bought = true; // Simula que tomamos una decisión (ahorrar) para no avanzar a otra compra
                     }
                 }
 

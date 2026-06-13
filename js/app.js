@@ -239,6 +239,7 @@ var activeSelectedEquipId = null;
 
 // Sobrescribir window.alert nativo por un modal inmersivo del juego
 window.alert = function (messageText, callback = null) {
+  window.resetEventModalTransparency();
   const overlay = document.getElementById('global-event-overlay');
   const title = document.getElementById('event-modal-title');
   const desc = document.getElementById('event-modal-desc');
@@ -310,6 +311,11 @@ window.alert = function (messageText, callback = null) {
   }
 
   title.innerHTML = headerText.replace(/🪙/g, COIN_SVG);
+
+  const eyeBtn = document.getElementById('event-modal-eye-btn');
+  if (eyeBtn && (messageText.includes('COMBAT_STATS:') || messageText.includes('¡COMBATE COMPLETADO!'))) {
+    eyeBtn.classList.remove('hidden');
+  }
   title.style.cssText = `font-family: 'Cinzel', serif; font-size: ${titleFontSize}; font-weight: 800; color: #ffd700; text-shadow: 0 0 15px rgba(255, 215, 0, 0.4); text-align: center; margin-bottom: 25px; letter-spacing: 2px; text-transform: uppercase;`;
 
   // Función de parseo interno para colorear y estructurar el mensaje
@@ -493,6 +499,7 @@ window.alert = function (messageText, callback = null) {
   btnOk.innerText = "ACEPTAR";
   btnOk.onclick = () => {
     overlay.classList.add('hidden');
+    window.resetEventModalTransparency();
     if (typeof callback === 'function') {
       callback();
     }
@@ -4008,14 +4015,20 @@ function renderRetaliationModal() {
     if (modal) modal.classList.remove('retaliation-theme');
     const container = document.getElementById('event-choices-container');
     if (container) container.classList.remove('retaliation-layout');
+    window.resetEventModalTransparency();
     return;
   }
 
+  window.resetEventModalTransparency();
   const overlay = document.getElementById('global-event-overlay');
   const title = document.getElementById('event-modal-title');
   const desc = document.getElementById('event-modal-desc');
   const container = document.getElementById('event-choices-container');
   const modal = document.querySelector('.event-modal');
+  const eyeBtn = document.getElementById('event-modal-eye-btn');
+  if (eyeBtn) {
+    eyeBtn.classList.remove('hidden');
+  }
 
   // Aplicar tema rojizo
   if (modal) modal.classList.add('retaliation-theme');
@@ -4169,6 +4182,7 @@ function assignAllRetaliationToPlayer(pIndex) {
         const modal = document.querySelector('.event-modal');
         if (modal) modal.classList.remove('retaliation-theme');
         container.classList.remove('retaliation-layout');
+        window.resetEventModalTransparency();
       } else if (gameState.retaliationQueue.length > 0) {
         renderRetaliationModal();
       }
@@ -4215,6 +4229,7 @@ function handleRetaliationChoice(gobUids, playerIdx) {
           if (modal) modal.classList.remove('retaliation-theme');
           const container = document.getElementById('event-choices-container');
           if (container) container.classList.remove('retaliation-layout');
+          window.resetEventModalTransparency();
         } else {
           renderRetaliationModal();
         }
@@ -4238,6 +4253,7 @@ function handleRetaliationChoice(gobUids, playerIdx) {
 }
 
 function renderGameWon() {
+  window.resetEventModalTransparency();
   const overlay = document.getElementById('global-event-overlay');
   const title = document.getElementById('event-modal-title');
   const desc = document.getElementById('event-modal-desc');
@@ -4277,6 +4293,7 @@ function renderGameWon() {
 }
 
 function renderGameOver() {
+  window.resetEventModalTransparency();
   const overlay = document.getElementById('global-event-overlay');
   const title = document.getElementById('event-modal-title');
   const desc = document.getElementById('event-modal-desc');
@@ -4310,6 +4327,7 @@ function renderGameOver() {
 }
 
 function openPotionsModal() {
+  window.resetEventModalTransparency();
   const overlay = document.getElementById('global-event-overlay');
   const container = document.getElementById('event-choices-container');
   const p = gameState.getCurrentPlayer();
@@ -4479,6 +4497,7 @@ function openPotionsModal() {
   closeBtn.onclick = () => {
     overlay.classList.add('hidden');
     container.classList.remove('potions-layout');
+    window.resetEventModalTransparency();
   };
   container.appendChild(closeBtn);
 
@@ -4500,6 +4519,7 @@ function updateNarrowStates() {
 window.addEventListener('resize', updateNarrowStates);
 
 function openDuplicateWarningModal(type, card, onConfirm) {
+  window.resetEventModalTransparency();
   const overlay = document.getElementById('global-event-overlay');
   const title = document.getElementById('event-modal-title');
   const desc = document.getElementById('event-modal-desc');
@@ -4521,6 +4541,7 @@ function openDuplicateWarningModal(type, card, onConfirm) {
   btnYes.innerText = "SÍ, COMPRAR Y ALMACENAR";
   btnYes.onclick = () => {
     overlay.classList.add('hidden');
+    window.resetEventModalTransparency();
     if (onConfirm) {
       onConfirm();
     } else {
@@ -4534,6 +4555,7 @@ function openDuplicateWarningModal(type, card, onConfirm) {
   btnNo.innerText = "CANCELAR COMPRA";
   btnNo.onclick = () => {
     overlay.classList.add('hidden');
+    window.resetEventModalTransparency();
   };
 
   container.appendChild(btnYes);
@@ -4542,6 +4564,7 @@ function openDuplicateWarningModal(type, card, onConfirm) {
 }
 
 function openPurchaseConfirmationModal(card, onConfirm) {
+  window.resetEventModalTransparency();
   const overlay = document.getElementById('global-event-overlay');
   const title = document.getElementById('event-modal-title');
   const desc = document.getElementById('event-modal-desc');
@@ -4562,6 +4585,7 @@ function openPurchaseConfirmationModal(card, onConfirm) {
   btnYes.innerText = "SÍ, COMPRAR";
   btnYes.onclick = () => {
     overlay.classList.add('hidden');
+    window.resetEventModalTransparency();
     onConfirm();
   };
 
@@ -4570,6 +4594,7 @@ function openPurchaseConfirmationModal(card, onConfirm) {
   btnNo.innerText = "CANCELAR";
   btnNo.onclick = () => {
     overlay.classList.add('hidden');
+    window.resetEventModalTransparency();
   };
 
   container.appendChild(btnYes);
@@ -4578,6 +4603,7 @@ function openPurchaseConfirmationModal(card, onConfirm) {
 }
 
 function openActionLossWarningModal(onConfirm) {
+  window.resetEventModalTransparency();
   const overlay = document.getElementById('global-event-overlay');
   const title = document.getElementById('event-modal-title');
   const desc = document.getElementById('event-modal-desc');
@@ -4599,6 +4625,7 @@ function openActionLossWarningModal(onConfirm) {
   btnYes.innerText = "SÍ, CONTINUAR";
   btnYes.onclick = () => {
     overlay.classList.add('hidden');
+    window.resetEventModalTransparency();
     onConfirm();
   };
 
@@ -4607,6 +4634,7 @@ function openActionLossWarningModal(onConfirm) {
   btnNo.innerText = "CANCELAR COMPRA";
   btnNo.onclick = () => {
     overlay.classList.add('hidden');
+    window.resetEventModalTransparency();
   };
 
   container.appendChild(btnYes);
@@ -5231,6 +5259,53 @@ document.addEventListener('DOMContentLoaded', () => {
       el.addEventListener('click', removeInitialFocusHighlights);
     }
   });
+});
+
+// Función global para limpiar el estado de transparencia del modal de eventos
+window.resetEventModalTransparency = function() {
+  const overlay = document.getElementById('global-event-overlay');
+  const modal = overlay ? overlay.querySelector('.event-modal') : null;
+  const eyeBtn = document.getElementById('event-modal-eye-btn');
+  if (overlay) {
+    overlay.classList.remove('overlay-transparent');
+  }
+  if (modal) {
+    modal.classList.remove('modal-transparent');
+  }
+  if (eyeBtn) {
+    eyeBtn.classList.add('hidden');
+    eyeBtn.innerHTML = '👁️';
+    eyeBtn.title = 'Hacer modal transparente';
+    eyeBtn.style.background = '';
+    eyeBtn.style.color = '';
+  }
+};
+
+// Escuchar clics en el botón de ojo de transparencia de modales
+document.addEventListener('DOMContentLoaded', () => {
+  const eyeBtn = document.getElementById('event-modal-eye-btn');
+  if (eyeBtn) {
+    eyeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const overlay = document.getElementById('global-event-overlay');
+      const modal = overlay ? overlay.querySelector('.event-modal') : null;
+      if (overlay && modal) {
+        const isTransparent = modal.classList.toggle('modal-transparent');
+        overlay.classList.toggle('overlay-transparent', isTransparent);
+        if (isTransparent) {
+          eyeBtn.innerHTML = '👁️‍🗨️';
+          eyeBtn.title = 'Restaurar opacidad';
+          eyeBtn.style.background = 'var(--gold)';
+          eyeBtn.style.color = '#000';
+        } else {
+          eyeBtn.innerHTML = '👁️';
+          eyeBtn.title = 'Hacer modal transparente';
+          eyeBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+          eyeBtn.style.color = 'var(--gold)';
+        }
+      }
+    });
+  }
 });
 
 
