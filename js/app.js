@@ -4826,6 +4826,10 @@ window.loadGame = function() {
     const data = JSON.parse(saveData);
     Object.assign(gameState, data);
 
+    if (!gameState.combatHistory) {
+      gameState.combatHistory = [];
+    }
+
     // RETROFIT: Ensure level 4+ players have their silver die
     if (gameState.players) {
        gameState.players.forEach(p => {
@@ -4895,272 +4899,320 @@ setInterval(() => {
 // --- DEBUG COMBAT ---
 const btnDebugCombat = document.getElementById('btn-debug-combat');
 
+window.getCombatDebugHtml = function(state) {
+  if (!state) return "<em>No hay datos disponibles.</em>";
+  let html = `<div style="font-family: sans-serif; color: #ddd; line-height: 1.4;">`;
+  
+  html += `<h3 style="color: var(--gold); border-bottom: 1px solid var(--gold); padding-bottom: 5px; margin-top: 5px;">Héroe al Inicio: ${state.player.playerNum ? 'J' + state.player.playerNum + ' - ' : ''}${state.player.name}</h3>`;
+  html += `<ul>`;
+  html += `<li><strong>Salud:</strong> ${state.player.hp} | <strong>Escudos:</strong> ${state.player.shield} | <strong>Energía:</strong> ${state.player.energy}</li>`;
+  html += `<li><strong>Oro:</strong> ${state.player.mo} | <strong>Experiencia:</strong> ${state.player.pex}</li>`;
+  
+  let equipList = state.player.equipped.map(eq => eq.isBroken ? `<s>${eq.name}</s> (Roto)` : eq.name).join(', ');
+  html += `<li><strong>Equipo:</strong> ${equipList || 'Ninguno'}</li>`;
+  html += `</ul>`;
+
+  html += `<h3 style="color: var(--accent-red); border-bottom: 1px solid var(--accent-red); padding-bottom: 5px;">Goblins en combate</h3>`;
+  html += `<ul>`;
+  if (state.goblins && state.goblins.length > 0) {
+    state.goblins.forEach(g => {
+      let gobName = g.name && g.name !== 'undefined' ? g.name : "Goblin";
+      let hpAfterStr = g.hpAfter !== undefined ? ` ➔ ${g.hpAfter}` : '';
+      html += `<li><strong>${gobName}</strong> (Nivel ${g.level}) - PV: ${g.hp}${hpAfterStr}</li>`;
+    });
+  } else {
+    html += `<li>Ninguno</li>`;
+  }
+  html += `</ul>`;
+
+  if (state.resolvedDetails) {
+    const details = state.resolvedDetails;
+    
+    // 1. Tus Dados (Héroe)
+    html += `<h3 style="color: #f1c40f; border-bottom: 1px solid #f1c40f; padding-bottom: 5px;">Tus Dados (Héroe)</h3>`;
+    if (state.playerDice && state.playerDice.length > 0) {
+      html += `<div style="margin-bottom: 12px; display: flex; gap: 6px; flex-wrap: wrap;">`;
+      state.playerDice.forEach(d => {
+        let bg = d.type === 'yellow' ? '#f1c40f' : (d.type === 'black' ? '#333' : (d.type === 'red' ? '#e74c3c' : (d.type === 'silver' ? 'linear-gradient(135deg, #e0e0e0, #999999)' : '#3498db')));
+        let col = d.type === 'yellow' ? '#000' : (d.type === 'silver' ? '#111' : '#fff');
+        let border = d.type === 'silver' ? '1px solid #666' : '1px solid #fff';
+        let val = d.value !== undefined ? d.value : d.val;
+        html += `<span style="display:inline-block; background:${bg}; color:${col}; padding:3px 10px; border-radius:4px; font-weight:bold; border:${border}; box-shadow: 0 2px 4px rgba(0,0,0,0.4);">${val}</span>`;
+      });
+      html += `</div>`;
+    }
+
+    if (details.playerDiceDetails && details.playerDiceDetails.length > 0) {
+      html += `<ul style="padding-left: 20px; margin-top: 8px;">`;
+      details.playerDiceDetails.forEach(d => {
+        let actions = [];
+        if (d.damage > 0) actions.push(`infligió <span style="color:#ff4d4d; font-weight:bold;">${d.damage} daño</span> a <strong>${d.target}</strong>`);
+        if (d.shield > 0) actions.push(`otorgó <span style="color:#3498db; font-weight:bold;">${d.shield} escudo</span>`);
+        if (d.heal > 0) actions.push(`curó <span style="color:#2ecc71; font-weight:bold;">${d.heal} PV</span>`);
+        if (d.energyGained > 0) actions.push(`generó <span style="color:#00d2ff; font-weight:bold;">${d.energyGained} energía de rol</span>`);
+        
+        let actionStr = actions.length > 0 ? actions.join(' y ') : "no aportó efectos numéricos (carta rota o no coincidente)";
+        if (d.isIntercept) {
+          actionStr = `anuló el dado del goblin de valor <span style="color:#2ecc71; font-weight:bold;">${d.value}</span>`;
+        }
+        
+        // Buscar tipo del dado para renderizarlo con su color
+        let dieType = 'red';
+        if (state.playerDice) {
+          const found = state.playerDice.find(pd => pd.id === d.dieId);
+          if (found) dieType = found.type;
+        }
+        let bg = dieType === 'yellow' ? '#f1c40f' : (dieType === 'black' ? '#333' : (dieType === 'red' ? '#e74c3c' : (dieType === 'silver' ? 'linear-gradient(135deg, #e0e0e0, #999999)' : '#3498db')));
+        let col = dieType === 'yellow' ? '#000' : (dieType === 'silver' ? '#111' : '#fff');
+        let border = dieType === 'silver' ? '1px solid #666' : '1px solid #fff';
+        let dieBadge = `<span style="display:inline-block; background:${bg}; color:${col}; padding:1px 6px; border-radius:4px; font-weight:bold; border:${border}; font-size:0.9rem; margin: 0 2px;">${d.value}</span>`;
+
+        html += `<li style="margin-bottom:6px;">Dado ${dieBadge} asignado a <strong>${d.assignedTo}</strong>: ${actionStr}.</li>`;
+      });
+      html += `</ul>`;
+    } else {
+      html += `<p>No se asignaron dados a equipo o rol.</p>`;
+    }
+
+    // 2. Dados de Goblins (Verdes)
+    html += `<h3 style="color: #2ecc71; border-bottom: 1px solid #2ecc71; padding-bottom: 5px;">Dados de Goblins (Verdes)</h3>`;
+    if (details.goblinDiceDetails && details.goblinDiceDetails.length > 0) {
+      html += `<ul style="padding-left: 20px;">`;
+      details.goblinDiceDetails.forEach(d => {
+        let statusStr = '';
+        if (d.isIntercepted) {
+          // Buscar tipo del dado interceptor para colorearlo
+          let interceptDieType = 'red';
+          if (state.playerDice && d.interceptedByDieId) {
+            const found = state.playerDice.find(pd => pd.id === d.interceptedByDieId);
+            if (found) interceptDieType = found.type;
+          }
+          let ibg = interceptDieType === 'yellow' ? '#f1c40f' : (interceptDieType === 'black' ? '#333' : (interceptDieType === 'red' ? '#e74c3c' : (interceptDieType === 'silver' ? 'linear-gradient(135deg, #e0e0e0, #999999)' : '#3498db')));
+          let icol = interceptDieType === 'yellow' ? '#000' : (interceptDieType === 'silver' ? '#111' : '#fff');
+          let iborder = interceptDieType === 'silver' ? '1px solid #666' : '1px solid #fff';
+          let interceptBadge = `<span style="display:inline-block; background:${ibg}; color:${icol}; padding:1px 6px; border-radius:4px; font-weight:bold; border:${iborder}; font-size:0.9rem; margin: 0 2px;">${d.interceptedBy}</span>`;
+          
+          statusStr = ` <span style="color:#2ecc71; font-size:0.9rem;">(Interceptado por dado ${interceptBadge})</span>`;
+        }
+        
+        let dieBadge = `<span style="display:inline-block; background:#2ecc71; color:#000; padding:2px 8px; border-radius:4px; font-weight:bold; margin-right:4px; box-shadow: 0 2px 4px rgba(0,0,0,0.4);">${d.val}</span>`;
+        let gName = d.goblinName && d.goblinName !== 'undefined' ? d.goblinName : "Goblin";
+        
+        html += `<li style="margin-bottom:10px;"><strong>${gName}</strong> sacó: ${dieBadge}${statusStr}`;
+        if (d.effects && d.effects.length > 0) {
+          html += `<ul style="padding-left: 15px; margin-top: 4px; font-size:0.95rem;">`;
+          d.effects.forEach(eff => {
+            const effTextLow = eff.text.toLowerCase();
+            let color = '#888';
+            
+            if (eff.status === 'aplicado') {
+              if (effTextLow.includes('rotura no esquivable')) {
+                color = '#c975ff'; // Morado
+              } else if (effTextLow.includes('calambre')) {
+                color = '#f1c40f'; // Amarillo
+              } else if (effTextLow.includes('tembleque')) {
+                color = '#00d2ff'; // Azul cielo
+              } else if (effTextLow.includes('escozor')) {
+                color = '#ff8c00'; // Naranja
+              } else {
+                color = '#ff6b6b'; // Rojo standard
+              }
+            }
+            
+            let decoration = eff.status === 'aplicado' ? 'font-weight:bold;' : 'text-decoration:line-through;';
+            let icon = eff.status === 'aplicado' ? '💥' : '🛡️';
+            
+            let textToShow = eff.text;
+            if (eff.status === 'mitigado') {
+              textToShow = `${eff.text} (Mitigado)`;
+            }
+            
+            html += `<li style="color:${color}; ${decoration}">${icon} ${textToShow}</li>`;
+          });
+          html += `</ul>`;
+        } else {
+          html += `<div style="font-size:0.9rem; color:#aaa; margin-left: 15px; font-style:italic;">(Sin efectos especiales de ataque para este dado)</div>`;
+        }
+        html += `</li>`;
+      });
+      html += `</ul>`;
+    } else {
+      html += `<p>Los goblins no tiraron dados de ataque.</p>`;
+    }
+
+    // 3. Resultado Final del Héroe
+    const outcome = details.finalPlayerOutcome;
+    html += `<h3 style="color: #e74c3c; border-bottom: 1px solid #e74c3c; padding-bottom: 5px;">Daño e Impacto Final en Héroe</h3>`;
+    html += `<ul style="padding-left: 20px; font-size: 1.05rem;">`;
+    html += `<li><strong>Daño Directo Recibido:</strong> <span style="color:#ff4d4d; font-weight:bold;">${outcome.directDamageReceived}</span></li>`;
+    html += `<li><strong>Daño Normal Recibido (antes de escudo):</strong> <span style="color:#e67e22; font-weight:bold;">${outcome.normalDamageIncoming}</span></li>`;
+    html += `<li><strong>Daño Bloqueado por Escudos:</strong> <span style="color:#3498db; font-weight:bold;">${outcome.damageBlocked}</span></li>`;
+    html += `<li><strong>Daño Normal Neto Recibido:</strong> <span style="color:#ff4d4d; font-weight:bold;">${outcome.netNormalDamageReceived}</span></li>`;
+    if (outcome.escozorDamageDealt > 0) {
+      html += `<li><strong>Daño por usar dados con Escozor:</strong> <span style="color:#ff8c00; font-weight:bold;">${outcome.escozorDamageDealt}</span></li>`;
+    }
+    if (outcome.warlordExtraDmg > 0) {
+      html += `<li><strong>Daño Extra por Golpe Certero (Jefe):</strong> <span style="color:#ff4d4d; font-weight:bold;">${outcome.warlordExtraDmg}</span></li>`;
+    }
+    if (outcome.healed > 0) {
+      html += `<li><strong>Curación Recibida:</strong> <span style="color:#2ecc71; font-weight:bold;">+${outcome.healed}</span></li>`;
+    }
+    
+    let hpChangeStr = '';
+    let hpGainFromLevelUp = 0;
+    if (outcome.levelAfter > outcome.levelBefore) {
+      hpGainFromLevelUp = (outcome.levelAfter - outcome.levelBefore) * 5;
+    }
+    
+    let netHpChange = outcome.hpAfter - outcome.hpBefore - hpGainFromLevelUp;
+    
+    if (outcome.finalDamageHpChange > 0) {
+      hpChangeStr = `<span style="color:#ff4d4d; font-weight:bold;">-${outcome.finalDamageHpChange} PV</span>`;
+    } else if (netHpChange > 0) {
+      hpChangeStr = `<span style="color:#2ecc71; font-weight:bold;">+${netHpChange} PV</span>`;
+    } else {
+      hpChangeStr = `<span style="color:#888; font-weight:bold;">Sin cambio neto</span>`;
+    }
+    let displayHpAfter = outcome.hpAfter - hpGainFromLevelUp;
+    html += `<li style="margin-top:10px; border-top:1px solid #444; padding-top:8px;"><strong>Salud del Héroe:</strong> ${outcome.hpBefore} ➔ <strong>${displayHpAfter}</strong> (${hpChangeStr})</li>`;
+    html += `</ul>`;
+    
+  } else {
+    // Fallback para combates antiguos
+    html += `<h3 style="color: #f1c40f; border-bottom: 1px solid #f1c40f; padding-bottom: 5px;">Tus Dados (Héroe)</h3>`;
+    if (state.playerDice && state.playerDice.length > 0) {
+      html += `<p>${state.playerDice.map(d => {
+        let bg = d.type === 'yellow' ? '#f1c40f' : (d.type === 'black' ? '#333' : (d.type === 'red' ? '#e74c3c' : '#3498db'));
+        let col = d.type === 'yellow' ? '#000' : '#fff';
+        let val = d.value !== undefined ? d.value : d.val;
+        return `<span style="display:inline-block; background:${bg}; color:${col}; padding:2px 8px; border-radius:4px; margin-right:5px; font-weight:bold; border: 1px solid #fff;">${val}</span>`;
+      }).join('')}</p>`;
+    } else {
+      html += `<p>Sin dados</p>`;
+    }
+
+    html += `<h3 style="color: #2ecc71; border-bottom: 1px solid #2ecc71; padding-bottom: 5px;">Dados de Goblins (Verdes)</h3>`;
+    if (state.goblinDice && Object.keys(state.goblinDice).length > 0) {
+      html += `<ul>`;
+      for (let gId in state.goblinDice) {
+        let gob = state.goblins.find(g => g.uid == gId);
+        let gName = gob && gob.name && gob.name !== 'undefined' ? gob.name : "Goblin";
+        let res = state.goblinDice[gId];
+        let diceStr = (res.details || []).filter(d => d.type === 'die').map(d => d.val || d.value).join(', ');
+        html += `<li><strong>${gName}</strong> sacó: <span style="display:inline-block; background:#2ecc71; color:#000; padding:2px 8px; border-radius:4px; margin-right:5px; font-weight:bold;">${diceStr || res.total}</span> (Daño total: ${res.total})</li>`;
+      }
+      html += `</ul>`;
+    } else {
+      html += `<p>Los goblins no tiraron dados.</p>`;
+    }
+
+    html += `<h3 style="color: #40bae9; border-bottom: 1px solid #40bae9; padding-bottom: 5px;">Asignaciones de Dados</h3>`;
+    if (state.assignments && Object.keys(state.assignments).length > 0) {
+      html += `<ul>`;
+      for (let eqId in state.assignments) {
+        let asgs = state.assignments[eqId];
+        if (!Array.isArray(asgs)) asgs = [asgs];
+        
+        let eqName = eqId;
+        if (eqId === 'rol' || eqId === 'role') eqName = 'Habilidad de Rol';
+        else {
+          let foundEq = state.player.equipped.find(e => e.id === eqId);
+          if (foundEq) eqName = foundEq.name;
+        }
+
+        asgs.forEach(a => {
+          let targetName = "Sin objetivo";
+          if (a.targetUid) {
+             let foundGob = state.goblins.find(g => g.uid == a.targetUid);
+             if (foundGob) targetName = foundGob.name && foundGob.name !== 'undefined' ? foundGob.name : "Goblin";
+             else targetName = "Goblin";
+          }
+          html += `<li>Dado <strong>${a.value}</strong> ··> asignado a <strong>${eqName}</strong> (Objetivo: ${targetName})</li>`;
+        });
+      }
+      html += `</ul>`;
+    } else {
+      html += `<p>No se asignaron dados a equipo o rol.</p>`;
+    }
+
+    html += `<h3 style="color: #f15bb5; border-bottom: 1px solid #f15bb5; padding-bottom: 5px;">Intercepciones (Defensa)</h3>`;
+    if (state.interceptions && Object.keys(state.interceptions).length > 0) {
+      html += `<ul>`;
+      for (let gobId in state.interceptions) {
+        let diceIds = state.interceptions[gobId];
+        let foundGob = state.goblins.find(g => g.uid == gobId);
+        let targetName = foundGob && foundGob.name && foundGob.name !== 'undefined' ? foundGob.name : "Goblin";
+        
+        let diceVals = diceIds.map(asg => {
+          let id = typeof asg === 'string' ? asg : asg.dieId;
+          let d = state.playerDice.find(pd => pd.id === id);
+          return d ? (d.value !== undefined ? d.value : d.val) : (asg.value || "?");
+        });
+
+        html += `<li>Ataque de <strong>${targetName}</strong> Interceptado con dado(s): <strong>${diceVals.join(', ')}</strong></li>`;
+      }
+      html += `</ul>`;
+    } else {
+      html += `<p>No se interceptó ningún ataque.</p>`;
+    }
+  }
+
+  html += `</div>`;
+  return html;
+};
+
+window.updateCombatHistorySelect = function() {
+  const select = document.getElementById('combat-history-select');
+  if (!select) return;
+  
+  select.innerHTML = '';
+  
+  if (!gameState || !gameState.combatHistory || gameState.combatHistory.length === 0) {
+    const opt = document.createElement('option');
+    opt.value = '';
+    opt.textContent = 'Sin combates';
+    select.appendChild(opt);
+    select.disabled = true;
+    return;
+  }
+  
+  select.disabled = false;
+  // Populate dropdown, newest first
+  for (let i = gameState.combatHistory.length - 1; i >= 0; i--) {
+    const c = gameState.combatHistory[i];
+    const opt = document.createElement('option');
+    opt.value = i;
+    
+    let playerRole = c.player && c.player.role ? c.player.role.toUpperCase() : 'HEROE';
+    let JPrefix = c.player && c.player.playerNum ? `J${c.player.playerNum} ` : '';
+    let enemies = c.goblins ? c.goblins.map(g => `G${g.level}`).join('+') : 'Goblins';
+    opt.textContent = `#${c.id} (O.${c.wave}) - ${JPrefix}${playerRole} vs ${enemies}`;
+    select.appendChild(opt);
+  }
+};
+
+window.renderSpecificCombatDebug = function(state) {
+  const debugCombatData = document.getElementById('debug-combat-data');
+  if (debugCombatData) {
+    debugCombatData.innerHTML = window.getCombatDebugHtml(state);
+  }
+};
+
 window.updateDebugCombatModalData = function() {
     const debugCombatModal = document.getElementById('debug-combat-modal');
     const debugCombatData = document.getElementById('debug-combat-data');
     if (!debugCombatModal || !debugCombatData) return;
     
-    if (!gameState || !gameState.lastCombatDebugState) {
-      debugCombatData.innerHTML = "<em>No hay datos del último combate aún.</em>";
+    window.updateCombatHistorySelect();
+    
+    if (!gameState || !gameState.combatHistory || gameState.combatHistory.length === 0) {
+      debugCombatData.innerHTML = "<em>No hay datos de combates registrados aún.</em>";
     } else {
-      const state = gameState.lastCombatDebugState;
-      let html = `<div style="font-family: sans-serif; color: #ddd; line-height: 1.4;">`;
+      const lastIdx = gameState.combatHistory.length - 1;
+      const select = document.getElementById('combat-history-select');
+      if (select) select.value = lastIdx;
       
-      html += `<h3 style="color: var(--gold); border-bottom: 1px solid var(--gold); padding-bottom: 5px; margin-top: 5px;">Héroe al Inicio: ${state.player.name}</h3>`;
-      html += `<ul>`;
-      html += `<li><strong>Salud:</strong> ${state.player.hp} | <strong>Escudos:</strong> ${state.player.shield} | <strong>Energía:</strong> ${state.player.energy}</li>`;
-      html += `<li><strong>Oro:</strong> ${state.player.mo} | <strong>Experiencia:</strong> ${state.player.pex}</li>`;
-      
-      let equipList = state.player.equipped.map(eq => eq.isBroken ? `<s>${eq.name}</s> (Roto)` : eq.name).join(', ');
-      html += `<li><strong>Equipo:</strong> ${equipList || 'Ninguno'}</li>`;
-      html += `</ul>`;
-
-      html += `<h3 style="color: var(--accent-red); border-bottom: 1px solid var(--accent-red); padding-bottom: 5px;">Goblins en combate</h3>`;
-      html += `<ul>`;
-      if (state.goblins && state.goblins.length > 0) {
-        state.goblins.forEach(g => {
-          let gobName = g.name && g.name !== 'undefined' ? g.name : "Goblin";
-          html += `<li><strong>${gobName}</strong> (Nivel ${g.level}) - PV Restantes: ${g.hp}</li>`;
-        });
-      } else {
-        html += `<li>Ninguno</li>`;
-      }
-      html += `</ul>`;
-
-      if (state.resolvedDetails) {
-        const details = state.resolvedDetails;
-        
-        // 1. Tus Dados (Héroe)
-        html += `<h3 style="color: #f1c40f; border-bottom: 1px solid #f1c40f; padding-bottom: 5px;">Tus Dados (Héroe)</h3>`;
-        if (state.playerDice && state.playerDice.length > 0) {
-          html += `<div style="margin-bottom: 12px; display: flex; gap: 6px; flex-wrap: wrap;">`;
-          state.playerDice.forEach(d => {
-            let bg = d.type === 'yellow' ? '#f1c40f' : (d.type === 'black' ? '#333' : (d.type === 'red' ? '#e74c3c' : (d.type === 'silver' ? 'linear-gradient(135deg, #e0e0e0, #999999)' : '#3498db')));
-            let col = d.type === 'yellow' ? '#000' : (d.type === 'silver' ? '#111' : '#fff');
-            let border = d.type === 'silver' ? '1px solid #666' : '1px solid #fff';
-            let val = d.value !== undefined ? d.value : d.val;
-            html += `<span style="display:inline-block; background:${bg}; color:${col}; padding:3px 10px; border-radius:4px; font-weight:bold; border:${border}; box-shadow: 0 2px 4px rgba(0,0,0,0.4);">${val}</span>`;
-          });
-          html += `</div>`;
-        }
-
-        if (details.playerDiceDetails && details.playerDiceDetails.length > 0) {
-          html += `<ul style="padding-left: 20px; margin-top: 8px;">`;
-          details.playerDiceDetails.forEach(d => {
-            let actions = [];
-            if (d.damage > 0) actions.push(`infligió <span style="color:#ff4d4d; font-weight:bold;">${d.damage} daño</span> a <strong>${d.target}</strong>`);
-            if (d.shield > 0) actions.push(`otorgó <span style="color:#3498db; font-weight:bold;">${d.shield} escudo</span>`);
-            if (d.heal > 0) actions.push(`curó <span style="color:#2ecc71; font-weight:bold;">${d.heal} PV</span>`);
-            if (d.energyGained > 0) actions.push(`generó <span style="color:#00d2ff; font-weight:bold;">${d.energyGained} energía de rol</span>`);
-            
-            let actionStr = actions.length > 0 ? actions.join(' y ') : "no aportó efectos numéricos (carta rota o no coincidente)";
-            if (d.isIntercept) {
-              actionStr = `anuló el dado del goblin de valor <span style="color:#2ecc71; font-weight:bold;">${d.value}</span>`;
-            }
-            
-            // Buscar tipo del dado para renderizarlo con su color
-            let dieType = 'red';
-            if (state.playerDice) {
-              const found = state.playerDice.find(pd => pd.id === d.dieId);
-              if (found) dieType = found.type;
-            }
-            let bg = dieType === 'yellow' ? '#f1c40f' : (dieType === 'black' ? '#333' : (dieType === 'red' ? '#e74c3c' : (dieType === 'silver' ? 'linear-gradient(135deg, #e0e0e0, #999999)' : '#3498db')));
-            let col = dieType === 'yellow' ? '#000' : (dieType === 'silver' ? '#111' : '#fff');
-            let border = dieType === 'silver' ? '1px solid #666' : '1px solid #fff';
-            let dieBadge = `<span style="display:inline-block; background:${bg}; color:${col}; padding:1px 6px; border-radius:4px; font-weight:bold; border:${border}; font-size:0.9rem; margin: 0 2px;">${d.value}</span>`;
-
-            html += `<li style="margin-bottom:6px;">Dado ${dieBadge} asignado a <strong>${d.assignedTo}</strong>: ${actionStr}.</li>`;
-          });
-          html += `</ul>`;
-        } else {
-          html += `<p>No se asignaron dados a equipo o rol.</p>`;
-        }
-
-        // 2. Dados de Goblins (Verdes)
-        html += `<h3 style="color: #2ecc71; border-bottom: 1px solid #2ecc71; padding-bottom: 5px;">Dados de Goblins (Verdes)</h3>`;
-        if (details.goblinDiceDetails && details.goblinDiceDetails.length > 0) {
-          html += `<ul style="padding-left: 20px;">`;
-          details.goblinDiceDetails.forEach(d => {
-            let statusStr = '';
-            if (d.isIntercepted) {
-              // Buscar tipo del dado interceptor para colorearlo
-              let interceptDieType = 'red';
-              if (state.playerDice && d.interceptedByDieId) {
-                const found = state.playerDice.find(pd => pd.id === d.interceptedByDieId);
-                if (found) interceptDieType = found.type;
-              }
-              let ibg = interceptDieType === 'yellow' ? '#f1c40f' : (interceptDieType === 'black' ? '#333' : (interceptDieType === 'red' ? '#e74c3c' : (interceptDieType === 'silver' ? 'linear-gradient(135deg, #e0e0e0, #999999)' : '#3498db')));
-              let icol = interceptDieType === 'yellow' ? '#000' : (interceptDieType === 'silver' ? '#111' : '#fff');
-              let iborder = interceptDieType === 'silver' ? '1px solid #666' : '1px solid #fff';
-              let interceptBadge = `<span style="display:inline-block; background:${ibg}; color:${icol}; padding:1px 6px; border-radius:4px; font-weight:bold; border:${iborder}; font-size:0.9rem; margin: 0 2px;">${d.interceptedBy}</span>`;
-              
-              statusStr = ` <span style="color:#2ecc71; font-size:0.9rem;">(Interceptado por dado ${interceptBadge})</span>`;
-            }
-            
-            let dieBadge = `<span style="display:inline-block; background:#2ecc71; color:#000; padding:2px 8px; border-radius:4px; font-weight:bold; margin-right:4px; box-shadow: 0 2px 4px rgba(0,0,0,0.4);">${d.val}</span>`;
-            let gName = d.goblinName && d.goblinName !== 'undefined' ? d.goblinName : "Goblin";
-            
-            html += `<li style="margin-bottom:10px;"><strong>${gName}</strong> sacó: ${dieBadge}${statusStr}`;
-            if (d.effects && d.effects.length > 0) {
-              html += `<ul style="padding-left: 15px; margin-top: 4px; font-size:0.95rem;">`;
-              d.effects.forEach(eff => {
-                const effTextLow = eff.text.toLowerCase();
-                let color = '#888';
-                
-                if (eff.status === 'aplicado') {
-                  if (effTextLow.includes('rotura no esquivable')) {
-                    color = '#c975ff'; // Morado
-                  } else if (effTextLow.includes('calambre')) {
-                    color = '#f1c40f'; // Amarillo
-                  } else if (effTextLow.includes('tembleque')) {
-                    color = '#00d2ff'; // Azul cielo
-                  } else if (effTextLow.includes('escozor')) {
-                    color = '#ff8c00'; // Naranja
-                  } else {
-                    color = '#ff6b6b'; // Rojo standard
-                  }
-                }
-                
-                let decoration = eff.status === 'aplicado' ? 'font-weight:bold;' : 'text-decoration:line-through;';
-                let icon = eff.status === 'aplicado' ? '💥' : '🛡️';
-                
-                let textToShow = eff.text;
-                if (eff.status === 'mitigado') {
-                  textToShow = `${eff.text} (Mitigado)`;
-                }
-                
-                html += `<li style="color:${color}; ${decoration}">${icon} ${textToShow}</li>`;
-              });
-              html += `</ul>`;
-            } else {
-              html += `<div style="font-size:0.9rem; color:#aaa; margin-left: 15px; font-style:italic;">(Sin efectos especiales de ataque para este dado)</div>`;
-            }
-            html += `</li>`;
-          });
-          html += `</ul>`;
-        } else {
-          html += `<p>Los goblins no tiraron dados de ataque.</p>`;
-        }
-
-        // 3. Resultado Final del Héroe
-        const outcome = details.finalPlayerOutcome;
-        html += `<h3 style="color: #e74c3c; border-bottom: 1px solid #e74c3c; padding-bottom: 5px;">Daño e Impacto Final en Héroe</h3>`;
-        html += `<ul style="padding-left: 20px; font-size: 1.05rem;">`;
-        html += `<li><strong>Daño Directo Recibido:</strong> <span style="color:#ff4d4d; font-weight:bold;">${outcome.directDamageReceived}</span></li>`;
-        html += `<li><strong>Daño Normal Recibido (antes de escudo):</strong> <span style="color:#e67e22; font-weight:bold;">${outcome.normalDamageIncoming}</span></li>`;
-        html += `<li><strong>Daño Bloqueado por Escudos:</strong> <span style="color:#3498db; font-weight:bold;">${outcome.damageBlocked}</span></li>`;
-        html += `<li><strong>Daño Normal Neto Recibido:</strong> <span style="color:#ff4d4d; font-weight:bold;">${outcome.netNormalDamageReceived}</span></li>`;
-        if (outcome.escozorDamageDealt > 0) {
-          html += `<li><strong>Daño por usar dados con Escozor:</strong> <span style="color:#ff8c00; font-weight:bold;">${outcome.escozorDamageDealt}</span></li>`;
-        }
-        if (outcome.warlordExtraDmg > 0) {
-          html += `<li><strong>Daño Extra por Golpe Certero (Jefe):</strong> <span style="color:#ff4d4d; font-weight:bold;">${outcome.warlordExtraDmg}</span></li>`;
-        }
-        if (outcome.healed > 0) {
-          html += `<li><strong>Curación Recibida:</strong> <span style="color:#2ecc71; font-weight:bold;">+${outcome.healed}</span></li>`;
-        }
-        
-        let hpChangeStr = '';
-        let hpGainFromLevelUp = 0;
-        if (outcome.levelAfter > outcome.levelBefore) {
-          hpGainFromLevelUp = (outcome.levelAfter - outcome.levelBefore) * 5;
-        }
-        
-        let netHpChange = outcome.hpAfter - outcome.hpBefore - hpGainFromLevelUp;
-        
-        if (outcome.finalDamageHpChange > 0) {
-          hpChangeStr = `<span style="color:#ff4d4d; font-weight:bold;">-${outcome.finalDamageHpChange} PV</span>`;
-        } else if (netHpChange > 0) {
-          hpChangeStr = `<span style="color:#2ecc71; font-weight:bold;">+${netHpChange} PV</span>`;
-        } else {
-          hpChangeStr = `<span style="color:#888; font-weight:bold;">Sin cambio neto</span>`;
-        }
-        let displayHpAfter = outcome.hpAfter - hpGainFromLevelUp;
-        html += `<li style="margin-top:10px; border-top:1px solid #444; padding-top:8px;"><strong>Salud del Héroe:</strong> ${outcome.hpBefore} ➔ <strong>${displayHpAfter}</strong> (${hpChangeStr})</li>`;
-        html += `</ul>`;
-        
-      } else {
-        // Fallback para combates antiguos
-        html += `<h3 style="color: #f1c40f; border-bottom: 1px solid #f1c40f; padding-bottom: 5px;">Tus Dados (Héroe)</h3>`;
-        if (state.playerDice && state.playerDice.length > 0) {
-          html += `<p>${state.playerDice.map(d => {
-            let bg = d.type === 'yellow' ? '#f1c40f' : (d.type === 'black' ? '#333' : (d.type === 'red' ? '#e74c3c' : '#3498db'));
-            let col = d.type === 'yellow' ? '#000' : '#fff';
-            let val = d.value !== undefined ? d.value : d.val;
-            return `<span style="display:inline-block; background:${bg}; color:${col}; padding:2px 8px; border-radius:4px; margin-right:5px; font-weight:bold; border: 1px solid #fff;">${val}</span>`;
-          }).join('')}</p>`;
-        } else {
-          html += `<p>Sin dados</p>`;
-        }
-
-        html += `<h3 style="color: #2ecc71; border-bottom: 1px solid #2ecc71; padding-bottom: 5px;">Dados de Goblins (Verdes)</h3>`;
-        if (state.goblinDice && Object.keys(state.goblinDice).length > 0) {
-          html += `<ul>`;
-          for (let gId in state.goblinDice) {
-            let gob = state.goblins.find(g => g.uid == gId);
-            let gName = gob && gob.name && gob.name !== 'undefined' ? gob.name : "Goblin";
-            let res = state.goblinDice[gId];
-            let diceStr = (res.details || []).filter(d => d.type === 'die').map(d => d.val || d.value).join(', ');
-            html += `<li><strong>${gName}</strong> sacó: <span style="display:inline-block; background:#2ecc71; color:#000; padding:2px 8px; border-radius:4px; margin-right:5px; font-weight:bold;">${diceStr || res.total}</span> (Daño total: ${res.total})</li>`;
-          }
-          html += `</ul>`;
-        } else {
-          html += `<p>Los goblins no tiraron dados.</p>`;
-        }
-
-        html += `<h3 style="color: #40bae9; border-bottom: 1px solid #40bae9; padding-bottom: 5px;">Asignaciones de Dados</h3>`;
-        if (state.assignments && Object.keys(state.assignments).length > 0) {
-          html += `<ul>`;
-          for (let eqId in state.assignments) {
-            let asgs = state.assignments[eqId];
-            if (!Array.isArray(asgs)) asgs = [asgs];
-            
-            let eqName = eqId;
-            if (eqId === 'rol' || eqId === 'role') eqName = 'Habilidad de Rol';
-            else {
-              let foundEq = state.player.equipped.find(e => e.id === eqId);
-              if (foundEq) eqName = foundEq.name;
-            }
-
-            asgs.forEach(a => {
-              let targetName = "Sin objetivo";
-              if (a.targetUid) {
-                 let foundGob = state.goblins.find(g => g.uid == a.targetUid);
-                 if (foundGob) targetName = foundGob.name && foundGob.name !== 'undefined' ? foundGob.name : "Goblin";
-                 else targetName = "Goblin";
-              }
-              html += `<li>Dado <strong>${a.value}</strong> ··> asignado a <strong>${eqName}</strong> (Objetivo: ${targetName})</li>`;
-            });
-          }
-          html += `</ul>`;
-        } else {
-          html += `<p>No se asignaron dados a equipo o rol.</p>`;
-        }
-
-        html += `<h3 style="color: #f15bb5; border-bottom: 1px solid #f15bb5; padding-bottom: 5px;">Intercepciones (Defensa)</h3>`;
-        if (state.interceptions && Object.keys(state.interceptions).length > 0) {
-          html += `<ul>`;
-          for (let gobId in state.interceptions) {
-            let diceIds = state.interceptions[gobId];
-            let foundGob = state.goblins.find(g => g.uid == gobId);
-            let targetName = foundGob && foundGob.name && foundGob.name !== 'undefined' ? foundGob.name : "Goblin";
-            
-            let diceVals = diceIds.map(asg => {
-              let id = typeof asg === 'string' ? asg : asg.dieId;
-              let d = state.playerDice.find(pd => pd.id === id);
-              return d ? (d.value !== undefined ? d.value : d.val) : (asg.value || "?");
-            });
-
-            html += `<li>Ataque de <strong>${targetName}</strong> Interceptado con dado(s): <strong>${diceVals.join(', ')}</strong></li>`;
-          }
-          html += `</ul>`;
-        } else {
-          html += `<p>No se interceptó ningún ataque.</p>`;
-        }
-      }
-
-      html += `</div>`;
-      debugCombatData.innerHTML = html;
+      debugCombatData.innerHTML = window.getCombatDebugHtml(gameState.combatHistory[lastIdx]);
     }
     
     const btnCloseDebugModal = document.getElementById('btn-close-debug-modal');
@@ -5170,6 +5222,73 @@ window.updateDebugCombatModalData = function() {
       };
     }
 };
+
+// Bind change and export events once elements are in DOM
+document.addEventListener('DOMContentLoaded', () => {
+  const historySelect = document.getElementById('combat-history-select');
+  if (historySelect) {
+    historySelect.addEventListener('change', () => {
+      const idx = parseInt(historySelect.value);
+      if (!isNaN(idx) && gameState.combatHistory && gameState.combatHistory[idx]) {
+        window.renderSpecificCombatDebug(gameState.combatHistory[idx]);
+      }
+    });
+  }
+
+  const btnExportHistory = document.getElementById('btn-export-combat-history');
+  if (btnExportHistory) {
+    btnExportHistory.addEventListener('click', () => {
+      if (!gameState || !gameState.combatHistory || gameState.combatHistory.length === 0) return;
+      
+      let combatsHtml = '';
+      gameState.combatHistory.forEach(c => {
+        let playerRole = c.player && c.player.role ? c.player.role.toUpperCase() : 'HEROE';
+        let JPrefix = c.player && c.player.playerNum ? `J${c.player.playerNum} ` : '';
+        let enemies = c.goblins ? c.goblins.map(g => `G${g.level}`).join('+') : 'Goblins';
+        
+        combatsHtml += `<div class="combat-card" style="background:#232333; padding:20px; border-radius:12px; margin-bottom:30px; border:1px solid #ff3366; box-shadow: 0 4px 15px rgba(0,0,0,0.5);">`;
+        combatsHtml += `<h2 style="color:#ff3366; font-family:'Georgia',serif; margin-top:0; border-bottom:1px dashed rgba(255, 51, 102, 0.4); padding-bottom:10px;">`;
+        combatsHtml += `Combate #${c.id} (Oleada ${c.wave}) - ${JPrefix}${playerRole} vs ${enemies} <span style="font-size:0.8rem; color:#aaa; font-weight:normal; float:right;">${c.timestamp}</span>`;
+        combatsHtml += `</h2>`;
+        combatsHtml += window.getCombatDebugHtml(c);
+        combatsHtml += `</div>`;
+      });
+      
+      const fullHtml = `<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <title>Historial de Combates - Malditos Goblins</title>
+  <style>
+    body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #1a1a24; color: #eee; padding: 20px; line-height: 1.5; }
+    .container { max-width: 900px; margin: 0 auto; }
+    h1 { color: #ff3366; text-align: center; font-family: 'Georgia', serif; border-bottom: 2px solid #ff3366; padding-bottom: 15px; margin-bottom: 25px; }
+    strong { color: #fff; }
+    ul { padding-left: 20px; }
+    li { margin-bottom: 4px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>Historial de Combates - Malditos Goblins</h1>
+    <p style="text-align: center; color: #aaa; margin-top: -15px; margin-bottom: 30px;">Exportado el ${new Date().toLocaleString()}</p>
+    ${combatsHtml}
+  </div>
+</body>
+</html>`;
+
+      const blob = new Blob([fullHtml], { type: 'text/html' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `historial_combates_${new Date().getTime()}.html`;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    });
+  }
+});
 
 if (btnDebugCombat) {
   btnDebugCombat.addEventListener('click', () => {

@@ -55,7 +55,8 @@ class GameState {
     this.prevPlayerStats = [];
     this.activeSelectedOrbUids = [];
 
-    // Log de acciones
+    // Log de acciones y historial de combates
+    this.combatHistory = [];
     this.logs = [];
 
     // Barajamos el mercado
@@ -541,6 +542,7 @@ class GameState {
       this.lastCombatDebugState = JSON.parse(JSON.stringify({
         player: {
           name: p.name,
+          playerNum: this.currentPlayerIndex + 1,
           hp: p.hp,
           shield: p.shield,
           energy: p.energy,
@@ -1374,6 +1376,7 @@ class GameState {
       this.lastCombatDebugState = {
         player: {
           name: p.name,
+          playerNum: this.currentPlayerIndex + 1,
           hp: hpBefore, // HP al inicio
           shield: shieldBefore, // Escudo al inicio
           energy: energyBefore, // Energía al inicio
@@ -1418,6 +1421,21 @@ class GameState {
       };
     } catch (e) {
       console.error("Error saving debug state:", e);
+    }
+
+    try {
+      if (this.lastCombatDebugState) {
+        this.lastCombatDebugState.id = (this.combatHistory ? this.combatHistory.length : 0) + 1;
+        this.lastCombatDebugState.timestamp = new Date().toLocaleString();
+        this.lastCombatDebugState.wave = this.battlefield.waveLevel;
+        
+        if (!this.combatHistory) {
+          this.combatHistory = [];
+        }
+        this.combatHistory.push(JSON.parse(JSON.stringify(this.lastCombatDebugState)));
+      }
+    } catch(e) {
+      console.error("Error saving to combatHistory:", e);
     }
 
     this.lastCombatAcquiredEffects = {
