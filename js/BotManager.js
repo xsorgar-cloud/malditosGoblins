@@ -2231,7 +2231,7 @@ calculateEquipPower(eq, bot) {
                     } else {
                         this.isActing = false;
                     }
-                }, 3500);
+                }, 1200);
             } else {
                 this.isActing = false;
                 this.handleGameState();
