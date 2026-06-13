@@ -777,9 +777,17 @@ performMainTurn(bot) {
                 const topCard = marketDecks && marketDecks.length > 0 ? marketDecks[0] : null;
                 const shortfall = topCard ? topCard.cost - bot.mo : 0;
 
-                const tableCanBeClearedAnyway = this.canClearTableWithoutCurrentAction();
+                // Solo se considera que la mesa puede ser limpiada por compañeros si estamos en la oleada 3 o posterior
+                const tableCanBeClearedAnyway = waveLevel >= 3 && this.canClearTableWithoutCurrentAction();
 
-                if (tableCanBeClearedAnyway && (shortfall === 1 || shortfall === 2)) {
+                // Verificar si podemos eliminar a algún goblin de la mesa de un solo ataque
+                let canEliminateAnyGoblin = false;
+                if (potentialTargets.length > 0) {
+                    const maxPower = this.getPlayerMaxPowerPerAction(bot);
+                    canEliminateAnyGoblin = potentialTargets.some(g => g.currentHp <= maxPower);
+                }
+
+                if (tableCanBeClearedAnyway && !canEliminateAnyGoblin && (shortfall === 1 || shortfall === 2)) {
                     // Conseguir 1 o 2 monedas
                     if (shortfall === 2 && bot.hp > 1) {
                         chosenAction = 'gold-dmg';
