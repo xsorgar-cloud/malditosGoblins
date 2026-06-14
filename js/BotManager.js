@@ -445,6 +445,74 @@ triggerAction(type, target = null, reason = "") {
         return maxPower;
     }
 
+    getPlayerMaxDefense(player) {
+        const shields = player.equipped.filter(eq => eq.isActive && this.isShield(eq));
+        let slots = [];
+        
+        shields.forEach(s => {
+            let maxDef = 0;
+            let facesAvailable = [6];
+            if (player.dicePool && player.dicePool.length > 0) {
+                facesAvailable = player.dicePool.map(d => d.faces || 6);
+            }
+            let maxDieFace = Math.max(...facesAvailable);
+
+            let effectStr = (s.isBroken && s.broken ? s.broken.effect : s.effect) || '';
+            let effectMax = 6;
+            if (effectStr.toUpperCase().includes('MAX')) {
+                 let match = effectStr.toUpperCase().match(/MAX\s*(\d+)/);
+                 if (match) effectMax = parseInt(match[1]);
+            }
+
+            for (let val = 1; val <= maxDieFace; val++) {
+                if (this.gameState.isValidDieForEquipment(val, s)) {
+                    let actualVal = Math.min(val, effectMax);
+                    if (effectStr.includes('+1')) actualVal += 1;
+                    else if (effectStr.includes('+2')) actualVal += 2;
+                    else if (effectStr.includes('-1')) actualVal -= 1;
+                    
+                    if (actualVal > maxDef) maxDef = actualVal;
+                }
+            }
+            
+            const extra = ((s.isBroken && s.broken ? s.broken.extra : s.extra) || '').toLowerCase();
+            const isReusable = extra.includes('reutilizable');
+            const maxUses = extra.includes('x3') ? 3 : (isReusable ? 3 : 1);
+            
+            for (let i = 0; i < maxUses; i++) {
+                slots.push(maxDef);
+            }
+        });
+        
+        slots.sort((a, b) => b - a);
+        
+        let numDice = player.dicePool ? player.dicePool.length : 2;
+        if (player.statusEffects) {
+            let totalEffects = (player.statusEffects.escozor || 0) + (player.statusEffects.calambre || 0) + (player.statusEffects.tembleque || 0);
+            numDice = Math.max(0, numDice - totalEffects);
+        }
+        
+        const weapons = player.equipped.filter(eq => eq.isActive && this.isWeapon(eq));
+        let weaponSlotsCount = 0;
+        weapons.forEach(w => {
+            const extra = ((w.isBroken && w.broken ? w.broken.extra : w.extra) || '').toLowerCase();
+            const isReusable = extra.includes('reutilizable');
+            const maxUses = extra.includes('x3') ? 3 : (isReusable ? 3 : 1);
+            weaponSlotsCount += maxUses;
+        });
+        
+        let diceForAttack = Math.min(numDice, weaponSlotsCount);
+        let diceForDefense = Math.max(0, numDice - diceForAttack);
+        
+        let maxDefense = 0;
+        const limit = Math.min(diceForDefense, slots.length);
+        for (let i = 0; i < limit; i++) {
+            maxDefense += slots[i];
+        }
+        
+        return maxDefense;
+    }
+
     getHitoSpawnedHp() {
         if (this.gameState.currentHito > 5) return 0;
         
@@ -494,7 +562,8 @@ triggerAction(type, target = null, reason = "") {
                     let bossHp = hito.bossStats.hpMultiplier * numPlayers;
                     projected.push({
                         level: 5,
-                        currentHp: bossHp
+                        currentHp: bossHp,
+                        isBoss: true
                     });
                 } else {
                     if ((this.gameState.activeSenda === 'guerrero' || this.gameState.activeSenda === 'rey_brujo') && this.gameState.currentHito === 1) {
@@ -522,6 +591,79 @@ triggerAction(type, target = null, reason = "") {
     }
 
     canClearTableAfterDeployingHito() {
+        if (this.gameState.currentHito === 5) {
+            // Caso especial: Hito 5 (Jefe Final)
+            // El objetivo del juego es eliminar al jefe. No hace falta limpiar la mesa.
+            // Si el bot calcula que puede eliminar al jefe antes de que la represalia le mate,
+            // puede activar el hito e ignorar a los otros goblins.
+            const sendaHitos = DB.hitos[this.gameState.activeSenda] || DB.hitos.iniciacion;
+            let hito = sendaHitos[4]; // Hito 5 es el índice 4
+            if (hito) {
+                const numPlayers = this.gameState.players.length;
+                let bossHp = hito.bossStats.hpMultiplier * numPlayers;
+
+                // Simulación de combate jugador a jugador en la wave restante
+                let simulatedBossHp = bossHp;
+                let simulatedPlayers = this.gameState.players.map(p => ({
+                    id: p.id,
+                    name: p.name,
+                    hp: p.hp,
+                    maxHp: p.maxHp,
+                    equipped: p.equipped.map(eq => ({ ...eq })),
+                    dicePool: p.dicePool ? [...p.dicePool] : null,
+                    statusEffects: p.statusEffects ? { ...p.statusEffects } : {}
+                }));
+
+                // Construir la cola de acciones de combate restantes en la ronda
+                let combatActionsQueue = [];
+                for (let a = this.gameState.battlefield.actionCount; a < 3; a++) {
+                    for (let pIdx = 0; pIdx < numPlayers; pIdx++) {
+                        if (a === this.gameState.battlefield.actionCount && pIdx < this.gameState.currentPlayerIndex) {
+                            continue; // Ya actuó en esta acción
+                        }
+                        combatActionsQueue.push(pIdx);
+                    }
+                }
+
+                // Simular las acciones de combate
+                for (let pIdx of combatActionsQueue) {
+                    let p = simulatedPlayers[pIdx];
+                    if (p.hp <= 0) continue; // Jugador muerto no actúa
+
+                    let maxPower = this.getPlayerMaxPowerPerAction(p);
+                    simulatedBossHp -= maxPower;
+
+                    if (simulatedBossHp <= 0) {
+                        this.gameState.addLog(`DEBUG Hito 5 Simulación: ¡El Jefe puede ser eliminado! (HP del Jefe proyectada: ${simulatedBossHp})`);
+                        return true; // Se puede eliminar al jefe antes de terminar la ronda/wave
+                    }
+
+                    // El jefe contraataca al jugador que le ataca
+                    let tempBossObj = {
+                        level: 5,
+                        isBoss: true,
+                        name: hito.name,
+                        dice: hito.bossStats.dice,
+                        attacks: hito.bossStats.attacks || DB.goblins[5].attacks
+                    };
+                    let bossDmgProfile = this.getGoblinDamageProfile(tempBossObj);
+                    let playerMaxDefense = this.getPlayerMaxDefense(p);
+                    let expectedDamageTaken = Math.max(0, bossDmgProfile.normal - playerMaxDefense) + bossDmgProfile.direct;
+
+                    p.hp = Math.max(0, p.hp - expectedDamageTaken);
+                }
+
+                // Si no se derrotó en las acciones de combate de la wave, se evalúa si el grupo sobrevive a la represalia
+                let currentGoblins = this.gameState.battlefield.goblins.filter(g => !g.isDying);
+                let totalRetaliationDmg = 5 + currentGoblins.reduce((sum, g) => sum + g.level, 0); // El jefe (nivel 5) + otros goblins
+                let totalPlayersHp = simulatedPlayers.reduce((sum, p) => sum + (p.hp > 0 ? p.hp : 0), 0);
+
+                const safe = totalRetaliationDmg < totalPlayersHp;
+                this.gameState.addLog(`DEBUG Hito 5 Simulación Retaliation: totalPlayersHp=${totalPlayersHp}, totalRetaliationDmg=${totalRetaliationDmg} (Safe: ${safe})`);
+                return safe;
+            }
+        }
+
         let projectedGoblins = this.getProjectedGoblinsAfterHito();
         
         let totalMaxTeamDamage = 0;
@@ -1681,6 +1823,12 @@ calculateEquipPower(eq, bot) {
 
         // 1. Añadir todos los objetivos posibles inicialmente
         let targets = [...goblinsEnMesa];
+        
+        // Si hay un jefe en la mesa, nos enfocamos únicamente en él, ignorando a los otros goblins
+        const boss = targets.find(g => g.isBoss);
+        if (boss) {
+            targets = [boss];
+        }
         
         // Limitar por la capacidad real del bot de asignar dados a armas/cartas de daño
         let numDice = bot.dicePool ? bot.dicePool.length : 2;
