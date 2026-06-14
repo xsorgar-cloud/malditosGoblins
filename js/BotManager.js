@@ -1283,7 +1283,7 @@ performCombatTurn(bot) {
             const totalNonCramped = this.gameState.currentCombat.playerDice.filter(d => !d.isCramped).length;
             // Excluir el dado plateado (silver) de la asignación directa
             const availableDice = this.gameState.currentCombat.playerDice.filter(d => !d.assignedTo && !d.isCramped && d.type !== 'silver');
-            availableDice.sort((a, b) => a.value - b.value);
+            availableDice.sort((a, b) => b.value - a.value);
             
             console.log(`[BotManager] availableDice: ${availableDice.length}/${totalNonCramped}`);
             if (availableDice.length === 0) {
@@ -1526,50 +1526,8 @@ performCombatTurn(bot) {
                 let projectedHpAfterDamage = bot.hp - Math.max(0, incomingNormalDmg - totalMaxDefense) - incomingDirectDmg;
                 let isLethalDamage = projectedHpAfterDamage <= 0;
 
-                let canKillGoblin = false;
                 let forceAttack = false;
-
-                if (this.gameState.currentCombat && this.gameState.currentCombat.goblins) {
-                    this.gameState.currentCombat.goblins.forEach(gob => {
-                        let assignedDmg = 0;
-                        for (let eqId in window.currentAssignments) {
-                            let eq = bot.equipped.find(e => e.id === eqId);
-                            if (eq && this.isWeapon(eq)) {
-                                let asgs = window.currentAssignments[eqId];
-                                const asgsArr = Array.isArray(asgs) ? asgs : [asgs];
-                                for (let asg of asgsArr) {
-                                    if (!asg.isRole && (asg.targetUid === gob.uid || this.gameState.currentCombat.goblins.length === 1)) {
-                                        assignedDmg += this.getDamageForDieInEquip(asg.value, eq);
-                                    }
-                                }
-                            }
-                        }
-
-                        let remainingHpToKill = gob.currentHp - assignedDmg;
-                        
-                        if (remainingHpToKill > 0) {
-                            let potentialRemainingDmg = 0;
-                            const weaponsForOverride = bot.equipped.filter(eq => eq.isActive && this.isWeapon(eq));
-                            
-                            availableDice.forEach(d => {
-                                let bestDmgForDie = 0;
-                                weaponsForOverride.forEach(w => {
-                                    if (this.canAcceptDie(d, w)) {
-                                        let dmg = this.getDamageForDieInEquip(d.value, w);
-                                        if (dmg > bestDmgForDie) bestDmgForDie = dmg;
-                                    }
-                                });
-                                potentialRemainingDmg += bestDmgForDie;
-                            });
-
-                            if (potentialRemainingDmg >= remainingHpToKill) {
-                                canKillGoblin = true;
-                            }
-                        }
-                    });
-                }
-
-                if (canKillGoblin && !isLethalDamage) {
+                if (plannedKills > 0 && !isLethalDamage) {
                     forceAttack = true;
                 }
 
