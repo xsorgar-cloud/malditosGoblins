@@ -1347,8 +1347,13 @@ performCombatTurn(bot) {
                 return;
             }
 
+            // Planificación óptima de asignaciones a armas (calculada previamente para intercepciones y relanzamientos)
+            const planResult = this.planWeaponAssignments(availableDice, this.gameState.currentCombat.goblins, bot);
+            const plannedAssignments = planResult.assignments;
+            const plannedKills = planResult.goblinsKilled;
+
             // Lógica de relanzamiento de dados negros (antes de asignar ningún dado)
-            const dieToReroll = availableDice.find(d => d.type === 'black' && !d.rerolled && this.shouldRerollBlackDie(d, bot));
+            const dieToReroll = availableDice.find(d => d.type === 'black' && !d.rerolled && this.shouldRerollBlackDie(d, bot, plannedAssignments));
             if (dieToReroll) {
                 console.log("[BotManager] Decided to reroll black die:", dieToReroll.id);
                 this.isActing = true;
@@ -1418,15 +1423,17 @@ performCombatTurn(bot) {
                     this.isActing = false;
                     return;
                 }
-                console.log("[BotManager] Assigning die:", die.id);
-                
-                // Planificación óptima de asignaciones a armas
-                const planResult = this.planWeaponAssignments(availableDice, this.gameState.currentCombat.goblins, bot);
-                const plannedAssignments = planResult.assignments;
-                const plannedKills = planResult.goblinsKilled;
 
-                // Intento de intercepción de ataques peligrosos (respetando si el dado es necesario para matar goblins)
-                if (this.tryInterceptDangerousDie(die, bot, plannedAssignments, plannedKills)) {
+                // Intento prioritario de intercepción de ataques peligrosos en cualquier dado disponible
+                let intercepted = false;
+                for (let d of availableDice) {
+                    if (this.tryInterceptDangerousDie(d, bot, plannedAssignments, plannedKills)) {
+                        intercepted = true;
+                        break;
+                    }
+                }
+
+                if (intercepted) {
                     console.log("[BotManager] Die used for interception. Updating UI.");
                     if (typeof window.renderCombatOverlay === 'function') {
                         window.renderCombatOverlay();
@@ -1435,6 +1442,8 @@ performCombatTurn(bot) {
                     this.handleGameState();
                     return;
                 }
+
+                console.log("[BotManager] Assigning die:", die.id);
 
                 let plannedWeaponAssigned = false;
                 if (plannedKills > 0) {
@@ -2072,16 +2081,24 @@ calculateEquipPower(eq, bot) {
     }
 
 // Decide si debe volver a lanzar un dado negro según su utilidad actual
-    shouldRerollBlackDie(die, bot) {
+    shouldRerollBlackDie(die, bot, plannedAssignments = {}) {
         if (die.type !== 'black' || die.rerolled) return false;
 
         let bestCurrentPower = 0;
         let isSpecialActivated = false;
         
-        // Obtenemos equipo al que se puede asignar este dado (incluyendo roto, que puede prepararse sin coste)
-        const allEquip = bot.equipped.filter(eq => eq.isActive && (eq.isBroken || (!eq.isBroken && this.canAcceptDie(die, eq))));
-        // Filtramos solo los que realmente pueden aceptar el dado
-        const usableEquip = allEquip.filter(eq => this.canAcceptDie(die, eq));
+        // Obtenemos equipo al que se puede asignar este dado (excluyendo el que ya está planificado para otros dados)
+        const usableEquip = bot.equipped.filter(eq => {
+            if (!eq.isActive) return false;
+            
+            // Si el equipo está ocupado por otro dado en el plan, no lo consideramos disponible para el dado negro
+            const hasOtherDiePlanned = Object.keys(plannedAssignments).some(dieId => {
+                return dieId !== die.id && plannedAssignments[dieId].weaponId === eq.id;
+            });
+            if (hasOtherDiePlanned) return false;
+            
+            return this.canAcceptDie(die, eq);
+        });
 
         if (usableEquip.length === 0) {
             // Si el dado actual es completamente inválido para todo nuestro equipo, relanzar es la única opción
@@ -2090,33 +2107,34 @@ calculateEquipPower(eq, bot) {
 
         for (let eq of usableEquip) {
             let effectMax = 6;
-            if (eq.effect && eq.effect.toUpperCase().includes('MAX')) {
-                 let match = eq.effect.toUpperCase().match(/MAX\s*(\d+)/);
+            let effectStr = (eq.isBroken && eq.broken ? eq.broken.effect : eq.effect) || '';
+            if (effectStr.toUpperCase().includes('MAX')) {
+                 let match = effectStr.toUpperCase().match(/MAX\s*(\d+)/);
                  if (match) effectMax = parseInt(match[1]);
             }
 
             let actualVal = Math.min(die.value, effectMax);
-            if (eq.effect && eq.effect.includes('+1')) actualVal += 1;
-            else if (eq.effect && eq.effect.includes('+2')) actualVal += 2;
-            else if (eq.effect && eq.effect.includes('-1')) actualVal -= 1;
+            if (effectStr.includes('+1')) actualVal += 1;
+            else if (effectStr.includes('+2')) actualVal += 2;
+            else if (effectStr.includes('-1')) actualVal -= 1;
             
-            if (eq.effect && eq.effect.match(/Daño\s*(\d+)(?!.*dado)/i)) {
-                let match = eq.effect.match(/Daño\s*(\d+)/i);
-                if (match && !eq.effect.toLowerCase().includes('dado')) {
+            if (effectStr.match(/Daño\s*(\d+)(?!.*dado)/i)) {
+                let match = effectStr.match(/Daño\s*(\d+)/i);
+                if (match && !effectStr.toLowerCase().includes('dado')) {
                     actualVal = parseInt(match[1]);
                     isSpecialActivated = true;
                 }
             }
-            if (eq.effect && eq.effect.match(/Cura\s*(\d+)(?!.*dado)/i)) {
-                let match = eq.effect.match(/Cura\s*(\d+)/i);
-                if (match && !eq.effect.toLowerCase().includes('dado')) {
+            if (effectStr.match(/Cura\s*(\d+)(?!.*dado)/i)) {
+                let match = effectStr.match(/Cura\s*(\d+)/i);
+                if (match && !effectStr.toLowerCase().includes('dado')) {
                     actualVal = parseInt(match[1]);
                     isSpecialActivated = true;
                 }
             }
             
-            // Revisar si en los extras del equipo se detona algo específico con este valor
-            if (eq.extra && eq.extra.includes(die.value.toString())) {
+            const extraStr = ((eq.isBroken && eq.broken ? eq.broken.extra : eq.extra) || '').toLowerCase();
+            if (extraStr.includes(die.value.toString())) {
                  isSpecialActivated = true;
             }
 
