@@ -2602,6 +2602,106 @@ document.getElementById('btn-toggle-log').addEventListener('click', () => {
   }
 });
 
+const btnExportJson = document.getElementById('btn-export-json');
+if (btnExportJson) {
+  btnExportJson.addEventListener('click', () => {
+    if (!gameState) return;
+    
+    const playersClean = gameState.players.map(p => {
+      const equippedItems = p.equipped.filter(eq => eq.isActive).map(eq => ({
+        id: eq.id,
+        name: eq.name,
+        type: eq.type,
+        isBroken: !!eq.isBroken,
+        effect: eq.effect,
+        extra: eq.extra,
+        cost: eq.cost
+      }));
+      const backpackItems = p.equipped.filter(eq => !eq.isActive).map(eq => ({
+        id: eq.id,
+        name: eq.name,
+        type: eq.type,
+        isBroken: !!eq.isBroken,
+        effect: eq.effect,
+        extra: eq.extra,
+        cost: eq.cost
+      }));
+      
+      return {
+        id: p.id,
+        name: p.name,
+        isBot: !!p.isBot,
+        hp: p.hp,
+        maxHp: p.maxHp,
+        mo: p.mo,
+        pex: p.pex,
+        level: p.level,
+        role: p.role ? { id: p.role.id, name: p.role.name } : null,
+        statusEffects: p.statusEffects ? { ...p.statusEffects } : {},
+        equipped: equippedItems,
+        backpack: backpackItems
+      };
+    });
+
+    const marketClean = {};
+    if (gameState.market) {
+      for (let deckType in gameState.market) {
+        const deck = gameState.market[deckType];
+        if (Array.isArray(deck) && deck.length > 0) {
+          const topCard = deck[0];
+          marketClean[deckType] = {
+            id: topCard.id,
+            name: topCard.name,
+            cost: topCard.cost,
+            effect: topCard.effect,
+            extra: topCard.extra
+          };
+        } else {
+          marketClean[deckType] = null;
+        }
+      }
+    }
+
+    const battlefieldClean = {
+      waveLevel: gameState.battlefield ? gameState.battlefield.waveLevel : 1,
+      actionCount: gameState.battlefield ? gameState.battlefield.actionCount : 0,
+      goblins: (gameState.battlefield && gameState.battlefield.goblins) ? gameState.battlefield.goblins.map(g => ({
+        name: g.name,
+        level: g.level,
+        currentHp: g.currentHp,
+        maxHp: g.maxHp,
+        isBoss: !!g.isBoss,
+        isHito: !!g.isHito,
+        isDying: !!g.isDying
+      })) : []
+    };
+
+    const exportData = {
+      gameInfo: {
+        activeSenda: gameState.activeSenda,
+        currentHito: gameState.currentHito,
+        isGameOver: !!gameState.isGameOver,
+        isGameWon: !!gameState.isGameWon,
+        players: playersClean
+      },
+      marketState: marketClean,
+      battlefieldState: battlefieldClean,
+      combatHistory: gameState.combatHistory || [],
+      logs: gameState.logs || []
+    };
+
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `partida_goblins_${new Date().getTime()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  });
+}
+
 const btnExportLog = document.getElementById('btn-export-log');
 if (btnExportLog) {
   btnExportLog.addEventListener('click', () => {
