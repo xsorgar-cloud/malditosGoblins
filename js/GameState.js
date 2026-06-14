@@ -852,12 +852,37 @@ class GameState {
                 gob2.rewardPex = 0;
                 
                 let extraProps = {};
-                if (gob1.isInvocacion && gob2.isInvocacion) {
+                const isGob1Wave = !gob1.isHito && !gob1.isInvocacion;
+                const isGob2Wave = !gob2.isHito && !gob2.isInvocacion;
+                const isGob1Hito = gob1.isHito && !gob1.isInvocacion;
+                const isGob2Hito = gob2.isHito && !gob2.isInvocacion;
+                const isGob1Summon = gob1.isInvocacion;
+                const isGob2Summon = gob2.isInvocacion;
+
+                // Determinar el tipo resultante de la fusión según el manual
+                if ((isGob1Wave && isGob2Summon) || (isGob2Wave && isGob1Summon)) {
+                  // Oleada + Invocación --> Oleada (pierde hito e invocación)
+                } else if ((isGob1Wave && isGob2Hito) || (isGob2Wave && isGob1Hito)) {
+                  // Oleada + Hito --> Oleada (pierde hito)
+                } else if ((isGob1Summon && isGob2Hito) || (isGob2Summon && isGob1Hito)) {
+                  // Invocación + Hito --> Invocación Hito (mantiene hito)
+                  extraProps.isInvocacion = true;
+                  extraProps.mo = 0;
+                  extraProps.isHito = true;
+                  extraProps.image = 'assets/Monstruos/invocacion_0' + (lvl + 1) + '.webp';
+                } else if (isGob1Summon && isGob2Summon) {
+                  // Invocación + Invocación --> Invocación (mantiene hito si alguno era hito)
                   extraProps.isInvocacion = true;
                   extraProps.mo = 0;
                   extraProps.image = 'assets/Monstruos/invocacion_0' + (lvl + 1) + '.webp';
+                  if (gob1.isHito || gob2.isHito) {
+                    extraProps.isHito = true;
+                  }
+                } else if (isGob1Hito && isGob2Hito) {
+                  // Hito + Hito --> Hito
+                  extraProps.isHito = true;
                 }
-                
+
                 this.battlefield.goblins.push({
                   ...DB.goblins[lvl + 1],
                   ...extraProps,
@@ -2075,6 +2100,11 @@ Daño directo: Sufres ${brokenCount} de daño.`);
             // Eliminar ambos
             this.battlefield.goblins = this.battlefield.goblins.filter(g => g.uid !== gob1.uid && g.uid !== gob2.uid);
             
+            // Determinar si conserva el hito según el manual
+            const isGob1Wave = !gob1.isHito && !gob1.isInvocacion;
+            const isGob2Wave = !gob2.isHito && !gob2.isInvocacion;
+            const keepHito = (gob1.isHito || gob2.isHito) && !isGob1Wave && !isGob2Wave;
+
             // Crear el nuevo
             let newGoblin = {
               ...DB.goblins[lvl + 1],
@@ -2083,6 +2113,9 @@ Daño directo: Sufres ${brokenCount} de daño.`);
               currentHp: DB.goblins[lvl + 1].hp,
               isMutated: true
             };
+            if (keepHito) {
+              newGoblin.isHito = true;
+            }
             this.battlefield.goblins.push(newGoblin);
             
             this.addLog(`🧬 <span style="color:#f54281"><strong>Mutación:</strong></span> ${logHtml}`);
@@ -2129,9 +2162,9 @@ Daño directo: Sufres ${brokenCount} de daño.`);
 
         if (invocaciones.length >= 1 && hitos.length >= 1) {
           this.battlefield.goblins = this.battlefield.goblins.filter(g => g.uid !== invocaciones[0].uid && g.uid !== hitos[0].uid);
-          let newGob = { ...DB.goblins[lvl + 1], uid: Date.now() + Math.random(), currentHp: DB.goblins[lvl + 1].hp, isMutated: true, isInvocacion: true, mo: 0, image: 'assets/Monstruos/invocacion_0' + (lvl + 1) + '.webp' };
+          let newGob = { ...DB.goblins[lvl + 1], uid: Date.now() + Math.random(), currentHp: DB.goblins[lvl + 1].hp, isMutated: true, isInvocacion: true, mo: 0, isHito: true, image: 'assets/Monstruos/invocacion_0' + (lvl + 1) + '.webp' };
           this.battlefield.goblins.push(newGob);
-          this.addLog(`🧬 <span style="color:#f54281"><strong>Mutación Mixta:</strong></span> <span style="color:#4cc9f0">Invocación G${lvl}</span> + <span style="color:#a545d1">Hito G${lvl}</span> --> <span style="color:#4cc9f0">Invocación G${lvl + 1}</span>`);
+          this.addLog(`🧬 <span style="color:#f54281"><strong>Mutación Mixta:</strong></span> <span style="color:#4cc9f0">Invocación G${lvl}</span> + <span style="color:#a545d1">Hito G${lvl}</span> --> <span style="color:#4cc9f0">Invocación G${lvl + 1} (Hito)</span>`);
           return { type: 'mutation', uidsToRemove: [invocaciones[0].uid, hitos[0].uid], newGoblin: newGob };
         }
 
