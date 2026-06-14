@@ -2676,6 +2676,162 @@ if (btnExportJson) {
       })) : []
     };
 
+    // Parsear de forma estructurada los logs para crear una lista de acciones del turno
+    const structuredActions = [];
+    if (gameState.logs) {
+      gameState.logs.forEach(logLine => {
+        // Extraer marca de tiempo
+        const tsMatch = logLine.match(/^\[(\d{2}:\d{2}:\d{2})\]/);
+        const timestamp = tsMatch ? tsMatch[1] : null;
+        
+        // Limpiar HTML y marcas de tiempo
+        const cleanLog = logLine.replace(/^\[\d{2}:\d{2}:\d{2}\]\s*/, '').replace(/<[^>]*>?/gm, '');
+        
+        let parsed = null;
+        
+        // A. Compras de equipamiento
+        if (cleanLog.includes(' compró y EQUIPÓ ') || cleanLog.includes(' compró ')) {
+          const buyRegex = /^(.+?) compró (?:y EQUIPÓ )?(.+?) por (\d+) mo\.(?:\s*Se ha guardado en la mochila (.+))?/;
+          const match = cleanLog.match(buyRegex);
+          if (match) {
+            parsed = {
+              type: 'buy_equipment',
+              player: match[1].trim(),
+              item: match[2].trim(),
+              cost: parseInt(match[3]),
+              destination: cleanLog.includes('y EQUIPÓ') ? 'equipped' : 'backpack',
+              reason: match[4] ? match[4].replace(/[()]/g, '').trim() : null
+            };
+          }
+        }
+        // B. Pociones (compra/uso)
+        else if (cleanLog.includes(' usó ') && (cleanLog.includes(' recuperó ') || cleanLog.includes(' PV.'))) {
+          const potionRegex = /^(.+?) usó (.+?) y recuperó (\d+) PV\./;
+          const match = cleanLog.match(potionRegex);
+          if (match) {
+            parsed = {
+              type: 'use_potion',
+              player: match[1].trim(),
+              potionName: match[2].trim(),
+              healing: parseInt(match[3])
+            };
+          }
+        }
+        // C. Dado en subida de nivel
+        else if (cleanLog.includes(' añadió un dado ') && cleanLog.includes(' a su colección')) {
+          const dieRegex = /^(.+?) añadió un dado (Rojo d6|Negro d4) a su colección(.*)/;
+          const match = cleanLog.match(dieRegex);
+          if (match) {
+            parsed = {
+              type: 'level_up_die',
+              player: match[1].trim(),
+              dieType: match[2].includes('Rojo') ? 'red' : 'black',
+              bonus: match[3].includes('ganó') ? '1 mo' : null
+            };
+          }
+        }
+        // D. Subida de nivel del grupo
+        else if (cleanLog.includes('Los jugadores subieron al Nivel')) {
+          const lvlRegex = /Los jugadores subieron al Nivel (\d+)/;
+          const match = cleanLog.match(lvlRegex);
+          if (match) {
+            parsed = {
+              type: 'group_level_up',
+              level: parseInt(match[1])
+            };
+          }
+        }
+        // E. Resolución de oleada
+        else if (cleanLog.includes('RESOLVIENDO FASE DE OLEADA')) {
+          const waveRegex = /RESOLVIENDO FASE DE OLEADA (\d+)/;
+          const match = cleanLog.match(waveRegex);
+          if (match) {
+            parsed = {
+              type: 'wave_phase_start',
+              wave: parseInt(match[1])
+            };
+          }
+        }
+        // F. Aparición de Goblins
+        else if (cleanLog.includes('Aparición (')) {
+          const spawnRegex = /Aparición \((.+?)\):\s*(.+)/;
+          const match = cleanLog.match(spawnRegex);
+          if (match) {
+            parsed = {
+              type: 'goblin_spawn',
+              difficulty: match[1].trim(),
+              details: match[2].trim()
+            };
+          }
+        }
+        // G. Mutación de Goblins
+        else if (cleanLog.includes('Mutación:')) {
+          const mutRegex = /Mutación:\s*(.+)/;
+          const match = cleanLog.match(mutRegex);
+          if (match) {
+            parsed = {
+              type: 'goblin_mutation',
+              details: match[1].trim()
+            };
+          }
+        }
+        // H. Desplegar Hito
+        else if (cleanLog.includes('HITO DESPLEGADO:')) {
+          const hitoRegex = /HITO DESPLEGADO:\s*(.+?)(?:\s*🔥|$)/;
+          const match = cleanLog.match(hitoRegex);
+          if (match) {
+            parsed = {
+              type: 'deploy_hito',
+              hitoName: match[1].trim()
+            };
+          }
+        }
+        // I. Reparación de equipamiento
+        else if (cleanLog.includes('pagó 1 mo para reparar')) {
+          const repairRegex = /^(.+?) pagó 1 mo para reparar (.+?)\.?$/;
+          const match = cleanLog.match(repairRegex);
+          if (match) {
+            parsed = {
+              type: 'repair_equipment',
+              player: match[1].replace('(Bot)', '').trim(),
+              item: match[2].trim()
+            };
+          }
+        }
+        // J. Explorar mercado
+        else if (cleanLog.includes('gastó 1 mo en explorar el mercado')) {
+          const exploreRegex = /^(.+?) gastó 1 mo en explorar el mercado, descartando (.+?)\.?$/;
+          const match = cleanLog.match(exploreRegex);
+          if (match) {
+            parsed = {
+              type: 'explore_market',
+              player: match[1].trim(),
+              discardedCard: match[2].trim()
+            };
+          }
+        }
+        // K. Fin de partida
+        else if (cleanLog.includes('PARTIDA FINALIZADA')) {
+          parsed = {
+            type: 'game_over',
+            outcome: 'defeat'
+          };
+        }
+        else if (cleanLog.includes('VICTORIA') && cleanLog.includes('ganado')) {
+          parsed = {
+            type: 'game_over',
+            outcome: 'victory'
+          };
+        }
+        
+        if (parsed) {
+          if (timestamp) parsed.timestamp = timestamp;
+          parsed.rawLog = logLine;
+          structuredActions.push(parsed);
+        }
+      });
+    }
+
     const exportData = {
       gameInfo: {
         activeSenda: gameState.activeSenda,
@@ -2687,6 +2843,7 @@ if (btnExportJson) {
       marketState: marketClean,
       battlefieldState: battlefieldClean,
       combatHistory: gameState.combatHistory || [],
+      structuredActions: structuredActions,
       logs: gameState.logs || []
     };
 

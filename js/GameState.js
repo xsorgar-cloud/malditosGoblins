@@ -530,7 +530,7 @@ class GameState {
     let moBefore = p.mo;
     let pexBefore = p.pex;
     let levelBefore = p.level;
-    let equippedBefore = p.equipped.map(eq => ({ id: eq.id, name: eq.name, isBroken: eq.isBroken }));
+    let equippedBefore = p.equipped.map(eq => ({ id: eq.id, name: eq.name, isBroken: eq.isBroken, isActive: !!eq.isActive }));
 
     let playerDiceDetails = [];
     let goblinDiceDetails = [];
@@ -550,7 +550,7 @@ class GameState {
           pex: p.pex,
           level: p.level,
           role: p.role.id,
-          equipped: p.equipped.map(eq => ({ id: eq.id, name: eq.name, isBroken: eq.isBroken }))
+          equipped: p.equipped.map(eq => ({ id: eq.id, name: eq.name, isBroken: eq.isBroken, isActive: !!eq.isActive }))
         },
         goblins: c.goblins.map(g => ({ uid: g.uid, name: g.name, level: g.level, hp: g.currentHp })),
         playerDice: c.playerDice,
