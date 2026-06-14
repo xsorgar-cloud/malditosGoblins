@@ -748,9 +748,9 @@ triggerAction(type, target = null, reason = "") {
 
         const targetLevel = Math.max(player.level, this.gameState.battlefield.waveLevel);
         const nonStarting = player.equipped.filter(eq => eq.type !== 'inicial');
-        const weapons = nonStarting.filter(eq => this.isWeapon(eq)).length;
-        const heals = nonStarting.filter(eq => this.isHeal(eq)).length;
-        const shields = nonStarting.filter(eq => this.isShield(eq)).length;
+        const weapons = nonStarting.filter(eq => eq.type === 'ataque').length;
+        const heals = nonStarting.filter(eq => eq.type === 'curacion').length;
+        const shields = nonStarting.filter(eq => eq.type === 'escudos').length;
 
         if (targetLevel === 2) {
             const hasWeapon = weapons >= 1;
@@ -787,9 +787,9 @@ triggerAction(type, target = null, reason = "") {
 
         const targetLevel = Math.max(player.level, this.gameState.battlefield.waveLevel);
         const nonStarting = player.equipped.filter(eq => eq.type !== 'inicial');
-        const weapons = nonStarting.filter(eq => this.isWeapon(eq)).length;
-        const heals = nonStarting.filter(eq => this.isHeal(eq)).length;
-        const shields = nonStarting.filter(eq => this.isShield(eq)).length;
+        const weapons = nonStarting.filter(eq => eq.type === 'ataque').length;
+        const heals = nonStarting.filter(eq => eq.type === 'curacion').length;
+        const shields = nonStarting.filter(eq => eq.type === 'escudos').length;
 
         if (targetLevel === 2) {
             const hasWeapon = weapons >= 1;
@@ -1061,7 +1061,7 @@ performMarketTurn(bot) {
 
             // Guerrero/Mago override for healing: solo priorizan curación si ya tienen un arma comprada
             if (isGuerreroOrMago && !bot.equipped.some(eq => eq.type === 'curacion' || eq.id.includes('pocion'))) {
-                const hasBoughtWeapon = bot.equipped.some(eq => eq.type !== 'inicial' && this.isWeapon(eq));
+                const hasBoughtWeapon = bot.equipped.some(eq => eq.type !== 'inicial' && eq.type === 'ataque');
                 needsHealing = hasBoughtWeapon && needsHealing;
             }
 
@@ -1150,7 +1150,7 @@ performMarketTurn(bot) {
                 if (!bought) {
                     // Lógica por defecto: intentar comprar ataque, luego escudos/curacion
                     const topWeapon = this.gameState.market['ataque'] && this.gameState.market['ataque'].length > 0 ? this.gameState.market['ataque'][0] : null;
-                    const hasBoughtWeapon = bot.equipped.some(eq => eq.type !== 'inicial' && this.isWeapon(eq));
+                    const hasBoughtWeapon = bot.equipped.some(eq => eq.type !== 'inicial' && eq.type === 'ataque');
                     
                     if (topWeapon && bot.mo >= topWeapon.cost) {
                         bought = buyIfPossible('ataque');
