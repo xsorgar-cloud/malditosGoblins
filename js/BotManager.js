@@ -1821,6 +1821,12 @@ calculateEquipPower(eq, bot) {
             totalMaxDefense += power.max;
         });
 
+        let totalMaxHealing = 0;
+        const heals = bot.equipped.filter(eq => eq.isActive && this.isHeal(eq));
+        heals.forEach(h => {
+            totalMaxHealing += this.calculateEquipHealingPower(h, bot);
+        });
+
         // 1. Añadir todos los objetivos posibles inicialmente
         let targets = [...goblinsEnMesa];
         
@@ -1870,8 +1876,8 @@ calculateEquipPower(eq, bot) {
             evaluatedDirectDmg = dmgProfile.direct;
             
             const expectedDamageTaken = Math.max(0, evaluatedNormalDmg - totalMaxDefense) + evaluatedDirectDmg;
-            const remainingHp = bot.hp - expectedDamageTaken;
-            deficitDefense = expectedDamageTaken - bot.hp + 1; // +1 to survive
+            const remainingHp = bot.hp - expectedDamageTaken + totalMaxHealing;
+            deficitDefense = expectedDamageTaken - bot.hp + 1 - totalMaxHealing; // +1 to survive
             
             if (remainingHp > 0) {
                 isSafe = true;
@@ -1896,7 +1902,8 @@ calculateEquipPower(eq, bot) {
         }, { normal: 0, direct: 0 });
         const finalDmgSum = finalDmgProfile.normal + finalDmgProfile.direct;
         
-        let logMsg = `🤖 evalúa el combate: Poder Ofensivo Máx. (${totalMaxDamage}${isGuerreroOrMago ? ' + ' + bot.energy + ' de rol' : ''}) vs PV Enemigos (${finalHpSum}). Defensa Máx. (${totalMaxDefense}) vs Daño Enemigo Estimado (${finalDmgSum}).`;
+        const healingMsg = totalMaxHealing > 0 ? `, Curación Máx. ${totalMaxHealing}` : '';
+        let logMsg = `🤖 evalúa el combate: Poder Ofensivo Máx. (${totalMaxDamage}${isGuerreroOrMago ? ' + ' + bot.energy + ' de rol' : ''}) vs PV Enemigos (${finalHpSum}). Defensa Máx. (${totalMaxDefense}${healingMsg}) vs Daño Enemigo Estimado (${finalDmgSum}).`;
         
         if (targets.length === 0) {
             logMsg += ` <span style="color:var(--dmg-color);">Evita el combate por considerarlo suicida (Déficit de PV: ${deficitDefense}).</span>`;
@@ -1906,6 +1913,86 @@ calculateEquipPower(eq, bot) {
         
         this.gameState.addLog(logMsg);
         return targets;
+    }
+
+    // Calcula la curación potencial máxima que un equipamiento activo puede proporcionar
+    calculateEquipHealingPower(eq, bot) {
+        if (!eq) return 0;
+        
+        let effectStr = ((eq.isBroken && eq.broken ? eq.broken.effect : eq.effect) || '').toLowerCase();
+        let extraStr = ((eq.isBroken && eq.broken ? eq.broken.extra : eq.extra) || '').toLowerCase();
+        
+        let facesAvailable = [6];
+        if (bot && bot.dicePool && bot.dicePool.length > 0) {
+            facesAvailable = bot.dicePool.map(d => d.faces || 6);
+        }
+        let maxDieFace = Math.max(...facesAvailable);
+        
+        let maxHeal = 0;
+        
+        // Simular para cada valor de dado posible en el pool de dados del bot
+        for (let val = 1; val <= maxDieFace; val++) {
+            if (this.gameState.isValidDieForEquipment(val, eq)) {
+                let currentHeal = 0;
+                
+                // 1. Casos específicos por ID
+                if (eq.id === 'gema_regeneracion') {
+                    if (val % 2 !== 0) {
+                        if (extraStr.includes('cura 2')) currentHeal = 2;
+                        else if (extraStr.includes('cura 1')) currentHeal = 1;
+                    }
+                } else if (eq.id === 'drenar_justo') {
+                    if (extraStr.includes('con un 3: cura 3') && val === 3) currentHeal = 3;
+                    else if (extraStr.includes('con un 2: cura 2') && val === 2) currentHeal = 2;
+                } else if (eq.id === 'corazon_elastico') {
+                    if (val % 2 !== 0) currentHeal = val;
+                } else {
+                    // 2. Lógica genérica de curación en el efecto base
+                    if (effectStr.includes('cura')) {
+                        let heal = 0;
+                        if (effectStr.includes('dado')) {
+                            heal = val;
+                        } else {
+                            let match = effectStr.match(/cura\s+(\d+)/);
+                            if (match) heal = parseInt(match[1]);
+                        }
+                        if (effectStr.includes('max')) {
+                            let maxMatch = effectStr.match(/max\s+(\d+)/);
+                            if (maxMatch) heal = Math.min(heal, parseInt(maxMatch[1]));
+                        }
+                        if (effectStr.includes('min')) {
+                            let minMatch = effectStr.match(/min\s+(\d+)/);
+                            if (minMatch) heal = Math.max(heal, parseInt(minMatch[1]));
+                        }
+                        currentHeal += heal;
+                    }
+                    
+                    // 3. Lógica genérica de curación en el extra
+                    if (extraStr.includes('cura max')) {
+                        let maxMatch = extraStr.match(/cura max\s+(\d+)/);
+                        if (maxMatch) currentHeal += Math.min(val, parseInt(maxMatch[1]));
+                    }
+                }
+                
+                if (currentHeal > maxHeal) {
+                    maxHeal = currentHeal;
+                }
+            }
+        }
+        
+        // Multiplicar por la reutilización
+        const extra = ((eq.isBroken && eq.broken ? eq.broken.extra : eq.extra) || '').toLowerCase();
+        const isReusable = extra.includes('reutilizable');
+        const maxUses = extra.includes('x3') ? 3 : (isReusable ? 3 : 1);
+        
+        let availableDice = bot && bot.dicePool ? bot.dicePool.length : 2;
+        if (bot && bot.statusEffects) {
+            let totalEffects = (bot.statusEffects.escozor || 0) + (bot.statusEffects.calambre || 0) + (bot.statusEffects.tembleque || 0);
+            availableDice = Math.max(0, availableDice - totalEffects);
+        }
+        
+        let usableCount = Math.min(maxUses, availableDice);
+        return maxHeal * usableCount;
     }
 
 // Verifica si el equipamiento es un arma (contiene la palabra 'daño')
