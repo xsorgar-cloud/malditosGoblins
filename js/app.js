@@ -239,6 +239,15 @@ var activeSelectedEquipId = null;
 
 // Sobrescribir window.alert nativo por un modal inmersivo del juego
 window.alert = function (messageText, callback = null) {
+  if (window.activeAlertTimerInterval) {
+    clearInterval(window.activeAlertTimerInterval);
+    window.activeAlertTimerInterval = null;
+  }
+  const oldTimer = document.getElementById('combat-alert-timer-btn');
+  if (oldTimer) {
+    oldTimer.remove();
+  }
+
   window.resetEventModalTransparency();
   const overlay = document.getElementById('global-event-overlay');
   const title = document.getElementById('event-modal-title');
@@ -498,6 +507,14 @@ window.alert = function (messageText, callback = null) {
   btnOk.className = 'btn primary';
   btnOk.innerText = "ACEPTAR";
   btnOk.onclick = () => {
+    if (window.activeAlertTimerInterval) {
+      clearInterval(window.activeAlertTimerInterval);
+      window.activeAlertTimerInterval = null;
+    }
+    const timerBtn = document.getElementById('combat-alert-timer-btn');
+    if (timerBtn) {
+      timerBtn.remove();
+    }
     overlay.classList.add('hidden');
     window.resetEventModalTransparency();
     if (typeof callback === 'function') {
@@ -506,6 +523,93 @@ window.alert = function (messageText, callback = null) {
   };
 
   container.appendChild(btnOk);
+
+  // Lógica de temporizador automático para bots en resolución de combate
+  const isCombatResolution = messageText.includes('¡COMBATE COMPLETADO!');
+  const activePlayer = typeof gameState !== 'undefined' && gameState.getCurrentPlayer ? gameState.getCurrentPlayer() : null;
+  const isBot = activePlayer && activePlayer.isBot;
+
+  if (isCombatResolution && isBot) {
+    const modalDiv = document.querySelector('.event-modal');
+    if (modalDiv) {
+      const timerBtn = document.createElement('div');
+      timerBtn.id = 'combat-alert-timer-btn';
+      timerBtn.style.cssText = `
+        position: absolute;
+        bottom: 20px;
+        right: 20px;
+        width: 50px;
+        height: 50px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        z-index: 10;
+        background: rgba(10, 10, 15, 0.95);
+        border-radius: 50%;
+        box-shadow: 0 0 15px rgba(0, 0, 0, 0.6), inset 0 0 5px rgba(255, 255, 255, 0.1);
+        transition: transform 0.2s ease, border-color 0.2s ease;
+      `;
+      timerBtn.title = "Pausar/Reanudar cuenta atrás de Bot";
+
+      // Circular SVG con radio r=21 (circunferencia ≈ 131.95)
+      timerBtn.innerHTML = `
+        <svg width="50" height="50" style="position: absolute; top: 0; left: 0; transform: rotate(-90deg);">
+          <circle cx="25" cy="25" r="21" fill="none" stroke="rgba(255, 255, 255, 0.1)" stroke-width="3.5" />
+          <circle id="timer-progress-bar" cx="25" cy="25" r="21" fill="none" stroke="var(--gold)" stroke-width="3.5"
+                  stroke-dasharray="131.95" stroke-dashoffset="131.95" stroke-linecap="round"
+                  style="transition: stroke-dashoffset 0.1s linear;" />
+        </svg>
+        <span id="timer-pause-icon" style="position: relative; z-index: 2; font-size: 0.9rem; color: var(--gold); font-family: 'Inter', sans-serif; font-weight: bold; user-select: none;">⏸</span>
+      `;
+
+      modalDiv.appendChild(timerBtn);
+
+      let timeLeft = 5000; // 5 segundos
+      const tickRate = 100; // Actualizar cada 100ms
+      let isTimerPaused = false;
+      const circumference = 131.95;
+
+      // Evento click para pausar/reanudar
+      timerBtn.onclick = () => {
+        isTimerPaused = !isTimerPaused;
+        const iconSpan = document.getElementById('timer-pause-icon');
+        if (iconSpan) {
+          iconSpan.innerText = isTimerPaused ? '▶' : '⏸';
+          iconSpan.style.left = isTimerPaused ? '1px' : '0px'; // Pequeño ajuste visual para centrar el icono de play
+        }
+        if (isTimerPaused) {
+          timerBtn.style.boxShadow = "0 0 15px rgba(255, 51, 102, 0.4), inset 0 0 5px rgba(255, 255, 255, 0.1)";
+          const bar = document.getElementById('timer-progress-bar');
+          if (bar) bar.style.stroke = "#ff3366"; // Rojo cuando está pausado
+        } else {
+          timerBtn.style.boxShadow = "0 0 15px rgba(0, 0, 0, 0.6), inset 0 0 5px rgba(255, 255, 255, 0.1)";
+          const bar = document.getElementById('timer-progress-bar');
+          if (bar) bar.style.stroke = "var(--gold)"; // Volver a dorado
+        }
+      };
+
+      window.activeAlertTimerInterval = setInterval(() => {
+        if (isTimerPaused) return;
+
+        timeLeft -= tickRate;
+        const progress = Math.max(0, timeLeft) / 5000;
+        const offset = circumference * progress; // Se va llenando en sentido horario, es decir, el dashoffset disminuye de 131.95 a 0
+        const bar = document.getElementById('timer-progress-bar');
+        if (bar) {
+          bar.style.strokeDashoffset = offset;
+        }
+
+        if (timeLeft <= 0) {
+          clearInterval(window.activeAlertTimerInterval);
+          window.activeAlertTimerInterval = null;
+          timerBtn.remove();
+          btnOk.click(); // Autocierre llamando al botón OK
+        }
+      }, tickRate);
+    }
+  }
+
   overlay.classList.remove('hidden');
 };
 
