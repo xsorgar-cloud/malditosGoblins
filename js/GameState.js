@@ -1320,9 +1320,10 @@ class GameState {
             currentHp: DB.goblins[1].hp,
             isInvocacion: true,
             mo: 0,
+            isHito: true,
             image: 'assets/Monstruos/invocacion_01.webp'
           });
-          this.addLog(`🐍 <strong>Nido de Víboras:</strong> Al morir un goblin del nido, aparece 1 Invocación Nivel 1.`);
+          this.addLog(`🐍 <strong>Nido de Víboras:</strong> Al morir un goblin del nido, aparece 1 Invocación Nivel 1 (Hito).`);
         }
         
         // El goblin da recompensa si es Hito o si su nivel >= nivel de los jugadores
