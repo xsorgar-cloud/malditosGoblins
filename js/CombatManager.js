@@ -688,6 +688,61 @@ const statsContainer = document.getElementById('combat-player-stats');
         document.getElementById('btn-confirm-attack').innerHTML = `<span class="txt-largo">Atacar Goblins (0)</span><span class="txt-corto">Atacar (0)</span>`;
         updateUI();
 
+        // Auto-reparar equipo de los bots después del combate si tienen oro y cumplen las reglas del manual
+        gameState.players.forEach(playerObj => {
+          if (playerObj.isBot) {
+            const currentCombatId = gameState.lastCombatId || 0;
+            
+            // 1. Filtrar equipos que cumplen la regla de reparación manual
+            const repairableEquips = playerObj.equipped.filter(eqObj => {
+              return eqObj.isBroken &&
+                playerObj.mo >= 1 &&
+                gameState.lastActionWasCombat &&
+                currentCombatId > 0 &&
+                eqObj.brokenInCombatId !== currentCombatId &&
+                eqObj.usedInCombatId === currentCombatId;
+            });
+
+            // 2. Aplicar filtros de oro inteligentes
+            const eligibleEquips = repairableEquips.filter(eqObj => {
+              if (eqObj.id === 'escudo_inicial') {
+                return playerObj.mo >= 3;
+              }
+              // Cualquier otro equipo (incluyendo espada_inicial y comprados) se repara con mo >= 1
+              return playerObj.mo >= 1;
+            });
+
+            // 3. Si hay equipos elegibles, ordenarlos por tipo (Armas > Curación > Escudos)
+            if (eligibleEquips.length > 0) {
+              const getPriority = (eq) => {
+                const effectStr = (eq.effect || '').toLowerCase();
+                const extraStr = (eq.extra || '').toLowerCase();
+                const kWordsW = ['daño', 'dano', 'dañ', 'dan', 'ataque', 'damage'];
+                const isW = kWordsW.some(k => effectStr.includes(k) || extraStr.includes(k)) || ['espada_inicial', 'daga', 'afilado', 'anadir_pinchos', 'cuchillo', 'serrado', 'oxidado'].includes(eq.id);
+                const kWordsH = ['cura', 'heal', 'regenera'];
+                const isH = kWordsH.some(k => effectStr.includes(k) || extraStr.includes(k)) || ['cristal_curacion', 'gema_regeneracion', 'corazon_elastico', 'vendaje', 'drenar', 'drenar_justo'].includes(eq.id);
+                const kWordsS = ['escudo', 'armadura', 'shield', 'defense', 'doble_reforzado', 'reforzado'];
+                const isS = kWordsS.some(k => effectStr.includes(k) || extraStr.includes(k)) || ['escudo_inicial', 'reforzado_pinchos', 'reforzado_hierro', 'rodela', 'doble_reforzado', 'reforzado_cuero', 'reforzado_placas'].includes(eq.id);
+
+                if (isW) return 3; // Armas primero
+                if (isH) return 2; // Curación después
+                if (isS) return 1; // Escudos al final
+                return 0;
+              };
+
+              eligibleEquips.sort((a, b) => getPriority(b) - getPriority(a));
+
+              // 4. Reparar máximo 1 equipo por combate
+              const bestEq = eligibleEquips[0];
+              playerObj.mo -= 1;
+              bestEq.isBroken = false;
+              bestEq.brokenAnimationPlayed = false;
+              gameState.addLog(`🛠️ <strong>${playerObj.name}</strong> (Bot) pagó 1 mo para reparar <strong>${bestEq.name}</strong>.`);
+            }
+          }
+        });
+        updateUI();
+
         const debugCombatModal = document.getElementById('debug-combat-modal');
         if (debugCombatModal && !debugCombatModal.classList.contains('hidden') && typeof window.updateDebugCombatModalData === 'function') {
           window.updateDebugCombatModalData();
