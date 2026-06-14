@@ -1801,6 +1801,18 @@ calculateEquipPower(eq, bot) {
         const boss = targets.find(g => g.isBoss);
         if (boss) {
             targets = [boss];
+        } else {
+            // Ordenar goblins en mesa priorizando recompensas, nivel y vida
+            targets.sort((a, b) => {
+                const aCat = this.getGoblinRewardCategory(a, bot);
+                const bCat = this.getGoblinRewardCategory(b, bot);
+                if (aCat !== bCat) return bCat - aCat;
+                
+                if (a.level !== b.level) {
+                    return b.level - a.level;
+                }
+                return a.currentHp - b.currentHp;
+            });
         }
         
         // Limitar por la capacidad real del bot de asignar dados a armas/cartas de daño
@@ -2110,6 +2122,16 @@ calculateEquipPower(eq, bot) {
         return false;
     }
 
+    // Clasifica a los goblins en categorías de recompensa para priorizar los objetivos en combate
+    getGoblinRewardCategory(g, bot) {
+        if (g.isBoss) return 3;
+        const hasFullReward = (g.isHito && !g.isInvocacion) || (!g.isInvocacion && g.level >= bot.level);
+        if (hasFullReward) return 2;
+        const hasPexOnly = g.isInvocacion && (g.isHito || g.level >= bot.level);
+        if (hasPexOnly) return 1;
+        return 0;
+    }
+
 // Intenta interceptar un dado peligroso de un goblin, respetando la planificación del combate
     tryInterceptDangerousDie(die, bot, plannedAssignments = {}, plannedKills = 0) {
         if (!this.gameState.currentCombat || this.gameState.currentCombat.isCrampPhase) return false;
@@ -2347,14 +2369,40 @@ calculateEquipPower(eq, bot) {
                 });
                 
                 if (killableGoblins.length > 0) {
-                    let sortedKillable = [...killableGoblins].sort((a, b) => b.level - a.level);
+                    let sortedKillable = [...killableGoblins].sort((a, b) => {
+                        const aCat = this.getGoblinRewardCategory(a, bot);
+                        const bCat = this.getGoblinRewardCategory(b, bot);
+                        if (aCat !== bCat) return bCat - aCat;
+                        
+                        if (a.level !== b.level) return b.level - a.level;
+                        
+                        const aRem = a.currentHp - (goblinDamage[a.uid] || 0);
+                        const bRem = b.currentHp - (goblinDamage[b.uid] || 0);
+                        return aRem - bRem;
+                    });
                     targetGoblin = sortedKillable[0];
                 } else {
-                    let sortedAlive = [...aliveGoblins].sort((a, b) => b.level - a.level);
+                    let sortedAlive = [...aliveGoblins].sort((a, b) => {
+                        const aCat = this.getGoblinRewardCategory(a, bot);
+                        const bCat = this.getGoblinRewardCategory(b, bot);
+                        if (aCat !== bCat) return bCat - aCat;
+                        
+                        if (a.level !== b.level) return b.level - a.level;
+                        
+                        const aRem = a.currentHp - (goblinDamage[a.uid] || 0);
+                        const bRem = b.currentHp - (goblinDamage[b.uid] || 0);
+                        return aRem - bRem;
+                    });
                     targetGoblin = sortedAlive[0];
                 }
             } else {
-                let sortedGoblins = [...goblins].sort((a, b) => b.currentHp - a.currentHp);
+                let sortedGoblins = [...goblins].sort((a, b) => {
+                    const aCat = this.getGoblinRewardCategory(a, bot);
+                    const bCat = this.getGoblinRewardCategory(b, bot);
+                    if (aCat !== bCat) return bCat - aCat;
+                    
+                    return b.currentHp - a.currentHp;
+                });
                 targetGoblin = sortedGoblins[0];
             }
             
