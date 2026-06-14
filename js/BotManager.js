@@ -300,7 +300,7 @@ triggerAction(type, target = null, reason = "") {
 
         // 3. Combate de supervivencia: si tiene equipo de curación y hay objetivos asequibles
         if (isCritical) {
-            let hasHealingEquip = bot.equipped.some(eq => eq.isActive && !eq.isBroken && this.isHeal(eq));
+            let hasHealingEquip = bot.equipped.some(eq => eq.isActive && this.isHeal(eq));
             if (hasHealingEquip) {
                 const goblinsEnMesa = this.gameState.battlefield.goblins.filter(g => !g.isDying);
                 const potentialTargets = this.getSafeCombatTargets(bot, goblinsEnMesa, 'Agresivo');
@@ -850,8 +850,8 @@ calculateCombatScore(bot, goblins) {
         if (goblins.length === 0) return 0;
         
         let score = 0;
-        const weaponCount = bot.equipped.filter(eq => eq.isActive && !eq.isBroken && this.isWeapon(eq)).length;
-        const shieldCount = bot.equipped.filter(eq => eq.isActive && !eq.isBroken && this.isShield(eq)).length;
+        const weaponCount = bot.equipped.filter(eq => eq.isActive && this.isWeapon(eq)).length;
+        const shieldCount = bot.equipped.filter(eq => eq.isActive && this.isShield(eq)).length;
         
         score += weaponCount * 5;
         score += shieldCount * 3;
@@ -1509,7 +1509,7 @@ performCombatTurn(bot) {
 
                 let totalMaxDefense = 0;
                 bot.equipped.forEach(eq => {
-                    if (eq.isActive && !eq.isBroken && this.isShield(eq)) {
+                    if (eq.isActive && this.isShield(eq)) {
                         totalMaxDefense += this.calculateEquipPower(eq, bot).max;
                     }
                 });
@@ -1540,7 +1540,7 @@ performCombatTurn(bot) {
                         
                         if (remainingHpToKill > 0) {
                             let potentialRemainingDmg = 0;
-                            const weaponsForOverride = bot.equipped.filter(eq => eq.isActive && !eq.isBroken && this.isWeapon(eq));
+                            const weaponsForOverride = bot.equipped.filter(eq => eq.isActive && this.isWeapon(eq));
                             
                             availableDice.forEach(d => {
                                 let bestDmgForDie = 0;
@@ -1600,9 +1600,9 @@ performCombatTurn(bot) {
                     if (this.isHeal(eq)) return bot.hp < bot.maxHp;
                     return true;
                 });
-                const weapons = (plannedKills > 0 && !plannedAssignments[die.id]) ? [] : (allGoblinsDead ? [] : bot.equipped.filter(eq => eq.isActive && !eq.isBroken && this.isWeapon(eq) && this.canAcceptDie(die, eq)));
-                const shields = allGoblinsDead ? [] : bot.equipped.filter(eq => eq.isActive && !eq.isBroken && this.isShield(eq) && this.canAcceptDie(die, eq) && (incomingNormalDmg > 0 || this.getDamageForDieInEquip(die.value, eq) > 0));
-                const heals = bot.equipped.filter(eq => eq.isActive && !eq.isBroken && this.isHeal(eq) && this.canAcceptDie(die, eq));
+                const weapons = (plannedKills > 0 && !plannedAssignments[die.id]) ? [] : (allGoblinsDead ? [] : bot.equipped.filter(eq => eq.isActive && this.isWeapon(eq) && this.canAcceptDie(die, eq)));
+                const shields = allGoblinsDead ? [] : bot.equipped.filter(eq => eq.isActive && this.isShield(eq) && this.canAcceptDie(die, eq) && (incomingNormalDmg > 0 || this.getDamageForDieInEquip(die.value, eq) > 0));
+                const heals = bot.equipped.filter(eq => eq.isActive && this.isHeal(eq) && this.canAcceptDie(die, eq));
                 
                 const fallbackToRole = (reason) => {
                     let eGain = bot.role && bot.role.energyRates ? bot.role.energyRates[die.value - 1] : 0;
@@ -2198,7 +2198,7 @@ calculateEquipPower(eq, bot) {
 
     // Planifica asignaciones óptimas a armas para derrotar goblins minimizando dados y valores asignados
     planWeaponAssignments(availableDice, goblins, bot) {
-        const weapons = bot.equipped.filter(eq => eq.isActive && !eq.isBroken && this.isWeapon(eq));
+        const weapons = bot.equipped.filter(eq => eq.isActive && this.isWeapon(eq));
         const aliveGoblins = goblins.filter(g => g.currentHp > 0 && !g.isDying);
         if (weapons.length === 0 || aliveGoblins.length === 0 || availableDice.length === 0) {
             return { assignments: {}, goblinsKilled: 0 };
@@ -2315,7 +2315,7 @@ calculateEquipPower(eq, bot) {
 // Verifica si el equipamiento puede aceptar el dado (límites de usos y validez)
     canAcceptDie(die, eq) {
         if (!this.gameState.isValidDieForEquipment(die.value, eq)) return false;
-        const extra = (eq.extra || '').toLowerCase();
+        const extra = ((eq.isBroken && eq.broken ? eq.broken.extra : eq.extra) || '').toLowerCase();
         const isReusable = extra.includes('reutilizable');
         const maxUses = extra.includes('x3') ? 3 : (isReusable ? 3 : 1);
         const currentlyAssigned = window.currentAssignments && window.currentAssignments[eq.id] ? window.currentAssignments[eq.id].length : 0;
@@ -3019,9 +3019,9 @@ calculateEquipPower(eq, bot) {
             }
 
             let weaponSlots = 0;
-            const activeWeapons = bot.equipped.filter(eq => eq.isActive && !eq.isBroken && this.isWeapon(eq));
+            const activeWeapons = bot.equipped.filter(eq => eq.isActive && this.isWeapon(eq));
             activeWeapons.forEach(w => {
-                const extra = (w.extra || '').toLowerCase();
+                const extra = ((w.isBroken && w.broken ? w.broken.extra : w.extra) || '').toLowerCase();
                 const isReusable = extra.includes('reutilizable');
                 const maxUses = extra.includes('x3') ? 3 : (isReusable ? 3 : 1);
                 weaponSlots += maxUses;
@@ -3029,10 +3029,10 @@ calculateEquipPower(eq, bot) {
 
             let remainingDiceForShields = Math.max(0, numDice - weaponSlots);
 
-            const activeShields = bot.equipped.filter(eq => eq.isActive && !eq.isBroken && this.isShield(eq));
+            const activeShields = bot.equipped.filter(eq => eq.isActive && this.isShield(eq));
             let shieldSlots = 0;
             activeShields.forEach(s => {
-                const extra = (s.extra || '').toLowerCase();
+                const extra = ((s.isBroken && s.broken ? s.broken.extra : s.extra) || '').toLowerCase();
                 const isReusable = extra.includes('reutilizable');
                 const maxUses = extra.includes('x3') ? 3 : (isReusable ? 3 : 1);
                 shieldSlots += maxUses;
@@ -3057,7 +3057,7 @@ calculateEquipPower(eq, bot) {
 
                 let assignedDice = 0;
                 for (let s of activeShields) {
-                    const extra = (s.extra || '').toLowerCase();
+                    const extra = ((s.isBroken && s.broken ? s.broken.extra : s.extra) || '').toLowerCase();
                     const isReusable = extra.includes('reutilizable');
                     const maxUses = extra.includes('x3') ? 3 : (isReusable ? 3 : 1);
                     for (let u = 0; u < maxUses; u++) {

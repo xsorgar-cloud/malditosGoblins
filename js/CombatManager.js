@@ -35,7 +35,7 @@ if (gameState.activeSenda === 'cazador' && dieData.value < 4) {
     // Verifica que el dado sea válido para el equipamiento seleccionado
 if (!gameState.isValidDieForEquipment(dieData.value, eq)) return;
 
-    const extra = (eq.extra || '').toLowerCase();
+    const extra = (eq.isBroken && eq.broken && eq.broken.extra !== undefined ? eq.broken.extra : (eq.extra || '')).toLowerCase();
     const isReusable = extra.includes('reutilizable');
     const maxUses = extra.includes('x3') ? 3 : (isReusable ? 6 : 1);
 
