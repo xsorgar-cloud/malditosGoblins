@@ -31,6 +31,27 @@ handleGameState() {
             return;
         }
 
+        // Verificar si algún bot tiene una elección de subida de nivel pendiente y manejarla autónomamente
+        const botWithLevelUp = this.gameState.players.find(p => p.isBot && p.pendingLevelUpChoice);
+        if (botWithLevelUp) {
+            this.isActing = true;
+            const pIndex = this.gameState.players.indexOf(botWithLevelUp);
+            const choice = this.getBotLevelUpChoice(botWithLevelUp);
+            
+            this.gameState.addLog(`🤖 El bot <strong>${botWithLevelUp.name}</strong> está pensando su elección de subida de nivel...`);
+            
+            setTimeout(() => {
+                if (window.botsPaused) {
+                    this.isActing = false;
+                    return;
+                }
+                window.handleLevelUpChoice(pIndex, choice);
+                this.isActing = false;
+                this.handleGameState();
+            }, 1500);
+            return;
+        }
+
         const activePlayer = this.gameState.getCurrentPlayer();
         if (!activePlayer || !activePlayer.isBot) {
             console.log("[BotManager] Not a bot's turn.");
@@ -2628,6 +2649,50 @@ calculateEquipPower(eq, bot) {
     getPersonalityForDecision(bot) {
         // All bots now use the Aggressive personality exclusively.
         return 'Agresivo';
+    }
+
+    // El bot elige sabiamente si prefiere un dado rojo d6 o un dado negro d4 + 1 moneda de oro
+    getBotLevelUpChoice(player) {
+        const roleId = player.role ? player.role.id : '';
+        const dicePool = player.dicePool || [];
+        const redCount = dicePool.filter(d => d.type === 'red').length;
+        const blackCount = dicePool.filter(d => d.type === 'black').length;
+
+        let redScore = 0;
+        let blackScore = 0;
+
+        // 1. Influencia de los roles, sus requerimientos y tasas de energía
+        if (roleId === 'guerrero') {
+            redScore += 4.0; // Guerreros quieren dados grandes de ataque y altos valores de energía
+        } else if (roleId === 'protector') {
+            redScore += 3.0; // Protector prefiere números altos para escudos/defensa
+            blackScore += 1.0;
+        } else if (roleId === 'mago') {
+            redScore += 2.5; // Mago quiere números altos para hechizos potentes
+            blackScore += 1.5;
+        } else if (roleId === 'ladron') {
+            blackScore += 4.0; // Ladrón quiere monedas y dados negros para relanzamientos
+        } else if (roleId === 'sanador') {
+            blackScore += 4.0; // Sanador cura con cap de MAX 4; además, cara 6 le da menos energía que 2/3/4/5
+        } else if (roleId === 'curandero') {
+            blackScore += 4.0; // Curandero obtiene 0 energía en cara 6, pero 3 energía en cara 4/5
+        }
+
+        // 2. Equilibrio del pool de dados (para mantener versatilidad)
+        if (redCount - blackCount >= 2) {
+            blackScore += 2.0;
+        } else if (blackCount - redCount >= 2) {
+            redScore += 2.0;
+        }
+
+        // 3. Situación financiera inmediata del bot
+        if (player.mo <= 1) {
+            blackScore += 1.5; // La moneda de regalo es valiosa
+        } else if (player.mo >= 8) {
+            redScore += 1.0; // Rico, prefiere poder bruto sobre monedas
+        }
+
+        return redScore >= blackScore ? 'red' : 'black';
     }
 
 // Devuelve el color de la burbuja según la personalidad (neutral en versión simplificada)
