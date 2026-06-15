@@ -52,9 +52,19 @@ handleGameState() {
             return;
         }
 
-        const activePlayer = this.gameState.getCurrentPlayer();
-        if (!activePlayer || !activePlayer.isBot) {
-            console.log("[BotManager] Not a bot's turn.");
+        let activePlayer = this.gameState.getCurrentPlayer();
+        
+        // Si estamos en la fase de represalia y el jugador activo actual está muerto,
+        // delegamos la acción al primer bot vivo para resolver la represalia.
+        if (this.gameState.isRetaliationPhase && activePlayer && activePlayer.hp <= 0) {
+            const firstLiveBot = this.gameState.players.find(p => p.isBot && p.hp > 0);
+            if (firstLiveBot) {
+                activePlayer = firstLiveBot;
+            }
+        }
+
+        if (!activePlayer || !activePlayer.isBot || activePlayer.hp <= 0) {
+            console.log("[BotManager] Not a bot's turn or active bot is dead.");
             this.hideAllBubbles();
             return;
         }
@@ -856,7 +866,7 @@ calculateCombatScore(bot, goblins) {
         score += weaponCount * 5;
         score += shieldCount * 3;
         
-        const avgHp = this.gameState.players.filter(p => !p.isDead).reduce((acc, p) => acc + (p.hp / p.maxHp), 0) / this.gameState.players.length;
+        const avgHp = this.gameState.players.filter(p => p.hp > 0).reduce((acc, p) => acc + (p.hp / p.maxHp), 0) / this.gameState.players.length;
         if (avgHp < 0.5) score -= 5; 
 
         let totalGoblinHP = 0;
@@ -2546,7 +2556,7 @@ calculateEquipPower(eq, bot) {
             let bestScore = -999;
 
             this.gameState.players.forEach((p, index) => {
-                if (p.isDead) return;
+                if (p.hp <= 0) return;
                 
                 // 
                 // Usaremos la vida actual para ser directos.
