@@ -1613,12 +1613,12 @@ performCombatTurn(bot) {
                 const brokenEquipsToRepair = bot.equipped.filter(eq => {
                     if (!eq.isBroken || !this.canAcceptDie(die, eq)) return false;
                     if (this.isWeapon(eq)) return !allGoblinsDead;
-                    if (this.isShield(eq)) return !allGoblinsDead && (incomingNormalDmg > 0 || this.getDamageForDieInEquip(die.value, eq) > 0);
+                    if (this.isShield(eq)) return (incomingNormalDmg > 0 || this.getDamageForDieInEquip(die.value, eq) > 0);
                     if (this.isHeal(eq)) return bot.hp < bot.maxHp;
                     return true;
                 });
                 const weapons = (plannedKills > 0 && !plannedAssignments[die.id]) ? [] : (allGoblinsDead ? [] : bot.equipped.filter(eq => eq.isActive && this.isWeapon(eq) && this.canAcceptDie(die, eq)));
-                const shields = allGoblinsDead ? [] : bot.equipped.filter(eq => eq.isActive && this.isShield(eq) && this.canAcceptDie(die, eq) && (incomingNormalDmg > 0 || this.getDamageForDieInEquip(die.value, eq) > 0));
+                const shields = bot.equipped.filter(eq => eq.isActive && this.isShield(eq) && this.canAcceptDie(die, eq) && (incomingNormalDmg > 0 || this.getDamageForDieInEquip(die.value, eq) > 0));
                 const heals = bot.equipped.filter(eq => eq.isActive && this.isHeal(eq) && this.canAcceptDie(die, eq));
                 
                 const fallbackToRole = (reason) => {
