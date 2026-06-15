@@ -2370,7 +2370,23 @@ calculateEquipPower(eq, bot) {
             let savedValueSum = 0;
 
             let gobDamage = {};
-            aliveGoblins.forEach(g => { gobDamage[g.uid] = 0; });
+            aliveGoblins.forEach(g => {
+                let preExistingDmg = 0;
+                const globalAssignments = window.currentAssignments || {};
+                for (let eqId in globalAssignments) {
+                    let assignedEq = bot.equipped.find(e => e.id === eqId);
+                    if (assignedEq && this.isWeapon(assignedEq)) {
+                        let asgs = globalAssignments[eqId];
+                        const asgsArr = Array.isArray(asgs) ? asgs : [asgs];
+                        asgsArr.forEach(asg => {
+                            if (!asg.isRole && asg.targetUid === g.uid) {
+                                preExistingDmg += this.getDamageForDieInEquip(asg.value, assignedEq);
+                            }
+                        });
+                    }
+                }
+                gobDamage[g.uid] = preExistingDmg;
+            });
 
             let weaponDiceCounts = {};
             weapons.forEach(w => { weaponDiceCounts[w.id] = 0; });
