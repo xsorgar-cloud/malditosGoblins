@@ -777,31 +777,12 @@ triggerAction(type, target = null, reason = "") {
         return true; // Nivel 1 no tiene requisitos mínimos
     }
 
-    getMaxAllowedEquipment(bot, type) {
-        const targetLevel = Math.max(bot.level, this.gameState.battlefield.waveLevel);
-        const isSanador = bot.role && bot.role.id === 'sanador';
-        const isProtector = bot.role && bot.role.id === 'protector';
-
-        if (type === 'ataque') {
-            if (targetLevel <= 2) return 1;
-            return 2;
-        }
-        if (type === 'curacion') {
-            if (targetLevel <= 2) return 1;
-            if (targetLevel === 3) return isSanador ? 2 : 1;
-            return 2;
-        }
-        if (type === 'escudos') {
-            if (targetLevel <= 2) return 1;
-            if (targetLevel === 3) return isProtector ? 2 : 1;
-            return 2;
-        }
-        return 2;
-    }
-
     getMissingEquipmentType(player) {
         const offensivePotential = this.getPlayerOffensivePotential(player);
         const needsOffensive = (player.level === 2 && offensivePotential < 10) || (player.level === 3 && offensivePotential < 15);
+
+        const isSanador = player.role && player.role.id === 'sanador';
+        const isProtector = player.role && player.role.id === 'protector';
 
         if (needsOffensive) {
             // Si nos podemos permitir la carta de ataque, compramos la de ataque primero
@@ -810,17 +791,19 @@ triggerAction(type, target = null, reason = "") {
                 return 'ataque';
             }
             
-            const nonStarting = player.equipped.filter(eq => eq.type !== 'inicial');
-            const heals = nonStarting.filter(eq => eq.type === 'curacion').length;
-            const shields = nonStarting.filter(eq => eq.type === 'escudos').length;
+            const weaponsCount = player.equipped.filter(eq => eq.type === 'ataque' || eq.id === 'espada_inicial').length;
+            const healsCount = player.equipped.filter(eq => eq.type === 'curacion').length;
+            const shieldCount = player.equipped.filter(eq => eq.type === 'escudos' || eq.id === 'escudo_inicial').length;
             
-            // Solo si no nos podemos permitir la de ataque, miramos si hay una híbrida de curación o escudo que sí nos podamos permitir y de la que no tengamos ya una copia
+            // Solo si no nos podemos permitir la de ataque, miramos si hay una híbrida de curación o escudo que sí nos podamos permitir y que no desequilibre nuestro inventario
             const topCuracion = this.gameState.market['curacion'] && this.gameState.market['curacion'].length > 0 ? this.gameState.market['curacion'][0] : null;
-            if (topCuracion && this.canDealDamage(topCuracion) && player.mo >= topCuracion.cost && heals === 0) {
+            const maxHeals = weaponsCount + (isSanador ? 2 : 1);
+            if (topCuracion && this.canDealDamage(topCuracion) && player.mo >= topCuracion.cost && healsCount < maxHeals) {
                 return 'curacion';
             }
             const topEscudos = this.gameState.market['escudos'] && this.gameState.market['escudos'].length > 0 ? this.gameState.market['escudos'][0] : null;
-            if (topEscudos && this.canDealDamage(topEscudos) && player.mo >= topEscudos.cost && shields === 0) {
+            const maxShields = weaponsCount + (isProtector ? 2 : 1);
+            if (topEscudos && this.canDealDamage(topEscudos) && player.mo >= topEscudos.cost && shieldCount < maxShields) {
                 return 'escudos';
             }
             return 'ataque';
@@ -1062,10 +1045,20 @@ performMarketTurn(bot) {
 
             const canBuy = (type) => this.gameState.market[type] && this.gameState.market[type].length > 0 && bot.mo >= this.gameState.market[type][0].cost;
             const buyIfPossible = (type) => {
-                // Limit excess equipment cards dynamically by level and role
-                const nonStartingCount = bot.equipped.filter(eq => eq.type === type).length;
-                const maxAllowed = this.getMaxAllowedEquipment(bot, type);
-                if (nonStartingCount >= maxAllowed) return false;
+                // Contar equipamiento por categoría original más iniciales
+                const weaponsCount = bot.equipped.filter(eq => eq.type === 'ataque' || eq.id === 'espada_inicial').length;
+                const healsCount = bot.equipped.filter(eq => eq.type === 'curacion').length;
+                const shieldCount = bot.equipped.filter(eq => eq.type === 'escudos' || eq.id === 'escudo_inicial').length;
+
+                // Evitar desequilibrios (ej: no acaparar curaciones/escudos si no se tienen suficientes armas)
+                if (type === 'curacion') {
+                    const maxHeals = weaponsCount + (isSanador ? 2 : 1);
+                    if (healsCount >= maxHeals) return false;
+                }
+                if (type === 'escudos') {
+                    const maxShields = weaponsCount + (isProtector ? 2 : 1);
+                    if (shieldCount >= maxShields) return false;
+                }
 
                 // Role-based restrictions
                 if (type === 'curacion' && isSanador) {
@@ -1098,9 +1091,10 @@ performMarketTurn(bot) {
             const isHardCombat = this.gameState.battlefield.goblins.filter(g => !g.isDying).length >= 2;
             
             // Solo considerar curación si el bot está herido (hp < maxHp), estamos en combate difícil y no tiene exceso de curaciones
-            const nonStartingHeals = bot.equipped.filter(eq => eq.type === 'curacion').length;
-            const maxHealsAllowed = this.getMaxAllowedEquipment(bot, 'curacion');
-            let needsHealing = isHardCombat && (bot.hp < bot.maxHp * 0.85) && (nonStartingHeals < maxHealsAllowed);
+            const weaponsCount = bot.equipped.filter(eq => eq.type === 'ataque' || eq.id === 'espada_inicial').length;
+            const healsCount = bot.equipped.filter(eq => eq.type === 'curacion').length;
+            const maxHeals = weaponsCount + (isSanador ? 2 : 1);
+            let needsHealing = isHardCombat && (bot.hp < bot.maxHp * 0.85) && (healsCount < maxHeals);
 
             // Si el bot es de Nivel 1, nunca prioriza curación a menos que sea una emergencia crítica
             if (bot.level === 1) {
