@@ -4715,7 +4715,7 @@ function renderGameOver() {
     <img src="assets/final.jpg" style="width: 100%; max-height: 300px; object-fit: cover; border-radius: 8px; margin-bottom: 20px; border: 1px solid rgba(230, 57, 70, 0.5); pointer-events: none; -webkit-user-drag: none; user-select: none;">
     <div style="font-size: 1.5rem; margin-bottom: 20px; color: #fff;">¡Habéis sido derrotados!</div>
     <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 12px; border: 1px solid rgba(230, 57, 70, 0.3);">
-      <p style="margin-bottom: 10px;">Llegasteis hasta la <strong>Oleada ${gameState.battlefield.waveLevel}</strong></p>
+      <p style="margin-bottom: 10px;">Llegasteis hasta la <strong>Oleada ${gameState.battlefield.waveLevel}</strong> &nbsp;&nbsp;|&nbsp;&nbsp; Llegasteis hasta el <strong>Hito ${gameState.currentHito}</strong></p>
       <p style="font-size: 0.9rem; color: var(--text-cita); font-style: italic;">"${phrase}"</p>
     </div>
   `;
