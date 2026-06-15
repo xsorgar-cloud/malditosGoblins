@@ -13,10 +13,10 @@ function renderCombatOverlay() {
 window.combatDieOnEquipHandler = (e) => {
     const dieId = e.detail.dieId;
     const eqId = e.detail.targetId;
-    if (gameState.currentCombat && gameState.currentCombat.isCrampPhase) return;
     let eq = gameState.getCurrentPlayer().equipped.find(eq => eq.id === eqId);
     let dieData = gameState.currentCombat.playerDice.find(d => d.id === dieId);
     if (!eq || !dieData) return;
+    if (gameState.currentCombat && gameState.currentCombat.needsCrampResolution && !dieData.isCramped) return;
 
     // Si el dado es de tipo plateado, solo puede fusionarse desde la reserva
 if (dieData.type === 'silver') {
@@ -79,7 +79,7 @@ currentAssignments[eq.id].push({ dieId: dieId, value: dieData.value, targetUid: 
 window.combatDieOnGoblinHandler = (e) => {
     const dieId = e.detail.dieId;
     const gobUid = e.detail.targetId;
-    if (gameState.currentCombat && gameState.currentCombat.isCrampPhase) return;
+    if (gameState.currentCombat && gameState.currentCombat.needsCrampResolution) return;
     let gob = gameState.currentCombat.goblins.find(g => String(g.uid) === String(gobUid));
     let dieData = gameState.currentCombat.playerDice.find(d => d.id === dieId);
     if (!gob || !dieData) return;
@@ -91,7 +91,7 @@ if (gob.isBoss && (gameState.activeSenda === 'la_madre' || gob.name === 'La Madr
       return;
     }
     // No permitir interceptar con dados que tienen calambre fuera de la fase de calambre
-if (dieData.isCramped && !gameState.currentCombat.isCrampPhase) return;
+if (dieData.isCramped && !gameState.currentCombat.needsCrampResolution) return;
 
     if (gob.isBoss && gob.name.includes("La Madre")) {
       if (typeof gameState !== 'undefined' && gameState.addLog) {
@@ -135,7 +135,7 @@ clearInterception(dieId);
 window.combatEquipOnGoblinHandler = (e) => {
     const eqId = e.detail.equipId;
     const gobUid = e.detail.targetId;
-    if (gameState.currentCombat && gameState.currentCombat.isCrampPhase) return;
+    if (gameState.currentCombat && gameState.currentCombat.needsCrampResolution) return;
     let targetGoblin = gameState.currentCombat.goblins.find(g => String(g.uid) === String(gobUid));
     let eq = gameState.getCurrentPlayer().equipped.find(eq => eq.id === eqId);
     if (!targetGoblin || !eq) return;
@@ -156,7 +156,7 @@ window.combatEquipOnGoblinHandler = (e) => {
   // Desasigna equipamiento del goblin o del jugador
 window.combatEquipUnassignHandler = (e) => {
     const eqId = e.detail.eqId;
-    if (gameState.currentCombat && gameState.currentCombat.isCrampPhase) return;
+    if (gameState.currentCombat && gameState.currentCombat.needsCrampResolution) return;
     
     // Check if currentAssignments[eqId] exists
     if (currentAssignments[eqId]) {
@@ -196,7 +196,7 @@ window.combatDieFusionHandler = (e) => {
   // Asigna un dado al rol de combate (ej. ataque especial) del jugador
 window.combatDieOnCombatRoleHandler = (e) => {
       const dieId = e.detail.dieId;
-      if (gameState.currentCombat && gameState.currentCombat.isCrampPhase) return;
+      if (gameState.currentCombat && gameState.currentCombat.needsCrampResolution) return;
       let dieData = gameState.currentCombat.playerDice.find(d => d.id === dieId);
       if (!dieData) return;
 

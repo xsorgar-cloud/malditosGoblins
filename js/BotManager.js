@@ -777,19 +777,50 @@ triggerAction(type, target = null, reason = "") {
         return true; // Nivel 1 no tiene requisitos mínimos
     }
 
+    getMaxAllowedEquipment(bot, type) {
+        const targetLevel = Math.max(bot.level, this.gameState.battlefield.waveLevel);
+        const isSanador = bot.role && bot.role.id === 'sanador';
+        const isProtector = bot.role && bot.role.id === 'protector';
+
+        if (type === 'ataque') {
+            if (targetLevel <= 2) return 1;
+            return 2;
+        }
+        if (type === 'curacion') {
+            if (targetLevel <= 2) return 1;
+            if (targetLevel === 3) return isSanador ? 2 : 1;
+            return 2;
+        }
+        if (type === 'escudos') {
+            if (targetLevel <= 2) return 1;
+            if (targetLevel === 3) return isProtector ? 2 : 1;
+            return 2;
+        }
+        return 2;
+    }
+
     getMissingEquipmentType(player) {
         const offensivePotential = this.getPlayerOffensivePotential(player);
         const needsOffensive = (player.level === 2 && offensivePotential < 10) || (player.level === 3 && offensivePotential < 15);
 
         if (needsOffensive) {
-            // Comprobamos si la carta superior de curación hace daño y nos la podemos permitir
+            // Si nos podemos permitir la carta de ataque, compramos la de ataque primero
+            const topAtaque = this.gameState.market['ataque'] && this.gameState.market['ataque'].length > 0 ? this.gameState.market['ataque'][0] : null;
+            if (topAtaque && player.mo >= topAtaque.cost) {
+                return 'ataque';
+            }
+            
+            const nonStarting = player.equipped.filter(eq => eq.type !== 'inicial');
+            const heals = nonStarting.filter(eq => eq.type === 'curacion').length;
+            const shields = nonStarting.filter(eq => eq.type === 'escudos').length;
+            
+            // Solo si no nos podemos permitir la de ataque, miramos si hay una híbrida de curación o escudo que sí nos podamos permitir y de la que no tengamos ya una copia
             const topCuracion = this.gameState.market['curacion'] && this.gameState.market['curacion'].length > 0 ? this.gameState.market['curacion'][0] : null;
-            if (topCuracion && this.canDealDamage(topCuracion) && player.mo >= topCuracion.cost) {
+            if (topCuracion && this.canDealDamage(topCuracion) && player.mo >= topCuracion.cost && heals === 0) {
                 return 'curacion';
             }
-            // Comprobamos si la de escudos hace daño (ej: reforzado de pinchos) y nos la podemos permitir
             const topEscudos = this.gameState.market['escudos'] && this.gameState.market['escudos'].length > 0 ? this.gameState.market['escudos'][0] : null;
-            if (topEscudos && this.canDealDamage(topEscudos) && player.mo >= topEscudos.cost) {
+            if (topEscudos && this.canDealDamage(topEscudos) && player.mo >= topEscudos.cost && shields === 0) {
                 return 'escudos';
             }
             return 'ataque';
@@ -1031,6 +1062,11 @@ performMarketTurn(bot) {
 
             const canBuy = (type) => this.gameState.market[type] && this.gameState.market[type].length > 0 && bot.mo >= this.gameState.market[type][0].cost;
             const buyIfPossible = (type) => {
+                // Limit excess equipment cards dynamically by level and role
+                const nonStartingCount = bot.equipped.filter(eq => eq.type === type).length;
+                const maxAllowed = this.getMaxAllowedEquipment(bot, type);
+                if (nonStartingCount >= maxAllowed) return false;
+
                 // Role-based restrictions
                 if (type === 'curacion' && isSanador) {
                     const hasHealingEquip = bot.equipped.some(eq => eq.type === 'curacion' || eq.id.includes('pocion'));
@@ -1061,8 +1097,10 @@ performMarketTurn(bot) {
             const isLowHp = bot.hp <= bot.maxHp * 0.5; // Ajustado a 50%
             const isHardCombat = this.gameState.battlefield.goblins.filter(g => !g.isDying).length >= 2;
             
-            // Solo considerar curación si el bot está herido (hp < maxHp) y estamos en combate difícil
-            let needsHealing = isHardCombat && (bot.hp < bot.maxHp * 0.85);
+            // Solo considerar curación si el bot está herido (hp < maxHp), estamos en combate difícil y no tiene exceso de curaciones
+            const nonStartingHeals = bot.equipped.filter(eq => eq.type === 'curacion').length;
+            const maxHealsAllowed = this.getMaxAllowedEquipment(bot, 'curacion');
+            let needsHealing = isHardCombat && (bot.hp < bot.maxHp * 0.85) && (nonStartingHeals < maxHealsAllowed);
 
             // Si el bot es de Nivel 1, nunca prioriza curación a menos que sea una emergencia crítica
             if (bot.level === 1) {
@@ -1113,7 +1151,7 @@ performMarketTurn(bot) {
                     if (bought) {
                         advice = "Tengo que encontrar algo para sanar estas heridas.";
                     } else {
-                        this.gameState.addLog(`🤖 <strong>${bot.name}</strong> necesita curación pero no puede permitírsela.`);
+                        this.gameState.addLog(`🤖 <strong>${bot.name}</strong> necesita curación pero no puede permitírsela o ya tiene suficiente equipo curativo.`);
                     }
                 }
             } else if (needsHealing) {
@@ -1257,7 +1295,7 @@ performCombatTurn(bot) {
                 return;
             }
 
-            const isCrampPhase = this.gameState.currentCombat && this.gameState.currentCombat.isCrampPhase;
+            const isCrampPhase = this.gameState.currentCombat && this.gameState.currentCombat.needsCrampResolution;
 
             // Fusionar dados plateados disponibles al inicio del combate del bot (solo fuera de la fase de calambres)
             if (!isCrampPhase) {
@@ -1314,7 +1352,7 @@ performCombatTurn(bot) {
                 
                 window.botCombatCountdownActive = true;
                 let secondsLeft = 5;
-                const isCramped = this.gameState.currentCombat && this.gameState.currentCombat.isCrampPhase;
+                const isCramped = this.gameState.currentCombat && this.gameState.currentCombat.needsCrampResolution;
                 const prefix = isCramped ? "Resolviendo calambres" : "Confirmando combate";
                 
                 const updateCountdown = () => {
@@ -2136,7 +2174,7 @@ calculateEquipPower(eq, bot) {
             });
 
             if (!canUseForShieldOrHeal) {
-                const isCrampPhase = this.gameState.currentCombat && this.gameState.currentCombat.isCrampPhase;
+                const isCrampPhase = this.gameState.currentCombat && this.gameState.currentCombat.needsCrampResolution;
                 const availableDice = this.gameState.currentCombat.playerDice.filter(d => 
                     !d.assignedTo && 
                     (isCrampPhase ? d.isCramped : !d.isCramped) && 
@@ -2244,7 +2282,7 @@ calculateEquipPower(eq, bot) {
 
 // Intenta interceptar un dado peligroso de un goblin, respetando la planificación del combate
     tryInterceptDangerousDie(die, bot, plannedAssignments = {}, plannedKills = 0) {
-        if (!this.gameState.currentCombat || this.gameState.currentCombat.isCrampPhase) return false;
+        if (!this.gameState.currentCombat || this.gameState.currentCombat.needsCrampResolution) return false;
         
         const goblins = this.gameState.currentCombat.goblins;
         if (!goblins || goblins.length === 0) return false;
