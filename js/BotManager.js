@@ -1370,8 +1370,8 @@ performCombatTurn(bot) {
             const plannedAssignments = planResult.assignments;
             const plannedKills = planResult.goblinsKilled;
 
-            // Lógica de relanzamiento de dados negros (antes de asignar ningún dado)
-            const dieToReroll = availableDice.find(d => d.type === 'black' && !d.rerolled && this.shouldRerollBlackDie(d, bot, plannedAssignments));
+            // Lógica de relanzamiento de dados negros (antes de asignar ningún dado, desactivado en fase de calambres)
+            const dieToReroll = !isCrampPhase ? availableDice.find(d => d.type === 'black' && !d.rerolled && this.shouldRerollBlackDie(d, bot, plannedAssignments)) : null;
             if (dieToReroll) {
                 console.log("[BotManager] Decided to reroll black die:", dieToReroll.id);
                 this.isActing = true;
@@ -1425,7 +1425,7 @@ performCombatTurn(bot) {
             let advice = "";
             let delay = 500;
 
-            if (availableDice.length === totalNonCramped) {
+            if (availableDice.length === totalActiveDice) {
                 advice = this.getCombatDialogue(availableDice, bot);
                 console.log("[BotManager] Showing combat advice:", advice);
                 this.showBubble(this.gameState.currentPlayerIndex, `${advice}`, 'combat');
@@ -2070,7 +2070,7 @@ calculateEquipPower(eq, bot) {
 
 // Decide si debe volver a lanzar un dado negro según su utilidad actual
     shouldRerollBlackDie(die, bot, plannedAssignments = {}) {
-        if (die.type !== 'black' || die.rerolled) return false;
+        if (die.type !== 'black' || die.rerolled || die.isCramped) return false;
 
         // Detectar si este dado negro es redundante y acabará descartado sin aportar valor.
         // Si no está planificado para ningún arma, y no tiene utilidad en escudos/curación activos,
