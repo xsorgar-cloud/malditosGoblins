@@ -1576,8 +1576,32 @@ performCombatTurn(bot) {
                 let projectedHpAfterDamage = bot.hp - Math.max(0, incomingNormalDmg - totalMaxDefense) - incomingDirectDmg;
                 let isLethalDamage = projectedHpAfterDamage <= 0;
 
+                // Contar bajas que ya están aseguradas en las asignaciones de armas actuales
+                let preExistingKills = 0;
+                if (this.gameState.currentCombat && this.gameState.currentCombat.goblins) {
+                    this.gameState.currentCombat.goblins.forEach(gob => {
+                        let assignedDmg = 0;
+                        for (let eqId in window.currentAssignments) {
+                            let eq = bot.equipped.find(e => e.id === eqId);
+                            if (eq && this.isWeapon(eq)) {
+                                let asgs = window.currentAssignments[eqId];
+                                const asgsArr = Array.isArray(asgs) ? asgs : [asgs];
+                                for (let asg of asgsArr) {
+                                    if (!asg.isRole && (asg.targetUid === gob.uid || this.gameState.currentCombat.goblins.length === 1)) {
+                                        assignedDmg += this.getDamageForDieInEquip(asg.value, eq);
+                                    }
+                                }
+                            }
+                        }
+                        if (gob.currentHp - assignedDmg <= 0) {
+                            preExistingKills++;
+                        }
+                    });
+                }
+
                 let forceAttack = false;
-                if (plannedKills > 0 && !isLethalDamage) {
+                let newKills = plannedKills - preExistingKills;
+                if (newKills > 0 && !isLethalDamage) {
                     forceAttack = true;
                 }
 
@@ -1587,7 +1611,7 @@ performCombatTurn(bot) {
                 
                 const hasRoleDie = window.currentAssignments && window.currentAssignments['role'] && window.currentAssignments['role'].length > 0;
 
-                if (!hasRoleDie && !forceAttack && incomingNormalDmg > 0 && incomingNormalDmg <= 2 && energyGain >= 3 && bot.hp >= 5) {
+                if (!hasRoleDie && (!forceAttack || !plannedAssignments[die.id]) && incomingNormalDmg > 0 && incomingNormalDmg <= 2 && energyGain > incomingNormalDmg && bot.hp >= 5) {
                     this.assignDieToRole(die, bot, `Daño entrante trivial (${incomingNormalDmg}), es más rentable ganar ${energyGain} de energía en el Rol`);
                     roleOverrideAssigned = true;
                 }
