@@ -1257,45 +1257,53 @@ performCombatTurn(bot) {
                 return;
             }
 
-            // Fusionar dados plateados disponibles al inicio del combate del bot
-            const unassignedSilverDice = this.gameState.currentCombat.playerDice.filter(d => d.type === 'silver' && !d.assignedTo);
-            if (unassignedSilverDice.length > 0) {
-                const targetDice = this.gameState.currentCombat.playerDice.filter(d => 
-                    (d.type === 'red' || d.type === 'black') && 
-                    !d.silverDieId && 
-                    !d.assignedTo && 
-                    !d.isCramped
-                );
-                
-                // Priorizar dados rojos sobre negros, y de mayor a menor valor
-                targetDice.sort((a, b) => {
-                    if (a.type === 'red' && b.type !== 'red') return -1;
-                    if (a.type !== 'red' && b.type === 'red') return 1;
-                    return b.value - a.value;
-                });
-                
-                for (let sDie of unassignedSilverDice) {
-                    if (targetDice.length > 0) {
-                        let tDie = targetDice.shift();
-                        sDie.assignedTo = tDie.id;
-                        tDie.silverDieId = sDie.id;
-                        tDie.originalValue = tDie.value;
-                        tDie.value += sDie.value;
-                        tDie.isSilver = true;
-                        this.gameState.addLog(`🎲 <strong>${bot.name}</strong> fusionó su <strong>Dado Plateado (d3: ${sDie.value})</strong> con su dado ${tDie.type === 'red' ? 'rojo' : 'negro'} (valor: ${tDie.originalValue}). ¡Nuevo valor: <span style="color:#c0c0c0; font-weight:bold">${tDie.value}</span>!`);
-                    } else {
-                        sDie.assignedTo = 'discarded';
-                        this.gameState.addLog(`🎲 <strong>${bot.name}</strong> no tiene dados válidos para fusionar su dado plateado y lo descarta.`);
+            const isCrampPhase = this.gameState.currentCombat && this.gameState.currentCombat.isCrampPhase;
+
+            // Fusionar dados plateados disponibles al inicio del combate del bot (solo fuera de la fase de calambres)
+            if (!isCrampPhase) {
+                const unassignedSilverDice = this.gameState.currentCombat.playerDice.filter(d => d.type === 'silver' && !d.assignedTo);
+                if (unassignedSilverDice.length > 0) {
+                    const targetDice = this.gameState.currentCombat.playerDice.filter(d => 
+                        (d.type === 'red' || d.type === 'black') && 
+                        !d.silverDieId && 
+                        !d.assignedTo && 
+                        !d.isCramped
+                    );
+                    
+                    // Priorizar dados rojos sobre negros, y de mayor a menor valor
+                    targetDice.sort((a, b) => {
+                        if (a.type === 'red' && b.type !== 'red') return -1;
+                        if (a.type !== 'red' && b.type === 'red') return 1;
+                        return b.value - a.value;
+                    });
+                    
+                    for (let sDie of unassignedSilverDice) {
+                        if (targetDice.length > 0) {
+                            let tDie = targetDice.shift();
+                            sDie.assignedTo = tDie.id;
+                            tDie.silverDieId = sDie.id;
+                            tDie.originalValue = tDie.value;
+                            tDie.value += sDie.value;
+                            tDie.isSilver = true;
+                            this.gameState.addLog(`🎲 <strong>${bot.name}</strong> fusionó su <strong>Dado Plateado (d3: ${sDie.value})</strong> con su dado ${tDie.type === 'red' ? 'rojo' : 'negro'} (valor: ${tDie.originalValue}). ¡Nuevo valor: <span style="color:#c0c0c0; font-weight:bold">${tDie.value}</span>!`);
+                        } else {
+                            sDie.assignedTo = 'discarded';
+                            this.gameState.addLog(`🎲 <strong>${bot.name}</strong> no tiene dados válidos para fusionar su dado plateado y lo descarta.`);
+                        }
                     }
                 }
             }
 
-            const totalNonCramped = this.gameState.currentCombat.playerDice.filter(d => !d.isCramped).length;
+            const totalActiveDice = this.gameState.currentCombat.playerDice.filter(d => isCrampPhase ? d.isCramped : !d.isCramped).length;
             // Excluir el dado plateado (silver) de la asignación directa
-            const availableDice = this.gameState.currentCombat.playerDice.filter(d => !d.assignedTo && !d.isCramped && d.type !== 'silver');
+            const availableDice = this.gameState.currentCombat.playerDice.filter(d => 
+                !d.assignedTo && 
+                (isCrampPhase ? d.isCramped : !d.isCramped) && 
+                d.type !== 'silver'
+            );
             availableDice.sort((a, b) => b.value - a.value);
             
-            console.log(`[BotManager] availableDice: ${availableDice.length}/${totalNonCramped}`);
+            console.log(`[BotManager] availableDice: ${availableDice.length}/${totalActiveDice}`);
             if (availableDice.length === 0) {
                 console.log("[BotManager] No more dice to assign. Scheduling combat resolution in 5s.");
                 this.isActing = true;
@@ -2128,7 +2136,12 @@ calculateEquipPower(eq, bot) {
             });
 
             if (!canUseForShieldOrHeal) {
-                const availableDice = this.gameState.currentCombat.playerDice.filter(d => !d.assignedTo && !d.isCramped && d.type !== 'silver');
+                const isCrampPhase = this.gameState.currentCombat && this.gameState.currentCombat.isCrampPhase;
+                const availableDice = this.gameState.currentCombat.playerDice.filter(d => 
+                    !d.assignedTo && 
+                    (isCrampPhase ? d.isCramped : !d.isCramped) && 
+                    d.type !== 'silver'
+                );
                 const spareDice = availableDice.filter(d => !plannedAssignments[d.id]);
                 const otherSpareDice = spareDice.filter(d => d.id !== die.id);
                 
