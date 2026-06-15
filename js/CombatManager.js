@@ -432,7 +432,8 @@ const statsContainer = document.getElementById('combat-player-stats');
     }
 
     let projNetDamage = isCrampPhase ? 0 : Math.max(0, projDamageObj.normal - projShield) + projDamageObj.direct;
-    let finalProjectedHp = Math.min(p.maxHp, Math.max(0, p.hp - projNetDamage + projHeal));
+    let hpAfterDamage = Math.max(0, p.hp - projNetDamage);
+    let finalProjectedHp = (hpAfterDamage > 0 && projHeal > 0) ? Math.min(p.maxHp, hpAfterDamage + projHeal) : hpAfterDamage;
     
     let projectedHtml = '';
     let goblinsProjHtml = '';
@@ -605,7 +606,7 @@ const statsContainer = document.getElementById('combat-player-stats');
         }
 
         // 1. ESTADÍSTICAS DEL COMBATE
-        const hpDiff = pAfter.hp - pBeforeState.hp - levelUpHpBonus;
+        const hpDiff = pAfter.hp - pBeforeState.hp;
         const moDiff = pAfter.mo - pBeforeState.mo;
         const energyDiff = pAfter.energy - pBeforeState.energy;
         const pexDiff = pAfter.pex - pBeforeState.pex;

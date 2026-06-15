@@ -5463,12 +5463,7 @@ window.getCombatDebugHtml = function(state) {
     }
     
     let hpChangeStr = '';
-    let hpGainFromLevelUp = 0;
-    if (outcome.levelAfter > outcome.levelBefore) {
-      hpGainFromLevelUp = (outcome.levelAfter - outcome.levelBefore) * 5;
-    }
-    
-    let netHpChange = outcome.hpAfter - outcome.hpBefore - hpGainFromLevelUp;
+    let netHpChange = outcome.hpAfter - outcome.hpBefore;
     
     if (outcome.finalDamageHpChange > 0) {
       hpChangeStr = `<span style="color:#ff4d4d; font-weight:bold;">-${outcome.finalDamageHpChange} PV</span>`;
@@ -5477,8 +5472,7 @@ window.getCombatDebugHtml = function(state) {
     } else {
       hpChangeStr = `<span style="color:#888; font-weight:bold;">Sin cambio neto</span>`;
     }
-    let displayHpAfter = outcome.hpAfter - hpGainFromLevelUp;
-    html += `<li style="margin-top:10px; border-top:1px solid #444; padding-top:8px;"><strong>Salud del Héroe:</strong> ${outcome.hpBefore} ➔ <strong>${displayHpAfter}</strong> (${hpChangeStr})</li>`;
+    html += `<li style="margin-top:10px; border-top:1px solid #444; padding-top:8px;"><strong>Salud del Héroe:</strong> ${outcome.hpBefore} ➔ <strong>${outcome.hpAfter}</strong> (${hpChangeStr})</li>`;
     html += `</ul>`;
     
   } else {
