@@ -3876,6 +3876,27 @@ function renderBattlefield() {
     btnDeployHito.disabled = true;
   }
 
+  // Capturar coordenadas de los goblins que están muriendo antes de limpiar el contenedor
+  const dyingGoblinCoords = new Map();
+  if (gameState && gameState.battlefield && gameState.battlefield.goblins) {
+    gameState.battlefield.goblins.forEach(goblin => {
+      if (goblin.isDying && goblin.gaveReward && !goblin.goldAnimationPlayed) {
+        const existingEl = goblinsContainer.querySelector(`[data-uid="${goblin.uid}"]`);
+        if (existingEl) {
+          const rect = existingEl.getBoundingClientRect();
+          if (rect.width > 0 && rect.height > 0) {
+            dyingGoblinCoords.set(goblin.uid, {
+              left: rect.left,
+              top: rect.top,
+              width: rect.width,
+              height: rect.height
+            });
+          }
+        }
+      }
+    });
+  }
+
   goblinsContainer.innerHTML = '';
 
   const hasGoblinsAlive = gameState.battlefield.goblins.some(g => !g.isDying);
@@ -3991,53 +4012,6 @@ function renderBattlefield() {
     if (goblin.isDying) {
       gobEl.classList.add(goblin.gaveReward ? 'dying-reward' : 'dying');
       gobEl.innerHTML = `<div class="goblin-hp" style="background: var(--accent-red); color: white;">0</div>`;
-      
-      // Trigger coin and PEX explosion animations if the goblin gave reward and it hasn't played yet
-      if (goblin.gaveReward && !goblin.goldAnimationPlayed) {
-        goblin.goldAnimationPlayed = true;
-        const activePlayer = gameState.getCurrentPlayer();
-        const isNormalReward = (goblin.isHito || (activePlayer && goblin.level >= activePlayer.level));
-        
-        // Oro (hacia el HUD a la derecha)
-        let baseMo = isNormalReward ? (goblin.mo || 0) : 0;
-        if (goblin.isInvocacion) {
-          baseMo = 0;
-        }
-        const extraMo = (gameState.activeSenda === 'recaudador') ? 1 : 0;
-        
-        // Usar los valores precálculados si existen para evitar desincronizaciones al subir de nivel
-        const coinsToSpawn = (goblin.rewardMo !== undefined) 
-          ? (goblin.rewardMo + extraMo) 
-          : (baseMo + extraMo);
-        
-        // Obtener el rect de posición del goblin inmediatamente, antes de que el DOM cambie
-        const rect = gobEl.getBoundingClientRect();
-        const coords = {
-          left: rect.left,
-          top: rect.top,
-          width: rect.width,
-          height: rect.height
-        };
-
-        if (coinsToSpawn > 0) {
-          // Delay ligeramente para que comience después de iniciar la opacidad de muerte
-          setTimeout(() => {
-            window.animateGoldDrop(coords, coinsToSpawn);
-          }, 150);
-        }
-
-        // PEX (hacia el panel de grupo a la izquierda)
-        const pexToSpawn = (goblin.rewardPex !== undefined)
-          ? goblin.rewardPex
-          : (isNormalReward ? (goblin.pex || 0) : 0);
-          
-        if (pexToSpawn > 0) {
-          // Ligeramente desfasado del oro para un flujo dinámico secuencial
-          setTimeout(() => {
-            window.animatePexDrop(coords, pexToSpawn);
-          }, 250);
-        }
-      }
     } else {
       const isInvulnerable = gameState.isGoblinInvulnerable(goblin);
       if (isInvulnerable) {
@@ -4160,6 +4134,56 @@ function renderBattlefield() {
     }
 
     goblinsContainer.appendChild(gobEl);
+
+    // Trigger coin and PEX explosion animations if the goblin gave reward and it hasn't played yet
+    if (goblin.isDying && goblin.gaveReward && !goblin.goldAnimationPlayed) {
+      goblin.goldAnimationPlayed = true;
+      const activePlayer = gameState.getCurrentPlayer();
+      const isNormalReward = (goblin.isHito || (activePlayer && goblin.level >= activePlayer.level));
+      
+      // Oro (hacia el HUD a la derecha)
+      let baseMo = isNormalReward ? (goblin.mo || 0) : 0;
+      if (goblin.isInvocacion) {
+        baseMo = 0;
+      }
+      const extraMo = (gameState.activeSenda === 'recaudador') ? 1 : 0;
+      
+      // Usar los valores precálculados si existen para evitar desincronizaciones al subir de nivel
+      const coinsToSpawn = (goblin.rewardMo !== undefined) 
+        ? (goblin.rewardMo + extraMo) 
+        : (baseMo + extraMo);
+      
+      // Obtener coordenadas desde el elemento anterior o desde el nuevo ya insertado en el DOM
+      let coords = dyingGoblinCoords.get(goblin.uid);
+      if (!coords) {
+        const rect = gobEl.getBoundingClientRect();
+        coords = {
+          left: rect.left,
+          top: rect.top,
+          width: rect.width,
+          height: rect.height
+        };
+      }
+
+      if (coinsToSpawn > 0) {
+        // Delay ligeramente para que comience después de iniciar la opacidad de muerte
+        setTimeout(() => {
+          window.animateGoldDrop(coords, coinsToSpawn);
+        }, 150);
+      }
+
+      // PEX (hacia el panel de grupo a la izquierda)
+      const pexToSpawn = (goblin.rewardPex !== undefined)
+        ? goblin.rewardPex
+        : (isNormalReward ? (goblin.pex || 0) : 0);
+        
+      if (pexToSpawn > 0) {
+        // Ligeramente desfasado del oro para un flujo dinámico secuencial
+        setTimeout(() => {
+          window.animatePexDrop(coords, pexToSpawn);
+        }, 250);
+      }
+    }
   });
 
   // Cleanup: eliminar del array los que ya han terminado la animación
