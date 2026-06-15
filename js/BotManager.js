@@ -1836,8 +1836,8 @@ calculateEquipPower(eq, bot) {
             targets = targets.slice(0, maxTargetableGoblins);
         }
         
-        // Ajuste por personalidad
-        targets = targets.slice(0, 1);
+        // Ajuste por personalidad (removido para permitir combatir con varios goblins a la vez según dados y armas disponibles)
+        // targets = targets.slice(0, 1);
 
         // 2. Riesgo y Supervivencia
         let isSafe = false;
