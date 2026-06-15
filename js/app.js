@@ -3515,7 +3515,7 @@ window.animateGoldDrop = function(sourceElOrRect, coinCount) {
       const deltaY = destY - startY;
       
       coin.style.setProperty('transform', `translate(${deltaX}px, ${deltaY}px) scale(0.6)`, 'important');
-      coin.style.setProperty('opacity', '0.2', 'important');
+      coin.style.setProperty('opacity', '1', 'important');
     }, 350 + i * 50);
 
     // Fase 3: Impacto y destrucción
@@ -3599,7 +3599,7 @@ window.animatePexDrop = function(sourceElOrRect, pexCount) {
       const deltaY = destY - startY;
       
       star.style.setProperty('transform', `translate(${deltaX}px, ${deltaY}px) scale(0.4)`, 'important');
-      star.style.setProperty('opacity', '0.4', 'important');
+      star.style.setProperty('opacity', '1', 'important');
     }, 450 + i * 50);
 
     // Fase 3: Impacto y destrucción
