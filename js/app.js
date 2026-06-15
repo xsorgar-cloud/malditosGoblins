@@ -3446,10 +3446,15 @@ window.animateCardPurchase = function(sourceEl, onComplete) {
   }, 480);
 }
 
-window.animateGoldDrop = function(sourceEl, coinCount) {
-  if (!sourceEl || !coinCount || coinCount <= 0) return;
+window.animateGoldDrop = function(sourceElOrRect, coinCount) {
+  if (!sourceElOrRect || !coinCount || coinCount <= 0) return;
 
-  const rect = sourceEl.getBoundingClientRect();
+  let rect;
+  if (sourceElOrRect instanceof HTMLElement) {
+    rect = sourceElOrRect.getBoundingClientRect();
+  } else {
+    rect = sourceElOrRect;
+  }
   const startX = rect.left + rect.width / 2;
   const startY = rect.top + rect.height / 2;
 
@@ -3527,10 +3532,15 @@ window.animateGoldDrop = function(sourceEl, coinCount) {
   }
 };
 
-window.animatePexDrop = function(sourceEl, pexCount) {
-  if (!sourceEl || !pexCount || pexCount <= 0) return;
+window.animatePexDrop = function(sourceElOrRect, pexCount) {
+  if (!sourceElOrRect || !pexCount || pexCount <= 0) return;
 
-  const rect = sourceEl.getBoundingClientRect();
+  let rect;
+  if (sourceElOrRect instanceof HTMLElement) {
+    rect = sourceElOrRect.getBoundingClientRect();
+  } else {
+    rect = sourceElOrRect;
+  }
   const startX = rect.left + rect.width / 2;
   const startY = rect.top + rect.height / 2;
 
@@ -4000,10 +4010,19 @@ function renderBattlefield() {
           ? (goblin.rewardMo + extraMo) 
           : (baseMo + extraMo);
         
+        // Obtener el rect de posición del goblin inmediatamente, antes de que el DOM cambie
+        const rect = gobEl.getBoundingClientRect();
+        const coords = {
+          left: rect.left,
+          top: rect.top,
+          width: rect.width,
+          height: rect.height
+        };
+
         if (coinsToSpawn > 0) {
           // Delay ligeramente para que comience después de iniciar la opacidad de muerte
           setTimeout(() => {
-            window.animateGoldDrop(gobEl, coinsToSpawn);
+            window.animateGoldDrop(coords, coinsToSpawn);
           }, 150);
         }
 
@@ -4015,7 +4034,7 @@ function renderBattlefield() {
         if (pexToSpawn > 0) {
           // Ligeramente desfasado del oro para un flujo dinámico secuencial
           setTimeout(() => {
-            window.animatePexDrop(gobEl, pexToSpawn);
+            window.animatePexDrop(coords, pexToSpawn);
           }, 250);
         }
       }
