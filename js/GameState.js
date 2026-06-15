@@ -751,9 +751,10 @@ class GameState {
                 currentHp: DB.goblins[1].hp,
                 isInvocacion: true,
                 mo: 0,
+                isHito: true,
                 image: 'assets/Monstruos/invocacion_01.webp'
               });
-              msgParts.push(`🥚 <span style="color:#f54281">Defensa del Nido: Aparece 1 Invocación Nivel 1</span>`);
+              msgParts.push(`🥚 <span style="color:#f54281">Defensa del Nido: Aparece 1 Invocación Nivel 1 (Hito)</span>`);
             }
           }
         }
@@ -790,11 +791,13 @@ class GameState {
                 ...DB.goblins[1],
                 uid: Date.now() + Math.random(),
                 currentHp: DB.goblins[1].hp,
-                isInvocacion: true, mo: 0,
+                isInvocacion: true, 
+                mo: 0,
+                isHito: true,
                 image: 'assets/Monstruos/invocacion_01.webp'
               });
             }
-            this.addLog(`🥚 <span style="color:#f54281"><strong>Efecto de La Madre (Dado ${rollVal}):</strong> Aparecen 2 Invocaciones Nivel 1.</span>`);
+            this.addLog(`🥚 <span style="color:#f54281"><strong>Efecto de La Madre (Dado ${rollVal}):</strong> Aparecen 2 Invocaciones Nivel 1 (Hito).</span>`);
           } 
           else if (rollVal === 2 || rollVal === 3) {
             let otherGobs = this.battlefield.goblins.filter(g => g.uid !== targetGoblin.uid && !g.isDying);
@@ -804,10 +807,16 @@ class GameState {
             } else {
               for(let i=0; i<2; i++){
                 this.battlefield.goblins.push({
-                  ...DB.goblins[1], uid: Date.now() + Math.random(), currentHp: DB.goblins[1].hp, isInvocacion: true, mo: 0, image: 'assets/Monstruos/invocacion_01.webp'
+                  ...DB.goblins[1], 
+                  uid: Date.now() + Math.random(), 
+                  currentHp: DB.goblins[1].hp, 
+                  isInvocacion: true, 
+                  mo: 0, 
+                  isHito: true,
+                  image: 'assets/Monstruos/invocacion_01.webp'
                 });
               }
-              this.addLog(`🥚 <span style="color:#f54281"><strong>Efecto de La Madre (Dado ${rollVal}):</strong> Sin Goblins en mesa, invoca 2 Goblins de Nivel 1.</span>`);
+              this.addLog(`🥚 <span style="color:#f54281"><strong>Efecto de La Madre (Dado ${rollVal}):</strong> Sin Goblins en mesa, invoca 2 Goblins de Nivel 1 (Hito).</span>`);
             }
           }
           else if (rollVal === 5) {
@@ -901,10 +910,12 @@ class GameState {
                 ...DB.goblins[2],
                 uid: Date.now() + Math.random(),
                 currentHp: DB.goblins[2].hp,
-                isInvocacion: true, mo: 0,
+                isInvocacion: true, 
+                mo: 0,
+                isHito: true,
                 image: 'assets/Monstruos/invocacion_02.webp'
               });
-              this.addLog(`🥚 <span style="color:#f54281"><strong>Efecto de La Madre (Dado 6):</strong> Sin parejas en mesa, invoca 1 Goblin de Nivel 2.</span>`);
+              this.addLog(`🥚 <span style="color:#f54281"><strong>Efecto de La Madre (Dado 6):</strong> Sin parejas en mesa, invoca 1 Goblin de Nivel 2 (Hito).</span>`);
             }
           }
         }
@@ -1076,9 +1087,10 @@ class GameState {
                     currentHp: DB.goblins[1].hp,
                     mo: 0,
                     isInvocacion: true,
+                    isHito: true,
                     image: 'assets/Monstruos/invocacion_01.webp'
                   });
-                  this.addLog(`🔮 <strong>Invocación:</strong> ¡${targetGoblin.name} invoca un Goblin de Nivel 1 (sin recompensa de oro)!`);
+                  this.addLog(`🔮 <strong>Invocación:</strong> ¡${targetGoblin.name} invoca un Goblin de Nivel 1 (Hito, sin recompensa de oro)!`);
                 }
               } else if (effLow.includes('lanza +')) {
                 if (!isIntercepted) {
