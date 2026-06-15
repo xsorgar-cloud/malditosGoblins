@@ -2054,6 +2054,93 @@ calculateEquipPower(eq, bot) {
     shouldRerollBlackDie(die, bot, plannedAssignments = {}) {
         if (die.type !== 'black' || die.rerolled) return false;
 
+        // Detectar si este dado negro es redundante y acabará descartado sin aportar valor.
+        // Si no está planificado para ningún arma, y no tiene utilidad en escudos/curación activos,
+        // y hay otro dado sobrante igual o mejor para la ranura única del Rol, entonces relanzarlo es óptimo.
+        const isPlannedForWeapon = plannedAssignments[die.id] !== undefined;
+        if (!isPlannedForWeapon) {
+            let canUseForShieldOrHeal = false;
+            
+            // Calcular daño entrante normal para evaluar utilidad de escudos
+            let incomingNormalDmg = 0;
+            if (this.gameState.currentCombat && this.gameState.currentCombat.goblins) {
+                this.gameState.currentCombat.goblins.forEach(gob => {
+                    let greenDiceResult = this.gameState.currentCombat.dice && this.gameState.currentCombat.dice.green ? this.gameState.currentCombat.dice.green[gob.uid] : null;
+                    if (greenDiceResult && greenDiceResult.details) {
+                        let goblinInterceptions = window.interceptionAssignments[gob.uid] || [];
+                        let naturalDieIdx = 0;
+                        for (let rawIdx = 0; rawIdx < greenDiceResult.details.length; rawIdx++) {
+                            let detail = greenDiceResult.details[rawIdx];
+                            if (detail.type === 'die') {
+                                const currentIdx = naturalDieIdx++;
+                                const isIntercepted = goblinInterceptions.some(asg => Number(asg.goblinDieIndex) === Number(currentIdx));
+                                if (isIntercepted) continue;
+                                
+                                let dieDmg = detail.val;
+                                let nextDetail = greenDiceResult.details[rawIdx + 1];
+                                if (nextDetail && nextDetail.type === 'mod') dieDmg += nextDetail.val;
+                                
+                                let gobDB = gob.attacks ? gob : (typeof DB !== 'undefined' && DB.goblins ? DB.goblins[gob.level] : null);
+                                let isDirect = false;
+                                if (gobDB && gobDB.attacks) {
+                                    let attacks = gobDB.attacks[detail.val] || [];
+                                    isDirect = attacks.some(a => {
+                                        let lower = a.toLowerCase();
+                                        return lower.includes('daño directo') || lower.includes('verdadero') || lower.includes('veneno') || lower.includes('toxina');
+                                    });
+                                }
+                                if (!isDirect) incomingNormalDmg += dieDmg;
+                            }
+                        }
+                    } else {
+                        let profile = this.getGoblinDamageProfile(gob);
+                        incomingNormalDmg += profile.normal;
+                    }
+                });
+            }
+
+            bot.equipped.forEach(eq => {
+                if (!eq.isActive) return;
+                
+                const hasOtherDiePlanned = Object.keys(plannedAssignments).some(dieId => {
+                    return plannedAssignments[dieId].weaponId === eq.id;
+                });
+                if (hasOtherDiePlanned) return;
+                
+                if (this.canAcceptDie(die, eq)) {
+                    if (this.isShield(eq) && incomingNormalDmg > 0) {
+                        canUseForShieldOrHeal = true;
+                    }
+                    if (this.isHeal(eq) && bot.hp < bot.maxHp) {
+                        canUseForShieldOrHeal = true;
+                    }
+                }
+            });
+
+            if (!canUseForShieldOrHeal) {
+                const availableDice = this.gameState.currentCombat.playerDice.filter(d => !d.assignedTo && !d.isCramped && d.type !== 'silver');
+                const spareDice = availableDice.filter(d => !plannedAssignments[d.id]);
+                const otherSpareDice = spareDice.filter(d => d.id !== die.id);
+                
+                const myEnergy = bot.role && bot.role.energyRates ? bot.role.energyRates[die.value - 1] : 0;
+                
+                const hasBetterOrEqualAlternative = otherSpareDice.some(d => {
+                    const altEnergy = bot.role && bot.role.energyRates ? bot.role.energyRates[d.value - 1] : 0;
+                    if (altEnergy >= myEnergy) {
+                        if (altEnergy > myEnergy) return true;
+                        if (d.type === 'red') return true;
+                        if (d.type === 'black' && d.rerolled) return true;
+                        if (d.type === 'black' && !d.rerolled && d.id < die.id) return true;
+                    }
+                    return false;
+                });
+                
+                if (hasBetterOrEqualAlternative) {
+                    return true;
+                }
+            }
+        }
+
         let bestCurrentPower = 0;
         let isSpecialActivated = false;
         
