@@ -196,9 +196,9 @@ window.combatDieFusionHandler = (e) => {
   // Asigna un dado al rol de combate (ej. ataque especial) del jugador
 window.combatDieOnCombatRoleHandler = (e) => {
       const dieId = e.detail.dieId;
-      if (gameState.currentCombat && gameState.currentCombat.needsCrampResolution) return;
       let dieData = gameState.currentCombat.playerDice.find(d => d.id === dieId);
       if (!dieData) return;
+      if (gameState.currentCombat && gameState.currentCombat.needsCrampResolution && !dieData.isCramped) return;
 
       if (dieData.type === 'silver') {
         alert("Los dados plateados solo pueden fusionarse con otros dados de la reserva.");
@@ -247,9 +247,16 @@ window.combatDieOnCombatRoleHandler = (e) => {
   const p = gameState.getCurrentPlayer();
   const isCrampPhase = c.needsCrampResolution;
 
+  // Actualizar título de combate a FASE DE COMBATE JX
+  const combatTitle = document.getElementById('combat-title');
+  if (combatTitle) {
+    const jNum = gameState.players.indexOf(p) + 1;
+    combatTitle.innerText = `FASE DE COMBATE J${jNum}`;
+  }
+
   // Render Player Stats Header
   // Contenedor para mostrar estadísticas del jugador durante el combate
-const statsContainer = document.getElementById('combat-player-stats');
+  const statsContainer = document.getElementById('combat-player-stats');
   const expReq = {
     1: 2 * gameState.players.length,
     2: 6 * gameState.players.length,
@@ -480,15 +487,14 @@ const statsContainer = document.getElementById('combat-player-stats');
     // --- FIN PROYECCION ---
 
     statsContainer.innerHTML = `
-      <div class="player-name-hover" data-player-index="${gameState.players.indexOf(p)}" style="font-size: 1.4rem; font-weight: bold; color: var(--gold); margin-bottom: 5px; cursor: pointer; width: fit-content; margin-left: auto; margin-right: auto;">${p.name}</div>
-      <div style="font-size: 0.9rem; color: #aaa; margin-bottom: 15px; font-weight: bold; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 5px;">
+      <div style="font-size: 0.9rem; color: #aaa; margin-top: 10px; margin-bottom: 15px; font-weight: bold; letter-spacing: 1px; display: flex; align-items: center; justify-content: center; gap: 5px;">
         Acción: 
         <span style="font-size: 1.2rem; color: ${gameState.battlefield.actionCount >= 0 ? '#ff4d4d' : '#444'}; text-shadow: ${gameState.battlefield.actionCount >= 0 ? '0 0 10px rgba(255, 77, 77, 0.6)' : 'none'};">★</span>
         <span style="font-size: 1.2rem; color: ${gameState.battlefield.actionCount >= 1 ? '#ff4d4d' : '#444'}; text-shadow: ${gameState.battlefield.actionCount >= 1 ? '0 0 10px rgba(255, 77, 77, 0.6)' : 'none'};">★</span>
         <span style="font-size: 1.2rem; color: ${gameState.battlefield.actionCount >= 2 ? '#ff4d4d' : '#444'}; text-shadow: ${gameState.battlefield.actionCount >= 2 ? '0 0 10px rgba(255, 77, 77, 0.6)' : 'none'};">★</span>
       </div>
       <div class="stats" style="display: flex; flex-direction: column; gap: 15px; font-size: 1.2rem;">
-        <div class="stat hp ${isLowHP ? 'low-hp' : ''}" style="display: flex; align-items: center; gap: 10px; height: 24px;"><span style="display: flex; align-items: center; width: 24px; justify-content: center;">❤️</span> <span>Vida: <span>${p.hp}</span>/<span>${p.maxHp}</span> ${finalProjectedHp !== p.hp && !isCrampPhase ? `<span style="color:${finalProjectedHp < p.hp ? '#ff4d4d' : '#33cc33'}; font-size: 0.9em; margin-left: 8px;">(➔ ${finalProjectedHp}/${p.maxHp})</span>` : ''}</span></div>
+        <div class="stat hp ${isLowHP ? 'low-hp' : ''}" style="display: flex; align-items: center; gap: 10px; height: 24px;"><span class="hp-icon" style="display: flex; align-items: center; width: 24px; justify-content: center;">❤️</span> <span>Vida: <span>${p.hp}</span>/<span>${p.maxHp}</span> ${finalProjectedHp !== p.hp && !isCrampPhase ? `<span style="color:${finalProjectedHp < p.hp ? '#ff4d4d' : '#33cc33'}; font-size: 0.9em; margin-left: 8px;">(➔ ${finalProjectedHp}/${p.maxHp})</span>` : ''}</span></div>
         ${projectedHtml}
         ${p.shield > 0 ? `<div class="stat shield" style="display: flex; align-items: center; gap: 10px; height: 24px; color: #33cc33;" title="Escudos del Protector"><span style="display: flex; align-items: center; width: 24px; justify-content: center;">🛡️</span> <span>Escudos: <span>${p.shield}</span></span></div>` : ''}
         <div class="stat gold" style="display: flex; align-items: center; gap: 10px; height: 24px;"><span style="display: flex; align-items: center; width: 24px; justify-content: center;">${COIN_SVG}</span> <span>Oro: <span>${p.mo}</span></span></div>
@@ -606,7 +612,7 @@ const statsContainer = document.getElementById('combat-player-stats');
         }
 
         // 1. ESTADÍSTICAS DEL COMBATE
-        const hpDiff = pAfter.hp - pBeforeState.hp;
+        const hpDiff = pAfter.hp - pBeforeState.hp - levelUpHpBonus;
         const moDiff = pAfter.mo - pBeforeState.mo;
         const energyDiff = pAfter.energy - pBeforeState.energy;
         const pexDiff = pAfter.pex - pBeforeState.pex;
@@ -1358,6 +1364,7 @@ const statsContainer = document.getElementById('combat-player-stats');
     if (activeSelectedDieId) {
       const dieData = c.playerDice.find(d => d.id === activeSelectedDieId);
       if (!dieData) return;
+      if (gameState.currentCombat && gameState.currentCombat.needsCrampResolution && !dieData.isCramped) return;
       if (dieData.type === 'silver') { alert("Los dados plateados solo pueden fusionarse con otros dados de la reserva."); return; }
 
       clearDieAssignment(activeSelectedDieId);
@@ -1817,6 +1824,19 @@ if (!window.combatArrowsResizeRegistered) {
 let prevPlayerStats = [];
 
 function renderPlayer() {
+  // Capturar coordenadas de los indicadores de vida de los jugadores antes de vaciar el contenedor
+  const hpRects = [];
+  gameState.players.forEach((p, index) => {
+    const oldPanel = playersContainer.children[index];
+    if (oldPanel) {
+      const hpEl = oldPanel.querySelector('.stat.hp');
+      if (hpEl) {
+        const iconEl = hpEl.querySelector('.hp-icon') || hpEl;
+        hpRects[index] = iconEl.getBoundingClientRect();
+      }
+    }
+  });
+
   playersContainer.innerHTML = '';
   const currentPlayerIdx = gameState.currentPlayerIndex;
 
@@ -1825,6 +1845,17 @@ function renderPlayer() {
 
     // Obtener estadísticas previas para comparar
     const prev = prevPlayerStats[index] || {};
+    
+    // Disparar animación de corazones al perder vida
+    if (prev.hp !== undefined && p.hp < prev.hp) {
+      const hpLost = prev.hp - p.hp;
+      const rect = hpRects[index] || { left: window.innerWidth / 2, top: window.innerHeight / 2, width: 0, height: 0 };
+      setTimeout(() => {
+        if (typeof window.animateHealthLoss === 'function') {
+          window.animateHealthLoss(rect, hpLost);
+        }
+      }, 50);
+    }
     const getPulseClass = (current, previous) => (previous !== undefined && current !== previous) ? 'pulse-stat' : '';
 
     const hpPulse = getPulseClass(p.hp, prev.hp);
@@ -2002,7 +2033,7 @@ function renderPlayer() {
                 <div class="status-effects-container">${statusHTML}</div>
             </div>
             <div class="stats">
-                <div class="stat hp ${isLowHP ? 'low-hp' : ''}" title="Puntos de Vida">&#10084;&#65039; <span class="${hpPulse}">${p.hp}</span>/<span>${p.maxHp}</span></div>
+                <div class="stat hp ${isLowHP ? 'low-hp' : ''}" title="Puntos de Vida"><span class="hp-icon">&#10084;&#65039;</span> <span class="${hpPulse}">${p.hp}</span>/<span>${p.maxHp}</span></div>
                 <div class="stat gold" title="Monedas">${COIN_SVG} <span class="${moPulse}">${p.mo}</span></div>
                 <div class="stat blocks" title="Carga de Equipo" style="${isOverweight ? 'color: var(--accent-red);' : ''}">${SACK_SVG} <span class="${blocksPulse}">${currentBlocks}</span>/<span>${maxBlocks}</span></div>
             </div>

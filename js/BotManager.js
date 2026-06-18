@@ -674,6 +674,14 @@ triggerAction(type, target = null, reason = "") {
             }
         }
 
+        // Restricción para el Hito 1: solo se despliega si la mesa tiene 1 o menos goblins vivos
+        if (this.gameState.currentHito === 1) {
+            const activeGoblinsCount = this.gameState.battlefield.goblins.filter(g => !g.isDying).length;
+            if (activeGoblinsCount > 1) {
+                return false;
+            }
+        }
+
         let projectedGoblins = this.getProjectedGoblinsAfterHito();
         
         let totalMaxTeamDamage = 0;
@@ -1059,19 +1067,6 @@ performMarketTurn(bot) {
                     const maxShields = weaponsCount + (isProtector ? 2 : 1);
                     if (shieldCount >= maxShields) return false;
                 }
-
-                // Role-based restrictions
-                if (type === 'curacion' && isSanador) {
-                    const hasHealingEquip = bot.equipped.some(eq => eq.type === 'curacion' || eq.id.includes('pocion'));
-                    const isCritical = bot.hp <= bot.maxHp * 0.2;
-                    const canHealWithRole = bot.energy > 0;
-                    
-                    if (!isCritical || (canHealWithRole && hasHealingEquip)) {
-                        return false;
-                    }
-                }
-                if (type === 'escudos' && isProtector && bot.equipped.some(eq => eq.id && (eq.id.includes('escudo') || eq.id.includes('armadura')))) return false;
-
                 if (canBuy(type)) {
                     const card = this.gameState.market[type][0];
                     const hasCard = bot.equipped.some(eq => eq.id === card.id);
@@ -1913,6 +1908,21 @@ calculateEquipPower(eq, bot) {
         // Ajuste por personalidad (removido para permitir combatir con varios goblins a la vez según dados y armas disponibles)
         // targets = targets.slice(0, 1);
 
+        // Asegurar la regla del Hito 2 del Rey Brujo: los goblins de pareja atacan juntos
+        let pairEnforcedTargets = [];
+        targets.forEach(g => {
+            if (!pairEnforcedTargets.some(pt => pt.uid === g.uid)) {
+                pairEnforcedTargets.push(g);
+                if (g.partnerUid) {
+                    const partner = goblinsEnMesa.find(p => p.uid === g.partnerUid);
+                    if (partner && !pairEnforcedTargets.some(pt => pt.uid === partner.uid)) {
+                        pairEnforcedTargets.push(partner);
+                    }
+                }
+            }
+        });
+        targets = pairEnforcedTargets;
+
         // 2. Riesgo y Supervivencia
         let isSafe = false;
         let deficitDefense = 0;
@@ -1943,7 +1953,13 @@ calculateEquipPower(eq, bot) {
                 if (canSurvive) {
                     isSafe = true;
                 } else {
-                    targets.pop(); // Drop 1 goblin and re-evaluate
+                    const dropped = targets.pop(); // Drop 1 goblin and re-evaluate
+                    if (dropped && dropped.partnerUid) {
+                        const partnerIdx = targets.findIndex(g => g.uid === dropped.partnerUid);
+                        if (partnerIdx !== -1) {
+                            targets.splice(partnerIdx, 1);
+                        }
+                    }
                 }
             }
         }
@@ -2337,7 +2353,8 @@ calculateEquipPower(eq, bot) {
                     if (!gobDB || !gobDB.attacks) continue;
 
                     let attacks = gobDB.attacks[detail.val] || [];
-                    let isDangerous = attacks.length > 0;
+                    // Dado peligroso si tiene efectos o si su daño bruto natural es >= 3
+                    let isDangerous = (attacks.length > 0) || (detail.val >= 3);
 
                     if (isDangerous) {
                         // Realizar la intercepción
@@ -3092,9 +3109,8 @@ calculateEquipPower(eq, bot) {
         return 'Agresivo';
     }
 
-    // El bot elige sabiamente si prefiere un dado rojo d6 o un dado negro d4 + 1 moneda de oro
+    // El bot elige de forma dinámica y matemática si prefiere un dado rojo d6 o un dado negro d4 + 1 moneda de oro
     getBotLevelUpChoice(player) {
-        const roleId = player.role ? player.role.id : '';
         const dicePool = player.dicePool || [];
         const redCount = dicePool.filter(d => d.type === 'red').length;
         const blackCount = dicePool.filter(d => d.type === 'black').length;
@@ -3102,35 +3118,56 @@ calculateEquipPower(eq, bot) {
         let redScore = 0;
         let blackScore = 0;
 
-        // 1. Influencia de los roles, sus requerimientos y tasas de energía
-        if (roleId === 'guerrero') {
-            redScore += 4.0; // Guerreros quieren dados grandes de ataque y altos valores de energía
-        } else if (roleId === 'protector') {
-            redScore += 3.0; // Protector prefiere números altos para escudos/defensa
-            blackScore += 1.0;
-        } else if (roleId === 'mago') {
-            redScore += 2.5; // Mago quiere números altos para hechizos potentes
-            blackScore += 1.5;
-        } else if (roleId === 'ladron') {
-            blackScore += 4.0; // Ladrón quiere monedas y dados negros para relanzamientos
-        } else if (roleId === 'sanador') {
-            blackScore += 4.0; // Sanador cura con cap de MAX 4; además, cara 6 le da menos energía que 2/3/4/5
-        } else if (roleId === 'curandero') {
-            blackScore += 4.0; // Curandero obtiene 0 energía en cara 6, pero 3 energía en cara 4/5
+        // 1. Eficiencia de recarga del Rol (basado en tasas de energía reales en database.js)
+        let d6EnergySum = 0;
+        let d4EnergySum = 0;
+        if (player.role && player.role.energyRates) {
+            const rates = player.role.energyRates;
+            for (let f = 1; f <= 6; f++) {
+                d6EnergySum += (rates[f - 1] || 0);
+            }
+            for (let f = 1; f <= 4; f++) {
+                d4EnergySum += (rates[f - 1] || 0);
+            }
+        }
+        const d6ExpectedEnergy = d6EnergySum / 6.0;
+        const d4ExpectedEnergy = d4EnergySum / 4.0;
+
+        if (d6ExpectedEnergy > d4ExpectedEnergy) {
+            redScore += (d6ExpectedEnergy - d4ExpectedEnergy) * 3.0;
+        } else if (d4ExpectedEnergy > d6ExpectedEnergy) {
+            blackScore += (d4ExpectedEnergy - d6ExpectedEnergy) * 3.0;
         }
 
-        // 2. Equilibrio del pool de dados (para mantener versatilidad)
+        // 2. Escalado de equipamiento actual
+        // Si el bot tiene cartas cuyo efecto o escudo depende directamente del valor del dado ("dado"),
+        // prefiere d6 rojo porque alcanza valores mayores (5 y 6).
+        let scalingEquipCount = 0;
+        if (player.equipped) {
+            player.equipped.forEach(eq => {
+                if (eq.isActive && !eq.isBroken) {
+                    const effectStr = (eq.effect || '').toLowerCase();
+                    const extraStr = (eq.extra || '').toLowerCase();
+                    if (effectStr.includes('dado') || extraStr.includes('dado')) {
+                        scalingEquipCount++;
+                    }
+                }
+            });
+        }
+        redScore += scalingEquipCount * 1.5;
+
+        // 3. Equilibrio del pool de dados (mantener versatilidad y evitar desequilibrios extremos)
         if (redCount - blackCount >= 2) {
             blackScore += 2.0;
         } else if (blackCount - redCount >= 2) {
             redScore += 2.0;
         }
 
-        // 3. Situación financiera inmediata del bot
+        // 4. Situación financiera inmediata del bot (la moneda extra es valiosa si es pobre)
         if (player.mo <= 1) {
-            blackScore += 1.5; // La moneda de regalo es valiosa
-        } else if (player.mo >= 8) {
-            redScore += 1.0; // Rico, prefiere poder bruto sobre monedas
+            blackScore += 1.5;
+        } else if (player.mo >= 6) {
+            redScore += 1.0;
         }
 
         return redScore >= blackScore ? 'red' : 'black';

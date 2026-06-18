@@ -1452,8 +1452,7 @@ class GameState {
             netNormalDamageReceived: netDamage,
             escozorDamageDealt: escozorDamageDealt,
             warlordExtraDmg: warlordExtraDmg,
-            healed: playerHeal,
-            finalDamageHpChange: Math.max(0, hpBefore - p.hp)
+            finalDamageHpChange: Math.max(0, hpBefore - (p.hp - ((p.level > levelBefore ? p.level - levelBefore : 0) * 5)))
           }
         }
       };
@@ -1908,19 +1907,29 @@ Daño directo: Sufres ${brokenCount} de daño.`);
         });
       } else {
         for (let p = 0; p < this.players.length; p++) {
+          let pairGoblins = [];
           for (let lvl of hito.goblins) {
             let extraProps = {};
             if (this.activeSenda === 'la_madre' && this.currentHito === 3) {
               extraProps.mo = 0;
               extraProps.image = 'assets/Monstruos/nomo_01.webp';
             }
-            this.battlefield.goblins.push({
+            let gob = {
               ...DB.goblins[lvl],
               ...extraProps,
               uid: Date.now() + Math.random(),
               currentHp: DB.goblins[lvl].hp,
               isHito: true
-            });
+            };
+            pairGoblins.push(gob);
+            this.battlefield.goblins.push(gob);
+          }
+          // Emparejar goblins si es el Hito 2 del Rey Brujo (El Oficial)
+          if (this.activeSenda === 'rey_brujo' && this.currentHito === 2) {
+            if (pairGoblins.length === 2) {
+              pairGoblins[0].partnerUid = pairGoblins[1].uid;
+              pairGoblins[1].partnerUid = pairGoblins[0].uid;
+            }
           }
         }
       }

@@ -177,7 +177,7 @@
             <div id="combat-sidebar"
                 style="width: 250px; flex-shrink: 0; display: flex; flex-direction: column; border-right: 1px solid rgba(212, 175, 55, 0.3); padding-right: 20px; justify-content: space-between;">
                 <div>
-                    <h2 style="margin-bottom: 20px; font-size: 1.5rem;">Fase de Combate</h2>
+                    <h2 id="combat-title" style="margin-bottom: 20px; font-size: 1.25rem; text-transform: uppercase;">Fase de Combate</h2>
                     
 					<div id="combat-player-stats"
                         style="display: flex; flex-direction: column; gap: 10px; text-align: left;"></div>
@@ -581,7 +581,6 @@
     </div>
 
 
-
     <!-- OVERLAY DE RELLENAR ROL -->
     <div id="role-fill-overlay" class="overlay hidden">
         <div class="modal-content" style="max-width: 600px; max-height: 90vh; overflow-y: auto;">
@@ -607,9 +606,9 @@
             </div>
 
             <div style="text-align: center;">
-                <button id="btn-cancel-role-fill" class="btn secondary">Cancelar</button>
                 <button id="btn-confirm-role-fill" class="btn primary" style="margin-left: 10px;"
                     disabled>Confirmar</button>
+				<button id="btn-cancel-role-fill" class="btn secondary">Cancelar</button>
             </div>
         </div>
     </div>
@@ -634,6 +633,26 @@
 
             <div id="event-choices-container">
                 <!-- Se generará dinámicamente -->
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL DE CONFIRMACIÓN DE HITO -->
+    <div id="hito-confirm-modal" class="overlay hidden">
+        <div class="event-modal" style="max-width: 650px; text-align: center; border: 2px solid var(--gold); background: rgba(15, 10, 25, 0.98); box-shadow: 0 0 40px rgba(212, 175, 55, 0.4); backdrop-filter: blur(15px); padding: 30px; border-radius: 15px; position: relative;">
+            <button id="hito-confirm-eye-btn" class="event-modal-eye-btn" title="Hacer modal transparente">👁️</button>
+            <h2 id="hito-confirm-title" style="color: var(--accent-red); font-family: 'Cinzel', serif; font-size: 1.6rem; margin-top: 0; margin-bottom: 10px; letter-spacing: 1px;">¿ACTIVAR HITO?</h2>
+            <h3 id="hito-confirm-name" style="color: var(--gold); font-family: 'Cinzel', serif; font-size: 1.25rem; margin-top: 0; margin-bottom: 20px;">Hito</h3>
+            <div style="width: 80px; height: 2px; background: linear-gradient(90deg, transparent, var(--gold), transparent); margin: 0 auto 20px auto;"></div>
+            
+            <div style="color: #cbd5e1; font-family: 'Outfit', sans-serif; font-size: 0.9rem; margin-bottom: 10px; letter-spacing: 0.5px;">Goblins que aparecerán:</div>
+            <div id="hito-confirm-goblins" style="margin-bottom: 25px; display: flex; justify-content: center; align-items: center; gap: 10px; flex-wrap: wrap;"></div>
+            
+            <p id="hito-confirm-desc" style="color: #eee; font-family: 'Outfit', sans-serif; font-size: 1.05rem; line-height: 1.6; margin-bottom: 30px;">Descripción de la regla...</p>
+            
+            <div style="display: flex; justify-content: center; gap: 15px;">
+                <button id="btn-accept-hito-confirm" class="btn primary" style="font-family: 'Cinzel', serif; padding: 12px 25px; font-size: 1rem; border-radius: 8px; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.2);">Aceptar</button>
+				<button id="btn-cancel-hito-confirm" class="btn secondary" style="font-family: 'Cinzel', serif; padding: 12px 25px; font-size: 1rem; border-radius: 8px;">Cancelar</button>
             </div>
         </div>
     </div>

@@ -530,7 +530,7 @@ window.alert = function (messageText, callback = null) {
   const isBot = activePlayer && activePlayer.isBot;
 
   if (isCombatResolution && isBot) {
-    const modalDiv = document.querySelector('.event-modal');
+    const modalDiv = document.querySelector('#global-event-overlay .event-modal');
     if (modalDiv) {
       const timerBtn = document.createElement('div');
       timerBtn.id = 'combat-alert-timer-btn';
@@ -1929,11 +1929,15 @@ btnStartGame.addEventListener('click', () => {
 });
 
 document.getElementById('btn-gold').addEventListener('click', () => {
+  const btn = document.getElementById('btn-gold');
+  window.animateGoldDrop(btn, 1);
   gameState.performActionGold();
   updateUI();
 });
 
 document.getElementById('btn-gold-dmg').addEventListener('click', () => {
+  const btn = document.getElementById('btn-gold-dmg');
+  window.animateGoldDrop(btn, 2);
   gameState.performActionGoldAndDamage();
   updateUI();
 });
@@ -2128,15 +2132,29 @@ window.hideSendaRulesTooltip = function() {
 const btnDeployHito = document.getElementById('btn-deploy-hito');
 btnDeployHito.addEventListener('click', () => {
   window.hideHitoGoblinsTooltip();
+  
+  if (gameState.currentHito > 5) return;
+
+  // Validar si ya hay Goblins de Hito activos
+  if (gameState.battlefield.goblins.some(g => g.isHito)) {
+    gameState.addLog("⚠️ No se puede desplegar un nuevo Hito mientras haya Goblins de Hito en la mesa.");
+    updateUI();
+    return;
+  }
+
   const sendaHitos = DB.hitos[gameState.activeSenda] || DB.hitos.iniciacion;
   const hitoToDeploy = sendaHitos[gameState.currentHito - 1];
 
-  if (gameState.deployHito()) {
-    if (hitoToDeploy && hitoToDeploy.ruleDesc) {
-      showHitoRuleNotification(hitoToDeploy);
+  if (!hitoToDeploy) return;
+
+  window.showHitoConfirmModal(hitoToDeploy, () => {
+    if (gameState.deployHito()) {
+      if (hitoToDeploy && hitoToDeploy.ruleDesc) {
+        showHitoRuleNotification(hitoToDeploy);
+      }
+      updateUI();
     }
-    updateUI();
-  }
+  });
 });
 btnDeployHito.addEventListener('mouseenter', window.showHitoGoblinsTooltip);
 btnDeployHito.addEventListener('mouseleave', window.hideHitoGoblinsTooltip);
@@ -2188,7 +2206,7 @@ function openHitosModal() {
   sendaHitos.forEach(hito => {
     let gobsDesc = hito.isBoss
       ? `Jefe: ${hito.name}`
-      : hito.goblins.map(lvl => `<img src="assets/g${lvl}.webp" style="height: 50px; vertical-align: middle; margin: 0 4px;" alt="G${lvl}">`).join(' ');
+      : hito.goblins.map(lvl => `<img src="assets/Monstruos/t${lvl}.webp" style="height: 50px; vertical-align: middle; margin: 0 4px;" alt="G${lvl}">`).join(' ');
 
     if (hito.isBoss && hito.bossStats.image) {
       bossImgHTML = `<div style="width: 100%; max-width: 261px; max-height: 373px; aspect-ratio: 2.5/3.5; background-image: url('${hito.bossStats.image}'); background-size: cover; background-position: center; border-radius: 10px; border: 2px solid #9d4edd; box-shadow: 0 0 20px rgba(157,78,221,0.5); margin: 0 auto;"></div>`;
@@ -2238,6 +2256,85 @@ document.getElementById('btn-close-hito-rule-notif').addEventListener('click', (
   document.getElementById('hito-rule-notification-modal').classList.add('hidden');
 });
 
+window.showHitoConfirmModal = function(hitoObj, onAccept) {
+  const overlay = document.getElementById('hito-confirm-modal');
+  const modal = overlay ? overlay.querySelector('.event-modal') : null;
+  const name = document.getElementById('hito-confirm-name');
+  const desc = document.getElementById('hito-confirm-desc');
+  const goblinsContainer = document.getElementById('hito-confirm-goblins');
+  const btnAccept = document.getElementById('btn-accept-hito-confirm');
+  const btnCancel = document.getElementById('btn-cancel-hito-confirm');
+  const eyeBtn = document.getElementById('hito-confirm-eye-btn');
+
+  if (overlay && modal && name && desc && goblinsContainer && btnAccept && btnCancel && eyeBtn) {
+    // Restaurar opacidades y clases de transparencia previas
+    modal.classList.remove('modal-transparent');
+    overlay.classList.remove('overlay-transparent');
+    eyeBtn.innerHTML = '👁️';
+    eyeBtn.title = 'Hacer modal transparente';
+    eyeBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+    eyeBtn.style.color = 'var(--gold)';
+
+    name.innerText = `Hito ${hitoObj.id}: ${hitoObj.name}`;
+    desc.innerText = hitoObj.ruleDesc || 'Sin reglas especiales para este hito.';
+
+    let gobsHTML = '';
+    if (hitoObj.isBoss) {
+      const bossImg = hitoObj.bossStats && hitoObj.bossStats.image ? hitoObj.bossStats.image : 'assets/Monstruos/05.webp';
+      gobsHTML = `<div style="display: flex; flex-direction: column; align-items: center; gap: 8px;">
+        <span style="color: var(--accent-red); font-weight: bold; font-family: 'Cinzel', serif; letter-spacing: 1px; font-size: 0.9rem;">JEFE DE LA SENDA</span>
+        <img src="${bossImg}" style="height: 320px; border-radius: 8px; border: 2px solid var(--accent-red); box-shadow: 0 0 15px rgba(230, 57, 70, 0.4);" alt="Jefe">
+      </div>`;
+    } else if (hitoObj.goblins && hitoObj.goblins.length > 0) {
+      gobsHTML = hitoObj.goblins.map(lvl => 
+        `<img src="assets/Monstruos/t${lvl}.webp" style="height: 160px; vertical-align: middle; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); margin: 0 5px;" alt="G${lvl}">`
+      ).join('');
+    } else {
+      gobsHTML = `<span style="color: #cbd5e1; font-style: italic;">Ninguno</span>`;
+    }
+    goblinsContainer.innerHTML = gobsHTML;
+
+    // Remover listeners anteriores clonando los botones
+    const newBtnAccept = btnAccept.cloneNode(true);
+    const newBtnCancel = btnCancel.cloneNode(true);
+    btnAccept.parentNode.replaceChild(newBtnAccept, btnAccept);
+    btnCancel.parentNode.replaceChild(newBtnCancel, btnCancel);
+
+    newBtnAccept.addEventListener('click', () => {
+      overlay.classList.add('hidden');
+      if (typeof onAccept === 'function') {
+        onAccept();
+      }
+    });
+
+    newBtnCancel.addEventListener('click', () => {
+      overlay.classList.add('hidden');
+    });
+
+    // Event listener para el botón del ojo (transparencia)
+    const newEyeBtn = eyeBtn.cloneNode(true);
+    eyeBtn.parentNode.replaceChild(newEyeBtn, eyeBtn);
+    newEyeBtn.addEventListener('click', (e) => {
+      e.stopPropagation();
+      const isTransparent = modal.classList.toggle('modal-transparent');
+      overlay.classList.toggle('overlay-transparent', isTransparent);
+      if (isTransparent) {
+        newEyeBtn.innerHTML = '👁️‍🗨️';
+        newEyeBtn.title = 'Restaurar opacidad';
+        newEyeBtn.style.background = 'var(--gold)';
+        newEyeBtn.style.color = '#000';
+      } else {
+        newEyeBtn.innerHTML = '👁️';
+        newEyeBtn.title = 'Hacer modal transparente';
+        newEyeBtn.style.background = 'rgba(255, 255, 255, 0.1)';
+        newEyeBtn.style.color = 'var(--gold)';
+      }
+    });
+
+    overlay.classList.remove('hidden');
+  }
+};
+
 function showHitoRuleNotification(hitoObj) {
   const modal = document.getElementById('hito-rule-notification-modal');
   const title = document.getElementById('hito-rule-notif-title');
@@ -2258,7 +2355,7 @@ function showHitoRuleNotification(hitoObj) {
       </div>`;
     } else if (hitoObj.goblins && hitoObj.goblins.length > 0) {
       gobsHTML = hitoObj.goblins.map(lvl => 
-        `<img src="assets/g${lvl}.webp" style="height: 60px; vertical-align: middle; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); margin: 0 5px;" alt="G${lvl}">`
+        `<img src="assets/Monstruos/t${lvl}.webp" style="height: 60px; vertical-align: middle; filter: drop-shadow(0 4px 6px rgba(0,0,0,0.5)); margin: 0 5px;" alt="G${lvl}">`
       ).join('');
     }
     goblinsContainer.innerHTML = gobsHTML;
@@ -2539,6 +2636,13 @@ document.getElementById('btn-confirm-role-fill').addEventListener('click', () =>
   const die = roleFillDice.find(d => d.id === roleFillAssigned);
   const val = die.val;
   const energyGain = p.role.energyRates[val - 1] || 0;
+
+  if (energyGain > 0) {
+    const sourceEl = document.getElementById('btn-role');
+    const activePanel = document.querySelector('.player-panel.active-turn');
+    const destEl = activePanel ? activePanel.querySelector('.role-energy-badge') : null;
+    window.animateEnergyRefill(sourceEl, destEl, energyGain);
+  }
 
   p.energy += energyGain;
 
@@ -3447,6 +3551,7 @@ window.animateCardPurchase = function(sourceEl, onComplete) {
 }
 
 window.animateGoldDrop = function(sourceElOrRect, coinCount) {
+  if (typeof gameState !== 'undefined' && (gameState.isGameOver || gameState.isGameWon)) return;
   if (!sourceElOrRect || !coinCount || coinCount <= 0) return;
 
   let rect;
@@ -3533,6 +3638,7 @@ window.animateGoldDrop = function(sourceElOrRect, coinCount) {
 };
 
 window.animatePexDrop = function(sourceElOrRect, pexCount) {
+  if (typeof gameState !== 'undefined' && (gameState.isGameOver || gameState.isGameWon)) return;
   if (!sourceElOrRect || !pexCount || pexCount <= 0) return;
 
   let rect;
@@ -3613,6 +3719,170 @@ window.animatePexDrop = function(sourceElOrRect, pexCount) {
         destEl.classList.add('pex-pulse');
       }
     }, 1050 + i * 50);
+  }
+};
+
+window.animateEnergyRefill = function(sourceElOrRect, destEl, energyCount) {
+  if (typeof gameState !== 'undefined' && (gameState.isGameOver || gameState.isGameWon)) return;
+  if (!sourceElOrRect || !energyCount || energyCount <= 0) return;
+
+  let rect;
+  if (sourceElOrRect instanceof HTMLElement) {
+    rect = sourceElOrRect.getBoundingClientRect();
+  } else {
+    rect = sourceElOrRect;
+  }
+  const startX = rect.left + rect.width / 2;
+  const startY = rect.top + rect.height / 2;
+
+  let destX = window.innerWidth * 0.5;
+  let destY = window.innerHeight * 0.5;
+
+  if (destEl) {
+    const destRect = destEl.getBoundingClientRect();
+    destX = destRect.left + destRect.width / 2;
+    destY = destRect.top + destRect.height / 2;
+  }
+
+  for (let i = 0; i < energyCount; i++) {
+    const energyNode = document.createElement('div');
+    energyNode.style.position = 'fixed';
+    energyNode.style.zIndex = '99999';
+    energyNode.style.pointerEvents = 'none';
+    energyNode.style.fontSize = '26px';
+    energyNode.innerText = '🔷';
+    energyNode.style.filter = 'drop-shadow(0 0 6px rgba(0, 210, 255, 0.6))';
+    
+    // Posición inicial: centro del botón
+    energyNode.style.left = (startX - 15) + 'px';
+    energyNode.style.top = (startY - 15) + 'px';
+    
+    // Estado inicial de la transformación
+    energyNode.style.setProperty('transform', 'translate(0, 0) scale(0.5)', 'important');
+    energyNode.style.setProperty('opacity', '0', 'important');
+    energyNode.style.setProperty('transition', 'transform 0.4s cubic-bezier(0.1, 0.8, 0.3, 1), opacity 0.3s ease-out', 'important');
+    
+    document.body.appendChild(energyNode);
+
+    // Calcular dirección y fuerza de dispersión aleatoria
+    const angle = Math.random() * Math.PI * 2;
+    const distance = 30 + Math.random() * 40;
+    const scatterX = Math.cos(angle) * distance;
+    const scatterY = Math.sin(angle) * distance - 20;
+
+    // Fase 1: Explosión inicial dispersa
+    setTimeout(() => {
+      energyNode.style.setProperty('transform', `translate(${scatterX}px, ${scatterY}px) scale(1.1)`, 'important');
+      energyNode.style.setProperty('opacity', '1', 'important');
+    }, 10 + i * 50);
+
+    // Fase 2: Vuelo hacia el rol
+    setTimeout(() => {
+      energyNode.style.setProperty('transition', 'transform 0.5s cubic-bezier(0.6, -0.28, 0.735, 0.045), opacity 0.5s ease-in', 'important');
+      
+      const deltaX = destX - startX;
+      const deltaY = destY - startY;
+      
+      energyNode.style.setProperty('transform', `translate(${deltaX}px, ${deltaY}px) scale(0.6)`, 'important');
+      energyNode.style.setProperty('opacity', '1', 'important');
+    }, 350 + i * 50);
+
+    // Fase 3: Impacto y destrucción
+    setTimeout(() => {
+      energyNode.remove();
+      
+      // Activar efecto visual de pulso en el badge de energía de rol
+      if (destEl) {
+        const badge = destEl.querySelector('.role-energy-badge');
+        if (badge) {
+          badge.classList.remove('energy-pulse');
+          void badge.offsetWidth;
+          badge.classList.add('energy-pulse');
+        }
+      }
+    }, 850 + i * 50);
+  }
+};
+
+window.animateHealthLoss = function(sourceElOrRect, hpCount) {
+  if (typeof gameState !== 'undefined' && (gameState.isGameOver || gameState.isGameWon)) return;
+  if (!sourceElOrRect || !hpCount || hpCount <= 0) return;
+
+  let rect;
+  if (sourceElOrRect instanceof HTMLElement) {
+    rect = sourceElOrRect.getBoundingClientRect();
+  } else {
+    rect = sourceElOrRect;
+  }
+
+  const startX = rect.left + rect.width / 2;
+  const startY = rect.top + rect.height / 2;
+
+  for (let i = 0; i < hpCount; i++) {
+    const heart = document.createElement('div');
+    heart.style.position = 'fixed';
+    heart.style.zIndex = '99999';
+    heart.style.pointerEvents = 'none';
+    heart.style.fontSize = '24px';
+    heart.innerText = '❤️';
+    
+    // Posición inicial: centro del indicador
+    let x = startX - 12;
+    let y = startY - 12;
+    
+    heart.style.left = `${x}px`;
+    heart.style.top = `${y}px`;
+    heart.style.transform = 'scale(1)';
+    heart.style.opacity = '1';
+    document.body.appendChild(heart);
+
+    // Parámetros de la simulación física (dispersión y caída con rebote)
+    let vx = (Math.random() - 0.5) * 3.5; 
+    let vy = -(Math.random() * 3.0 + 2.0); 
+    const gravity = 0.35;
+    const bounce = 0.5;
+    let rotation = 0;
+    
+    // Suelo virtual para el rebote (parte inferior de la pantalla)
+    const floorY = window.innerHeight - 35 - Math.random() * 10;
+    let bounceCount = 0;
+    let opacity = 1.0;
+    let frames = 0;
+
+    function step() {
+      frames++;
+      vy += gravity;
+      x += vx;
+      y += vy;
+
+      if (y >= floorY && vy > 0) {
+        y = floorY;
+        vy = -vy * bounce;
+        vx *= 0.7; // Fricción
+        if (bounceCount === 0) {
+          rotation = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 15 + 15); // Inclinación aleatoria entre 15 y 30 grados
+        }
+        bounceCount++;
+      }
+
+      if (bounceCount >= 2 || frames > 70) {
+        opacity -= 0.05;
+        vx *= 0.85;
+      }
+
+      heart.style.left = `${x}px`;
+      heart.style.top = `${y}px`;
+      heart.style.opacity = `${opacity}`;
+      heart.style.transform = `rotate(${rotation}deg)`;
+
+      if (opacity > 0) {
+        requestAnimationFrame(step);
+      } else {
+        heart.remove();
+      }
+    }
+    
+    requestAnimationFrame(step);
   }
 };
 
@@ -4106,6 +4376,18 @@ function renderBattlefield() {
         if (index !== -1) {
           selectedGoblins.splice(index, 1);
           gobEl.classList.remove('selected');
+
+          // Deseleccionar también al compañero si tiene
+          if (goblin.partnerUid) {
+            const partnerIdx = selectedGoblins.findIndex(g => g.uid === goblin.partnerUid);
+            if (partnerIdx !== -1) {
+              selectedGoblins.splice(partnerIdx, 1);
+              const partnerEl = goblinsContainer.querySelector(`[data-uid="${goblin.partnerUid}"]`);
+              if (partnerEl) {
+                partnerEl.classList.remove('selected');
+              }
+            }
+          }
         } else {
           // Escudos de Carne (Senda de La Madre)
           if (gameState.activeSenda === 'la_madre' && !goblin.isDying && gameState.isGoblinInvulnerable(goblin)) {
@@ -4127,6 +4409,18 @@ function renderBattlefield() {
 
           selectedGoblins.push(goblin);
           gobEl.classList.add('selected');
+
+          // Seleccionar también al compañero si tiene y sigue vivo en el tablero
+          if (goblin.partnerUid) {
+            const partner = gameState.battlefield.goblins.find(g => g.uid === goblin.partnerUid && !g.isDying);
+            if (partner && !selectedGoblins.some(sg => sg.uid === partner.uid)) {
+              selectedGoblins.push(partner);
+              const partnerEl = goblinsContainer.querySelector(`[data-uid="${partner.uid}"]`);
+              if (partnerEl) {
+                partnerEl.classList.add('selected');
+              }
+            }
+          }
         }
         const btn = document.getElementById('btn-confirm-attack');
         if (btn) btn.innerHTML = `<span class="txt-largo">Atacar Goblins (${selectedGoblins.length})</span><span class="txt-corto">Atacar (${selectedGoblins.length})</span>`;
@@ -5463,7 +5757,11 @@ window.getCombatDebugHtml = function(state) {
     }
     
     let hpChangeStr = '';
-    let netHpChange = outcome.hpAfter - outcome.hpBefore;
+    let hpGainFromLevelUp = 0;
+    if (outcome.levelAfter > outcome.levelBefore) {
+      hpGainFromLevelUp = (outcome.levelAfter - outcome.levelBefore) * 5;
+    }
+    let netHpChange = outcome.hpAfter - outcome.hpBefore - hpGainFromLevelUp;
     
     if (outcome.finalDamageHpChange > 0) {
       hpChangeStr = `<span style="color:#ff4d4d; font-weight:bold;">-${outcome.finalDamageHpChange} PV</span>`;
@@ -5472,7 +5770,9 @@ window.getCombatDebugHtml = function(state) {
     } else {
       hpChangeStr = `<span style="color:#888; font-weight:bold;">Sin cambio neto</span>`;
     }
-    html += `<li style="margin-top:10px; border-top:1px solid #444; padding-top:8px;"><strong>Salud del Héroe:</strong> ${outcome.hpBefore} ➔ <strong>${outcome.hpAfter}</strong> (${hpChangeStr})</li>`;
+    
+    let levelUpExtraText = hpGainFromLevelUp > 0 ? ` <span style="color:#f1c40f; font-size:0.9rem;">(+${hpGainFromLevelUp} PV de Nivel)</span>` : "";
+    html += `<li style="margin-top:10px; border-top:1px solid #444; padding-top:8px;"><strong>Salud del Héroe:</strong> ${outcome.hpBefore} ➔ <strong>${outcome.hpAfter}</strong> (${hpChangeStr}${levelUpExtraText})</li>`;
     html += `</ul>`;
     
   } else {

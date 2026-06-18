@@ -1,0 +1,163 @@
+﻿{
+    "player":  {
+                   "name":  "Jugador 1",
+                   "playerNum":  1,
+                   "hp":  6,
+                   "shield":  0,
+                   "energy":  1,
+                   "mo":  0,
+                   "pex":  9,
+                   "level":  2,
+                   "role":  "guerrero",
+                   "equipped":  [
+                                    {
+                                        "id":  "espada_inicial",
+                                        "name":  "Espada Inicial",
+                                        "isBroken":  false,
+                                        "isActive":  true
+                                    },
+                                    {
+                                        "id":  "escudo_inicial",
+                                        "name":  "Escudo Madera",
+                                        "isBroken":  true,
+                                        "isActive":  true
+                                    },
+                                    {
+                                        "id":  "daga",
+                                        "name":  "Daga",
+                                        "isBroken":  false,
+                                        "isActive":  true
+                                    },
+                                    {
+                                        "id":  "drenar_justo",
+                                        "name":  "Drenar Justo",
+                                        "isBroken":  false,
+                                        "isActive":  true
+                                    }
+                                ]
+               },
+    "goblins":  [
+                    {
+                        "uid":  1781482859612.206,
+                        "name":  "Goblin F",
+                        "level":  1,
+                        "hp":  5,
+                        "hpAfter":  0
+                    }
+                ],
+    "playerDice":  [
+                       {
+                           "type":  "red",
+                           "faces":  6,
+                           "id":  "die-0",
+                           "value":  6,
+                           "rerolled":  false,
+                           "assignedTo":  "role"
+                       },
+                       {
+                           "type":  "black",
+                           "faces":  6,
+                           "id":  "die-1",
+                           "value":  6,
+                           "rerolled":  false,
+                           "assignedTo":  "discarded"
+                       },
+                       {
+                           "type":  "red",
+                           "faces":  6,
+                           "id":  "die-2",
+                           "value":  4,
+                           "rerolled":  false,
+                           "assignedTo":  "daga"
+                       }
+                   ],
+    "goblinDice":  {
+                       "1781482859612.206":  {
+                                                 "total":  1,
+                                                 "details":  [
+                                                                 {
+                                                                     "type":  "die",
+                                                                     "faces":  4,
+                                                                     "val":  1
+                                                                 }
+                                                             ]
+                                             }
+                   },
+    "assignments":  {
+                        "role":  [
+                                     {
+                                         "dieId":  "die-0",
+                                         "value":  6,
+                                         "isRole":  true
+                                     }
+                                 ],
+                        "daga":  [
+                                     {
+                                         "dieId":  "die-2",
+                                         "value":  4,
+                                         "targetUid":  1781482859612.206,
+                                         "elasticDamage":  null
+                                     }
+                                 ]
+                    },
+    "interceptions":  {
+
+                      },
+    "resolvedDetails":  {
+                            "playerDiceDetails":  [
+                                                      {
+                                                          "dieId":  "die-0",
+                                                          "value":  6,
+                                                          "assignedTo":  "Rol (Guerrero)",
+                                                          "isRole":  true,
+                                                          "damage":  0,
+                                                          "shield":  0,
+                                                          "heal":  0,
+                                                          "energyGained":  4,
+                                                          "target":  "Rol"
+                                                      },
+                                                      {
+                                                          "dieId":  "die-2",
+                                                          "value":  4,
+                                                          "assignedTo":  "Daga",
+                                                          "isRole":  false,
+                                                          "damage":  5,
+                                                          "shield":  0,
+                                                          "heal":  0,
+                                                          "target":  "Goblin F"
+                                                      }
+                                                  ],
+                            "goblinDiceDetails":  [
+                                                      {
+                                                          "goblinName":  "Goblin F",
+                                                          "val":  1,
+                                                          "isIntercepted":  false,
+                                                          "interceptedBy":  null,
+                                                          "interceptedByDieId":  null,
+                                                          "effects":  [
+                                                                          {
+                                                                              "text":  "DaÃ±o Directo",
+                                                                              "status":  "aplicado"
+                                                                          }
+                                                                      ]
+                                                      }
+                                                  ],
+                            "finalPlayerOutcome":  {
+                                                       "hpBefore":  6,
+                                                       "hpAfter":  5,
+                                                       "levelBefore":  2,
+                                                       "levelAfter":  2,
+                                                       "directDamageReceived":  1,
+                                                       "normalDamageIncoming":  0,
+                                                       "damageBlocked":  0,
+                                                       "netNormalDamageReceived":  0,
+                                                       "escozorDamageDealt":  0,
+                                                       "warlordExtraDmg":  0,
+                                                       "healed":  0,
+                                                       "finalDamageHpChange":  1
+                                                   }
+                        },
+    "id":  9,
+    "timestamp":  "15/6/2026, 2:24:59",
+    "wave":  2
+}

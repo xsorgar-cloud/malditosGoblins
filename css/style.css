@@ -3711,6 +3711,7 @@ main {
   border-color: rgba(212, 175, 55, 0.3) !important;
   box-shadow: none !important;
   pointer-events: none; /* Permite clickear los elementos de fondo */
+  backdrop-filter: none !important;
 }
 
 /* Mantener el botón del ojo interactivo y visible */
@@ -3729,6 +3730,7 @@ main {
 .overlay.overlay-transparent {
   background: rgba(0, 0, 0, 0.1) !important;
   pointer-events: none; /* Permite hacer clic a través del fondo */
+  backdrop-filter: none !important;
 }
 
 
