@@ -1605,7 +1605,7 @@ performCombatTurn(bot) {
 
                 // Smart override: Don't waste high dice blocking trivial damage
                 let roleOverrideAssigned = false;
-                let energyGain = bot.role && bot.role.energyRates ? bot.role.energyRates[die.value - 1] : (die.value >= 5 ? 3 : 0);
+                let energyGain = bot.role && bot.role.energyRates ? (bot.role.energyRates[die.value - 1] || 0) : (die.value >= 5 ? 3 : 0);
                 
                 const hasRoleDie = window.currentAssignments && window.currentAssignments['role'] && window.currentAssignments['role'].length > 0;
 
@@ -1644,7 +1644,7 @@ performCombatTurn(bot) {
                 const heals = bot.equipped.filter(eq => eq.isActive && this.isHeal(eq) && this.canAcceptDie(die, eq));
                 
                 const fallbackToRole = (reason) => {
-                    let eGain = bot.role && bot.role.energyRates ? bot.role.energyRates[die.value - 1] : 0;
+                    let eGain = bot.role && bot.role.energyRates ? (bot.role.energyRates[die.value - 1] || 0) : 0;
                     if (eGain === 0) {
                         if (weapons.length > 0) {
                             this.assignDieToEquip(die, weapons[0], bot, "Rol da 0 energía, usando arma por descarte");
@@ -2220,10 +2220,10 @@ calculateEquipPower(eq, bot) {
                 const spareDice = availableDice.filter(d => !plannedAssignments[d.id]);
                 const otherSpareDice = spareDice.filter(d => d.id !== die.id);
                 
-                const myEnergy = bot.role && bot.role.energyRates ? bot.role.energyRates[die.value - 1] : 0;
+                const myEnergy = bot.role && bot.role.energyRates ? (bot.role.energyRates[die.value - 1] || 0) : 0;
                 
                 const hasBetterOrEqualAlternative = otherSpareDice.some(d => {
-                    const altEnergy = bot.role && bot.role.energyRates ? bot.role.energyRates[d.value - 1] : 0;
+                    const altEnergy = bot.role && bot.role.energyRates ? (bot.role.energyRates[d.value - 1] || 0) : 0;
                     if (altEnergy >= myEnergy) {
                         if (altEnergy > myEnergy) return true;
                         if (d.type === 'red') return true;
@@ -3065,7 +3065,7 @@ calculateEquipPower(eq, bot) {
 
         // 5. Decisión de Rol / Energía (dado alto con ganancia de energía sustancial y sin peligro inminente de muerte)
         const highestDie = availableDice[availableDice.length - 1];
-        const energyGain = bot.role && bot.role.energyRates ? bot.role.energyRates[highestDie.value - 1] : (highestDie.value >= 5 ? 3 : 0);
+        const energyGain = bot.role && bot.role.energyRates ? (bot.role.energyRates[highestDie.value - 1] || 0) : (highestDie.value >= 5 ? 3 : 0);
         if (energyGain >= 3 && bot.hp >= 4) {
             if (roleId === 'guerrero') {
                 return "¡Siento la ira de batalla! Recargaré mi energía de combate.";
