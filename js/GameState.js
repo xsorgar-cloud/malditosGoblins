@@ -2271,7 +2271,10 @@ Daño directo: Sufres ${brokenCount} de daño.`);
               ...DB.goblins[1],
               uid: Date.now() + Math.random(),
               currentHp: DB.goblins[1].hp,
-              isHito: true
+              isHito: true,
+              isInvocacion: true,
+              mo: 0,
+              image: 'assets/Monstruos/invocacion_01.webp'
             };
             this.battlefield.goblins.push(gob);
             spawns.push(gob);
