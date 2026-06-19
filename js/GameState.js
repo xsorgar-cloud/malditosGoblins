@@ -738,10 +738,10 @@ class GameState {
           }
 
           if (damageNegated) {
-            msgParts.push(`ataque anulado por Campo de Fuerza`);
+            msgParts.push(`evita el daño por Campo de Fuerza`);
           } else {
             targetGoblin.currentHp -= stats.damage;
-            msgParts.push(`inflige ${stats.damage} daño`);
+            msgParts.push(`recibe ${stats.damage} daño`);
             
             // Defensa del Nido (Senda de La Madre)
             if (targetGoblin.isBoss && (this.activeSenda === 'la_madre' || targetGoblin.name.includes("La Madre")) && stats.damage > 0) {
@@ -754,7 +754,7 @@ class GameState {
                 isHito: true,
                 image: 'assets/Monstruos/invocacion_01.webp'
               });
-              msgParts.push(`🥚 <span style="color:#f54281">Defensa del Nido: Aparece 1 Invocación Nivel 1 (Hito)</span>`);
+              msgParts.push(`🥚 <span style="color:#f54281">activa Defensa del Nido (Aparece 1 Invocación)</span>`);
             }
           }
         }
@@ -1206,9 +1206,9 @@ class GameState {
       }
       if (directDmg === 0 && normalDmg === 0) {
         if (goblinInterceptions.length > 0) {
-          msgParts.push(`ataque anulado por intercepción`);
+          msgParts.push(`ve su ataque anulado por intercepción`);
         } else {
-          msgParts.push(`ataque anulado`);
+          msgParts.push(`no logra contraatacar`);
         }
       }
 
