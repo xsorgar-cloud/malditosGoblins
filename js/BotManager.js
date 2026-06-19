@@ -997,13 +997,16 @@ performMainTurn(bot) {
                     decisionText = "¡A por ellos! No dejaré a ni uno vivo.";
                 } else {
                     // Fallback si no hay objetivos seguros de combate
-                    if (shortfall > 0) {
-                        chosenAction = 'gold';
-                        decisionText = "No hay objetivos de combate seguros. Conseguiré oro para equiparme.";
-                    } else {
-                        chosenAction = 'role';
-                        decisionText = "No hay objetivos de combate seguros. Recargaré mi habilidad de rol.";
+                    // NUNCA obtener oro ni recargar rol si hay goblins en la mesa, porque desperdicia el turno y adelanta la represalia.
+                    // Forzamos combate contra el goblin más débil, asumiendo el riesgo.
+                    let easiest = [...goblinsEnMesa].sort((a,b) => a.level - b.level || a.currentHp - b.currentHp)[0];
+                    targetForCombat = [easiest];
+                    if (easiest.partnerUid) {
+                        let partner = goblinsEnMesa.find(p => p.uid === easiest.partnerUid);
+                        if (partner) targetForCombat.push(partner);
                     }
+                    chosenAction = 'combat';
+                    decisionText = "La situación es crítica, pero perder el turno es peor. ¡Atacaré al enemigo más débil!";
                 }
             }
 
