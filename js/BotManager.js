@@ -2642,12 +2642,65 @@ calculateEquipPower(eq, bot) {
                 }
             }
 
+            let netIncomingDmg = 0;
+            if (this.gameState.currentCombat && this.gameState.currentCombat.goblins) {
+                let totalIncNormal = 0;
+                let totalIncDirect = 0;
+                this.gameState.currentCombat.goblins.forEach(gob => {
+                    let greenDiceResult = this.gameState.currentCombat.dice && this.gameState.currentCombat.dice.green ? this.gameState.currentCombat.dice.green[gob.uid] : null;
+                    if (greenDiceResult && greenDiceResult.details) {
+                        let goblinInterceptions = window.interceptionAssignments ? (window.interceptionAssignments[gob.uid] || []) : [];
+                        let naturalDieIdx = 0;
+                        for (let rawIdx = 0; rawIdx < greenDiceResult.details.length; rawIdx++) {
+                            let detail = greenDiceResult.details[rawIdx];
+                            if (detail.type === 'die') {
+                                const currentIdx = naturalDieIdx;
+                                naturalDieIdx++;
+                                if (goblinInterceptions.some(asg => Number(asg.goblinDieIndex) === Number(currentIdx))) continue;
+                                let dieDmg = detail.val;
+                                let nextDetail = greenDiceResult.details[rawIdx + 1];
+                                if (nextDetail && nextDetail.type === 'mod') dieDmg += nextDetail.val;
+                                let gobDB = gob.attacks ? gob : (typeof DB !== 'undefined' && DB.goblins ? DB.goblins[gob.level] : null);
+                                let isDirect = false;
+                                if (gobDB && gobDB.attacks) {
+                                    let attacks = gobDB.attacks[detail.val] || [];
+                                    isDirect = attacks.some(a => {
+                                        let lower = a.toLowerCase();
+                                        return lower.includes('daño directo') || lower.includes('dano directo') || lower.includes('direct') || lower.includes('verdadero') || lower.includes('veneno') || lower.includes('toxina');
+                                    });
+                                }
+                                if (isDirect) totalIncDirect += dieDmg;
+                                else totalIncNormal += dieDmg;
+                            }
+                        }
+                    } else {
+                        let profile = this.getGoblinDamageProfile(gob);
+                        totalIncNormal += profile.normal;
+                        totalIncDirect += profile.direct;
+                    }
+                });
+                
+                let currentShields = 0;
+                for (let eqId in currentAssignments) {
+                    let assignedEq = bot.equipped.find(e => e.id === eqId);
+                    if (assignedEq && this.isShield(assignedEq)) {
+                        let asgsArr = Array.isArray(currentAssignments[eqId]) ? currentAssignments[eqId] : [currentAssignments[eqId]];
+                        asgsArr.forEach(asg => {
+                            if (!asg.isRole) currentShields += this.getShieldForDieInEquip(asg.value, assignedEq);
+                        });
+                    }
+                }
+                netIncomingDmg = Math.max(0, totalIncNormal - currentShields) + totalIncDirect;
+            }
+
+            let needsHealing = (bot.hp < bot.maxHp) || (netIncomingDmg > 0);
+
             if (neededDmg > 0 && neededDmg <= val) {
                 calculatedElasticDamage = neededDmg;
             } else if (neededDmg > val) {
-                calculatedElasticDamage = (bot.hp < bot.maxHp) ? 0 : val;
+                calculatedElasticDamage = needsHealing ? 0 : val;
             } else {
-                calculatedElasticDamage = (bot.hp < bot.maxHp) ? 0 : val;
+                calculatedElasticDamage = needsHealing ? 0 : val;
             }
         }
 
