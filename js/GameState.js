@@ -2072,24 +2072,6 @@ Daño directo: Sufres ${brokenCount} de daño.`);
       this.addLog(`💖 La vida de los goblins supervivientes se ha restablecido al máximo.`);
     }
 
-    // Regla de Hito 3 de El Rey Brujo: La Plaga (respawn de derrotados)
-    if (this.activeSenda === 'rey_brujo' && this.currentHito === 4) {
-      let aliveHitoGoblins = this.battlefield.goblins.filter(g => g.isHito && g.currentHp > 0);
-      let targetCount = 3 * this.players.length;
-      if (aliveHitoGoblins.length > 0 && aliveHitoGoblins.length < targetCount) {
-        let toSpawn = targetCount - aliveHitoGoblins.length;
-        for (let i = 0; i < toSpawn; i++) {
-          this.battlefield.goblins.push({
-            ...DB.goblins[1],
-            uid: Date.now() + Math.random(),
-            currentHp: DB.goblins[1].hp,
-            isHito: true
-          });
-        }
-        this.addLog(`🔮 <strong>La Plaga:</strong> ¡Se reinvocan ${toSpawn} G1 del Hito 3 que habían sido eliminados!`);
-      }
-    }
-
     this.battlefield.waveLevel++;
 
     this.addLog(`<span style="color:#f54281"><strong>*******************************************</strong></span>`);
@@ -2277,6 +2259,26 @@ Daño directo: Sufres ${brokenCount} de daño.`);
           this.addLog(`💖 <span style="color:#ff477e"><strong>Regeneración de Jefe:</strong></span> ${g.name} recuperó ${regenAmount} PV (Total: ${g.currentHp}/${g.maxHp}).`);
         }
       });
+
+      // Regla de Hito 3 de El Rey Brujo: La Plaga (respawn de derrotados)
+      if (this.activeSenda === 'rey_brujo' && this.currentHito === 4) {
+        let aliveHitoGoblins = this.battlefield.goblins.filter(g => g.isHito && g.currentHp > 0);
+        let targetCount = 3 * this.players.length;
+        if (aliveHitoGoblins.length > 0 && aliveHitoGoblins.length < targetCount) {
+          let toSpawn = targetCount - aliveHitoGoblins.length;
+          for (let i = 0; i < toSpawn; i++) {
+            let gob = {
+              ...DB.goblins[1],
+              uid: Date.now() + Math.random(),
+              currentHp: DB.goblins[1].hp,
+              isHito: true
+            };
+            this.battlefield.goblins.push(gob);
+            spawns.push(gob);
+          }
+          this.addLog(`🔮 <strong>La Plaga:</strong> ¡Se reinvocan ${toSpawn} G1 del Hito 3 que habían sido eliminados!`);
+        }
+      }
 
       this.addLog(`<span style="color:#f54281"><strong>*******************************************</strong></span>`);
       
