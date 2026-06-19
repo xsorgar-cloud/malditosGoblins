@@ -1006,7 +1006,7 @@ performMainTurn(bot) {
                         if (partner) targetForCombat.push(partner);
                     }
                     chosenAction = 'combat';
-                    decisionText = "La situación es crítica, pero perder el turno es peor. ¡Atacaré al enemigo más débil!";
+                    decisionText = "Moriré matando.";
                 }
             }
 
