@@ -2613,11 +2613,49 @@ calculateEquipPower(eq, bot) {
                 targetName = targetGoblin.name || `G${targetGoblin.level}`;
             }
         }
+        let calculatedElasticDamage = null;
+        if (eq.id === 'corazon_elastico') {
+            let val = die.value;
+            let neededDmg = 0;
+            if (targetUid) {
+                const combatGobs = this.gameState.currentCombat ? this.gameState.currentCombat.goblins : [];
+                const tgtGob = combatGobs.find(g => g.uid === targetUid);
+                if (tgtGob) {
+                    let currentDmg = 0;
+                    for (let eqId in currentAssignments) {
+                        let assignedEq = bot.equipped.find(e => e.id === eqId);
+                        if (assignedEq && this.isWeapon(assignedEq)) {
+                            let asgs = currentAssignments[eqId];
+                            const asgsArr = Array.isArray(asgs) ? asgs : [asgs];
+                            asgsArr.forEach(asg => {
+                                if (!asg.isRole && asg.targetUid === targetUid) {
+                                    if (eqId === 'corazon_elastico' && asg.elasticDamage !== null && asg.elasticDamage !== undefined) {
+                                        currentDmg += asg.elasticDamage;
+                                    } else {
+                                        currentDmg += this.getDamageForDieInEquip(asg.value, assignedEq);
+                                    }
+                                }
+                            });
+                        }
+                    }
+                    neededDmg = Math.max(0, tgtGob.currentHp - currentDmg);
+                }
+            }
+
+            if (neededDmg > 0 && neededDmg <= val) {
+                calculatedElasticDamage = neededDmg;
+            } else if (neededDmg > val) {
+                calculatedElasticDamage = (bot.hp < bot.maxHp) ? 0 : val;
+            } else {
+                calculatedElasticDamage = (bot.hp < bot.maxHp) ? 0 : val;
+            }
+        }
+
         currentAssignments[eq.id].push({ 
             dieId: die.id, 
             value: die.value, 
             targetUid: targetUid, 
-            elasticDamage: null 
+            elasticDamage: calculatedElasticDamage 
         });
         die.assignedTo = eq.id;
         
