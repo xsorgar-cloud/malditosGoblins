@@ -706,15 +706,13 @@ window.combatDieOnCombatRoleHandler = (e) => {
                 playerObj.mo >= 1 &&
                 gameState.lastActionWasCombat &&
                 currentCombatId > 0 &&
-                eqObj.brokenInCombatId !== currentCombatId;
+                eqObj.brokenInCombatId !== currentCombatId &&
+                eqObj.usedInCombatId === currentCombatId;
             });
 
             // 2. Aplicar filtros de oro inteligentes
             const eligibleEquips = repairableEquips.filter(eqObj => {
-              if (eqObj.id === 'escudo_inicial') {
-                return playerObj.mo >= 3;
-              }
-              // Cualquier otro equipo (incluyendo espada_inicial y comprados) se repara con mo >= 1
+              // Cualquier equipo se repara con mo >= 1
               return playerObj.mo >= 1;
             });
 
@@ -1889,7 +1887,8 @@ function renderPlayer() {
         p.mo >= 1 &&
         gameState.lastActionWasCombat &&
         currentCombatId > 0 &&
-        eq.brokenInCombatId !== currentCombatId;
+        eq.brokenInCombatId !== currentCombatId &&
+        eq.usedInCombatId === currentCombatId;
       const repairBtnHTML = canRepair ? `<button class="btn primary repair-btn" style="position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%) rotate(180deg); font-size: 0.75rem; padding: 4px 8px; z-index: 20;">Reparar</button>` : '';
       let repairableClass = canRepair ? 'can-repair-glow' : '';
       
