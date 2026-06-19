@@ -1006,7 +1006,7 @@ performMainTurn(bot) {
                         if (partner) targetForCombat.push(partner);
                     }
                     chosenAction = 'combat';
-                    decisionText = "Moriré matando.";
+                    decisionText = "Ahhhhhh. ¡Moriré matando!";
                 }
             }
 
