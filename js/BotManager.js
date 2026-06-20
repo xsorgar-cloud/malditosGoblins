@@ -313,7 +313,7 @@ triggerAction(type, target = null, reason = "") {
             let hasHealingEquip = bot.equipped.some(eq => eq.isActive && this.isHeal(eq));
             if (hasHealingEquip) {
                 const goblinsEnMesa = this.gameState.battlefield.goblins.filter(g => !g.isDying);
-                const potentialTargets = this.getSafeCombatTargets(bot, goblinsEnMesa, 'Agresivo');
+                const potentialTargets = this.getSafeCombatTargets(bot, goblinsEnMesa, 'Agresivo', true);
                 if (potentialTargets.length > 0) {
                     this.showBubble(pIndex, `<strong style="color: red;">[Crítico]</strong> Buscaré un combate fácil para usar mi curación.`, 'combat');
                     this.gameState.addLog(`🤖 <strong>${bot.name}</strong> está en estado crítico de PV, tiene equipo de curación y decide iniciar combate contra objetivos asequibles para curarse.`);
@@ -1926,7 +1926,7 @@ calculateEquipPower(eq, bot) {
      }
 
 // Determina los objetivos de combate seguros según el bot, los goblins presentes y la personalidad
-    getSafeCombatTargets(bot, goblinsEnMesa, currentPersonality) {
+    getSafeCombatTargets(bot, goblinsEnMesa, currentPersonality, isFarmingLife = false) {
         if (!goblinsEnMesa || goblinsEnMesa.length === 0) return [];
         
         const isGuerreroOrMago = bot.role && (bot.role.id === 'guerrero' || bot.role.id === 'mago');
@@ -1963,16 +1963,23 @@ calculateEquipPower(eq, bot) {
         if (boss) {
             targets = [boss];
         } else {
-            // Ordenar goblins en mesa priorizando recompensas, nivel y vida
+            // Ordenar goblins
             targets.sort((a, b) => {
-                const aCat = this.getGoblinRewardCategory(a, bot);
-                const bCat = this.getGoblinRewardCategory(b, bot);
-                if (aCat !== bCat) return bCat - aCat;
-                
-                if (a.level !== b.level) {
-                    return b.level - a.level;
+                if (isFarmingLife) {
+                    // Si buscamos curarnos, queremos el objetivo MÁS DÉBIL
+                    if (a.level !== b.level) return a.level - b.level; // Menor nivel primero
+                    return a.currentHp - b.currentHp; // Menor vida primero
+                } else {
+                    // Si buscamos combate normal, priorizamos recompensas, nivel y vida
+                    const aCat = this.getGoblinRewardCategory(a, bot);
+                    const bCat = this.getGoblinRewardCategory(b, bot);
+                    if (aCat !== bCat) return bCat - aCat;
+                    
+                    if (a.level !== b.level) {
+                        return b.level - a.level;
+                    }
+                    return a.currentHp - b.currentHp;
                 }
-                return a.currentHp - b.currentHp;
             });
         }
         
