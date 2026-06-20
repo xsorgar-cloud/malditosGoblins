@@ -726,7 +726,13 @@ triggerAction(type, target = null, reason = "") {
         let totalRetaliationDmg = survivingGoblins.reduce((sum, g) => sum + g.level, 0);
         let totalPlayersHp = this.gameState.players.reduce((sum, p) => sum + (p.hp > 0 ? p.hp : 0), 0);
         
-        const safe = totalRetaliationDmg < totalPlayersHp;
+        let safe = false;
+        if (this.gameState.battlefield.actionCount >= 2) {
+            // Regla: En la última acción, solo se despliega si limpia el 100% de la mesa (Retaliation = 0)
+            safe = (totalRetaliationDmg === 0);
+        } else {
+            safe = totalRetaliationDmg < totalPlayersHp;
+        }
         
         this.gameState.addLog(`DEBUG canClearTableAfterDeployingHito: totalMaxTeamDamage=${totalMaxTeamDamage}, totalPlayersHp=${totalPlayersHp}, projectedRetaliation=${totalRetaliationDmg} (Safe: ${safe}) [${debugDetails.join(' | ')}]`);
         
