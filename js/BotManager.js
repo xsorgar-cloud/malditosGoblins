@@ -1343,7 +1343,12 @@ performCombatTurn(bot) {
                 (isCrampPhase ? d.isCramped : !d.isCramped) && 
                 d.type !== 'silver'
             );
-            availableDice.sort((a, b) => b.value - a.value);
+            availableDice.sort((a, b) => {
+                if (b.value !== a.value) return b.value - a.value;
+                if (a.type === 'red' && b.type !== 'red') return -1;
+                if (a.type !== 'red' && b.type === 'red') return 1;
+                return 0;
+            });
             
             console.log(`[BotManager] availableDice: ${availableDice.length}/${totalActiveDice}`);
             if (availableDice.length === 0) {
