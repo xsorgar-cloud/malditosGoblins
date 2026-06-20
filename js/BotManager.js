@@ -2412,7 +2412,6 @@ calculateEquipPower(eq, bot) {
                             this.gameState.addLog(`🛡️ <strong>${bot.name}</strong> usa su dado de valor <strong>${die.value}</strong> para interceptar un ataque peligroso de <strong>${gob.isBoss ? gob.name : 'Goblin de Nivel ' + gob.level}</strong>.`);
                         }
                         return true;
-                    }
                 }
             }
         }
