@@ -983,12 +983,18 @@ performMainTurn(bot) {
 
                 // Verificar si podemos eliminar a algún goblin de la mesa de un solo ataque
                 let canEliminateAnyGoblin = false;
+                const maxPowerAll = this.getPlayerMaxPowerPerAction(bot);
                 if (potentialTargets.length > 0) {
-                    const maxPower = this.getPlayerMaxPowerPerAction(bot);
-                    canEliminateAnyGoblin = potentialTargets.some(g => g.currentHp <= maxPower);
+                    canEliminateAnyGoblin = potentialTargets.some(g => g.currentHp <= maxPowerAll);
                 }
 
-                if (tableCanBeClearedAnyway && !canEliminateAnyGoblin && (shortfall === 1 || shortfall === 2)) {
+                let isLastAction = this.gameState.battlefield.actionCount >= 2;
+                let canEliminateAnyGoblinOnTable = goblinsEnMesa.some(g => g.currentHp <= maxPowerAll);
+
+                if (isLastAction && !canEliminateAnyGoblinOnTable) {
+                    chosenAction = 'gold';
+                    decisionText = "Atacar es inútil porque se curarán al final del turno. Descanso y saco algo de oro.";
+                } else if (tableCanBeClearedAnyway && !canEliminateAnyGoblin && (shortfall === 1 || shortfall === 2)) {
                     // Conseguir 1 o 2 monedas
                     if (shortfall === 2 && bot.hp > 1) {
                         chosenAction = 'gold-dmg';
@@ -1951,7 +1957,13 @@ calculateEquipPower(eq, bot) {
             const remainingHp = bot.hp - expectedDamageTaken + totalMaxHealing;
             deficitDefense = expectedDamageTaken - bot.hp + 1 - totalMaxHealing; // +1 to survive
             
-            if (remainingHp > 0) {
+            let isLastAction = this.gameState.battlefield.actionCount >= 2;
+            let totalTargetsHp = targets.reduce((s, g) => s + g.currentHp, 0);
+            let canKillTargets = (totalMaxDamage + (isGuerreroOrMago ? bot.energy : 0)) >= totalTargetsHp;
+
+            if (isLastAction && !canKillTargets) {
+                isSafe = false;
+            } else if (remainingHp > 0) {
                 isSafe = true;
             } else {
                 let canSurvive = false;
