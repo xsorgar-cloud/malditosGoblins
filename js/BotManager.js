@@ -2351,10 +2351,7 @@ calculateEquipPower(eq, bot) {
         const goblins = this.gameState.currentCombat.goblins;
         if (!goblins || goblins.length === 0) return false;
 
-        // Si el dado es necesario para matar a los goblins en el plan de ataque, no lo usamos para interceptar
-        if (plannedKills > 0 && plannedAssignments[die.id]) {
-            return false;
-        }
+
 
         for (let gob of goblins) {
             // Bosses like "La Madre" are uninterceptable
@@ -2383,12 +2380,19 @@ calculateEquipPower(eq, bot) {
                     if (!gobDB || !gobDB.attacks) continue;
 
                     let attacks = gobDB.attacks[detail.val] || [];
-                    // Dado peligroso si tiene efectos o si su daño bruto natural es >= 3
-                    let isDangerous = (attacks.length > 0) || (detail.val >= 3);
+                    let hasEffects = attacks.length > 0;
+                    let isHighDamage = detail.val >= 3;
+                    
+                    if (!hasEffects && !isHighDamage) continue;
 
-                    if (isDangerous) {
-                        // Realizar la intercepción
-                        if (!window.interceptionAssignments[gob.uid]) window.interceptionAssignments[gob.uid] = [];
+                    // Si NO tiene efectos especiales, y el dado está planificado para conseguir una kill, 
+                    // preferimos hacer la kill en lugar de bloquear daño normal.
+                    if (!hasEffects && plannedKills > 0 && plannedAssignments[die.id]) {
+                        continue;
+                    }
+
+                    // Realizar la intercepción
+                    if (!window.interceptionAssignments[gob.uid]) window.interceptionAssignments[gob.uid] = [];
                         window.interceptionAssignments[gob.uid].push({
                             dieId: die.id,
                             value: die.value,
