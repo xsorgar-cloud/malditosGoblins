@@ -1492,7 +1492,7 @@ performCombatTurn(bot) {
                 // Intento prioritario de intercepción de ataques peligrosos en cualquier dado disponible
                 let intercepted = false;
                 for (let d of availableDice) {
-                    if (this.tryInterceptDangerousDie(d, bot, plannedAssignments, plannedKills)) {
+                    if (this.tryInterceptDangerousDie(d, bot, plannedAssignments, plannedKills, availableDice)) {
                         intercepted = true;
                         break;
                     }
@@ -2345,7 +2345,7 @@ calculateEquipPower(eq, bot) {
     }
 
 // Intenta interceptar un dado peligroso de un goblin, respetando la planificación del combate
-    tryInterceptDangerousDie(die, bot, plannedAssignments = {}, plannedKills = 0) {
+    tryInterceptDangerousDie(die, bot, plannedAssignments = {}, plannedKills = 0, availableDice = []) {
         if (!this.gameState.currentCombat || this.gameState.currentCombat.needsCrampResolution) return false;
         
         const goblins = this.gameState.currentCombat.goblins;
@@ -2388,7 +2388,15 @@ calculateEquipPower(eq, bot) {
                     // Si NO tiene efectos especiales, y el dado está planificado para conseguir una kill, 
                     // preferimos hacer la kill en lugar de bloquear daño normal.
                     if (!hasEffects && plannedKills > 0 && plannedAssignments[die.id]) {
-                        continue;
+                        if (availableDice.length > 0) {
+                            const remainingDice = availableDice.filter(d => d.id !== die.id);
+                            const alternatePlan = this.planWeaponAssignments(remainingDice, goblins, bot);
+                            if (alternatePlan.goblinsKilled < plannedKills) {
+                                continue; // Nos cuesta una kill, así que dejamos pasar el daño normal
+                            }
+                        } else {
+                            continue;
+                        }
                     }
 
                     // Realizar la intercepción
