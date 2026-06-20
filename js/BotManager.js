@@ -1062,11 +1062,14 @@ performMarketTurn(bot) {
             let chosenTarget = null;
             let actionReason = "";
             
+            const brokenCount = bot.equipped.filter(eq => eq.isBroken).length;
+            const availableMo = Math.max(0, bot.mo - brokenCount);
+            
             const isSanador = bot.role && bot.role.id === 'sanador';
             const isProtector = bot.role && bot.role.id === 'protector';
             const isGuerreroOrMago = bot.role && (bot.role.id === 'guerrero' || bot.role.id === 'mago');
 
-            const canBuy = (type) => this.gameState.market[type] && this.gameState.market[type].length > 0 && bot.mo >= this.gameState.market[type][0].cost;
+            const canBuy = (type) => this.gameState.market[type] && this.gameState.market[type].length > 0 && availableMo >= this.gameState.market[type][0].cost;
             const buyIfPossible = (type) => {
                 // Contar equipamiento por categoría original más iniciales
                 const weaponsCount = bot.equipped.filter(eq => eq.type === 'ataque' || eq.id === 'espada_inicial').length;
@@ -1120,7 +1123,7 @@ performMarketTurn(bot) {
             const canBuyPotion = () => {
                 if (this.gameState.battlefield.waveLevel < 3) return null;
                 if (typeof DB !== 'undefined' && DB.equipment && DB.equipment.pociones) {
-                    const affordables = DB.equipment.pociones.filter(p => bot.mo >= p.cost);
+                    const affordables = DB.equipment.pociones.filter(p => availableMo >= p.cost);
                     if (affordables.length > 0) {
                         return affordables[affordables.length - 1]; // Retorna la poción más cara que pueda pagar
                     }
@@ -1167,8 +1170,8 @@ performMarketTurn(bot) {
             if (!bought && !emergencyHealing) {
                 const isWellEq = this.isWellEquipped(bot);
                 
-                // Si ya va bien equipado y la oleada es >= 3, ahorrar oro para pociones
-                if (isWellEq && this.gameState.battlefield.waveLevel >= 3) {
+                // Si ya va bien equipado, ahorrar oro para pociones o reparaciones
+                if (isWellEq) {
                     if (bot.mo > 0) {
                         advice = "Guardaré este oro para cuando realmente nos haga falta.";
                     } else {
@@ -1183,7 +1186,7 @@ performMarketTurn(bot) {
                     if (!isWellEq && missingType) {
                         // Si no va bien equipado, PRIORIZA el tipo de equipo que le falta
                         const topCard = this.gameState.market[missingType] && this.gameState.market[missingType].length > 0 ? this.gameState.market[missingType][0] : null;
-                        if (topCard && bot.mo >= topCard.cost) {
+                        if (topCard && availableMo >= topCard.cost) {
                             bought = buyIfPossible(missingType);
                             if (bought) {
                                 advice = `Necesito mejorar mi equipo para la oleada. Compraré una carta de ${missingType}.`;
@@ -1204,7 +1207,7 @@ performMarketTurn(bot) {
                     const topWeapon = this.gameState.market['ataque'] && this.gameState.market['ataque'].length > 0 ? this.gameState.market['ataque'][0] : null;
                     const hasBoughtWeapon = bot.equipped.some(eq => eq.type !== 'inicial' && eq.type === 'ataque');
                     
-                    if (topWeapon && bot.mo >= topWeapon.cost) {
+                    if (topWeapon && availableMo >= topWeapon.cost) {
                         bought = buyIfPossible('ataque');
                         if (bought) advice = "¡Poder! Dame todo el poder para aplastar goblins.";
                     }
@@ -1224,8 +1227,8 @@ performMarketTurn(bot) {
 										 advice = "Sin oro poca cosa podré hacer.";
 									 }
                                 } else {
-                                    // Si tiene más de 6 mo y no le convence el arma actual, explora el mercado de ataque
-                                    if (bot.mo > 6 && topWeapon) {
+                                    // Si le sobra el oro y no le convence el arma actual, explora el mercado de ataque
+                                    if (availableMo > 6 && topWeapon) {
                                         chosenAction = 'explore-market';
                                         chosenTarget = 'ataque';
                                         advice = "No me gusta esta arma. Pagaré por ver la siguiente.";
