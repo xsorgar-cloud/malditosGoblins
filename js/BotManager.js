@@ -410,7 +410,7 @@ triggerAction(type, target = null, reason = "") {
         }, 600);
     }
 
-    getPlayerMaxPowerPerAction(player) {
+    getPlayerPowerSlots(player) {
         // Filtra las armas activas (tanto rotas como no rotas)
         const weapons = player.equipped.filter(eq => eq.isActive && this.isWeapon(eq));
         let slots = [];
@@ -445,14 +445,68 @@ triggerAction(type, target = null, reason = "") {
             numDice = Math.max(0, numDice - totalEffects);
         }
         
-        // Suma los mejores Math.min(numDice, slots.length) huecos de daño
-        let maxPower = 0;
+        // Devuelve solo los mejores Math.min(numDice, slots.length) huecos de daño
         const limit = Math.min(numDice, slots.length);
-        for (let i = 0; i < limit; i++) {
-            maxPower += slots[i];
+        return slots.slice(0, limit);
+    }
+
+    getPlayerMaxPowerPerAction(player) {
+        const activeSlots = this.getPlayerPowerSlots(player);
+        let maxPower = 0;
+        for (let i = 0; i < activeSlots.length; i++) {
+            maxPower += activeSlots[i];
         }
-        
         return maxPower;
+    }
+
+    simulateCombatActionsGreedy(goblins, combatActionsQueue) {
+        // goblins: array de objetos { level, currentHp, isBoss... }
+        // combatActionsQueue: array de slots por cada acción de cada jugador. Ej: [[6, 3], [5, 4]]
+        let survivingGoblins = [...goblins].map(g => ({ ...g }));
+
+        for (let actionSlots of combatActionsQueue) {
+            // Si el jugador no tiene armas o dados, no puede atacar
+            if (!actionSlots || actionSlots.length === 0) continue;
+            
+            // actionSlots viene ordenado de mayor a menor, ej: [6, 3]
+            let availableSlots = [...actionSlots];
+
+            // Ordenar goblins vivos: mayor nivel primero, luego menor HP
+            survivingGoblins.sort((a, b) => {
+                if (a.level !== b.level) return b.level - a.level;
+                return a.currentHp - b.currentHp;
+            });
+
+            for (let g of survivingGoblins) {
+                if (availableSlots.length === 0) break; // Sin objetivos/manos
+                if (g.currentHp <= 0) continue; // Ya está muerto
+
+                // Asignar slots a este goblin hasta que muera o nos quedemos sin slots
+                while (g.currentHp > 0 && availableSlots.length > 0) {
+                    // Buscar el slot más pequeño que pueda matarlo para no desperdiciar los grandes
+                    let slotIdx = -1;
+                    for (let i = availableSlots.length - 1; i >= 0; i--) {
+                        if (availableSlots[i] >= g.currentHp) {
+                            slotIdx = i;
+                            break;
+                        }
+                    }
+                    
+                    // Si ningún slot individual puede matarlo, usar el slot más grande para ablandarlo
+                    if (slotIdx === -1) {
+                        slotIdx = 0;
+                    }
+
+                    let dmg = availableSlots.splice(slotIdx, 1)[0];
+                    g.currentHp -= dmg;
+                }
+            }
+            
+            // Eliminar los goblins muertos para la siguiente acción
+            survivingGoblins = survivingGoblins.filter(g => g.currentHp > 0);
+        }
+
+        return survivingGoblins;
     }
 
     getPlayerMaxDefense(player) {
@@ -684,12 +738,12 @@ triggerAction(type, target = null, reason = "") {
 
         let projectedGoblins = this.getProjectedGoblinsAfterHito();
         
-        let totalMaxTeamDamage = 0;
+        let combatActionsQueue = [];
         let debugDetails = [];
         this.gameState.players.forEach((p, idx) => {
             if (p.hp <= 0) return; // Jugador muerto no aporta daño
             
-            let maxPower = this.getPlayerMaxPowerPerAction(p);
+            let powerSlots = this.getPlayerPowerSlots(p);
             let actionsRemaining = 0;
             
             if (idx === this.gameState.currentPlayerIndex) {
@@ -701,27 +755,14 @@ triggerAction(type, target = null, reason = "") {
                 actionsRemaining = Math.max(0, 3 - this.gameState.battlefield.actionCount);
             }
             
-            totalMaxTeamDamage += maxPower * actionsRemaining;
-            debugDetails.push(`${p.name}: power=${maxPower}, actions=${actionsRemaining}`);
-        });
-        
-        // Ordenar goblins proyectados por ratio Nivel/Vida de forma descendente para minimizar la represalia
-        projectedGoblins.sort((a, b) => {
-            let ratioA = a.level / a.currentHp;
-            let ratioB = b.level / b.currentHp;
-            return ratioB - ratioA;
-        });
-        
-        let remainingDamage = totalMaxTeamDamage;
-        let survivingGoblins = [];
-        projectedGoblins.forEach(g => {
-            if (remainingDamage >= g.currentHp) {
-                remainingDamage -= g.currentHp;
-            } else {
-                survivingGoblins.push(g);
-                remainingDamage = 0;
+            for (let i = 0; i < actionsRemaining; i++) {
+                combatActionsQueue.push(powerSlots);
             }
+            let maxPower = powerSlots.reduce((a,b) => a+b, 0);
+            debugDetails.push(`${p.name}: power=${maxPower}(${powerSlots.join(',')}), actions=${actionsRemaining}`);
         });
+        
+        let survivingGoblins = this.simulateCombatActionsGreedy(projectedGoblins, combatActionsQueue);
         
         let totalRetaliationDmg = survivingGoblins.reduce((sum, g) => sum + g.level, 0);
         let totalPlayersHp = this.gameState.players.reduce((sum, p) => sum + (p.hp > 0 ? p.hp : 0), 0);
@@ -734,19 +775,19 @@ triggerAction(type, target = null, reason = "") {
             safe = totalRetaliationDmg < totalPlayersHp;
         }
         
-        this.gameState.addLog(`DEBUG canClearTableAfterDeployingHito: totalMaxTeamDamage=${totalMaxTeamDamage}, totalPlayersHp=${totalPlayersHp}, projectedRetaliation=${totalRetaliationDmg} (Safe: ${safe}) [${debugDetails.join(' | ')}]`);
+        this.gameState.addLog(`DEBUG canClearTableAfterDeployingHito: totalPlayersHp=${totalPlayersHp}, projectedRetaliation=${totalRetaliationDmg} (Safe: ${safe}) [${debugDetails.join(' | ')}]`);
         
         return safe;
     }
 
     canClearTableWithoutCurrentAction() {
-        let currentGoblinHp = this.gameState.battlefield.goblins.filter(g => !g.isDying).reduce((sum, g) => sum + g.currentHp, 0);
+        let currentGoblins = this.gameState.battlefield.goblins.filter(g => !g.isDying).map(g => ({ ...g }));
         
-        let totalMaxTeamDamage = 0;
+        let combatActionsQueue = [];
         this.gameState.players.forEach((p, idx) => {
             if (p.hp <= 0) return;
             
-            let maxPower = this.getPlayerMaxPowerPerAction(p);
+            let powerSlots = this.getPlayerPowerSlots(p);
             let actionsRemaining = 0;
             
             if (idx === this.gameState.currentPlayerIndex) {
@@ -758,10 +799,13 @@ triggerAction(type, target = null, reason = "") {
                 actionsRemaining = Math.max(0, 3 - this.gameState.battlefield.actionCount);
             }
             
-            totalMaxTeamDamage += maxPower * actionsRemaining;
+            for (let i = 0; i < actionsRemaining; i++) {
+                combatActionsQueue.push(powerSlots);
+            }
         });
         
-        return totalMaxTeamDamage >= currentGoblinHp;
+        let survivingGoblins = this.simulateCombatActionsGreedy(currentGoblins, combatActionsQueue);
+        return survivingGoblins.length === 0;
     }
 
     isWellEquipped(player) {
@@ -1700,10 +1744,38 @@ performCombatTurn(bot) {
                         this.assignDieToEquip(die, weapons[0], bot, "Force‑attack: elimino al goblin con este dado.");
                     } else if (weapons.length > 0) {
                         this.assignDieToEquip(die, weapons[0], bot, "Asignación agresiva a arma.");
-                    } else if (shields.length > 0 && (incomingNormalDmg > 0 || this.getDamageForDieInEquip(die.value, shields[0]) > 0)) {
-                        this.assignDieToEquip(die, shields[0], bot, "Sin armas, asigno a escudo para mitigar daño.");
-                    } else if (heals.length > 0 && bot.hp < bot.maxHp) {
-                        this.assignDieToEquip(die, heals[0], bot, "Asigno a curación para recuperar vida.");
+                    } else if (shields.length > 0 || heals.length > 0) {
+                        let bestShield = null;
+                        let maxShieldVal = 0;
+                        if (shields.length > 0) {
+                            bestShield = shields[0];
+                            if (incomingNormalDmg > 0) {
+                                let sVal = this.getShieldForDieInEquip(die.value, bestShield);
+                                maxShieldVal = Math.min(incomingNormalDmg, sVal);
+                            }
+                        }
+
+                        let bestHeal = null;
+                        let maxHealVal = 0;
+                        if (heals.length > 0 && bot.hp < bot.maxHp) {
+                            bestHeal = heals[0];
+                            let hVal = this.getHealForDieInEquip(die.value, bestHeal);
+                            maxHealVal = Math.min(bot.maxHp - bot.hp, hVal);
+                        }
+
+                        if (bestHeal && maxHealVal > maxShieldVal && maxHealVal > 0) {
+                            this.assignDieToEquip(die, bestHeal, bot, "Asigno a curación porque recupera más vida que mitigar daño.");
+                        } else if (bestShield && maxShieldVal > 0) {
+                            this.assignDieToEquip(die, bestShield, bot, "Sin armas, asigno a escudo para mitigar daño.");
+                        } else if (bestShield && this.getDamageForDieInEquip(die.value, bestShield) > 0) {
+                            this.assignDieToEquip(die, bestShield, bot, "Sin armas, asigno a escudo porque inflige daño.");
+                        } else if (bestHeal && maxHealVal > 0) {
+                            this.assignDieToEquip(die, bestHeal, bot, "Asigno a curación para recuperar vida.");
+                        } else if (bestShield) {
+                            this.assignDieToEquip(die, bestShield, bot, "Sin armas, descarto dado en escudo.");
+                        } else {
+                            this.assignDieToEquip(die, bestHeal, bot, "Sin armas, descarto dado en curación.");
+                        }
                     } else {
                         if (brokenEquipsToRepair.length > 0) {
                             this.assignDieToEquip(die, brokenEquipsToRepair[0], bot, "Equipo roto como último recurso.");
@@ -3338,6 +3410,51 @@ calculateEquipPower(eq, bot) {
     }
 
     // --- HEURÍSTICAS DE ENERGÍA Y HABILIDADES DE ROL ---
+
+    // Retorna la curación que aporta un valor de dado asignado a una pieza de equipo
+    getHealForDieInEquip(val, eq) {
+        if (!this.gameState.isValidDieForEquipment(val, eq)) return 0;
+        const effectStr = (eq.isBroken && eq.broken ? eq.broken.effect : eq.effect).toLowerCase();
+        const extraStr = ((eq.isBroken && eq.broken ? eq.broken.extra : eq.extra) || '').toLowerCase();
+        
+        let currentHeal = 0;
+        
+        if (eq.id === 'gema_regeneracion') {
+            if (val % 2 !== 0) {
+                if (extraStr.includes('cura 2')) currentHeal = 2;
+                else if (extraStr.includes('cura 1')) currentHeal = 1;
+            }
+        } else if (eq.id === 'drenar_justo') {
+            if (extraStr.includes('con un 3: cura 3') && val === 3) currentHeal = 3;
+            else if (extraStr.includes('con un 2: cura 2') && val === 2) currentHeal = 2;
+        } else if (eq.id === 'corazon_elastico') {
+            if (val % 2 !== 0) currentHeal = val;
+        } else {
+            if (effectStr.includes('cura')) {
+                let heal = 0;
+                if (effectStr.includes('dado')) {
+                    heal = val;
+                } else {
+                    let match = effectStr.match(/cura\s+(\d+)/);
+                    if (match) heal = parseInt(match[1]);
+                }
+                if (effectStr.includes('max')) {
+                    let maxMatch = effectStr.match(/max\s+(\d+)/);
+                    if (maxMatch) heal = Math.min(heal, parseInt(maxMatch[1]));
+                }
+                if (effectStr.includes('min')) {
+                    let minMatch = effectStr.match(/min\s+(\d+)/);
+                    if (minMatch) heal = Math.max(heal, parseInt(minMatch[1]));
+                }
+                currentHeal += heal;
+            }
+            if (extraStr.includes('cura max')) {
+                let maxMatch = extraStr.match(/cura max\s+(\d+)/);
+                if (maxMatch) currentHeal += Math.min(val, parseInt(maxMatch[1]));
+            }
+        }
+        return currentHeal;
+    }
 
     // Retorna la defensa/escudo que aporta un valor de dado asignado a una pieza de equipo
     getShieldForDieInEquip(val, eq) {
