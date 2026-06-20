@@ -1974,12 +1974,16 @@ calculateEquipPower(eq, bot) {
                 if (canSurvive) {
                     isSafe = true;
                 } else {
-                    const dropped = targets.pop(); // Drop 1 goblin and re-evaluate
-                    if (dropped && dropped.partnerUid) {
-                        const partnerIdx = targets.findIndex(g => g.uid === dropped.partnerUid);
-                        if (partnerIdx !== -1) {
-                            targets.splice(partnerIdx, 1);
-                        }
+                    isSafe = false;
+                }
+            }
+
+            if (!isSafe) {
+                const dropped = targets.pop(); // Drop 1 goblin and re-evaluate
+                if (dropped && dropped.partnerUid) {
+                    const partnerIdx = targets.findIndex(g => g.uid === dropped.partnerUid);
+                    if (partnerIdx !== -1) {
+                        targets.splice(partnerIdx, 1);
                     }
                 }
             }
