@@ -4204,7 +4204,7 @@ function renderBattlefield() {
     btnOptA.addEventListener('click', () => {
       gameState.battlefield.goblins.push({
         ...DB.goblins[1],
-        uid: Date.now() + Math.random(),
+        uid: Date.now() + '-' + Math.random().toString(36).substring(2),
         currentHp: DB.goblins[1].hp,
         isHito: false
       });

@@ -267,7 +267,7 @@ class GameState {
         this.pendingHito1Goblins--;
         this.battlefield.goblins.push({
           ...DB.goblins[1],
-          uid: Date.now() + Math.random(),
+          uid: Date.now() + '-' + Math.random().toString(36).substring(2),
           currentHp: DB.goblins[1].hp,
           isHito: true
         });
@@ -747,7 +747,7 @@ class GameState {
             if (targetGoblin.isBoss && (this.activeSenda === 'la_madre' || targetGoblin.name.includes("La Madre")) && stats.damage > 0) {
               this.battlefield.goblins.push({
                 ...DB.goblins[1],
-                uid: Date.now() + Math.random(),
+                uid: Date.now() + '-' + Math.random().toString(36).substring(2),
                 currentHp: DB.goblins[1].hp,
                 isInvocacion: true,
                 mo: 0,
@@ -789,7 +789,7 @@ class GameState {
             for(let i=0; i<2; i++){
               this.battlefield.goblins.push({
                 ...DB.goblins[1],
-                uid: Date.now() + Math.random(),
+                uid: Date.now() + '-' + Math.random().toString(36).substring(2),
                 currentHp: DB.goblins[1].hp,
                 isInvocacion: true, 
                 mo: 0,
@@ -808,7 +808,7 @@ class GameState {
               for(let i=0; i<2; i++){
                 this.battlefield.goblins.push({
                   ...DB.goblins[1], 
-                  uid: Date.now() + Math.random(), 
+                  uid: Date.now() + '-' + Math.random().toString(36).substring(2), 
                   currentHp: DB.goblins[1].hp, 
                   isInvocacion: true, 
                   mo: 0, 
@@ -895,7 +895,7 @@ class GameState {
                 this.battlefield.goblins.push({
                   ...DB.goblins[lvl + 1],
                   ...extraProps,
-                  uid: Date.now() + Math.random(),
+                  uid: Date.now() + '-' + Math.random().toString(36).substring(2),
                   currentHp: DB.goblins[lvl + 1].hp,
                   isMutated: true
                 });
@@ -908,7 +908,7 @@ class GameState {
             if (!pairFound) {
               this.battlefield.goblins.push({
                 ...DB.goblins[2],
-                uid: Date.now() + Math.random(),
+                uid: Date.now() + '-' + Math.random().toString(36).substring(2),
                 currentHp: DB.goblins[2].hp,
                 isInvocacion: true, 
                 mo: 0,
@@ -1083,7 +1083,7 @@ class GameState {
                   applied = true;
                   this.battlefield.goblins.push({
                     ...DB.goblins[1],
-                    uid: Date.now() + Math.random(),
+                    uid: Date.now() + '-' + Math.random().toString(36).substring(2),
                     currentHp: DB.goblins[1].hp,
                     mo: 0,
                     isInvocacion: true,
@@ -1328,7 +1328,7 @@ class GameState {
         if (this.activeSenda === 'cazador' && this.currentHito === 4 && g.isHito && g.level === 1) {
           this.battlefield.goblins.push({
             ...DB.goblins[1],
-            uid: Date.now() + Math.random(),
+            uid: Date.now() + '-' + Math.random().toString(36).substring(2),
             currentHp: DB.goblins[1].hp,
             isInvocacion: true,
             mo: 0,
@@ -1773,7 +1773,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
       // Solo entra activo si hay espacio Y no es un duplicado de uno ya activo
       const canFit = (currentBlocks + card.blocks <= maxBlocks) && !hasDuplicate;
 
-      const justBoughtId = Date.now() + Math.random();
+      const justBoughtId = Date.now() + '-' + Math.random().toString(36).substring(2);
       p.equipped.push({ ...card, isBroken: false, isActive: canFit, _justBoughtId: justBoughtId });
 
       // Limpiar la flag después de 500ms para evitar problemas si se guarda la partida
@@ -1884,7 +1884,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
       let bossHp = hito.bossStats.hpMultiplier * this.players.length;
       this.battlefield.goblins.push({
         ...DB.goblins[5],
-        uid: Date.now() + Math.random(),
+        uid: Date.now() + '-' + Math.random().toString(36).substring(2),
         currentHp: bossHp,
         maxHp: bossHp,
         isBoss: true,
@@ -1901,7 +1901,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
         this.pendingHito1Goblins = totalGobs - 1;
         this.battlefield.goblins.push({
           ...DB.goblins[1],
-          uid: Date.now() + Math.random(),
+          uid: Date.now() + '-' + Math.random().toString(36).substring(2),
           currentHp: DB.goblins[1].hp,
           isHito: true
         });
@@ -1917,7 +1917,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
             let gob = {
               ...DB.goblins[lvl],
               ...extraProps,
-              uid: Date.now() + Math.random(),
+              uid: Date.now() + '-' + Math.random().toString(36).substring(2),
               currentHp: DB.goblins[lvl].hp,
               isHito: true
             };
@@ -2113,7 +2113,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
             let newGoblin = {
               ...DB.goblins[lvl + 1],
               ...extraProps,
-              uid: Date.now() + Math.random(),
+              uid: Date.now() + '-' + Math.random().toString(36).substring(2),
               currentHp: DB.goblins[lvl + 1].hp,
               isMutated: true
             };
@@ -2150,7 +2150,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
 
         if (normales.length >= 1 && invocaciones.length >= 1) {
           this.battlefield.goblins = this.battlefield.goblins.filter(g => g.uid !== normales[0].uid && g.uid !== invocaciones[0].uid);
-          let newGob = { ...DB.goblins[lvl + 1], uid: Date.now() + Math.random(), currentHp: DB.goblins[lvl + 1].hp, isMutated: true };
+          let newGob = { ...DB.goblins[lvl + 1], uid: Date.now() + '-' + Math.random().toString(36).substring(2), currentHp: DB.goblins[lvl + 1].hp, isMutated: true };
           this.battlefield.goblins.push(newGob);
           this.addLog(`🧬 <span style="color:#f54281"><strong>Mutación Mixta:</strong></span> G${lvl} + <span style="color:#4cc9f0">Invocación G${lvl}</span> --> G${lvl + 1}`);
           return { type: 'mutation', uidsToRemove: [normales[0].uid, invocaciones[0].uid], newGoblin: newGob };
@@ -2158,7 +2158,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
 
         if (normales.length >= 1 && hitos.length >= 1) {
           this.battlefield.goblins = this.battlefield.goblins.filter(g => g.uid !== normales[0].uid && g.uid !== hitos[0].uid);
-          let newGob = { ...DB.goblins[lvl + 1], uid: Date.now() + Math.random(), currentHp: DB.goblins[lvl + 1].hp, isMutated: true };
+          let newGob = { ...DB.goblins[lvl + 1], uid: Date.now() + '-' + Math.random().toString(36).substring(2), currentHp: DB.goblins[lvl + 1].hp, isMutated: true };
           this.battlefield.goblins.push(newGob);
           this.addLog(`🧬 <span style="color:#f54281"><strong>Mutación Mixta:</strong></span> G${lvl} + <span style="color:#a545d1">Hito G${lvl}</span> --> G${lvl + 1}`);
           return { type: 'mutation', uidsToRemove: [normales[0].uid, hitos[0].uid], newGoblin: newGob };
@@ -2166,7 +2166,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
 
         if (invocaciones.length >= 1 && hitos.length >= 1) {
           this.battlefield.goblins = this.battlefield.goblins.filter(g => g.uid !== invocaciones[0].uid && g.uid !== hitos[0].uid);
-          let newGob = { ...DB.goblins[lvl + 1], uid: Date.now() + Math.random(), currentHp: DB.goblins[lvl + 1].hp, isMutated: true, isInvocacion: true, mo: 0, isHito: true, image: 'assets/Monstruos/invocacion_0' + (lvl + 1) + '.webp' };
+          let newGob = { ...DB.goblins[lvl + 1], uid: Date.now() + '-' + Math.random().toString(36).substring(2), currentHp: DB.goblins[lvl + 1].hp, isMutated: true, isInvocacion: true, mo: 0, isHito: true, image: 'assets/Monstruos/invocacion_0' + (lvl + 1) + '.webp' };
           this.battlefield.goblins.push(newGob);
           this.addLog(`🧬 <span style="color:#f54281"><strong>Mutación Mixta:</strong></span> <span style="color:#4cc9f0">Invocación G${lvl}</span> + <span style="color:#a545d1">Hito G${lvl}</span> --> <span style="color:#4cc9f0">Invocación G${lvl + 1} (Hito)</span>`);
           return { type: 'mutation', uidsToRemove: [invocaciones[0].uid, hitos[0].uid], newGoblin: newGob };
@@ -2188,7 +2188,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
       if (diff === 'chupado') {
         // Nivel Chupado: Voltea boca arriba tantos Goblins de nivel 1 como jugadores.
         for (let i = 0; i < this.players.length; i++) {
-          let gob = { ...DB.goblins[1], uid: Date.now() + Math.random(), currentHp: DB.goblins[1].hp };
+          let gob = { ...DB.goblins[1], uid: Date.now() + '-' + Math.random().toString(36).substring(2), currentHp: DB.goblins[1].hp };
           this.battlefield.goblins.push(gob);
           spawns.push(gob);
         }
@@ -2199,7 +2199,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
         let nivelAparecer = Math.min(this.battlefield.waveLevel, 5);
         if (DB.goblins[nivelAparecer]) {
           for (let i = 0; i < this.players.length; i++) {
-            let gob = { ...DB.goblins[nivelAparecer], uid: Date.now() + Math.random(), currentHp: DB.goblins[nivelAparecer].hp };
+            let gob = { ...DB.goblins[nivelAparecer], uid: Date.now() + '-' + Math.random().toString(36).substring(2), currentHp: DB.goblins[nivelAparecer].hp };
             this.battlefield.goblins.push(gob);
             spawns.push(gob);
           }
@@ -2209,7 +2209,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
       else if (diff === 'medio') {
         // Nivel Medio: Voltea boca arriba tantos Goblins de nivel 1 como jugadores. A continuación voltea un goblin del nivel de la oleada actual.
         for (let i = 0; i < this.players.length; i++) {
-          let gob = { ...DB.goblins[1], uid: Date.now() + Math.random(), currentHp: DB.goblins[1].hp };
+          let gob = { ...DB.goblins[1], uid: Date.now() + '-' + Math.random().toString(36).substring(2), currentHp: DB.goblins[1].hp };
           this.battlefield.goblins.push(gob);
           spawns.push(gob);
         }
@@ -2217,7 +2217,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
 
         let nivelAparecer = Math.min(this.battlefield.waveLevel, 5);
         if (DB.goblins[nivelAparecer]) {
-          let gob = { ...DB.goblins[nivelAparecer], uid: Date.now() + Math.random(), currentHp: DB.goblins[nivelAparecer].hp };
+          let gob = { ...DB.goblins[nivelAparecer], uid: Date.now() + '-' + Math.random().toString(36).substring(2), currentHp: DB.goblins[nivelAparecer].hp };
           this.battlefield.goblins.push(gob);
           spawns.push(gob);
           this.addLog(`🔥 <span style="color:#f54281"><strong>Aparición (Medio):</strong></span> 1 x G${nivelAparecer}`);
@@ -2226,7 +2226,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
       else if (diff === 'dificil') {
         // Nivel Difícil: Voltea boca arriba tantos Goblins de nivel 1 como jugadores. A continuación voltea un goblin de cada nivel superior hasta la oleada actual, incluida.
         for (let i = 0; i < this.players.length; i++) {
-          let gob = { ...DB.goblins[1], uid: Date.now() + Math.random(), currentHp: DB.goblins[1].hp };
+          let gob = { ...DB.goblins[1], uid: Date.now() + '-' + Math.random().toString(36).substring(2), currentHp: DB.goblins[1].hp };
           this.battlefield.goblins.push(gob);
           spawns.push(gob);
         }
@@ -2235,7 +2235,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
         let nivelMax = Math.min(this.battlefield.waveLevel, 5);
         for (let lvl = 2; lvl <= nivelMax; lvl++) {
           if (DB.goblins[lvl]) {
-            let gob = { ...DB.goblins[lvl], uid: Date.now() + Math.random(), currentHp: DB.goblins[lvl].hp };
+            let gob = { ...DB.goblins[lvl], uid: Date.now() + '-' + Math.random().toString(36).substring(2), currentHp: DB.goblins[lvl].hp };
             this.battlefield.goblins.push(gob);
             spawns.push(gob);
             this.addLog(`🔥 <span style="color:#f54281"><strong>Aparición (Difícil):</strong></span> 1 x G${lvl}`);
@@ -2245,7 +2245,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
 
       // Eclosión Tardía (Senda de La Madre)
       if (this.activeSenda === 'la_madre') {
-        let gob = { ...DB.goblins[1], uid: Date.now() + Math.random(), currentHp: DB.goblins[1].hp };
+        let gob = { ...DB.goblins[1], uid: Date.now() + '-' + Math.random().toString(36).substring(2), currentHp: DB.goblins[1].hp };
         this.battlefield.goblins.push(gob);
         spawns.push(gob);
         this.addLog(`🥚 <span style="color:#f54281"><strong>Eclosión Tardía:</strong></span> 1 x G1 extra por La Madre`);
@@ -2269,7 +2269,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
           for (let i = 0; i < toSpawn; i++) {
             let gob = {
               ...DB.goblins[1],
-              uid: Date.now() + Math.random(),
+              uid: Date.now() + '-' + Math.random().toString(36).substring(2),
               currentHp: DB.goblins[1].hp,
               isHito: true,
               isInvocacion: true,
