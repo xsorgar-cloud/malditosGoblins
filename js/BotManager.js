@@ -1462,7 +1462,7 @@ performCombatTurn(bot) {
             const plannedKills = planResult.goblinsKilled;
 
             // Lógica de relanzamiento de dados negros (antes de asignar ningún dado, desactivado en fase de calambres)
-            const dieToReroll = !isCrampPhase ? availableDice.find(d => d.type === 'black' && !d.rerolled && this.shouldRerollBlackDie(d, bot, plannedAssignments)) : null;
+            const dieToReroll = !isCrampPhase ? availableDice.find(d => d.type === 'black' && !d.rerolled && this.shouldRerollBlackDie(d, bot, plannedAssignments, plannedKills)) : null;
             if (dieToReroll) {
                 console.log("[BotManager] Decided to reroll black die:", dieToReroll.id);
                 this.isActing = true;
@@ -2249,8 +2249,8 @@ calculateEquipPower(eq, bot) {
         return dmg;
     }
 
-// Decide si debe volver a lanzar un dado negro según su utilidad actual
-    shouldRerollBlackDie(die, bot, plannedAssignments = {}) {
+    // Decide si debe volver a lanzar un dado negro según su utilidad actual
+    shouldRerollBlackDie(die, bot, plannedAssignments = {}, plannedKills = 0) {
         if (die.type !== 'black' || die.rerolled || die.isCramped) return false;
 
         // Detectar si este dado negro es redundante y acabará descartado sin aportar valor.
@@ -2348,9 +2348,14 @@ calculateEquipPower(eq, bot) {
         let bestCurrentPower = 0;
         let isSpecialActivated = false;
         
+        const allGoblinsDead = plannedKills === (this.gameState.currentCombat && this.gameState.currentCombat.goblins ? this.gameState.currentCombat.goblins.length : 0);
+        const forbiddenForWeapons = (plannedKills > 0 && !isPlannedForWeapon) || allGoblinsDead;
+
         // Obtenemos equipo al que se puede asignar este dado (excluyendo el que ya está planificado para otros dados)
         const usableEquip = bot.equipped.filter(eq => {
             if (!eq.isActive) return false;
+            
+            if (this.isWeapon(eq) && forbiddenForWeapons) return false;
             
             // Si el equipo está ocupado por otro dado en el plan, no lo consideramos disponible para el dado negro
             const hasOtherDiePlanned = Object.keys(plannedAssignments).some(dieId => {
