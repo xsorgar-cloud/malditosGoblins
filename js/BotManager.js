@@ -768,11 +768,37 @@ triggerAction(type, target = null, reason = "") {
         let totalPlayersHp = this.gameState.players.reduce((sum, p) => sum + (p.hp > 0 ? p.hp : 0), 0);
         
         let safe = false;
+        
+        // Simular mutaciones esperadas (Cualquier par de goblins del mismo nivel muta al siguiente nivel)
+        let hasDangerousMutations = false;
+        let goblinCounts = {1: 0, 2: 0, 3: 0, 4: 0, 5: 0};
+
+        survivingGoblins.forEach(g => {
+            goblinCounts[g.level] = (goblinCounts[g.level] || 0) + 1;
+        });
+
+        let maxPlayerLevel = Math.max(...this.gameState.players.map(p => p.level || 1));
+        let dangerousLevelThreshold = maxPlayerLevel + 2; // Goblins dos niveles por encima del jugador son muy peligrosos
+
+        // Resolver mutaciones (de nivel 1 hacia arriba)
+        for (let lvl = 1; lvl <= 4; lvl++) {
+            while (goblinCounts[lvl] >= 2) {
+                goblinCounts[lvl] -= 2;
+                goblinCounts[lvl + 1] = (goblinCounts[lvl + 1] || 0) + 1;
+            }
+            
+            for (let checkLvl = dangerousLevelThreshold; checkLvl <= 5; checkLvl++) {
+                if (goblinCounts[checkLvl] > 0) hasDangerousMutations = true;
+            }
+        }
+
         if (this.gameState.battlefield.actionCount >= 2) {
-            // Regla: En la última acción, solo se despliega si limpia el 100% de la mesa (Retaliation = 0)
+            // Regla: En la última acción, solo se despliega si limpia el 100% de la mesa
             safe = (totalRetaliationDmg === 0);
         } else {
-            safe = totalRetaliationDmg < totalPlayersHp;
+            // Regla: En las primeras acciones, puede dejar vivos goblins asumiendo daño,
+            // SIEMPRE Y CUANDO no mueran por represalia y no se generen mutaciones peligrosas (nivel 3+)
+            safe = (totalRetaliationDmg < totalPlayersHp) && !hasDangerousMutations;
         }
         
         this.gameState.addLog(`DEBUG canClearTableAfterDeployingHito: totalPlayersHp=${totalPlayersHp}, projectedRetaliation=${totalRetaliationDmg} (Safe: ${safe}) [${debugDetails.join(' | ')}]`);
