@@ -1,0 +1,1396 @@
+{
+  "gameInfo": {
+    "activeSenda": "iniciacion",
+    "currentHito": 3,
+    "isGameOver": false,
+    "isGameWon": false,
+    "players": [
+      {
+        "id": 1,
+        "name": "Jugador 1",
+        "isBot": true,
+        "hp": 4,
+        "maxHp": 15,
+        "mo": 0,
+        "pex": 5,
+        "level": 2,
+        "role": {
+          "id": "guerrero",
+          "name": "Guerrero"
+        },
+        "statusEffects": {
+          "escozor": 0,
+          "calambre": 0,
+          "tembleque": 0,
+          "eliminaRojo": 0
+        },
+        "equipped": [
+          {
+            "id": "espada_inicial",
+            "name": "Espada Inicial",
+            "type": "inicial",
+            "isBroken": false,
+            "effect": "Daño dado",
+            "extra": "",
+            "cost": 0
+          },
+          {
+            "id": "escudo_inicial",
+            "name": "Escudo Madera",
+            "type": "inicial",
+            "isBroken": true,
+            "effect": "Escudo dado MAX 4",
+            "extra": "",
+            "cost": 0
+          },
+          {
+            "id": "cuchillo",
+            "name": "Cuchillo",
+            "type": "ataque",
+            "isBroken": false,
+            "effect": "Daño 3",
+            "extra": "",
+            "cost": 3
+          },
+          {
+            "id": "gema_regeneracion",
+            "name": "Gema Regeneración",
+            "type": "curacion",
+            "isBroken": false,
+            "effect": "Daño dado",
+            "extra": "Con un impar: cura 2",
+            "cost": 4
+          }
+        ],
+        "backpack": []
+      }
+    ]
+  },
+  "marketState": {
+    "ataque": {
+      "id": "anadir_pinchos",
+      "name": "Añadir Pinchos",
+      "cost": 6,
+      "effect": "Daño dado",
+      "extra": "Con un 5: daño 6"
+    },
+    "escudos": {
+      "id": "reforzado_placas",
+      "name": "Reforzado de Placas",
+      "cost": 3,
+      "effect": "Escudo dado MAX 4",
+      "extra": ""
+    },
+    "curacion": {
+      "id": "gema_regeneracion",
+      "name": "Gema Regeneración",
+      "cost": 4,
+      "effect": "Daño dado",
+      "extra": "Con un impar: cura 2"
+    }
+  },
+  "battlefieldState": {
+    "waveLevel": 3,
+    "actionCount": 0,
+    "goblins": [
+      {
+        "name": "Goblin H",
+        "level": 3,
+        "currentHp": 15,
+        "isBoss": false,
+        "isHito": true,
+        "isDying": false
+      },
+      {
+        "name": "Goblin I",
+        "level": 3,
+        "currentHp": 15,
+        "isBoss": false,
+        "isHito": false,
+        "isDying": false
+      }
+    ]
+  },
+  "combatHistory": [
+    {
+      "player": {
+        "name": "Jugador 1",
+        "playerNum": 1,
+        "hp": 10,
+        "shield": 0,
+        "energy": 0,
+        "mo": 2,
+        "pex": 0,
+        "level": 1,
+        "role": "guerrero",
+        "equipped": [
+          {
+            "id": "espada_inicial",
+            "name": "Espada Inicial",
+            "isBroken": false,
+            "isActive": true
+          },
+          {
+            "id": "escudo_inicial",
+            "name": "Escudo Madera",
+            "isBroken": false,
+            "isActive": true
+          }
+        ]
+      },
+      "goblins": [
+        {
+          "uid": 1781993572519,
+          "name": "Goblin A",
+          "level": 1,
+          "hp": 5,
+          "hpAfter": -1
+        }
+      ],
+      "playerDice": [
+        {
+          "type": "red",
+          "faces": 6,
+          "id": "die-0",
+          "value": 4,
+          "rerolled": false,
+          "assignedTo": "intercept-1781993572519-0"
+        },
+        {
+          "type": "black",
+          "faces": 6,
+          "id": "die-1",
+          "value": 6,
+          "rerolled": true,
+          "assignedTo": "espada_inicial"
+        }
+      ],
+      "goblinDice": {
+        "1781993572519": {
+          "total": 4,
+          "details": [
+            {
+              "type": "die",
+              "faces": 4,
+              "val": 4
+            }
+          ]
+        }
+      },
+      "assignments": {
+        "espada_inicial": [
+          {
+            "dieId": "die-1",
+            "value": 6,
+            "targetUid": 1781993572519,
+            "elasticDamage": null
+          }
+        ]
+      },
+      "interceptions": {
+        "1781993572519": [
+          {
+            "dieId": "die-0",
+            "value": 4,
+            "goblinDieIndex": 0
+          }
+        ]
+      },
+      "resolvedDetails": {
+        "playerDiceDetails": [
+          {
+            "dieId": "die-1",
+            "value": 6,
+            "assignedTo": "Espada Inicial",
+            "isRole": false,
+            "damage": 6,
+            "shield": 0,
+            "heal": 0,
+            "target": "Goblin A"
+          },
+          {
+            "dieId": "die-0",
+            "value": 4,
+            "assignedTo": "Intercepción contra Goblin A",
+            "isRole": false,
+            "isIntercept": true,
+            "damage": 0,
+            "shield": 0,
+            "heal": 0,
+            "energyGained": 0,
+            "target": "Goblin A"
+          }
+        ],
+        "goblinDiceDetails": [
+          {
+            "goblinName": "Goblin A",
+            "val": 4,
+            "isIntercepted": true,
+            "interceptedBy": 4,
+            "interceptedByDieId": "die-0",
+            "effects": [
+              {
+                "text": "Rotura no esquivable [Se rompió: Espada Inicial]",
+                "status": "aplicado"
+              }
+            ]
+          }
+        ],
+        "finalPlayerOutcome": {
+          "hpBefore": 10,
+          "hpAfter": 10,
+          "levelBefore": 1,
+          "levelAfter": 1,
+          "directDamageReceived": 0,
+          "normalDamageIncoming": 0,
+          "damageBlocked": 0,
+          "netNormalDamageReceived": 0,
+          "escozorDamageDealt": 0,
+          "warlordExtraDmg": 0,
+          "finalDamageHpChange": 0
+        }
+      },
+      "id": 1,
+      "timestamp": "21/6/2026, 0:13:16",
+      "wave": 1
+    },
+    {
+      "player": {
+        "name": "Jugador 1",
+        "playerNum": 1,
+        "hp": 10,
+        "shield": 0,
+        "energy": 0,
+        "mo": 1,
+        "pex": 1,
+        "level": 1,
+        "role": "guerrero",
+        "equipped": [
+          {
+            "id": "espada_inicial",
+            "name": "Espada Inicial",
+            "isBroken": true,
+            "isActive": true
+          },
+          {
+            "id": "escudo_inicial",
+            "name": "Escudo Madera",
+            "isBroken": false,
+            "isActive": true
+          },
+          {
+            "id": "cuchillo",
+            "name": "Cuchillo",
+            "isBroken": false,
+            "isActive": true
+          }
+        ]
+      },
+      "goblins": [
+        {
+          "uid": 1781993577561.1094,
+          "name": "Goblin B",
+          "level": 1,
+          "hp": 5,
+          "hpAfter": 5
+        },
+        {
+          "uid": 1781993577561.4473,
+          "name": "Goblin C",
+          "level": 1,
+          "hp": 5,
+          "hpAfter": 5
+        }
+      ],
+      "playerDice": [
+        {
+          "type": "red",
+          "faces": 6,
+          "id": "die-0",
+          "value": 4,
+          "rerolled": false,
+          "assignedTo": "intercept-1781993577561.4473-0"
+        },
+        {
+          "type": "black",
+          "faces": 6,
+          "id": "die-1",
+          "value": 3,
+          "rerolled": false,
+          "assignedTo": "intercept-1781993577561.1094-0"
+        }
+      ],
+      "goblinDice": {
+        "1781993577561.1094": {
+          "total": 3,
+          "details": [
+            {
+              "type": "die",
+              "faces": 4,
+              "val": 3
+            }
+          ]
+        },
+        "1781993577561.4473": {
+          "total": 4,
+          "details": [
+            {
+              "type": "die",
+              "faces": 4,
+              "val": 4
+            }
+          ]
+        }
+      },
+      "assignments": {},
+      "interceptions": {
+        "1781993577561.4473": [
+          {
+            "dieId": "die-0",
+            "value": 4,
+            "goblinDieIndex": 0
+          }
+        ],
+        "1781993577561.1094": [
+          {
+            "dieId": "die-1",
+            "value": 3,
+            "goblinDieIndex": 0
+          }
+        ]
+      },
+      "resolvedDetails": {
+        "playerDiceDetails": [
+          {
+            "dieId": "die-0",
+            "value": 4,
+            "assignedTo": "Intercepción contra Goblin C",
+            "isRole": false,
+            "isIntercept": true,
+            "damage": 0,
+            "shield": 0,
+            "heal": 0,
+            "energyGained": 0,
+            "target": "Goblin C"
+          },
+          {
+            "dieId": "die-1",
+            "value": 3,
+            "assignedTo": "Intercepción contra Goblin B",
+            "isRole": false,
+            "isIntercept": true,
+            "damage": 0,
+            "shield": 0,
+            "heal": 0,
+            "energyGained": 0,
+            "target": "Goblin B"
+          }
+        ],
+        "goblinDiceDetails": [
+          {
+            "goblinName": "Goblin B",
+            "val": 3,
+            "isIntercepted": true,
+            "interceptedBy": 3,
+            "interceptedByDieId": "die-1",
+            "effects": []
+          },
+          {
+            "goblinName": "Goblin C",
+            "val": 4,
+            "isIntercepted": true,
+            "interceptedBy": 4,
+            "interceptedByDieId": "die-0",
+            "effects": [
+              {
+                "text": "Rotura no esquivable [Se rompió: Cuchillo]",
+                "status": "aplicado"
+              }
+            ]
+          }
+        ],
+        "finalPlayerOutcome": {
+          "hpBefore": 10,
+          "hpAfter": 10,
+          "levelBefore": 1,
+          "levelAfter": 1,
+          "directDamageReceived": 0,
+          "normalDamageIncoming": 0,
+          "damageBlocked": 0,
+          "netNormalDamageReceived": 0,
+          "escozorDamageDealt": 0,
+          "warlordExtraDmg": 0,
+          "finalDamageHpChange": 0
+        }
+      },
+      "id": 2,
+      "timestamp": "21/6/2026, 0:13:44",
+      "wave": 1
+    },
+    {
+      "player": {
+        "name": "Jugador 1",
+        "playerNum": 1,
+        "hp": 10,
+        "shield": 0,
+        "energy": 0,
+        "mo": 1,
+        "pex": 1,
+        "level": 1,
+        "role": "guerrero",
+        "equipped": [
+          {
+            "id": "espada_inicial",
+            "name": "Espada Inicial",
+            "isBroken": true,
+            "isActive": true
+          },
+          {
+            "id": "escudo_inicial",
+            "name": "Escudo Madera",
+            "isBroken": false,
+            "isActive": true
+          },
+          {
+            "id": "cuchillo",
+            "name": "Cuchillo",
+            "isBroken": true,
+            "isActive": true
+          }
+        ]
+      },
+      "goblins": [
+        {
+          "uid": 1781993577561.1094,
+          "name": "Goblin B",
+          "level": 1,
+          "hp": 5,
+          "hpAfter": 0
+        }
+      ],
+      "playerDice": [
+        {
+          "type": "red",
+          "faces": 6,
+          "id": "die-0",
+          "value": 2,
+          "rerolled": false,
+          "assignedTo": "escudo_inicial"
+        },
+        {
+          "type": "black",
+          "faces": 6,
+          "id": "die-1",
+          "value": 5,
+          "rerolled": false,
+          "assignedTo": "espada_inicial"
+        }
+      ],
+      "goblinDice": {
+        "1781993577561.1094": {
+          "total": 4,
+          "details": [
+            {
+              "type": "die",
+              "faces": 4,
+              "val": 4
+            }
+          ]
+        }
+      },
+      "assignments": {
+        "espada_inicial": [
+          {
+            "dieId": "die-1",
+            "value": 5,
+            "targetUid": 1781993577561.1094,
+            "elasticDamage": null
+          }
+        ],
+        "escudo_inicial": [
+          {
+            "dieId": "die-0",
+            "value": 2,
+            "targetUid": null,
+            "elasticDamage": null
+          }
+        ]
+      },
+      "interceptions": {},
+      "resolvedDetails": {
+        "playerDiceDetails": [
+          {
+            "dieId": "die-1",
+            "value": 5,
+            "assignedTo": "Espada Inicial",
+            "isRole": false,
+            "damage": 5,
+            "shield": 0,
+            "heal": 0,
+            "target": "Goblin B"
+          },
+          {
+            "dieId": "die-0",
+            "value": 2,
+            "assignedTo": "Escudo Madera",
+            "isRole": false,
+            "damage": 0,
+            "shield": 2,
+            "heal": 0,
+            "target": "Sin objetivo"
+          }
+        ],
+        "goblinDiceDetails": [
+          {
+            "goblinName": "Goblin B",
+            "val": 4,
+            "isIntercepted": false,
+            "interceptedBy": null,
+            "interceptedByDieId": null,
+            "effects": [
+              {
+                "text": "Rotura no esquivable [Se rompió: Escudo Madera]",
+                "status": "aplicado"
+              }
+            ]
+          }
+        ],
+        "finalPlayerOutcome": {
+          "hpBefore": 10,
+          "hpAfter": 13,
+          "levelBefore": 1,
+          "levelAfter": 2,
+          "directDamageReceived": 0,
+          "normalDamageIncoming": 4,
+          "damageBlocked": 2,
+          "netNormalDamageReceived": 2,
+          "escozorDamageDealt": 0,
+          "warlordExtraDmg": 0,
+          "finalDamageHpChange": 2
+        }
+      },
+      "id": 3,
+      "timestamp": "21/6/2026, 0:14:09",
+      "wave": 1
+    },
+    {
+      "player": {
+        "name": "Jugador 1",
+        "playerNum": 1,
+        "hp": 12,
+        "shield": 0,
+        "energy": 0,
+        "mo": 2,
+        "pex": 2,
+        "level": 2,
+        "role": "guerrero",
+        "equipped": [
+          {
+            "id": "espada_inicial",
+            "name": "Espada Inicial",
+            "isBroken": false,
+            "isActive": true
+          },
+          {
+            "id": "escudo_inicial",
+            "name": "Escudo Madera",
+            "isBroken": true,
+            "isActive": true
+          },
+          {
+            "id": "cuchillo",
+            "name": "Cuchillo",
+            "isBroken": true,
+            "isActive": true
+          }
+        ]
+      },
+      "goblins": [
+        {
+          "uid": 1781993577561.4473,
+          "name": "Goblin C",
+          "level": 1,
+          "hp": 5,
+          "hpAfter": -1
+        },
+        {
+          "uid": 1781993660339.6216,
+          "name": "Goblin D",
+          "level": 2,
+          "hp": 10,
+          "hpAfter": 10
+        }
+      ],
+      "playerDice": [
+        {
+          "type": "red",
+          "faces": 6,
+          "id": "die-0",
+          "value": 6,
+          "rerolled": false,
+          "assignedTo": "espada_inicial"
+        },
+        {
+          "type": "black",
+          "faces": 6,
+          "id": "die-1",
+          "value": 2,
+          "rerolled": false,
+          "assignedTo": "intercept-1781993660339.6216-0"
+        },
+        {
+          "type": "red",
+          "faces": 6,
+          "id": "die-2",
+          "value": 3,
+          "rerolled": false,
+          "assignedTo": "escudo_inicial"
+        }
+      ],
+      "goblinDice": {
+        "1781993577561.4473": {
+          "total": 4,
+          "details": [
+            {
+              "type": "die",
+              "faces": 4,
+              "val": 4
+            }
+          ]
+        },
+        "1781993660339.6216": {
+          "total": 3,
+          "details": [
+            {
+              "type": "die",
+              "faces": 6,
+              "val": 2
+            },
+            {
+              "type": "mod",
+              "val": 1
+            }
+          ]
+        }
+      },
+      "assignments": {
+        "espada_inicial": [
+          {
+            "dieId": "die-0",
+            "value": 6,
+            "targetUid": 1781993577561.4473,
+            "elasticDamage": null
+          }
+        ],
+        "escudo_inicial": [
+          {
+            "dieId": "die-2",
+            "value": 3,
+            "targetUid": null,
+            "elasticDamage": null
+          }
+        ]
+      },
+      "interceptions": {
+        "1781993660339.6216": [
+          {
+            "dieId": "die-1",
+            "value": 2,
+            "goblinDieIndex": 0
+          }
+        ]
+      },
+      "resolvedDetails": {
+        "playerDiceDetails": [
+          {
+            "dieId": "die-0",
+            "value": 6,
+            "assignedTo": "Espada Inicial",
+            "isRole": false,
+            "damage": 6,
+            "shield": 0,
+            "heal": 0,
+            "target": "Goblin C"
+          },
+          {
+            "dieId": "die-2",
+            "value": 3,
+            "assignedTo": "Escudo Madera",
+            "isRole": false,
+            "damage": 0,
+            "shield": 3,
+            "heal": 0,
+            "target": "Sin objetivo"
+          },
+          {
+            "dieId": "die-1",
+            "value": 2,
+            "assignedTo": "Intercepción contra Goblin D",
+            "isRole": false,
+            "isIntercept": true,
+            "damage": 0,
+            "shield": 0,
+            "heal": 0,
+            "energyGained": 0,
+            "target": "Goblin D"
+          }
+        ],
+        "goblinDiceDetails": [
+          {
+            "goblinName": "Goblin C",
+            "val": 4,
+            "isIntercepted": false,
+            "interceptedBy": null,
+            "interceptedByDieId": null,
+            "effects": [
+              {
+                "text": "Rotura no esquivable [Se rompió: Espada Inicial]",
+                "status": "aplicado"
+              }
+            ]
+          },
+          {
+            "goblinName": "Goblin D",
+            "val": 2,
+            "isIntercepted": true,
+            "interceptedBy": 2,
+            "interceptedByDieId": "die-1",
+            "effects": [
+              {
+                "text": "1 calambre",
+                "status": "mitigado"
+              }
+            ]
+          }
+        ],
+        "finalPlayerOutcome": {
+          "hpBefore": 12,
+          "hpAfter": 11,
+          "levelBefore": 2,
+          "levelAfter": 2,
+          "directDamageReceived": 0,
+          "normalDamageIncoming": 4,
+          "damageBlocked": 3,
+          "netNormalDamageReceived": 1,
+          "escozorDamageDealt": 0,
+          "warlordExtraDmg": 0,
+          "finalDamageHpChange": 1
+        }
+      },
+      "id": 4,
+      "timestamp": "21/6/2026, 0:14:37",
+      "wave": 2
+    },
+    {
+      "player": {
+        "name": "Jugador 1",
+        "playerNum": 1,
+        "hp": 11,
+        "shield": 0,
+        "energy": 0,
+        "mo": 3,
+        "pex": 3,
+        "level": 2,
+        "role": "guerrero",
+        "equipped": [
+          {
+            "id": "espada_inicial",
+            "name": "Espada Inicial",
+            "isBroken": true,
+            "isActive": true
+          },
+          {
+            "id": "escudo_inicial",
+            "name": "Escudo Madera",
+            "isBroken": false,
+            "isActive": true
+          },
+          {
+            "id": "cuchillo",
+            "name": "Cuchillo",
+            "isBroken": true,
+            "isActive": true
+          }
+        ]
+      },
+      "goblins": [
+        {
+          "uid": 1781993660339.6216,
+          "name": "Goblin D",
+          "level": 2,
+          "hp": 10,
+          "hpAfter": 3
+        }
+      ],
+      "playerDice": [
+        {
+          "type": "red",
+          "faces": 6,
+          "id": "die-0",
+          "value": 2,
+          "rerolled": false,
+          "assignedTo": "cuchillo"
+        },
+        {
+          "type": "black",
+          "faces": 6,
+          "id": "die-1",
+          "value": 4,
+          "rerolled": true,
+          "assignedTo": "escudo_inicial"
+        },
+        {
+          "type": "red",
+          "faces": 6,
+          "id": "die-2",
+          "value": 4,
+          "rerolled": false,
+          "assignedTo": "espada_inicial"
+        }
+      ],
+      "goblinDice": {
+        "1781993660339.6216": {
+          "total": 7,
+          "details": [
+            {
+              "type": "die",
+              "faces": 6,
+              "val": 6
+            },
+            {
+              "type": "mod",
+              "val": 1
+            }
+          ]
+        }
+      },
+      "assignments": {
+        "espada_inicial": [
+          {
+            "dieId": "die-2",
+            "value": 4,
+            "targetUid": 1781993660339.6216,
+            "elasticDamage": null
+          }
+        ],
+        "cuchillo": [
+          {
+            "dieId": "die-0",
+            "value": 2,
+            "targetUid": 1781993660339.6216,
+            "elasticDamage": null
+          }
+        ],
+        "escudo_inicial": [
+          {
+            "dieId": "die-1",
+            "value": 4,
+            "targetUid": null,
+            "elasticDamage": null
+          }
+        ]
+      },
+      "interceptions": {},
+      "resolvedDetails": {
+        "playerDiceDetails": [
+          {
+            "dieId": "die-2",
+            "value": 4,
+            "assignedTo": "Espada Inicial",
+            "isRole": false,
+            "damage": 4,
+            "shield": 0,
+            "heal": 0,
+            "target": "Goblin D"
+          },
+          {
+            "dieId": "die-0",
+            "value": 2,
+            "assignedTo": "Cuchillo",
+            "isRole": false,
+            "damage": 3,
+            "shield": 0,
+            "heal": 0,
+            "target": "Goblin D"
+          },
+          {
+            "dieId": "die-1",
+            "value": 4,
+            "assignedTo": "Escudo Madera",
+            "isRole": false,
+            "damage": 0,
+            "shield": 4,
+            "heal": 0,
+            "target": "Sin objetivo"
+          }
+        ],
+        "goblinDiceDetails": [
+          {
+            "goblinName": "Goblin D",
+            "val": 6,
+            "isIntercepted": false,
+            "interceptedBy": null,
+            "interceptedByDieId": null,
+            "effects": [
+              {
+                "text": "Rotura no esquivable [Se rompió: Escudo Madera]",
+                "status": "aplicado"
+              }
+            ]
+          }
+        ],
+        "finalPlayerOutcome": {
+          "hpBefore": 11,
+          "hpAfter": 8,
+          "levelBefore": 2,
+          "levelAfter": 2,
+          "directDamageReceived": 0,
+          "normalDamageIncoming": 7,
+          "damageBlocked": 4,
+          "netNormalDamageReceived": 3,
+          "escozorDamageDealt": 0,
+          "warlordExtraDmg": 0,
+          "finalDamageHpChange": 3
+        }
+      },
+      "id": 5,
+      "timestamp": "21/6/2026, 0:15:09",
+      "wave": 2
+    },
+    {
+      "player": {
+        "name": "Jugador 1",
+        "playerNum": 1,
+        "hp": 8,
+        "shield": 0,
+        "energy": 0,
+        "mo": 2,
+        "pex": 3,
+        "level": 2,
+        "role": "guerrero",
+        "equipped": [
+          {
+            "id": "espada_inicial",
+            "name": "Espada Inicial",
+            "isBroken": false,
+            "isActive": true
+          },
+          {
+            "id": "escudo_inicial",
+            "name": "Escudo Madera",
+            "isBroken": true,
+            "isActive": true
+          },
+          {
+            "id": "cuchillo",
+            "name": "Cuchillo",
+            "isBroken": true,
+            "isActive": true
+          }
+        ]
+      },
+      "goblins": [
+        {
+          "uid": 1781993660339.6216,
+          "name": "Goblin D",
+          "level": 2,
+          "hp": 3,
+          "hpAfter": 0
+        }
+      ],
+      "playerDice": [
+        {
+          "type": "red",
+          "faces": 6,
+          "id": "die-0",
+          "value": 1,
+          "rerolled": false,
+          "assignedTo": "role"
+        },
+        {
+          "type": "black",
+          "faces": 6,
+          "id": "die-1",
+          "value": 3,
+          "rerolled": true,
+          "assignedTo": "intercept-1781993660339.6216-0"
+        },
+        {
+          "type": "red",
+          "faces": 6,
+          "id": "die-2",
+          "value": 4,
+          "rerolled": false,
+          "assignedTo": "cuchillo"
+        }
+      ],
+      "goblinDice": {
+        "1781993660339.6216": {
+          "total": 4,
+          "details": [
+            {
+              "type": "die",
+              "faces": 6,
+              "val": 3
+            },
+            {
+              "type": "mod",
+              "val": 1
+            }
+          ]
+        }
+      },
+      "assignments": {
+        "cuchillo": [
+          {
+            "dieId": "die-2",
+            "value": 4,
+            "targetUid": 1781993660339.6216,
+            "elasticDamage": null
+          }
+        ],
+        "role": [
+          {
+            "dieId": "die-0",
+            "value": 1,
+            "isRole": true
+          }
+        ]
+      },
+      "interceptions": {
+        "1781993660339.6216": [
+          {
+            "dieId": "die-1",
+            "value": 3,
+            "goblinDieIndex": 0
+          }
+        ]
+      },
+      "resolvedDetails": {
+        "playerDiceDetails": [
+          {
+            "dieId": "die-2",
+            "value": 4,
+            "assignedTo": "Cuchillo",
+            "isRole": false,
+            "damage": 3,
+            "shield": 0,
+            "heal": 0,
+            "target": "Goblin D"
+          },
+          {
+            "dieId": "die-0",
+            "value": 1,
+            "assignedTo": "Rol (Guerrero)",
+            "isRole": true,
+            "damage": 0,
+            "shield": 0,
+            "heal": 0,
+            "energyGained": 0,
+            "target": "Rol"
+          },
+          {
+            "dieId": "die-1",
+            "value": 3,
+            "assignedTo": "Intercepción contra Goblin D",
+            "isRole": false,
+            "isIntercept": true,
+            "damage": 0,
+            "shield": 0,
+            "heal": 0,
+            "energyGained": 0,
+            "target": "Goblin D"
+          }
+        ],
+        "goblinDiceDetails": [
+          {
+            "goblinName": "Goblin D",
+            "val": 3,
+            "isIntercepted": true,
+            "interceptedBy": 3,
+            "interceptedByDieId": "die-1",
+            "effects": []
+          }
+        ],
+        "finalPlayerOutcome": {
+          "hpBefore": 8,
+          "hpAfter": 8,
+          "levelBefore": 2,
+          "levelAfter": 2,
+          "directDamageReceived": 0,
+          "normalDamageIncoming": 0,
+          "damageBlocked": 0,
+          "netNormalDamageReceived": 0,
+          "escozorDamageDealt": 0,
+          "warlordExtraDmg": 0,
+          "finalDamageHpChange": 0
+        }
+      },
+      "id": 6,
+      "timestamp": "21/6/2026, 0:15:52",
+      "wave": 2
+    }
+  ],
+  "structuredActions": [
+    {
+      "type": "deploy_hito",
+      "hitoName": "Bautismo de Hierro",
+      "timestamp": "00:12:57",
+      "rawLog": "[00:12:57] 🔥 <strong>HITO DESPLEGADO: Bautismo de Hierro</strong> 🔥"
+    },
+    {
+      "type": "buy_equipment",
+      "player": "Jugador 1",
+      "item": "Cuchillo",
+      "cost": 3,
+      "destination": "equipped",
+      "reason": null,
+      "timestamp": "00:13:23",
+      "rawLog": "[00:13:23] <strong>Jugador 1</strong> compró y EQUIPÓ <em>Cuchillo</em> por 3 mo."
+    },
+    {
+      "type": "group_level_up",
+      "level": 2,
+      "timestamp": "00:14:09",
+      "rawLog": "[00:14:09] 🎉 <span style=\"color:#ecf542\">¡<strong>Los jugadores subieron al Nivel 2!  ❤️+5</strong></span> 🎉"
+    },
+    {
+      "type": "repair_equipment",
+      "player": "🛠️ Jugador 1",
+      "item": "Espada Inicial",
+      "timestamp": "00:14:10",
+      "rawLog": "[00:14:10] 🛠️ <strong>Jugador 1</strong> (Bot) pagó 1 mo para reparar <strong>Espada Inicial</strong>."
+    },
+    {
+      "type": "level_up_die",
+      "player": "🎲 Jugador 1",
+      "dieType": "red",
+      "bonus": null,
+      "timestamp": "00:14:12",
+      "rawLog": "[00:14:12] 🎲 <strong>Jugador 1</strong> añadió un dado Rojo d6 a su colección."
+    },
+    {
+      "type": "wave_phase_start",
+      "wave": 2,
+      "timestamp": "00:14:20",
+      "rawLog": "[00:14:20] <span style=\"color:#f54281\"><strong>RESOLVIENDO FASE DE OLEADA 2 </strong></span>"
+    },
+    {
+      "type": "goblin_spawn",
+      "difficulty": "Fácil",
+      "details": "1 x G2",
+      "timestamp": "00:14:20",
+      "rawLog": "[00:14:20] 🔥 <span style=\"color:#f54281\"><strong>Aparición (Fácil):</strong></span> 1 x G2"
+    },
+    {
+      "type": "repair_equipment",
+      "player": "🛠️ Jugador 1",
+      "item": "Escudo Madera",
+      "timestamp": "00:14:40",
+      "rawLog": "[00:14:40] 🛠️ <strong>Jugador 1</strong> (Bot) pagó 1 mo para reparar <strong>Escudo Madera</strong>."
+    },
+    {
+      "type": "deploy_hito",
+      "hitoName": "Alerta de Mutación",
+      "timestamp": "00:14:51",
+      "rawLog": "[00:14:51] 🔥 <strong>HITO DESPLEGADO: Alerta de Mutación</strong> 🔥"
+    },
+    {
+      "type": "repair_equipment",
+      "player": "🛠️ Jugador 1",
+      "item": "Espada Inicial",
+      "timestamp": "00:15:13",
+      "rawLog": "[00:15:13] 🛠️ <strong>Jugador 1</strong> (Bot) pagó 1 mo para reparar <strong>Espada Inicial</strong>."
+    },
+    {
+      "type": "repair_equipment",
+      "player": "🛠️ Jugador 1",
+      "item": "Cuchillo",
+      "timestamp": "00:15:54",
+      "rawLog": "[00:15:54] 🛠️ <strong>Jugador 1</strong> (Bot) pagó 1 mo para reparar <strong>Cuchillo</strong>."
+    },
+    {
+      "type": "buy_equipment",
+      "player": "Jugador 1",
+      "item": "Gema Regeneración",
+      "cost": 4,
+      "destination": "equipped",
+      "reason": null,
+      "timestamp": "00:15:59",
+      "rawLog": "[00:15:59] <strong>Jugador 1</strong> compró y EQUIPÓ <em>Gema Regeneración</em> por 4 mo."
+    },
+    {
+      "type": "wave_phase_start",
+      "wave": 3,
+      "timestamp": "00:16:08",
+      "rawLog": "[00:16:08] <span style=\"color:#f54281\"><strong>RESOLVIENDO FASE DE OLEADA 3 </strong></span>"
+    },
+    {
+      "type": "goblin_mutation",
+      "details": "Hito G1 + Hito G1 --> Hito G2",
+      "timestamp": "00:16:08",
+      "rawLog": "[00:16:08] 🧬 <span style=\"color:#f54281\"><strong>Mutación:</strong></span> <span style=\"color:#a545d1\">Hito G1</span> + <span style=\"color:#a545d1\">Hito G1</span> --> <span style=\"color:#a545d1\">Hito G2</span>"
+    },
+    {
+      "type": "goblin_mutation",
+      "details": "Hito G2 + Hito G2 --> Hito G3",
+      "timestamp": "00:16:09",
+      "rawLog": "[00:16:09] 🧬 <span style=\"color:#f54281\"><strong>Mutación:</strong></span> <span style=\"color:#a545d1\">Hito G2</span> + <span style=\"color:#a545d1\">Hito G2</span> --> <span style=\"color:#a545d1\">Hito G3</span>"
+    },
+    {
+      "type": "goblin_spawn",
+      "difficulty": "Fácil",
+      "details": "1 x G3",
+      "timestamp": "00:16:11",
+      "rawLog": "[00:16:11] 🔥 <span style=\"color:#f54281\"><strong>Aparición (Fácil):</strong></span> 1 x G3"
+    }
+  ],
+  "logs": [
+    "[00:12:52] ¡La aventura comienza en la Oleada 1! Fase de Mercado.",
+    "[00:12:52] <span style=\"color: #4cc9f0;\">➡️>>> Turno de <strong>Jugador 1</strong> (Vida: 10/10, Oro: 2).</span>",
+    "[00:12:54] DEBUG canClearTableAfterDeployingHito: totalMaxTeamDamage=18, totalPlayersHp=10, projectedRetaliation=0 (Safe: true) [Jugador 1: power=6, actions=3]",
+    "[00:12:54] DEBUG Hito: waveLevel=1, hitoLevel=1, canDeployHito=true, canClearTable=true",
+    "[00:12:54] 🤖 \"Estamos preparados para poder limpiar la mesa. ¡Desplegando hito!\"",
+    "[00:12:57] 🔥 <strong>HITO DESPLEGADO: Bautismo de Hierro</strong> 🔥",
+    "[00:12:59] DEBUG canClearTableAfterDeployingHito: totalMaxTeamDamage=18, totalPlayersHp=10, projectedRetaliation=4 (Safe: true) [Jugador 1: power=6, actions=3]",
+    "[00:12:59] DEBUG Hito: waveLevel=1, hitoLevel=2, canDeployHito=false, canClearTable=true",
+    "[00:12:59] 🤖 evalúa el combate: Poder Ofensivo Máx. (6 + 0 de rol) vs PV Enemigos (5). Defensa Máx. (4) vs Daño Enemigo Estimado (5). <span style=\"color:var(--heal-color);\">Riesgo aceptable. Selecciona 1 objetivo(s).</span>",
+    "[00:12:59] 🤖 \"¡A por ellos! No dejaré a ni uno vivo.\"",
+    "[00:13:03] <span style=\"color:#B81D1D\">*****<strong>Jugador 1</strong> inició un combate contra: G1.*****</span>",
+    "[00:13:06] 🎲 <strong>Jugador 1</strong> decide relanzar su dado negro buscando un mejor resultado para su equipo.",
+    "[00:13:08] 🤖 \"¡Excelente tirada! ¡Mi acero los cortará a todos en pedazos!\"",
+    "[00:13:08] 🛡️ <strong>Jugador 1</strong> usa su dado de valor <strong>4</strong> para interceptar un ataque peligroso de <strong>Goblin de Nivel 1</strong>.",
+    "[00:13:10] 🎲 <strong>Jugador 1</strong> asigna un <strong>6</strong> a <strong>Espada Inicial</strong> contra <strong>Goblin A</strong>. <br><span style=\"font-size:0.9em; color:#888;\"><i>(Planificado: eliminar goblin)</i></span>",
+    "[00:13:16] 🛡️ Un dado natural de <strong>4</strong> de G1 fue interceptado.",
+    "[00:13:16] 💔 ¡CRACK! El equipo <strong>Espada Inicial</strong> de <strong>Jugador 1</strong> se ha <span style=\"color:var(--accent-red)\">ROTO</span>.",
+    "[00:13:16] Frente a <strong>Jugador 1</strong>, el G1 recibe 6 daño y ve su ataque anulado por intercepción.",
+    "[00:13:16] ⚔️ <strong>Jugador 1</strong> eliminó a G1. Recompensa: 2 mo, 1 PEX.",
+    "[00:13:19] 🤖 \"¡Poder! Dame todo el poder para aplastar goblins.\"",
+    "[00:13:23] <strong>Jugador 1</strong> compró y EQUIPÓ <em>Cuchillo</em> por 3 mo.",
+    "[00:13:25] 🤖 \"Guardaré este oro para cuando realmente nos haga falta.\"",
+    "[00:13:28] <span style=\"color: #4cc9f0;\">🔄<<< <strong>Jugador 1</strong> ha finalizado su turno.</span>",
+    "[00:13:28] <span style=\"color: #4cc9f0;\">➡️>>> Turno de <strong>Jugador 1</strong> (Vida: 10/10, Oro: 1).</span>",
+    "[00:13:30] DEBUG canClearTableAfterDeployingHito: totalMaxTeamDamage=16, totalPlayersHp=10, projectedRetaliation=3 (Safe: true) [Jugador 1: power=8, actions=2]",
+    "[00:13:30] DEBUG Hito: waveLevel=1, hitoLevel=2, canDeployHito=false, canClearTable=true",
+    "[00:13:30] 🤖 evalúa el combate: Poder Ofensivo Máx. (8 + 0 de rol) vs PV Enemigos (10). Defensa Máx. (4) vs Daño Enemigo Estimado (10). <span style=\"color:var(--heal-color);\">Riesgo aceptable. Selecciona 2 objetivo(s).</span>",
+    "[00:13:30] 🤖 \"¡A por ellos! No dejaré a ni uno vivo.\"",
+    "[00:13:34] <span style=\"color:#B81D1D\">*****<strong>Jugador 1</strong> inició un combate contra: G1 + G1.*****</span>",
+    "[00:13:35] 🤖 \"¡Ese goblin de ahí no pasa de este turno! ¡A por él!\"",
+    "[00:13:36] 🛡️ <strong>Jugador 1</strong> usa su dado de valor <strong>4</strong> para interceptar un ataque peligroso de <strong>Goblin de Nivel 1</strong>.",
+    "[00:13:37] 🛡️ <strong>Jugador 1</strong> usa su dado de valor <strong>3</strong> para interceptar un ataque peligroso de <strong>Goblin de Nivel 1</strong>.",
+    "[00:13:44] 🛡️ Un dado natural de <strong>3</strong> de G1 fue interceptado.",
+    "[00:13:44] Frente a <strong>Jugador 1</strong>, el G1 ve su ataque anulado por intercepción.",
+    "[00:13:44] 🛡️ Un dado natural de <strong>4</strong> de G1 fue interceptado.",
+    "[00:13:44] 💔 ¡CRACK! El equipo <strong>Cuchillo</strong> de <strong>Jugador 1</strong> se ha <span style=\"color:var(--accent-red)\">ROTO</span>.",
+    "[00:13:44] Frente a <strong>Jugador 1</strong>, el G1 ve su ataque anulado por intercepción.",
+    "[00:13:50] 🤖 \"Guardaré este oro para cuando realmente nos haga falta.\"",
+    "[00:13:54] <span style=\"color: #4cc9f0;\">🔄<<< <strong>Jugador 1</strong> ha finalizado su turno.</span>",
+    "[00:13:54] <span style=\"color: #4cc9f0;\">➡️>>> Turno de <strong>Jugador 1</strong> (Vida: 10/10, Oro: 1).</span>",
+    "[00:13:56] DEBUG canClearTableAfterDeployingHito: totalMaxTeamDamage=8, totalPlayersHp=10, projectedRetaliation=5 (Safe: false) [Jugador 1: power=8, actions=1]",
+    "[00:13:56] DEBUG Hito: waveLevel=1, hitoLevel=2, canDeployHito=false, canClearTable=false",
+    "[00:13:56] 🤖 evalúa el combate: Poder Ofensivo Máx. (8 + 0 de rol) vs PV Enemigos (5). Defensa Máx. (4) vs Daño Enemigo Estimado (5). <span style=\"color:var(--heal-color);\">Riesgo aceptable. Selecciona 1 objetivo(s).</span>",
+    "[00:13:56] 🤖 \"¡A por ellos! No dejaré a ni uno vivo.\"",
+    "[00:13:59] <span style=\"color:#B81D1D\">*****<strong>Jugador 1</strong> inició un combate contra: G1.*****</span>",
+    "[00:14:01] 🤖 \"¡Excelente tirada! ¡Mi acero los cortará a todos en pedazos!\"",
+    "[00:14:01] 🎲 <strong>Jugador 1</strong> asigna un <strong>5</strong> a <strong>Espada Inicial</strong> contra <strong>Goblin B</strong>. <br><span style=\"font-size:0.9em; color:#888;\"><i>(Planificado: eliminar goblin)</i></span>",
+    "[00:14:03] 🎲 <strong>Jugador 1</strong> asigna un <strong>2</strong> a <strong>Escudo Madera</strong>. <br><span style=\"font-size:0.9em; color:#888;\"><i>(Sin armas, asigno a escudo para mitigar daño.)</i></span>",
+    "[00:14:09] 💔 ¡CRACK! El equipo <strong>Escudo Madera</strong> de <strong>Jugador 1</strong> se ha <span style=\"color:var(--accent-red)\">ROTO</span>.",
+    "[00:14:09] Frente a <strong>Jugador 1</strong>, el G1 recibe 5 daño y contraataca con 4 daño.",
+    "[00:14:09] ⚔️ <strong>Jugador 1</strong> eliminó a G1. Recompensa: 2 mo, 1 PEX.",
+    "[00:14:09] 🛡️ <strong>Jugador 1</strong> bloquea <span style=\"color:#3a7bd5\"><strong>2 daño</strong></span> con sus escudos (Defensa total: 2).",
+    "[00:14:09] 💥 <strong>Jugador 1</strong> recibe <span style=\"color:#ff4d4d\"><strong>2 daño</strong></span> sobrante.",
+    "[00:14:09] 🎉 <span style=\"color:#ecf542\">¡<strong>Los jugadores subieron al Nivel 2!  ❤️+5</strong></span> 🎉",
+    "[00:14:10] 🤖 El bot <strong>Jugador 1</strong> está pensando su elección de subida de nivel...",
+    "[00:14:10] 🛠️ <strong>Jugador 1</strong> (Bot) pagó 1 mo para reparar <strong>Espada Inicial</strong>.",
+    "[00:14:12] 🎲 <strong>Jugador 1</strong> añadió un dado Rojo d6 a su colección.",
+    "[00:14:13] 🤖 \"Ahorraré para un equipo de ataque (necesito 6 mo para Añadir Pinchos).\"",
+    "[00:14:17] <span style=\"color: #4cc9f0;\">🔄<<< <strong>Jugador 1</strong> ha finalizado su turno.</span>",
+    "[00:14:17] ⚠️ <span style=\"color: #e63946;\"><strong>¡REPRESALIA!</strong></span> Los 1 goblins restantes atacan.",
+    "[00:14:19] 🤖 \"Aguantaré este golpe por el equipo.\"",
+    "[00:14:20] 💀 <strong>Represalia:</strong> Causó 1 daño a <strong>Jugador 1</strong>.",
+    "[00:14:20] <span style=\"color:#f54281\"><strong>*******************************************</strong></span>",
+    "[00:14:20] <span style=\"color:#f54281\"><strong>RESOLVIENDO FASE DE OLEADA 2 </strong></span>",
+    "[00:14:20] 🔥 <span style=\"color:#f54281\"><strong>Aparición (Fácil):</strong></span> 1 x G2",
+    "[00:14:20] <span style=\"color:#f54281\"><strong>*******************************************</strong></span>",
+    "[00:14:21] <span style=\"color: #4cc9f0;\">➡️>>> Turno de <strong>Jugador 1</strong> (Vida: 12/15, Oro: 2).</span>",
+    "[00:14:22] DEBUG canClearTableAfterDeployingHito: totalMaxTeamDamage=27, totalPlayersHp=12, projectedRetaliation=2 (Safe: true) [Jugador 1: power=9, actions=3]",
+    "[00:14:22] DEBUG Hito: waveLevel=2, hitoLevel=2, canDeployHito=false, canClearTable=true",
+    "[00:14:22] 🤖 evalúa el combate: Poder Ofensivo Máx. (9 + 0 de rol) vs PV Enemigos (15). Defensa Máx. (3) vs Daño Enemigo Estimado (14). <span style=\"color:var(--heal-color);\">Riesgo aceptable. Selecciona 2 objetivo(s).</span>",
+    "[00:14:22] 🤖 \"¡A por ellos! No dejaré a ni uno vivo.\"",
+    "[00:14:26] <span style=\"color:#B81D1D\">*****<strong>Jugador 1</strong> inició un combate contra: G1 + G2.*****</span>",
+    "[00:14:27] 🤖 \"¡Ese goblin de ahí no pasa de este turno! ¡A por él!\"",
+    "[00:14:28] 🛡️ <strong>Jugador 1</strong> usa su dado de valor <strong>2</strong> para interceptar un ataque peligroso de <strong>Goblin de Nivel 2</strong>.",
+    "[00:14:30] 🎲 <strong>Jugador 1</strong> asigna un <strong>6</strong> a <strong>Espada Inicial</strong> contra <strong>Goblin C</strong>. <br><span style=\"font-size:0.9em; color:#888;\"><i>(Planificado: eliminar goblin)</i></span>",
+    "[00:14:31] 🎲 <strong>Jugador 1</strong> asigna un <strong>3</strong> a <strong>Escudo Madera</strong>. <br><span style=\"font-size:0.9em; color:#888;\"><i>(Sin armas, asigno a escudo para mitigar daño.)</i></span>",
+    "[00:14:37] 💔 ¡CRACK! El equipo <strong>Espada Inicial</strong> de <strong>Jugador 1</strong> se ha <span style=\"color:var(--accent-red)\">ROTO</span>.",
+    "[00:14:37] Frente a <strong>Jugador 1</strong>, el G1 recibe 6 daño y contraataca con 4 daño.",
+    "[00:14:37] ⚔️ <strong>Jugador 1</strong> eliminó a G1. Recompensa: 2 mo, 1 PEX.",
+    "[00:14:37] 🛡️ Un dado natural de <strong>2</strong> y su modificador de +1 de G2 fue interceptado.",
+    "[00:14:37] Frente a <strong>Jugador 1</strong>, el G2 ve su ataque anulado por intercepción.",
+    "[00:14:37] 🛡️ <strong>Jugador 1</strong> bloquea <span style=\"color:#3a7bd5\"><strong>3 daño</strong></span> con sus escudos (Defensa total: 3).",
+    "[00:14:37] 💥 <strong>Jugador 1</strong> recibe <span style=\"color:#ff4d4d\"><strong>1 daño</strong></span> sobrante.",
+    "[00:14:40] 🛠️ <strong>Jugador 1</strong> (Bot) pagó 1 mo para reparar <strong>Escudo Madera</strong>.",
+    "[00:14:41] 🤖 \"Ahorraré para un equipo de ataque (necesito 6 mo para Añadir Pinchos).\"",
+    "[00:14:45] <span style=\"color: #4cc9f0;\">🔄<<< <strong>Jugador 1</strong> ha finalizado su turno.</span>",
+    "[00:14:45] <span style=\"color: #4cc9f0;\">➡️>>> Turno de <strong>Jugador 1</strong> (Vida: 11/15, Oro: 3).</span>",
+    "[00:14:47] DEBUG canClearTableAfterDeployingHito: totalMaxTeamDamage=16, totalPlayersHp=11, projectedRetaliation=3 (Safe: true) [Jugador 1: power=8, actions=2]",
+    "[00:14:47] DEBUG Hito: waveLevel=2, hitoLevel=2, canDeployHito=true, canClearTable=true",
+    "[00:14:47] 🤖 \"Estamos preparados para poder limpiar la mesa. ¡Desplegando hito!\"",
+    "[00:14:51] 🔥 <strong>HITO DESPLEGADO: Alerta de Mutación</strong> 🔥",
+    "[00:14:53] DEBUG canClearTableAfterDeployingHito: totalMaxTeamDamage=16, totalPlayersHp=11, projectedRetaliation=6 (Safe: true) [Jugador 1: power=8, actions=2]",
+    "[00:14:53] DEBUG Hito: waveLevel=2, hitoLevel=3, canDeployHito=false, canClearTable=true",
+    "[00:14:53] 🤖 evalúa el combate: Poder Ofensivo Máx. (8 + 0 de rol) vs PV Enemigos (10). Defensa Máx. (4) vs Daño Enemigo Estimado (9). <span style=\"color:var(--heal-color);\">Riesgo aceptable. Selecciona 1 objetivo(s).</span>",
+    "[00:14:53] 🤖 \"¡A por ellos! No dejaré a ni uno vivo.\"",
+    "[00:14:56] <span style=\"color:#B81D1D\">*****<strong>Jugador 1</strong> inició un combate contra: G2.*****</span>",
+    "[00:14:58] 🤖 \"¡Menudo golpe se avecina! Me cubriré temporalmente.\"",
+    "[00:14:58] 🎲 <strong>Jugador 1</strong> asigna un <strong>4</strong> a <strong>Espada Inicial</strong> contra <strong>Goblin D</strong>. <br><span style=\"font-size:0.9em; color:#888;\"><i>(Asignación agresiva a arma.)</i></span>",
+    "[00:15:00] 🎲 <strong>Jugador 1</strong> asigna un <strong>2</strong> a <strong>Cuchillo</strong> contra <strong>Goblin D</strong>. <br><span style=\"font-size:0.9em; color:#888;\"><i>(Asignación agresiva a arma.)</i></span>",
+    "[00:15:01] 🎲 <strong>Jugador 1</strong> decide relanzar su dado negro buscando un mejor resultado para su equipo.",
+    "[00:15:03] 🎲 <strong>Jugador 1</strong> asigna un <strong>4</strong> a <strong>Escudo Madera</strong>. <br><span style=\"font-size:0.9em; color:#888;\"><i>(Sin armas, asigno a escudo para mitigar daño.)</i></span>",
+    "[00:15:09] 💔 ¡CRACK! El equipo <strong>Escudo Madera</strong> de <strong>Jugador 1</strong> se ha <span style=\"color:var(--accent-red)\">ROTO</span>.",
+    "[00:15:09] Frente a <strong>Jugador 1</strong>, el G2 recibe 7 daño y contraataca con 7 daño.",
+    "[00:15:09] 🛡️ <strong>Jugador 1</strong> bloquea <span style=\"color:#3a7bd5\"><strong>4 daño</strong></span> con sus escudos (Defensa total: 4).",
+    "[00:15:09] 💥 <strong>Jugador 1</strong> recibe <span style=\"color:#ff4d4d\"><strong>3 daño</strong></span> sobrante.",
+    "[00:15:13] 🛠️ <strong>Jugador 1</strong> (Bot) pagó 1 mo para reparar <strong>Espada Inicial</strong>.",
+    "[00:15:15] 🤖 \"Ahorraré para un equipo de ataque (necesito 6 mo para Añadir Pinchos).\"",
+    "[00:15:18] <span style=\"color: #4cc9f0;\">🔄<<< <strong>Jugador 1</strong> ha finalizado su turno.</span>",
+    "[00:15:18] <span style=\"color: #4cc9f0;\">➡️>>> Turno de <strong>Jugador 1</strong> (Vida: 8/15, Oro: 2).</span>",
+    "[00:15:20] DEBUG canClearTableAfterDeployingHito: totalMaxTeamDamage=9, totalPlayersHp=8, projectedRetaliation=6 (Safe: false) [Jugador 1: power=9, actions=1]",
+    "[00:15:20] DEBUG Hito: waveLevel=2, hitoLevel=3, canDeployHito=false, canClearTable=false",
+    "[00:15:20] 🤖 evalúa el combate: Poder Ofensivo Máx. (9 + 0 de rol) vs PV Enemigos (10). Defensa Máx. (3) vs Daño Enemigo Estimado (9). <span style=\"color:var(--heal-color);\">Riesgo aceptable. Selecciona 1 objetivo(s).</span>",
+    "[00:15:20] 🤖 \"¡A por ellos! No dejaré a ni uno vivo.\"",
+    "[00:15:24] <span style=\"color:#B81D1D\">*****<strong>Jugador 1</strong> inició un combate contra: G2.*****</span>",
+    "[00:15:25] 🎲 <strong>Jugador 1</strong> decide relanzar su dado negro buscando un mejor resultado para su equipo.",
+    "[00:15:27] 🤖 \"¡Excelente tirada! ¡Mi acero los cortará a todos en pedazos!\"",
+    "[00:15:28] 🛡️ <strong>Jugador 1</strong> usa su dado de valor <strong>3</strong> para interceptar un ataque peligroso de <strong>Goblin de Nivel 2</strong>.",
+    "[00:15:29] 🎲 <strong>Jugador 1</strong> asigna un <strong>4</strong> a <strong>Cuchillo</strong> contra <strong>Goblin D</strong>. <br><span style=\"font-size:0.9em; color:#888;\"><i>(Equipo roto como último recurso.)</i></span>",
+    "[00:15:31] ⚡ <strong>Jugador 1</strong> asigna un <strong>1</strong> a su <strong>Habilidad de Rol</strong>. <br><span style=\"font-size:0.9em; color:#888;\"><i>(Asignación a rol como último recurso.)</i></span>",
+    "[00:15:52] 🛡️ Un dado natural de <strong>3</strong> y su modificador de +1 de G2 fue interceptado.",
+    "[00:15:52] Frente a <strong>Jugador 1</strong>, el G2 recibe 3 daño y ve su ataque anulado por intercepción.",
+    "[00:15:52] ⚔️ <strong>Jugador 1</strong> eliminó a G2. Recompensa: 3 mo, 2 PEX.",
+    "[00:15:54] 🛠️ <strong>Jugador 1</strong> (Bot) pagó 1 mo para reparar <strong>Cuchillo</strong>.",
+    "[00:15:55] 🤖 \"Necesito equipo curativo para lo que se avecina.\"",
+    "[00:15:59] <strong>Jugador 1</strong> compró y EQUIPÓ <em>Gema Regeneración</em> por 4 mo.",
+    "[00:15:59] <span style=\"color: #4cc9f0;\">🔄<<< <strong>Jugador 1</strong> ha finalizado su turno.</span>",
+    "[00:15:59] ⚠️ <span style=\"color: #e63946;\"><strong>¡REPRESALIA!</strong></span> Los 3 goblins restantes atacan.",
+    "[00:16:01] 🤖 \"Aguantaré este golpe por el equipo.\"",
+    "[00:16:02] 💀 <strong>Represalia:</strong> Causó 1 daño a <strong>Jugador 1</strong>.",
+    "[00:16:04] 🤖 \"Aguantaré este golpe por el equipo.\"",
+    "[00:16:05] 💀 <strong>Represalia:</strong> Causó 1 daño a <strong>Jugador 1</strong>.",
+    "[00:16:07] 🤖 \"Aguantaré este golpe por el equipo.\"",
+    "[00:16:08] 💀 <strong>Represalia:</strong> Causó 2 daño a <strong>Jugador 1</strong>.",
+    "[00:16:08] <span style=\"color:#f54281\"><strong>*******************************************</strong></span>",
+    "[00:16:08] <span style=\"color:#f54281\"><strong>RESOLVIENDO FASE DE OLEADA 3 </strong></span>",
+    "[00:16:08] 🧬 <span style=\"color:#f54281\"><strong>Mutación:</strong></span> <span style=\"color:#a545d1\">Hito G1</span> + <span style=\"color:#a545d1\">Hito G1</span> --> <span style=\"color:#a545d1\">Hito G2</span>",
+    "[00:16:09] 🧬 <span style=\"color:#f54281\"><strong>Mutación:</strong></span> <span style=\"color:#a545d1\">Hito G2</span> + <span style=\"color:#a545d1\">Hito G2</span> --> <span style=\"color:#a545d1\">Hito G3</span>",
+    "[00:16:11] 🔥 <span style=\"color:#f54281\"><strong>Aparición (Fácil):</strong></span> 1 x G3",
+    "[00:16:11] <span style=\"color:#f54281\"><strong>*******************************************</strong></span>",
+    "[00:16:12] <span style=\"color: #4cc9f0;\">➡️>>> Turno de <strong>Jugador 1</strong> (Vida: 4/15, Oro: 0).</span>",
+    "[00:16:13] 🤖 evalúa el combate: Poder Ofensivo Máx. (13 + 0 de rol) vs PV Enemigos (0). Defensa Máx. (3, Curación Máx. 2) vs Daño Enemigo Estimado (0). <span style=\"color:var(--dmg-color);\">Evita el combate por considerarlo suicida (Déficit de PV: 6).</span>",
+    "[00:16:13] ⚠️ <strong>Jugador 1</strong> está en estado crítico de PV (4/15) pero no tiene opciones disponibles de curación.",
+    "[00:16:13] DEBUG canClearTableAfterDeployingHito: totalMaxTeamDamage=39, totalPlayersHp=4, projectedRetaliation=3 (Safe: true) [Jugador 1: power=13, actions=3]",
+    "[00:16:13] DEBUG Hito: waveLevel=3, hitoLevel=3, canDeployHito=false, canClearTable=true",
+    "[00:16:13] 🤖 evalúa el combate: Poder Ofensivo Máx. (13 + 0 de rol) vs PV Enemigos (0). Defensa Máx. (3, Curación Máx. 2) vs Daño Enemigo Estimado (0). <span style=\"color:var(--dmg-color);\">Evita el combate por considerarlo suicida (Déficit de PV: 6).</span>",
+    "[00:16:13] 🤖 \"Ahhhhhh. ¡Moriré matando!\""
+  ]
+}
