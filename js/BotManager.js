@@ -2386,9 +2386,8 @@ calculateEquipPower(eq, bot) {
                 }
             });
 
-            let diceUsed = perm.length - (usageCount['role'] || 0);
-            score -= diceUsed * 100;
-
+            // Sin penalización por usar dados, ya que los no usados se pierden.
+            // Los dados usados se valoran por el daño, bloqueo o energía que aportan.
             if (score > bestScore) {
                 bestScore = score;
                 let assignments = {};
