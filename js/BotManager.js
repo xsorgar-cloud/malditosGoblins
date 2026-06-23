@@ -2345,7 +2345,7 @@ calculateEquipPower(eq, bot) {
                 else if (opt.type === 'heal') healAmount += this.getHealForDieInEquip(die.value, opt.equip);
                 else if (opt.type === 'role') {
                     let eGain = bot.role && bot.role.energyRates ? (bot.role.energyRates[die.value - 1] || 0) : (die.value >= 5 ? 3 : 0);
-                    simulatedEnergy = Math.min(5, simulatedEnergy + eGain);
+                    simulatedEnergy += eGain;
                 }
             }
 
@@ -2358,10 +2358,12 @@ calculateEquipPower(eq, bot) {
                     damageDealt += g.currentHp;
                 } else {
                     damageDealt += totalDmg;
-                    let remain = this.getGoblinRemainingDamage(g);
-                    simulatedIncomingNormal += remain.normal;
-                    simulatedIncomingDirect += remain.direct;
                 }
+                
+                // En Malditos Goblins, el daño es simultáneo. Incluso los goblins muertos atacan.
+                let remain = this.getGoblinRemainingDamage(g);
+                simulatedIncomingNormal += remain.normal;
+                simulatedIncomingDirect += remain.direct;
             });
 
             let netNormalDmg = Math.max(0, simulatedIncomingNormal - shieldBlocked);
