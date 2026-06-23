@@ -1592,7 +1592,7 @@ performCombatTurn(bot) {
 
                 console.log("[BotManager] Assigning die:", die.id);
                 
-                let plan = assignments[die.id];
+                let plan = plannedAssignments[die.id];
                 if (plan) {
                     if (plan.isRole) {
                         this.assignDieToRole(die, bot, "Estrategia óptima global: maximizar puntos (energía).");
@@ -2426,7 +2426,7 @@ calculateEquipPower(eq, bot) {
 
 // Asigna un dado al equipamiento especificado, registrando la razón y objetivo
     assignDieToEquip(die, eq, bot, reason = "", forcedTargetUid = null) {
-        if (!currentAssignments[eq.id]) currentAssignments[eq.id] = [];
+        if (!window.currentAssignments[eq.id]) window.currentAssignments[eq.id] = [];
         let targetUid = forcedTargetUid;
         let targetName = null;
         const goblins = this.gameState.currentCombat ? this.gameState.currentCombat.goblins : [];
@@ -2444,10 +2444,10 @@ calculateEquipPower(eq, bot) {
                 goblinDamage[g.uid] = 0;
             });
             
-            for (let eqId in currentAssignments) {
+            for (let eqId in window.currentAssignments) {
                 let assignedEq = bot.equipped.find(e => e.id === eqId);
                 if (assignedEq) {
-                    let asgs = currentAssignments[eqId];
+                    let asgs = window.currentAssignments[eqId];
                     const asgsArr = Array.isArray(asgs) ? asgs : [asgs];
                     asgsArr.forEach(asg => {
                         if (!asg.isRole && asg.targetUid) {
@@ -2524,10 +2524,10 @@ calculateEquipPower(eq, bot) {
                 const tgtGob = combatGobs.find(g => g.uid === targetUid);
                 if (tgtGob) {
                     let currentDmg = 0;
-                    for (let eqId in currentAssignments) {
+                    for (let eqId in window.currentAssignments) {
                         let assignedEq = bot.equipped.find(e => e.id === eqId);
                         if (assignedEq) {
-                            let asgs = currentAssignments[eqId];
+                            let asgs = window.currentAssignments[eqId];
                             const asgsArr = Array.isArray(asgs) ? asgs : [asgs];
                             asgsArr.forEach(asg => {
                                 if (!asg.isRole && asg.targetUid === targetUid) {
@@ -2583,10 +2583,10 @@ calculateEquipPower(eq, bot) {
                 });
                 
                 let currentShields = 0;
-                for (let eqId in currentAssignments) {
+                for (let eqId in window.currentAssignments) {
                     let assignedEq = bot.equipped.find(e => e.id === eqId);
                     if (assignedEq && this.isShield(assignedEq)) {
-                        let asgsArr = Array.isArray(currentAssignments[eqId]) ? currentAssignments[eqId] : [currentAssignments[eqId]];
+                        let asgsArr = Array.isArray(window.currentAssignments[eqId]) ? window.currentAssignments[eqId] : [window.currentAssignments[eqId]];
                         asgsArr.forEach(asg => {
                             if (!asg.isRole) currentShields += this.getShieldForDieInEquip(asg.value, assignedEq);
                         });
@@ -2606,7 +2606,7 @@ calculateEquipPower(eq, bot) {
             }
         }
 
-        currentAssignments[eq.id].push({ 
+        window.currentAssignments[eq.id].push({ 
             dieId: die.id, 
             value: die.value, 
             targetUid: targetUid, 
@@ -2623,8 +2623,8 @@ calculateEquipPower(eq, bot) {
 
 // Asigna un dado a la habilidad de rol del bot, con razón opcional
     assignDieToRole(die, bot, reason = "") {
-        if (!currentAssignments['role']) currentAssignments['role'] = [];
-        currentAssignments['role'].push({ dieId: die.id, value: die.value, isRole: true });
+        if (!window.currentAssignments['role']) window.currentAssignments['role'] = [];
+        window.currentAssignments['role'].push({ dieId: die.id, value: die.value, isRole: true });
         die.assignedTo = 'role';
         if (bot) {
             let reasonText = reason ? ` <br><span style="font-size:0.9em; color:#888;"><i>(${reason})</i></span>` : '';
