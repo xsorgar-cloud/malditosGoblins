@@ -1490,7 +1490,8 @@ performCombatTurn(bot) {
             }
 
             // Planificación óptima de asignaciones a armas (calculada previamente para intercepciones y relanzamientos)
-            const planResult = this.planWeaponAssignments(availableDice, this.gameState.currentCombat.goblins, bot);
+            const isLastAction = this.gameState.battlefield.actionCount >= 2;
+            const planResult = this.evaluateOptimalCombatTurn(availableDice, this.gameState.currentCombat.goblins, bot, isLastAction);
             const plannedAssignments = planResult.assignments;
             const plannedKills = planResult.goblinsKilled;
 
@@ -1505,7 +1506,8 @@ performCombatTurn(bot) {
                     dieEl.classList.add('die-spin');
                 }
                 
-                this.gameState.addLog(`🎲 <strong>${bot.name}</strong> decide relanzar su dado negro buscando un mejor resultado para su equipo.`);
+                const originalValue = dieToReroll.value;
+                this.gameState.addLog(`🎲 <strong>${bot.name}</strong> decide relanzar su dado negro (valor inicial: <strong>${originalValue}</strong>) buscando un mejor resultado para su equipo.`);
                 
                 // Animación y relanzamiento del dado
                 setTimeout(() => {
@@ -1515,6 +1517,9 @@ performCombatTurn(bot) {
                     }
                     
                     const newVal = this.gameState.rerollDie(dieToReroll.id);
+                    if (newVal) {
+                        this.gameState.addLog(`🎲 El relanzamiento obtuvo un valor de <strong>${newVal}</strong>.`);
+                    }
                     if (newVal && dieEl) {
                         dieEl.innerText = newVal;
                     }
@@ -1586,236 +1591,23 @@ performCombatTurn(bot) {
                 }
 
                 console.log("[BotManager] Assigning die:", die.id);
-
-                let plannedWeaponAssigned = false;
-                if (plannedKills > 0) {
-                    if (plannedAssignments[die.id]) {
-                        const plan = plannedAssignments[die.id];
-                        const plannedWeapon = bot.equipped.find(eq => eq.id === plan.weaponId);
-                        if (plannedWeapon) {
-                            this.assignDieToEquip(die, plannedWeapon, bot, "Planificado: eliminar goblin", plan.targetUid);
-                            plannedWeaponAssigned = true;
-                        }
-                    }
-                }
-
-                if (plannedWeaponAssigned) {
-                    console.log("[BotManager] Die assigned via plan. Updating UI.");
-                    if (typeof window.renderCombatOverlay === 'function') {
-                        window.renderCombatOverlay();
-                    }
-                    this.isActing = false;
-                    this.handleGameState();
-                    return;
-                }
-
-                let incomingNormalDmg = 0;
-                let incomingDirectDmg = 0;
-                if (this.gameState.currentCombat && this.gameState.currentCombat.goblins) {
-                    this.gameState.currentCombat.goblins.forEach(gob => {
-                        let greenDiceResult = this.gameState.currentCombat.dice && this.gameState.currentCombat.dice.green ? this.gameState.currentCombat.dice.green[gob.uid] : null;
-                        if (greenDiceResult && greenDiceResult.details) {
-                            let goblinInterceptions = window.interceptionAssignments[gob.uid] || [];
-                            
-                            let naturalDieIdx = 0;
-                            for (let rawIdx = 0; rawIdx < greenDiceResult.details.length; rawIdx++) {
-                                let detail = greenDiceResult.details[rawIdx];
-                                if (detail.type === 'die') {
-                                    const currentIdx = naturalDieIdx;
-                                    naturalDieIdx++;
-                                    
-                                    const isIntercepted = goblinInterceptions.some(asg => Number(asg.goblinDieIndex) === Number(currentIdx));
-                                    if (isIntercepted) continue;
-                                    
-                                    let dieDmg = detail.val;
-                                    let nextDetail = greenDiceResult.details[rawIdx + 1];
-                                    if (nextDetail && nextDetail.type === 'mod') {
-                                        dieDmg += nextDetail.val;
-                                    }
-                                    
-                                    let gobDB = gob.attacks ? gob : (typeof DB !== 'undefined' && DB.goblins ? DB.goblins[gob.level] : null);
-                                    let isDirect = false;
-                                    if (gobDB && gobDB.attacks) {
-                                        let attacks = gobDB.attacks[detail.val] || [];
-                                        isDirect = attacks.some(a => {
-                                            let lower = a.toLowerCase();
-                                            return lower.includes('daño directo') || lower.includes('dano directo') || lower.includes('direct') || lower.includes('verdadero') || lower.includes('veneno') || lower.includes('toxina');
-                                        });
-                                    }
-                                    
-                                    if (isDirect) {
-                                        incomingDirectDmg += dieDmg;
-                                    } else {
-                                        incomingNormalDmg += dieDmg;
-                                    }
-                                }
-                            }
-                        } else {
-                            let profile = this.getGoblinDamageProfile(gob);
-                            incomingNormalDmg += profile.normal;
-                            incomingDirectDmg += profile.direct;
-                        }
-                    });
-                }
-
-                let totalMaxDefense = 0;
-                bot.equipped.forEach(eq => {
-                    if (eq.isActive && this.isShield(eq)) {
-                        totalMaxDefense += this.calculateEquipPower(eq, bot).max;
-                    }
-                });
-
-                let projectedHpAfterDamage = bot.hp - Math.max(0, incomingNormalDmg - totalMaxDefense) - incomingDirectDmg;
-                let isLethalDamage = projectedHpAfterDamage <= 0;
-
-                // Contar bajas que ya están aseguradas en las asignaciones de armas actuales
-                let preExistingKills = 0;
-                if (this.gameState.currentCombat && this.gameState.currentCombat.goblins) {
-                    this.gameState.currentCombat.goblins.forEach(gob => {
-                        let assignedDmg = 0;
-                        for (let eqId in window.currentAssignments) {
-                            let eq = bot.equipped.find(e => e.id === eqId);
-                            if (eq) {
-                                let asgs = window.currentAssignments[eqId];
-                                const asgsArr = Array.isArray(asgs) ? asgs : [asgs];
-                                for (let asg of asgsArr) {
-                                    if (!asg.isRole && (asg.targetUid === gob.uid || this.gameState.currentCombat.goblins.length === 1)) {
-                                        assignedDmg += this.getDamageForDieInEquip(asg.value, eq);
-                                    }
-                                }
-                            }
-                        }
-                        if (gob.currentHp - assignedDmg <= 0) {
-                            preExistingKills++;
-                        }
-                    });
-                }
-
-                let forceAttack = false;
-                let newKills = plannedKills - preExistingKills;
-                if (newKills > 0 && !isLethalDamage) {
-                    forceAttack = true;
-                }
-
-                // Smart override: Don't waste high dice blocking trivial damage
-                let roleOverrideAssigned = false;
-                let energyGain = bot.role && bot.role.energyRates ? (bot.role.energyRates[die.value - 1] || 0) : (die.value >= 5 ? 3 : 0);
                 
-                const hasRoleDie = window.currentAssignments && window.currentAssignments['role'] && window.currentAssignments['role'].length > 0;
-
-                if (!hasRoleDie && (!forceAttack || !plannedAssignments[die.id]) && incomingNormalDmg > 0 && incomingNormalDmg <= 2 && energyGain > incomingNormalDmg && bot.hp >= 5) {
-                    this.assignDieToRole(die, bot, `Daño entrante trivial (${incomingNormalDmg}), es más rentable ganar ${energyGain} de energía en el Rol`);
-                    roleOverrideAssigned = true;
-                }
-
-                // Helper variables
-                const allGoblinsDead = this.gameState.currentCombat && this.gameState.currentCombat.goblins && this.gameState.currentCombat.goblins.every(gob => {
-                    let assignedDmg = 0;
-                    for (let eqId in window.currentAssignments) {
-                        let eq = bot.equipped.find(e => e.id === eqId);
-                        if (eq) {
-                            let asgs = window.currentAssignments[eqId];
-                            const asgsArr = Array.isArray(asgs) ? asgs : [asgs];
-                            for (let asg of asgsArr) {
-                                if (!asg.isRole && (asg.targetUid === gob.uid || this.gameState.currentCombat.goblins.length === 1)) {
-                                    assignedDmg += this.getDamageForDieInEquip(asg.value, eq);
-                                }
-                            }
-                        }
-                    }
-                    return gob.currentHp - assignedDmg <= 0;
-                });
-
-                const brokenEquipsToRepair = bot.equipped.filter(eq => {
-                    if (!eq.isBroken || !this.canAcceptDie(die, eq)) return false;
-                    if (this.isWeapon(eq)) return !allGoblinsDead;
-                    if (this.isShield(eq)) return (incomingNormalDmg > 0 || this.getDamageForDieInEquip(die.value, eq) > 0);
-                    if (this.isHeal(eq)) return bot.hp < bot.maxHp;
-                    return true;
-                });
-                const weapons = (plannedKills > 0 && !plannedAssignments[die.id]) ? [] : (allGoblinsDead ? [] : bot.equipped.filter(eq => eq.isActive && this.isWeapon(eq) && this.canAcceptDie(die, eq)));
-                const shields = bot.equipped.filter(eq => eq.isActive && this.isShield(eq) && this.canAcceptDie(die, eq) && (incomingNormalDmg > 0 || this.getDamageForDieInEquip(die.value, eq) > 0));
-                const heals = bot.equipped.filter(eq => eq.isActive && this.isHeal(eq) && this.canAcceptDie(die, eq));
-                
-                const fallbackToRole = (reason) => {
-                    let eGain = bot.role && bot.role.energyRates ? (bot.role.energyRates[die.value - 1] || 0) : 0;
-                    if (eGain === 0) {
-                        if (weapons.length > 0) {
-                            this.assignDieToEquip(die, weapons[0], bot, "Rol da 0 energía, usando arma por descarte");
-                            return;
-                        } else if (shields.length > 0) {
-                            this.assignDieToEquip(die, shields[0], bot, "Rol da 0 energía, usando escudo por descarte");
-                            return;
-                        } else if (heals.length > 0) {
-                            this.assignDieToEquip(die, heals[0], bot, "Rol da 0 energía, usando curación por descarte");
-                            return;
-                        }
-                    }
-
-                    const hasRoleDieInner = window.currentAssignments && window.currentAssignments['role'] && window.currentAssignments['role'].length > 0;
-                    if (hasRoleDieInner) {
-                        if (weapons.length > 0) {
-                            this.assignDieToEquip(die, weapons[0], bot, "Rol ya tiene dado, usando arma por descarte");
-                        } else if (shields.length > 0) {
-                            this.assignDieToEquip(die, shields[0], bot, "Rol ya tiene dado, usando escudo por descarte");
-                        } else if (heals.length > 0) {
-                            this.assignDieToEquip(die, heals[0], bot, "Rol ya tiene dado, usando curación por descarte");
-                        } else if (brokenEquipsToRepair.length > 0) {
-                            this.assignDieToEquip(die, brokenEquipsToRepair[0], bot, "Rol ya tiene dado, usando equipo roto por descarte");
-                        } else {
-                            this.gameState.addLog(`🎲 <strong>${bot.name}</strong> descarta el dado <strong>${die.value}</strong> ya que el Rol ya tiene un dado asignado.`);
-                            die.assignedTo = 'discarded';
-                        }
-                        return;
-                    }
-                    this.assignDieToRole(die, bot, reason);
-                };
-
-                // Simplified assignment for Aggressive personality only.
-                if (!roleOverrideAssigned) {
-                    if (forceAttack && weapons.length > 0) {
-                        this.assignDieToEquip(die, weapons[0], bot, "Force‑attack: elimino al goblin con este dado.");
-                    } else if (weapons.length > 0) {
-                        this.assignDieToEquip(die, weapons[0], bot, "Asignación agresiva a arma.");
-                    } else if (shields.length > 0 || heals.length > 0) {
-                        let bestShield = null;
-                        let maxShieldVal = 0;
-                        if (shields.length > 0) {
-                            bestShield = shields[0];
-                            if (incomingNormalDmg > 0) {
-                                let sVal = this.getShieldForDieInEquip(die.value, bestShield);
-                                maxShieldVal = Math.min(incomingNormalDmg, sVal);
-                            }
-                        }
-
-                        let bestHeal = null;
-                        let maxHealVal = 0;
-                        if (heals.length > 0 && bot.hp < bot.maxHp) {
-                            bestHeal = heals[0];
-                            let hVal = this.getHealForDieInEquip(die.value, bestHeal);
-                            maxHealVal = Math.min(bot.maxHp - bot.hp, hVal);
-                        }
-
-                        if (bestHeal && maxHealVal > maxShieldVal && maxHealVal > 0) {
-                            this.assignDieToEquip(die, bestHeal, bot, "Asigno a curación porque recupera más vida que mitigar daño.");
-                        } else if (bestShield && maxShieldVal > 0) {
-                            this.assignDieToEquip(die, bestShield, bot, "Sin armas, asigno a escudo para mitigar daño.");
-                        } else if (bestShield && this.getDamageForDieInEquip(die.value, bestShield) > 0) {
-                            this.assignDieToEquip(die, bestShield, bot, "Sin armas, asigno a escudo porque inflige daño.");
-                        } else if (bestHeal && maxHealVal > 0) {
-                            this.assignDieToEquip(die, bestHeal, bot, "Asigno a curación para recuperar vida.");
-                        } else if (bestShield) {
-                            this.assignDieToEquip(die, bestShield, bot, "Sin armas, descarto dado en escudo.");
-                        } else {
-                            this.assignDieToEquip(die, bestHeal, bot, "Sin armas, descarto dado en curación.");
-                        }
+                let plan = assignments[die.id];
+                if (plan) {
+                    if (plan.isRole) {
+                        this.assignDieToRole(die, bot, "Estrategia óptima global: maximizar puntos (energía).");
                     } else {
-                        if (brokenEquipsToRepair.length > 0) {
-                            this.assignDieToEquip(die, brokenEquipsToRepair[0], bot, "Equipo roto como último recurso.");
-                        } else {
-                            fallbackToRole("Asignación a rol como último recurso.");
-                        }
+                        let equip = bot.equipped.find(eq => eq.id === plan.weaponId);
+                        let reason = "Estrategia óptima global.";
+                        if (plan.isWeapon) reason = "Estrategia óptima global: atacar goblin.";
+                        else if (plan.isShield) reason = "Estrategia óptima global: bloquear daño.";
+                        else if (plan.isHeal) reason = "Estrategia óptima global: curación preventiva.";
+                        
+                        this.assignDieToEquip(die, equip, bot, reason, plan.targetUid);
                     }
+                } else {
+                    die.assignedTo = 'discarded';
+                    this.gameState.addLog("🎲 <strong>" + bot.name + "</strong> descarta el dado <strong>" + die.value + "</strong> al no encontrar un uso beneficioso.");
                 }
 
                 console.log("[BotManager] Die assigned. Updating UI.");
@@ -2406,47 +2198,130 @@ calculateEquipPower(eq, bot) {
         return false;
     }
 
-    // Planifica asignaciones óptimas a armas para derrotar goblins minimizando dados y valores asignados
-    planWeaponAssignments(availableDice, goblins, bot) {
+    getGoblinRemainingDamage(gob) {
+        let normalDmg = 0;
+        let directDmg = 0;
+        let greenDiceResult = this.gameState.currentCombat.dice && this.gameState.currentCombat.dice.green ? this.gameState.currentCombat.dice.green[gob.uid] : null;
+        if (greenDiceResult && greenDiceResult.details) {
+            let goblinInterceptions = window.interceptionAssignments[gob.uid] || [];
+            let naturalDieIdx = 0;
+            for (let rawIdx = 0; rawIdx < greenDiceResult.details.length; rawIdx++) {
+                let detail = greenDiceResult.details[rawIdx];
+                if (detail.type === 'die') {
+                    const currentIdx = naturalDieIdx++;
+                    const isIntercepted = goblinInterceptions.some(asg => Number(asg.goblinDieIndex) === Number(currentIdx));
+                    if (isIntercepted) continue;
+                    
+                    let dieDmg = detail.val;
+                    let nextDetail = greenDiceResult.details[rawIdx + 1];
+                    if (nextDetail && nextDetail.type === 'mod') dieDmg += nextDetail.val;
+                    
+                    let gobDB = gob.attacks ? gob : (typeof DB !== 'undefined' && DB.goblins ? DB.goblins[gob.level] : null);
+                    let isDirect = false;
+                    if (gobDB && gobDB.attacks) {
+                        let attacks = gobDB.attacks[detail.val] || [];
+                        isDirect = attacks.some(a => {
+                            let lower = a.toLowerCase();
+                            return lower.includes('daño directo') || lower.includes('dano directo') || lower.includes('direct') || lower.includes('verdadero') || lower.includes('veneno') || lower.includes('toxina');
+                        });
+                    }
+                    if (isDirect) directDmg += dieDmg;
+                    else normalDmg += dieDmg;
+                }
+            }
+        } else {
+            let profile = this.getGoblinDamageProfile(gob);
+            normalDmg += profile.normal;
+            directDmg += profile.direct;
+        }
+        return { normal: normalDmg, direct: directDmg };
+    }
+
+    evaluateOptimalCombatTurn(availableDice, goblins, bot, isLastAction) {
+        if (availableDice.length === 0) return { assignments: {}, score: -Infinity, goblinsKilled: 0 };
+
         const weapons = bot.equipped.filter(eq => eq.isActive && (this.isWeapon(eq) || (eq.effect && eq.effect.toLowerCase().includes('daño')) || (eq.broken && eq.broken.effect && eq.broken.effect.toLowerCase().includes('daño'))));
+        const shields = bot.equipped.filter(eq => eq.isActive && this.isShield(eq));
+        const heals = bot.equipped.filter(eq => eq.isActive && this.isHeal(eq));
         const aliveGoblins = goblins.filter(g => g.currentHp > 0 && !g.isDying);
-        if (weapons.length === 0 || aliveGoblins.length === 0 || availableDice.length === 0) {
-            return { assignments: {}, goblinsKilled: 0 };
+
+        let diceOptions = [];
+        for (let d of availableDice) {
+            let options = [];
+            for (let w of weapons) {
+                if (this.canAcceptDie(d, w)) {
+                    for (let g of aliveGoblins) {
+                        options.push({ type: 'weapon', equipId: w.id, targetUid: g.uid, equip: w });
+                    }
+                }
+            }
+            for (let s of shields) {
+                if (this.canAcceptDie(d, s)) options.push({ type: 'shield', equipId: s.id, targetUid: null, equip: s });
+            }
+            for (let h of heals) {
+                if (this.canAcceptDie(d, h)) options.push({ type: 'heal', equipId: h.id, targetUid: null, equip: h });
+            }
+            options.push({ type: 'role', equipId: 'role', targetUid: null });
+            diceOptions.push(options);
         }
 
-        let bestConfig = {
-            assignments: {},
-            goblinsKilled: 0,
-            diceUsed: 0,
-            savedValueSum: 0
-        };
         let bestScore = -Infinity;
+        let bestPermutation = null;
 
         const diceCount = availableDice.length;
-        const weaponCount = weapons.length;
-        const goblinCount = aliveGoblins.length;
-
-        const optionsPerDie = 1 + weaponCount * goblinCount;
-        const totalPermutations = Math.pow(optionsPerDie, diceCount);
-
-        if (totalPermutations > 10000) {
-            return { assignments: {}, goblinsKilled: 0 };
+        let optionsPerDieArray = diceOptions.map(opts => opts.length);
+        let totalPermutations = optionsPerDieArray.reduce((acc, val) => acc * val, 1);
+        
+        if (totalPermutations > 500000) {
+            console.warn("[BotManager] Demasiadas permutaciones, simplificando.");
+            totalPermutations = 500000;
         }
 
         for (let i = 0; i < totalPermutations; i++) {
+            let perm = [];
             let temp = i;
-            let currentAssignments = {};
-            let diceUsedCount = 0;
-            let savedValueSum = 0;
+            for (let d = 0; d < diceCount; d++) {
+                let opts = diceOptions[d];
+                perm.push(opts[temp % opts.length]);
+                temp = Math.floor(temp / opts.length);
+            }
 
-            let gobDamage = {};
+            let usageCount = {};
+            let valid = true;
+            for (let j = 0; j < perm.length; j++) {
+                let opt = perm[j];
+                if (opt.type !== 'role') {
+                    usageCount[opt.equipId] = (usageCount[opt.equipId] || 0) + 1;
+                    let eq = opt.equip;
+                    const extra = ((eq.isBroken && eq.broken ? eq.broken.extra : eq.extra) || '').toLowerCase();
+                    const isReusable = extra.includes('reutilizable');
+                    const maxUses = extra.includes('x3') ? 3 : (isReusable ? 3 : 1);
+                    
+                    const currentlyAssigned = window.currentAssignments && window.currentAssignments[eq.id] ? window.currentAssignments[eq.id].length : 0;
+                    if (usageCount[opt.equipId] + currentlyAssigned > maxUses) {
+                        valid = false; break;
+                    }
+                } else {
+                    usageCount['role'] = (usageCount['role'] || 0) + 1;
+                    const currentlyAssigned = window.currentAssignments && window.currentAssignments['role'] ? window.currentAssignments['role'].length : 0;
+                    if (usageCount['role'] + currentlyAssigned > 1) {
+                        valid = false; break;
+                    }
+                }
+            }
+            if (!valid) continue;
+
+            let simulatedHp = bot.hp;
+            let simulatedEnergy = bot.energy;
+            let goblinsKilled = 0;
+            let damageDealt = 0;
+            let damageToGoblins = {};
             aliveGoblins.forEach(g => {
                 let preExistingDmg = 0;
-                const globalAssignments = window.currentAssignments || {};
-                for (let eqId in globalAssignments) {
+                for (let eqId in window.currentAssignments || {}) {
                     let assignedEq = bot.equipped.find(e => e.id === eqId);
                     if (assignedEq) {
-                        let asgs = globalAssignments[eqId];
+                        let asgs = window.currentAssignments[eqId];
                         const asgsArr = Array.isArray(asgs) ? asgs : [asgs];
                         asgsArr.forEach(asg => {
                             if (!asg.isRole && asg.targetUid === g.uid) {
@@ -2455,102 +2330,88 @@ calculateEquipPower(eq, bot) {
                         });
                     }
                 }
-                gobDamage[g.uid] = preExistingDmg;
+                damageToGoblins[g.uid] = preExistingDmg;
             });
 
-            let weaponDiceCounts = {};
-            weapons.forEach(w => { weaponDiceCounts[w.id] = 0; });
+            let shieldBlocked = 0;
+            let healAmount = 0;
 
-            let validPermutation = true;
-
-            for (let dIdx = 0; dIdx < diceCount; dIdx++) {
-                const die = availableDice[dIdx];
-                const option = temp % optionsPerDie;
-                temp = Math.floor(temp / optionsPerDie);
-
-                if (option === 0) {
-                    savedValueSum += die.value;
-                } else {
-                    const choiceIdx = option - 1;
-                    const wIdx = Math.floor(choiceIdx / goblinCount);
-                    const gIdx = choiceIdx % goblinCount;
-
-                    const weapon = weapons[wIdx];
-                    const goblin = aliveGoblins[gIdx];
-
-                    const extra = ((weapon.isBroken && weapon.broken ? weapon.broken.extra : weapon.extra) || '').toLowerCase();
-                    const isReusable = extra.includes('reutilizable');
-                    const maxUses = extra.includes('x3') ? 3 : (isReusable ? 3 : 1);
-
-                    if (weaponDiceCounts[weapon.id] >= maxUses || !this.canAcceptDie(die, weapon)) {
-                        validPermutation = false;
-                        break;
-                    }
-
-                    weaponDiceCounts[weapon.id]++;
-                    diceUsedCount++;
-
-                    let dmg = this.getDamageForDieInEquip(die.value, weapon);
-
-                    // Rechazar asignar un 1 o 2 a un arma normal si hace muy poco daño. 
-                    // Esto permite que el dado quede libre para ser relanzado o usado en curaciones rotas.
-                    const limitStr = (weapon.isBroken && weapon.broken ? weapon.broken.limit : weapon.limit) || '';
-                    if (die.value <= 2 && dmg <= 2 && !weapon.isBroken && (limitStr === '-' || limitStr === '')) {
-                        validPermutation = false;
-                        break;
-                    }
-
-                    gobDamage[goblin.uid] += dmg;
-
-                    currentAssignments[die.id] = {
-                        weaponId: weapon.id,
-                        targetUid: goblin.uid
-                    };
+            for (let j = 0; j < perm.length; j++) {
+                let opt = perm[j];
+                let die = availableDice[j];
+                
+                if (opt.type === 'weapon') damageToGoblins[opt.targetUid] += this.getDamageForDieInEquip(die.value, opt.equip);
+                else if (opt.type === 'shield') shieldBlocked += this.getShieldForDieInEquip(die.value, opt.equip);
+                else if (opt.type === 'heal') healAmount += this.getHealForDieInEquip(die.value, opt.equip);
+                else if (opt.type === 'role') {
+                    let eGain = bot.role && bot.role.energyRates ? (bot.role.energyRates[die.value - 1] || 0) : (die.value >= 5 ? 3 : 0);
+                    simulatedEnergy = Math.min(5, simulatedEnergy + eGain);
                 }
             }
 
-            if (!validPermutation) continue;
-
-            let goblinsKilledCount = 0;
-            let killScore = 0;
+            let simulatedIncomingNormal = 0;
+            let simulatedIncomingDirect = 0;
             aliveGoblins.forEach(g => {
-                if (g.currentHp - gobDamage[g.uid] <= 0) {
-                    goblinsKilledCount++;
-                    killScore += g.level * 1000000;
-                    
-                    let maxHp = g.maxHp || g.hp;
-                    let missingHp = maxHp - g.currentHp;
-                    killScore += missingHp * 5000;
-                }
-            });
-
-            let damageScore = 0;
-            aliveGoblins.forEach(g => {
-                let remainingHp = g.currentHp - gobDamage[g.uid];
-                if (remainingHp <= 0) {
-                    damageScore += remainingHp * 10;
+                let totalDmg = damageToGoblins[g.uid];
+                if (g.currentHp - totalDmg <= 0) {
+                    goblinsKilled++;
+                    damageDealt += g.currentHp;
                 } else {
-                    damageScore += gobDamage[g.uid];
+                    damageDealt += totalDmg;
+                    let remain = this.getGoblinRemainingDamage(g);
+                    simulatedIncomingNormal += remain.normal;
+                    simulatedIncomingDirect += remain.direct;
                 }
             });
 
-            let score = killScore - (diceUsedCount * 10000) + (savedValueSum * 100) + damageScore;
+            let netNormalDmg = Math.max(0, simulatedIncomingNormal - shieldBlocked);
+            simulatedHp -= netNormalDmg;
+            simulatedHp -= simulatedIncomingDirect;
+            
+            if (simulatedHp > 0) simulatedHp = Math.min(bot.maxHp, simulatedHp + healAmount);
+
+            let score = 0;
+            if (simulatedHp <= 0) score -= 1000000000;
+            else score += simulatedHp * 10000;
+            
+            score += goblinsKilled * 1000000;
+            score += simulatedEnergy * 5000;
+            
+            aliveGoblins.forEach(g => {
+                let totalDmg = damageToGoblins[g.uid];
+                if (g.currentHp - totalDmg > 0 && !isLastAction) {
+                    score += totalDmg * 1000;
+                }
+            });
+
+            let diceUsed = perm.length - (usageCount['role'] || 0);
+            score -= diceUsed * 100;
 
             if (score > bestScore) {
                 bestScore = score;
-                bestConfig = {
-                    assignments: currentAssignments,
-                    goblinsKilled: goblinsKilledCount,
-                    diceUsed: diceUsedCount,
-                    savedValueSum: savedValueSum
+                let assignments = {};
+                for (let j = 0; j < perm.length; j++) {
+                    if (perm[j].type !== 'role') {
+                        assignments[availableDice[j].id] = {
+                            weaponId: perm[j].equipId,
+                            targetUid: perm[j].targetUid,
+                            isWeapon: perm[j].type === 'weapon',
+                            isShield: perm[j].type === 'shield',
+                            isHeal: perm[j].type === 'heal'
+                        };
+                    } else {
+                        assignments[availableDice[j].id] = { isRole: true };
+                    }
+                }
+                bestPermutation = {
+                    assignments: assignments,
+                    score: score,
+                    goblinsKilled: goblinsKilled
                 };
             }
         }
 
-        return {
-            assignments: bestConfig.assignments,
-            goblinsKilled: bestConfig.goblinsKilled
-        };
+        return bestPermutation || { assignments: {}, score: -Infinity, goblinsKilled: 0 };
     }
 
 // Verifica si el equipamiento puede aceptar el dado (límites de usos y validez)
