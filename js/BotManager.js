@@ -2377,7 +2377,7 @@ calculateEquipPower(eq, bot) {
             else score += simulatedHp * 10000;
             
             score += goblinsKilled * 1000000;
-            score += simulatedEnergy * 5000;
+            score += simulatedEnergy * 10000;
             
             aliveGoblins.forEach(g => {
                 let totalDmg = damageToGoblins[g.uid];
