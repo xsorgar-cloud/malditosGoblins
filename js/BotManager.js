@@ -2170,7 +2170,7 @@ calculateEquipPower(eq, bot) {
                     if (!hasEffects && plannedKills > 0 && plannedAssignments[die.id]) {
                         if (availableDice.length > 0) {
                             const remainingDice = availableDice.filter(d => d.id !== die.id);
-                            const alternatePlan = this.planWeaponAssignments(remainingDice, goblins, bot);
+                            const alternatePlan = this.evaluateOptimalCombatTurn(remainingDice, goblins, bot, false);
                             if (alternatePlan.goblinsKilled < plannedKills) {
                                 continue; // Nos cuesta una kill, así que dejamos pasar el daño normal
                             }
@@ -2848,7 +2848,7 @@ calculateEquipPower(eq, bot) {
     getCombatDialogue(availableDice, bot) {
         const roleId = bot.role ? bot.role.id : '';
         const goblins = this.gameState.currentCombat ? this.gameState.currentCombat.goblins : [];
-        const planResult = this.planWeaponAssignments(availableDice, goblins, bot);
+        const planResult = this.evaluateOptimalCombatTurn(availableDice, goblins, bot, false);
         const plannedKills = planResult.goblinsKilled;
         
         // 1. Calambres (Cramped)
