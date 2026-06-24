@@ -1883,14 +1883,22 @@ function renderPlayer() {
 
       let activeClass = eq.isActive ? '' : 'inactive';
 
-      const canRepair = eq.isBroken &&
-        p.mo >= 1 &&
+      const isRepairableState = eq.isBroken &&
         gameState.lastActionWasCombat &&
         currentCombatId > 0 &&
         eq.brokenInCombatId !== currentCombatId &&
         eq.usedInCombatId === currentCombatId;
-      const repairBtnHTML = canRepair ? `<button class="btn primary repair-btn" style="position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%) rotate(180deg); font-size: 0.75rem; padding: 4px 8px; z-index: 20;">Reparar</button>` : '';
-      let repairableClass = canRepair ? 'can-repair-glow' : '';
+
+      let repairBtnHTML = '';
+      let repairableClass = '';
+      if (isRepairableState) {
+        if (p.mo >= 1) {
+          repairBtnHTML = `<button class="btn primary repair-btn" style="position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%) rotate(180deg); font-size: 0.75rem; padding: 4px 8px; z-index: 20;">Reparar</button>`;
+          repairableClass = 'can-repair-glow';
+        } else {
+          repairBtnHTML = `<button class="btn primary repair-btn" disabled style="position: absolute; bottom: 5px; left: 50%; transform: translateX(-50%) rotate(180deg); font-size: 0.75rem; padding: 4px 8px; z-index: 20; opacity: 0.5; cursor: not-allowed;" title="Necesitas 1 moneda para reparar">Reparar</button>`;
+        }
+      }
       
       let justBoughtClass = eq._justBoughtId ? 'just-bought-hidden' : '';
 
@@ -1905,19 +1913,20 @@ function renderPlayer() {
 
     let statusHTML = '';
     if (p.shield > 0) {
-      statusHTML += `<div class="status-icon escudo" title="Escudos: ${p.shield}">${SHIELD_SVG} <span>${p.shield}</span></div>`;
+      statusHTML += `<div class="status-icon escudo" title="Escudos: Podrás bloquear hasta ${p.shield} puntos de daño en combate.">${SHIELD_SVG} <span>${p.shield}</span></div>`;
     }
     if (p.statusEffects.escozor > 0) {
-      statusHTML += `<div class="status-icon escozor" title="Escozor: ${p.statusEffects.escozor}">&#128293; <span>${p.statusEffects.escozor}</span></div>`;
+      statusHTML += `<div class="status-icon escozor" title="Escozor: Uno de tus dados ROJOS te causará 2 puntos de daño si decides usarlo.">&#128293; <span>${p.statusEffects.escozor}</span></div>`;
+
     }
     if (p.statusEffects.eliminaRojo > 0) {
-      statusHTML += `<div class="status-icon elimina-rojo" style="background: #ef233c; border-color: #d90429;" title="Dado rojo anulado: ${p.statusEffects.eliminaRojo}">&#127922;&#10060; <span>${p.statusEffects.eliminaRojo}</span></div>`;
+      statusHTML += `<div class="status-icon elimina-rojo" style="background: #ef233c; border-color: #d90429;" title="Dado anulado: Pierdes ${p.statusEffects.eliminaRojo} dado(s) de ataque en tu próximo combate.">&#127922;&#10060; <span>${p.statusEffects.eliminaRojo}</span></div>`;
     }
     if (p.statusEffects.calambre > 0) {
-      statusHTML += `<div class="status-icon calambre" title="Calambre: ${p.statusEffects.calambre}">&#9889; <span>${p.statusEffects.calambre}</span></div>`;
+      statusHTML += `<div class="status-icon calambre" title="Calambre: Uno de tus dados NEGROS deberá asignarse antes que el resto y no podrá ser relanzado.">&#9889; <span>${p.statusEffects.calambre}</span></div>`;
     }
     if (p.statusEffects.tembleque > 0) {
-      statusHTML += `<div class="status-icon tembleque" title="Tembleque: ${p.statusEffects.tembleque}">&#10052; <span>${p.statusEffects.tembleque}</span></div>`;
+      statusHTML += `<div class="status-icon tembleque" title="Tembleque: Uno de tus dados ROJOS tendrá su valor reducido a 1.">&#10052; <span>${p.statusEffects.tembleque}</span></div>`;
     }
 
     const expReq = {

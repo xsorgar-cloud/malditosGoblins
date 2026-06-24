@@ -1,0 +1,79 @@
+﻿{
+    "id":  1,
+    "name":  "Jugador 1",
+    "isBot":  false,
+    "hp":  10,
+    "maxHp":  20,
+    "mo":  0,
+    "pex":  7,
+    "level":  3,
+    "role":  {
+                 "id":  "sanador",
+                 "name":  "Sanador"
+             },
+    "statusEffects":  {
+                          "escozor":  1,
+                          "calambre":  0,
+                          "tembleque":  0,
+                          "eliminaRojo":  0
+                      },
+    "equipped":  [
+                     {
+                         "id":  "espada_inicial",
+                         "name":  "Espada Inicial",
+                         "type":  "inicial",
+                         "isBroken":  false,
+                         "effect":  "DaÃ±o dado",
+                         "extra":  "",
+                         "cost":  0
+                     },
+                     {
+                         "id":  "escudo_inicial",
+                         "name":  "Escudo Madera",
+                         "type":  "inicial",
+                         "isBroken":  true,
+                         "effect":  "Escudo dado MAX 4",
+                         "extra":  "",
+                         "cost":  0
+                     },
+                     {
+                         "id":  "cuchillo",
+                         "name":  "Cuchillo",
+                         "type":  "ataque",
+                         "isBroken":  true,
+                         "effect":  "DaÃ±o 3",
+                         "extra":  "",
+                         "cost":  3
+                     },
+                     {
+                         "id":  "vendaje",
+                         "name":  "Vendaje",
+                         "type":  "curacion",
+                         "isBroken":  true,
+                         "effect":  "Cura 2",
+                         "extra":  "Reutilizable",
+                         "cost":  4
+                     },
+                     {
+                         "id":  "doble_reforzado",
+                         "name":  "Doble Reforzado",
+                         "type":  "escudos",
+                         "isBroken":  false,
+                         "effect":  "Escudo dado x2",
+                         "extra":  "",
+                         "cost":  3
+                     },
+                     {
+                         "id":  "anadir_pinchos",
+                         "name":  "AÃ±adir Pinchos",
+                         "type":  "ataque",
+                         "isBroken":  true,
+                         "effect":  "DaÃ±o dado",
+                         "extra":  "Con un 5: daÃ±o 6",
+                         "cost":  6
+                     }
+                 ],
+    "backpack":  [
+
+                 ]
+}

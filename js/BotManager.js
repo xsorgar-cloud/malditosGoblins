@@ -1597,7 +1597,7 @@ performCombatTurn(bot) {
                     if (plan.isRole) {
                         this.assignDieToRole(die, bot, "Estrategia óptima global: maximizar puntos (energía).");
                     } else {
-                        let equip = bot.equipped.find(eq => eq.id === plan.weaponId);
+                        let equip = bot.equipped.find(eq => eq.id === plan.weaponId && eq.isActive);
                         let reason = "Estrategia óptima global.";
                         if (plan.isWeapon) reason = "Estrategia óptima global: atacar goblin.";
                         else if (plan.isShield) reason = "Estrategia óptima global: bloquear daño.";
@@ -2319,7 +2319,7 @@ calculateEquipPower(eq, bot) {
             aliveGoblins.forEach(g => {
                 let preExistingDmg = 0;
                 for (let eqId in window.currentAssignments || {}) {
-                    let assignedEq = bot.equipped.find(e => e.id === eqId);
+                    let assignedEq = bot.equipped.find(e => e.id === eqId && e.isActive);
                     if (assignedEq) {
                         let asgs = window.currentAssignments[eqId];
                         const asgsArr = Array.isArray(asgs) ? asgs : [asgs];
@@ -2446,7 +2446,7 @@ calculateEquipPower(eq, bot) {
             });
             
             for (let eqId in window.currentAssignments) {
-                let assignedEq = bot.equipped.find(e => e.id === eqId);
+                let assignedEq = bot.equipped.find(e => e.id === eqId && e.isActive);
                 if (assignedEq) {
                     let asgs = window.currentAssignments[eqId];
                     const asgsArr = Array.isArray(asgs) ? asgs : [asgs];
@@ -2526,7 +2526,7 @@ calculateEquipPower(eq, bot) {
                 if (tgtGob) {
                     let currentDmg = 0;
                     for (let eqId in window.currentAssignments) {
-                        let assignedEq = bot.equipped.find(e => e.id === eqId);
+                        let assignedEq = bot.equipped.find(e => e.id === eqId && e.isActive);
                         if (assignedEq) {
                             let asgs = window.currentAssignments[eqId];
                             const asgsArr = Array.isArray(asgs) ? asgs : [asgs];
@@ -2585,7 +2585,7 @@ calculateEquipPower(eq, bot) {
                 
                 let currentShields = 0;
                 for (let eqId in window.currentAssignments) {
-                    let assignedEq = bot.equipped.find(e => e.id === eqId);
+                    let assignedEq = bot.equipped.find(e => e.id === eqId && e.isActive);
                     if (assignedEq && this.isShield(assignedEq)) {
                         let asgsArr = Array.isArray(window.currentAssignments[eqId]) ? window.currentAssignments[eqId] : [window.currentAssignments[eqId]];
                         asgsArr.forEach(asg => {

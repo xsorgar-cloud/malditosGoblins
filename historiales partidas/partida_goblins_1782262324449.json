@@ -1,0 +1,347 @@
+{
+  "gameInfo": {
+    "activeSenda": "iniciacion",
+    "currentHito": 1,
+    "isGameOver": false,
+    "isGameWon": false,
+    "players": [
+      {
+        "id": 1,
+        "name": "Jugador 1",
+        "isBot": false,
+        "hp": 6,
+        "maxHp": 10,
+        "mo": 0,
+        "pex": 0,
+        "level": 1,
+        "role": {
+          "id": "guerrero",
+          "name": "Guerrero"
+        },
+        "statusEffects": {
+          "escozor": 0,
+          "calambre": 0,
+          "tembleque": 0,
+          "eliminaRojo": 0
+        },
+        "equipped": [
+          {
+            "id": "espada_inicial",
+            "name": "Espada Inicial",
+            "type": "inicial",
+            "isBroken": true,
+            "effect": "Daño dado",
+            "extra": "",
+            "cost": 0
+          },
+          {
+            "id": "escudo_inicial",
+            "name": "Escudo Madera",
+            "type": "inicial",
+            "isBroken": false,
+            "effect": "Escudo dado MAX 4",
+            "extra": "",
+            "cost": 0
+          }
+        ],
+        "backpack": []
+      }
+    ]
+  },
+  "marketState": {
+    "ataque": {
+      "id": "afilado",
+      "name": "Afilado",
+      "cost": 6,
+      "effect": "Daño dado",
+      "extra": "Con un 4: daño 6"
+    },
+    "escudos": {
+      "id": "reforzado_hierro",
+      "name": "Reforzado de Hierro",
+      "cost": 6,
+      "effect": "Escudo dado",
+      "extra": ""
+    },
+    "curacion": {
+      "id": "cristal_curacion",
+      "name": "Cristal de Curación",
+      "cost": 4,
+      "effect": "Cura dado Max 4",
+      "extra": ""
+    }
+  },
+  "battlefieldState": {
+    "waveLevel": 1,
+    "actionCount": 2,
+    "goblins": [
+      {
+        "name": "Goblin A",
+        "level": 1,
+        "currentHp": 1,
+        "isBoss": false,
+        "isHito": false,
+        "isDying": false
+      }
+    ]
+  },
+  "combatHistory": [
+    {
+      "player": {
+        "name": "Jugador 1",
+        "playerNum": 1,
+        "hp": 10,
+        "shield": 0,
+        "energy": 0,
+        "mo": 2,
+        "pex": 0,
+        "level": 1,
+        "role": "guerrero",
+        "equipped": [
+          {
+            "id": "espada_inicial",
+            "name": "Espada Inicial",
+            "isBroken": false,
+            "isActive": true
+          },
+          {
+            "id": "escudo_inicial",
+            "name": "Escudo Madera",
+            "isBroken": false,
+            "isActive": true
+          }
+        ]
+      },
+      "goblins": [
+        {
+          "uid": 1782261683887,
+          "name": "Goblin A",
+          "level": 1,
+          "hp": 5,
+          "hpAfter": 5
+        }
+      ],
+      "playerDice": [
+        {
+          "type": "red",
+          "faces": 6,
+          "id": "die-0",
+          "value": 5,
+          "rerolled": false,
+          "assignedTo": null
+        },
+        {
+          "type": "black",
+          "faces": 6,
+          "id": "die-1",
+          "value": 6,
+          "rerolled": false,
+          "assignedTo": null
+        }
+      ],
+      "goblinDice": {
+        "1782261683887": {
+          "total": 4,
+          "details": [
+            {
+              "type": "die",
+              "faces": 4,
+              "val": 4
+            }
+          ]
+        }
+      },
+      "assignments": {},
+      "interceptions": {},
+      "resolvedDetails": {
+        "playerDiceDetails": [],
+        "goblinDiceDetails": [
+          {
+            "goblinName": "Goblin A",
+            "val": 4,
+            "isIntercepted": false,
+            "interceptedBy": null,
+            "interceptedByDieId": null,
+            "effects": [
+              {
+                "text": "Rotura no esquivable [Se rompió: Espada Inicial]",
+                "status": "aplicado"
+              }
+            ]
+          }
+        ],
+        "finalPlayerOutcome": {
+          "hpBefore": 10,
+          "hpAfter": 6,
+          "levelBefore": 1,
+          "levelAfter": 1,
+          "directDamageReceived": 0,
+          "normalDamageIncoming": 4,
+          "damageBlocked": 0,
+          "netNormalDamageReceived": 4,
+          "escozorDamageDealt": 0,
+          "warlordExtraDmg": 0,
+          "finalDamageHpChange": 4
+        }
+      },
+      "id": 1,
+      "timestamp": "24/6/2026, 2:41:29",
+      "wave": 1
+    },
+    {
+      "player": {
+        "name": "Jugador 1",
+        "playerNum": 1,
+        "hp": 6,
+        "shield": 0,
+        "energy": 0,
+        "mo": 0,
+        "pex": 0,
+        "level": 1,
+        "role": "guerrero",
+        "equipped": [
+          {
+            "id": "espada_inicial",
+            "name": "Espada Inicial",
+            "isBroken": true,
+            "isActive": true
+          },
+          {
+            "id": "escudo_inicial",
+            "name": "Escudo Madera",
+            "isBroken": false,
+            "isActive": true
+          }
+        ]
+      },
+      "goblins": [
+        {
+          "uid": 1782261683887,
+          "name": "Goblin A",
+          "level": 1,
+          "hp": 5,
+          "hpAfter": 1
+        }
+      ],
+      "playerDice": [
+        {
+          "type": "red",
+          "faces": 6,
+          "id": "die-0",
+          "value": 6,
+          "rerolled": false,
+          "assignedTo": "escudo_inicial"
+        },
+        {
+          "type": "black",
+          "faces": 6,
+          "id": "die-1",
+          "value": 4,
+          "rerolled": false,
+          "assignedTo": "espada_inicial"
+        }
+      ],
+      "goblinDice": {
+        "1782261683887": {
+          "total": 2,
+          "details": [
+            {
+              "type": "die",
+              "faces": 4,
+              "val": 2
+            }
+          ]
+        }
+      },
+      "assignments": {
+        "espada_inicial": [
+          {
+            "dieId": "die-1",
+            "value": 4,
+            "targetUid": 1782261683887,
+            "elasticDamage": null
+          }
+        ],
+        "escudo_inicial": [
+          {
+            "dieId": "die-0",
+            "value": 6,
+            "targetUid": null,
+            "elasticDamage": null
+          }
+        ]
+      },
+      "interceptions": {},
+      "resolvedDetails": {
+        "playerDiceDetails": [
+          {
+            "dieId": "die-1",
+            "value": 4,
+            "assignedTo": "Espada Inicial",
+            "isRole": false,
+            "damage": 4,
+            "shield": 0,
+            "heal": 0,
+            "target": "Goblin A"
+          },
+          {
+            "dieId": "die-0",
+            "value": 6,
+            "assignedTo": "Escudo Madera",
+            "isRole": false,
+            "damage": 0,
+            "shield": 4,
+            "heal": 0,
+            "target": "Sin objetivo"
+          }
+        ],
+        "goblinDiceDetails": [
+          {
+            "goblinName": "Goblin A",
+            "val": 2,
+            "isIntercepted": false,
+            "interceptedBy": null,
+            "interceptedByDieId": null,
+            "effects": []
+          }
+        ],
+        "finalPlayerOutcome": {
+          "hpBefore": 6,
+          "hpAfter": 6,
+          "levelBefore": 1,
+          "levelAfter": 1,
+          "directDamageReceived": 0,
+          "normalDamageIncoming": 2,
+          "damageBlocked": 2,
+          "netNormalDamageReceived": 0,
+          "escozorDamageDealt": 0,
+          "warlordExtraDmg": 0,
+          "finalDamageHpChange": 0
+        }
+      },
+      "id": 2,
+      "timestamp": "24/6/2026, 2:41:43",
+      "wave": 1
+    }
+  ],
+  "structuredActions": [],
+  "logs": [
+    "[02:41:23] ¡La aventura comienza en la Oleada 1! Fase de Mercado.",
+    "[02:41:23] <span style=\"color: #4cc9f0;\">➡️>>> Turno de <strong>Jugador 1</strong> (Vida: 10/10, Oro: 2).</span>",
+    "[02:41:25] <span style=\"color:#B81D1D\">*****<strong>Jugador 1</strong> inició un combate contra: G1.*****</span>",
+    "[02:41:27] <span style=\"color:#B81D1D\">*****<strong>Jugador 1</strong> inició un combate contra: G1.*****</span>",
+    "[02:41:29] 💔 ¡CRACK! El equipo <strong>Espada Inicial</strong> de <strong>Jugador 1</strong> se ha <span style=\"color:var(--accent-red)\">ROTO</span>.",
+    "[02:41:29] Frente a <strong>Jugador 1</strong>, el G1 contraataca con 4 daño.",
+    "[02:41:29] 💥 <strong>Jugador 1</strong> recibe <span style=\"color:#ff4d4d\"><strong>4 daño</strong></span> sobrante.",
+    "[02:41:37] <span style=\"color: #4cc9f0;\">🔄<<< <strong>Jugador 1</strong> ha finalizado su turno.</span>",
+    "[02:41:37] <span style=\"color: #4cc9f0;\">➡️>>> Turno de <strong>Jugador 1</strong> (Vida: 6/10, Oro: 0).</span>",
+    "[02:41:39] <span style=\"color:#B81D1D\">*****<strong>Jugador 1</strong> inició un combate contra: G1.*****</span>",
+    "[02:41:43] Frente a <strong>Jugador 1</strong>, el G1 recibe 4 daño y contraataca con 2 daño.",
+    "[02:41:43] 🛡️ <strong>Jugador 1</strong> bloquea <span style=\"color:#3a7bd5\"><strong>2 daño</strong></span> con sus escudos (Defensa total: 4).",
+    "[02:41:43] 🛡️ <strong>Jugador 1</strong> bloqueó todo el daño entrante.",
+    "[02:41:43] <span style=\"color: #4cc9f0;\">🔄<<< <strong>Jugador 1</strong> ha finalizado su turno.</span>",
+    "[02:41:43] <span style=\"color: #4cc9f0;\">➡️>>> Turno de <strong>Jugador 1</strong> (Vida: 6/10, Oro: 0).</span>",
+    "[02:42:10] 📦 <strong>Jugador 1</strong> ha guardado <em>Espada Inicial</em> en la mochila.",
+    "[02:42:11] 🎒 <strong>Jugador 1</strong> ha equipado <em>Espada Inicial</em>."
+  ]
+}
