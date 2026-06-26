@@ -240,25 +240,26 @@ triggerAction(type, target = null, reason = "") {
 
     // Comprueba si el bot necesita priorizar la supervivencia (curación o energía) antes de cualquier otra acción
     evaluateSurvivalOverride(bot) {
-        let isCritical = bot.hp < bot.maxHp * 0.40;
-        if (!isCritical) return false;
-
         const pIndex = this.gameState.players.indexOf(bot);
         if (pIndex === -1) return false;
 
-        // 1. Sanador: si tiene energía, usar rol para curarse
+        // 1. Sanador: curación proactiva si tiene energía y baja del 90% de vida
         if (bot.role && bot.role.id === 'sanador' && bot.energy > 0) {
-            let healNeeded = bot.maxHp - bot.hp;
-            let energyToUse = Math.min(bot.energy, healNeeded);
-            if (energyToUse > 0) {
-                this.gameState.addLog(`🔷 <strong>${bot.name}</strong> está en estado crítico de PV y usa su rol de Sanador para curarse.`);
-                for (let i = 0; i < energyToUse; i++) {
-                    this.gameState.useRoleAbility(pIndex, 'self');
+            if (bot.hp <= bot.maxHp * 0.90) {
+                let healNeeded = bot.maxHp - bot.hp;
+                let energyToUse = Math.min(bot.energy, healNeeded);
+                if (energyToUse > 0) {
+                    this.gameState.addLog(`🚑 <strong>${bot.name}</strong> aprovecha su energía sobrante y usa su rol de Sanador para curarse.`);
+                    for (let i = 0; i < energyToUse; i++) {
+                        this.gameState.useRoleAbility(pIndex, 'self');
+                    }
+                    if (typeof window.updateUI === 'function') window.updateUI();
                 }
-                if (typeof window.updateUI === 'function') window.updateUI();
-                isCritical = bot.hp < bot.maxHp * 0.40;
             }
         }
+
+        let isCritical = bot.hp < bot.maxHp * 0.40;
+        if (!isCritical) return false;
 
         // 2. Compra de pociones (Oleada 3 o superior)
         let hpShortfall = bot.maxHp - bot.hp;
@@ -861,12 +862,33 @@ triggerAction(type, target = null, reason = "") {
         return true; // Nivel 1 no tiene requisitos mínimos
     }
 
+    getEquipmentLimits(bot) {
+        const weaponsCount = bot.equipped.filter(eq => eq.type === 'ataque' || eq.id === 'espada_inicial').length;
+        const healsCount = bot.equipped.filter(eq => eq.type === 'curacion').length;
+        const shieldCount = bot.equipped.filter(eq => eq.type === 'escudos' || eq.id === 'escudo_inicial').length;
+
+        const maxWeapons = 4; // Límite absoluto
+        
+        // REGLA 1: "Nunca podrá comprar una 2da curación si no ha comprado un escudo, etc."
+        // REGLA 2: "Compra ataque, después cure, después escudo."
+        // Al restar -1 a weaponsCount obligamos a que el bot TENGA que comprar un arma antes de poder comprar curación.
+        const maxHeals = Math.min(weaponsCount - 1, shieldCount);
+        
+        // REGLA 3: Respetando el máximo de las cartas de ataque.
+        // El escudo no puede superar a las armas, y solo se desbloquea si ya compramos la curación correspondiente.
+        const maxShields = Math.min(weaponsCount, healsCount + 1);
+
+        return {
+            weaponsCount, healsCount, shieldCount,
+            maxWeapons, maxHeals, maxShields
+        };
+    }
+
     getMissingEquipmentType(player) {
         const offensivePotential = this.getPlayerOffensivePotential(player);
         const needsOffensive = (player.level === 2 && offensivePotential < 10) || (player.level === 3 && offensivePotential < 15);
 
-        const isSanador = player.role && player.role.id === 'sanador';
-        const isProtector = player.role && player.role.id === 'protector';
+        const limits = this.getEquipmentLimits(player);
 
         if (needsOffensive) {
             // Si nos podemos permitir la carta de ataque, compramos la de ataque primero
@@ -875,51 +897,27 @@ triggerAction(type, target = null, reason = "") {
                 return 'ataque';
             }
             
-            const weaponsCount = player.equipped.filter(eq => eq.type === 'ataque' || eq.id === 'espada_inicial').length;
-            const healsCount = player.equipped.filter(eq => eq.type === 'curacion').length;
-            const shieldCount = player.equipped.filter(eq => eq.type === 'escudos' || eq.id === 'escudo_inicial').length;
-            
-            // Solo si no nos podemos permitir la de ataque, miramos si hay una híbrida de curación o escudo que sí nos podamos permitir y que no desequilibre nuestro inventario
+            // Prioridad 1: Curación híbrida (si no hemos superado el límite de eslabones)
             const topCuracion = this.gameState.market['curacion'] && this.gameState.market['curacion'].length > 0 ? this.gameState.market['curacion'][0] : null;
-            const maxHeals = weaponsCount + (isSanador ? 2 : 1);
-            if (topCuracion && this.canDealDamage(topCuracion) && player.mo >= topCuracion.cost && healsCount < maxHeals) {
+            if (topCuracion && this.canDealDamage(topCuracion) && player.mo >= topCuracion.cost && limits.healsCount < limits.maxHeals) {
                 return 'curacion';
             }
+            
+            // Prioridad 2: Escudo híbrido (si no hemos superado el límite de eslabones)
             const topEscudos = this.gameState.market['escudos'] && this.gameState.market['escudos'].length > 0 ? this.gameState.market['escudos'][0] : null;
-            const maxShields = weaponsCount + (isProtector ? 2 : 1);
-            if (topEscudos && this.canDealDamage(topEscudos) && player.mo >= topEscudos.cost && shieldCount < maxShields) {
+            if (topEscudos && this.canDealDamage(topEscudos) && player.mo >= topEscudos.cost && limits.shieldCount < limits.maxShields) {
                 return 'escudos';
             }
             return 'ataque';
         }
 
-        const targetLevel = Math.max(player.level, this.gameState.battlefield.waveLevel);
-        const nonStarting = player.equipped.filter(eq => eq.type !== 'inicial');
-        const weapons = nonStarting.filter(eq => eq.type === 'ataque').length;
-        const heals = nonStarting.filter(eq => eq.type === 'curacion').length;
-        const shields = nonStarting.filter(eq => eq.type === 'escudos').length;
-
-        if (targetLevel === 2) {
-            const hasWeapon = weapons >= 1;
-            const hasDamageHeal = player.equipped.some(eq => eq.type !== 'inicial' && this.isHeal(eq) && this.canDealDamage(eq));
-            if (!hasWeapon && !hasDamageHeal) {
-                return 'ataque'; // prioriza ataque si no tiene ninguno de los dos
-            }
-        } else if (targetLevel === 3) {
-            if (weapons === 0) return 'ataque';
-            if (heals === 0) return 'curacion';
-        } else if (targetLevel >= 4) {
-            if (weapons < 2) return 'ataque';
-            if (heals < 1 && shields < 1) {
-                return 'curacion';
-            }
-            if (heals >= 1 && shields === 0 && heals < 2) {
-                return 'escudos';
-            }
-            if (shields >= 1 && heals === 0 && shields < 2) {
-                return 'curacion';
-            }
-        }
+        // Fuera de emergencias ofensivas, seguir la cadena de compra estricta
+        if (limits.weaponsCount < 2) return 'ataque'; // Early game priority
+        
+        if (limits.healsCount < limits.maxHeals) return 'curacion';
+        if (limits.shieldCount < limits.maxShields) return 'escudos';
+        if (limits.weaponsCount < limits.maxWeapons) return 'ataque';
+        
         return null;
     }
 
@@ -1139,26 +1137,13 @@ performMarketTurn(bot) {
             const isProtector = bot.role && bot.role.id === 'protector';
             const isGuerreroOrMago = bot.role && (bot.role.id === 'guerrero' || bot.role.id === 'mago');
 
+            const limits = this.getEquipmentLimits(bot);
+            
             const canBuy = (type) => this.gameState.market[type] && this.gameState.market[type].length > 0 && bot.mo >= this.gameState.market[type][0].cost;
             const buyIfPossible = (type) => {
-                // Contar equipamiento por categoría original más iniciales
-                const weaponsCount = bot.equipped.filter(eq => eq.type === 'ataque' || eq.id === 'espada_inicial').length;
-                const healsCount = bot.equipped.filter(eq => eq.type === 'curacion').length;
-                const shieldCount = bot.equipped.filter(eq => eq.type === 'escudos' || eq.id === 'escudo_inicial').length;
-
-                // Evitar desequilibrios (ej: no acaparar curaciones/escudos si no se tienen suficientes armas)
-                if (type === 'ataque') {
-                    const maxWeapons = 4;
-                    if (weaponsCount >= maxWeapons) return false;
-                }
-                if (type === 'curacion') {
-                    const maxHeals = weaponsCount;
-                    if (healsCount >= maxHeals) return false;
-                }
-                if (type === 'escudos') {
-                    const maxShields = weaponsCount;
-                    if (shieldCount >= maxShields) return false;
-                }
+                if (type === 'ataque' && limits.weaponsCount >= limits.maxWeapons) return false;
+                if (type === 'curacion' && limits.healsCount >= limits.maxHeals) return false;
+                if (type === 'escudos' && limits.shieldCount >= limits.maxShields) return false;
                 if (canBuy(type)) {
                     const card = this.gameState.market[type][0];
                     const hasCard = bot.equipped.some(eq => eq.id === card.id);
@@ -1496,7 +1481,7 @@ performCombatTurn(bot) {
             const plannedKills = planResult.goblinsKilled;
 
             // Lógica de relanzamiento de dados negros (antes de asignar ningún dado, desactivado en fase de calambres)
-            const dieToReroll = !isCrampPhase ? availableDice.find(d => d.type === 'black' && !d.rerolled && this.shouldRerollBlackDie(d, bot, plannedAssignments, plannedKills)) : null;
+            const dieToReroll = !isCrampPhase ? availableDice.find(d => d.type === 'black' && !d.rerolled && this.shouldRerollBlackDie(d, bot, plannedAssignments, plannedKills, planResult.score)) : null;
             if (dieToReroll) {
                 console.log("[BotManager] Decided to reroll black die:", dieToReroll.id);
                 this.isActing = true;
@@ -1795,14 +1780,18 @@ calculateEquipPower(eq, bot) {
                     if (a.level !== b.level) return a.level - b.level; // Menor nivel primero
                     return a.currentHp - b.currentHp; // Menor vida primero
                 } else {
-                    // Si buscamos combate normal, priorizamos recompensas, nivel y vida
+                    // Si buscamos combate normal, priorizamos recompensas, luego DA├æO (para mitigar), y vida
                     const aCat = this.getGoblinRewardCategory(a, bot);
                     const bCat = this.getGoblinRewardCategory(b, bot);
                     if (aCat !== bCat) return bCat - aCat;
                     
-                    if (a.level !== b.level) {
-                        return b.level - a.level;
-                    }
+                    let dmgA = this.getGoblinDamageProfile(a);
+                    let dmgB = this.getGoblinDamageProfile(b);
+                    let totalDmgA = dmgA.normal + dmgA.direct;
+                    let totalDmgB = dmgB.normal + dmgB.direct;
+
+                    if (totalDmgA !== totalDmgB) return totalDmgB - totalDmgA;
+
                     return a.currentHp - b.currentHp;
                 }
             });
@@ -2075,42 +2064,96 @@ calculateEquipPower(eq, bot) {
     }
 
     // Decide si debe volver a lanzar un dado negro según su utilidad actual
-    shouldRerollBlackDie(die, bot, plannedAssignments = {}, plannedKills = 0) {
+    // Decide si debe volver a lanzar un dado negro según su utilidad actual y probabilidad
+    shouldRerollBlackDie(die, bot, plannedAssignments = {}, plannedKills = 0, plannedScore = 0) {
         if (die.type !== 'black' || die.rerolled || die.isCramped) return false;
         
-        const allGoblinsDead = plannedKills === (this.gameState.currentCombat && this.gameState.currentCombat.goblins ? this.gameState.currentCombat.goblins.length : 0);
+        // --- 1. Evaluar nuestro plan actual (sin relanzar) ---
+        const currentScore = plannedScore || 0; // plannedScore debe venir por parámetro, pero si no, usamos 0
+        const currentHp = bot.hp - (plannedAssignments.damageTaken || 0);
         
-        if (die.value <= 2) {
-            let reasonToKeep = false;
+        // Simularemos los 6 posibles resultados del dado si lo relanzamos
+        let betterScoreCount = 0;
+        let worseScoreCount = 0;
+        let betterSurvivalCount = 0;
+        let deathCount = 0;
+        
+        // Extraemos los dados disponibles sin el dado negro actual
+        const availableDice = [];
+        if (this.gameState.currentCombat && this.gameState.currentCombat.dice && this.gameState.currentCombat.dice.black) {
+            this.gameState.currentCombat.dice.black.forEach(d => {
+                if (d.id !== die.id && !d.assignedTo && !d.isCramped) availableDice.push(d);
+            });
+        }
+        
+        const goblins = this.gameState.currentCombat ? this.gameState.currentCombat.goblins : [];
+        if (goblins.length === 0) return false;
+
+        // Simulador rápido para los 6 resultados
+        for (let v = 1; v <= 6; v++) {
+            let simDie = { ...die, value: v };
+            let simDice = [...availableDice, simDie];
             
+            // Evaluamos el turno con este universo posible
+            let simResult = this.evaluateOptimalCombatTurn(simDice, goblins, bot, false);
+            
+            // Calculamos daño recibido en la simulación
+            let simDmgTaken = 0;
+            goblins.forEach(g => {
+                if (!simResult.assignments[`kill-${g.uid}`]) {
+                    let rem = this.getGoblinRemainingDamage(g);
+                    simDmgTaken += rem.normal + rem.direct;
+                }
+            });
+            let simHp = bot.hp - simDmgTaken;
+            
+            if (simHp <= 0) deathCount++;
+            if (simHp > currentHp) betterSurvivalCount++;
+            
+            if (simResult.score > currentScore) betterScoreCount++;
+            if (simResult.score < currentScore) worseScoreCount++;
+        }
+        
+        // --- 2. Toma de decisión basada en probabilidad y riesgo ---
+        
+        // Regla 1: Supervivencia prioritaria. Si relanzar nos mata en más de 2/6 universos y actualmente sobrevivimos, NO relanzar.
+        if (currentHp > 0 && deathCount >= 3) {
+            console.log(`[BotManager] Reroll black die ${die.id} DENEGADO: Riesgo inaceptable de muerte (${deathCount}/6).`);
+            return false;
+        }
+        
+        // Regla 2: Mejora garantizada o altamente probable.
+        // Si en 4 de 6 casos (66%+) mejoramos nuestra puntuación, relanzamos.
+        if (betterScoreCount >= 4) {
+            console.log(`[BotManager] Reroll black die ${die.id} APROBADO: Alta probabilidad de mejora (${betterScoreCount}/6).`);
+            return true;
+        }
+        
+        // Regla 3: Si nuestro dado actual es un 1 o 2, suele ser inútil salvo para escudos específicos.
+        if (die.value <= 2) {
+            let neededForShield = false;
             bot.equipped.forEach(eq => {
-                if (!eq.isActive) return;
-                
-                const limit = (eq.isBroken && eq.broken ? eq.broken.limit : eq.limit) || '';
-                const extraStr = ((eq.isBroken && eq.broken ? eq.broken.extra : eq.extra) || '').toLowerCase();
-                
-                if (eq.isBroken) {
-                    if (limit === 'MAX 2' && die.value <= 2) reasonToKeep = true;
-                    if (limit === 'MAX 3' && die.value <= 3) reasonToKeep = true;
-                    if (limit === 'PAR' && die.value === 2) reasonToKeep = true;
-                    if (limit === 'IMPAR' && die.value === 1) reasonToKeep = true;
-                }
-                
-                if (extraStr.includes(`con un ${die.value}:`)) {
-                    reasonToKeep = true;
-                }
-                
-                if (allGoblinsDead && limit.includes('MAX')) {
-                    let maxVal = parseInt(limit.replace('MAX', '').trim());
-                    if (!isNaN(maxVal) && maxVal <= 3 && die.value <= maxVal) {
-                        reasonToKeep = true;
-                    }
+                if (eq.isActive && eq.type === 'escudos') {
+                    const limit = (eq.isBroken && eq.broken ? eq.broken.limit : eq.limit) || '';
+                    if (limit === 'MAX 2' && die.value <= 2) neededForShield = true;
+                    if (limit === 'PAR' && die.value === 2) neededForShield = true;
+                    if (limit === 'IMPAR' && die.value === 1) neededForShield = true;
                 }
             });
             
-            return !reasonToKeep;
+            if (!neededForShield) {
+                console.log(`[BotManager] Reroll black die ${die.id} APROBADO: Dado inútil actualmente, cualquier cosa es mejor.`);
+                return true;
+            }
         }
         
+        // Regla 4: Supervivencia desesperada.
+        // Si en el plan actual morimos, relanzamos SIEMPRE buscando un milagro, salvo que no haya ningún mundo donde sobrevivamos.
+        if (currentHp <= 0 && deathCount < 6) {
+            console.log(`[BotManager] Reroll black die ${die.id} APROBADO: Supervivencia desesperada. Posibilidades de salvarse: ${6 - deathCount}/6.`);
+            return true;
+        }
+
         return false;
     }
 

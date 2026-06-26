@@ -2675,6 +2675,16 @@ if (btnToggleMenu) {
       } else {
         menuCollapsible.style.display = 'none';
         btnToggleMenu.innerText = '◀';
+        
+        const logPanelEl = document.getElementById('log-panel');
+        if (logPanelEl && logPanelEl.style.display !== 'none') {
+            logPanelEl.style.display = 'none';
+        }
+        
+        const debugModalEl = document.getElementById('debug-combat-modal');
+        if (debugModalEl && !debugModalEl.classList.contains('hidden')) {
+            debugModalEl.classList.add('hidden');
+        }
       }
     }
   });
@@ -4280,7 +4290,8 @@ function renderBattlefield() {
     gobEl.style.backgroundImage = `url('${imageUrl}')`;
 
     if (goblin.isDying) {
-      gobEl.classList.add(goblin.gaveReward ? 'dying-reward' : 'dying');
+      const hasRealReward = goblin.gaveReward && (goblin.rewardMo > 0 || goblin.rewardPex > 0);
+      gobEl.classList.add(hasRealReward ? 'dying-reward' : 'dying');
       gobEl.innerHTML = `<div class="goblin-hp" style="background: var(--accent-red); color: white;">0</div>`;
     } else {
       const isInvulnerable = gameState.isGoblinInvulnerable(goblin);
