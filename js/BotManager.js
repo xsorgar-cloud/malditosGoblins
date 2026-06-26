@@ -1060,20 +1060,20 @@ performMainTurn(bot) {
                 let canEliminateAnyGoblinOnTable = goblinsEnMesa.some(g => g.currentHp <= maxPowerAll);
 
                 if (isLastAction && !canEliminateAnyGoblinOnTable) {
-                    if (waveLevel >= 3) {
-                        chosenAction = 'role';
-                        decisionText = "Atacar es inútil porque se curarán al final del turno. Descanso y recargo mi energía.";
-                    } else {
-                        chosenAction = 'gold';
-                        decisionText = "Atacar es inútil porque se curarán al final del turno. Descanso y saco algo de oro.";
-                    }
-                } else if (tableCanBeClearedAnyway && !canEliminateAnyGoblin) {
-                    // En oleada 3 o posterior (tableCanBeClearedAnyway requiere waveLevel >= 3),
-                    // obtener oro no tiene sentido, así que recargamos rol.
-                    chosenAction = 'role';
+                    chosenAction = 'gold';
+                    decisionText = "Atacar es inútil porque se curarán al final del turno. Descanso y saco algo de oro.";
+                } else if (tableCanBeClearedAnyway && !canEliminateAnyGoblin && (shortfall === 1 || shortfall === 2)) {
+                    // Conseguir 1 o 2 monedas
                     let alivePlayers = this.gameState.players.filter(p => p.hp > 0).length;
                     let textPrefix = alivePlayers > 1 ? "Mis compañeros pueden limpiar la mesa." : "Tengo tiempo de limpiar la mesa luego.";
-                    decisionText = `${textPrefix} Aprovecharé para recargar mi energía.`;
+                    
+                    if (shortfall === 2 && bot.hp > 1) {
+                        chosenAction = 'gold-dmg';
+                        decisionText = `${textPrefix} Conseguiré 2 monedas de oro para comprar ${topCard.name}.`;
+                    } else {
+                        chosenAction = 'gold';
+                        decisionText = `${textPrefix} Conseguiré 1 moneda de oro para comprar ${topCard.name}.`;
+                    }
                 } else if (potentialTargets.length > 0) {
                     chosenAction = 'combat';
                     targetForCombat = potentialTargets;
@@ -2419,15 +2419,15 @@ calculateEquipPower(eq, bot) {
 
             let score = 0;
             if (simulatedHp <= 0) score -= 1000000000;
-            else score += simulatedHp * 100000;
+            else score += simulatedHp * 10000;
             
             score += goblinsKilled * 1000000;
-            score += simulatedEnergy * 5000;
+            score += simulatedEnergy * 10000;
             
             aliveGoblins.forEach(g => {
                 let totalDmg = damageToGoblins[g.uid];
                 if (g.currentHp - totalDmg > 0 && !isLastAction) {
-                    score += totalDmg * 10000;
+                    score += totalDmg * 1000;
                 }
             });
 
