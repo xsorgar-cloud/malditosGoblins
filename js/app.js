@@ -19,6 +19,8 @@ const showInterceptionError = (val) => {
 (function initSplashScreen() {
   const setupSplash = () => {
     const splash = document.getElementById('splash-screen');
+    const logoEl = document.getElementById('game-logo');
+
     if (!splash) return;
 
     let isRemoving = false;

@@ -1,4 +1,19 @@
 const DB = {
+  // LOGOS ESTACIONALES / EVENTOS
+  // Formato MM-DD (Mes-Día). Puede abarcar fin de año (ej: "12-15" a "01-06")
+  seasonalLogos: [
+  
+    { fecha_inicio: "01-02", fecha_fin: "01-07", imagen_mostrar: "assets/logos/logo_navidad.png" },
+	{ fecha_inicio: "02-12", fecha_fin: "02-18", imagen_mostrar: "assets/logos/logo_carnaval.png" },
+	{ fecha_inicio: "06-01", fecha_fin: "10-24", imagen_mostrar: "assets/logos/logo_verano.png" },
+	{ fecha_inicio: "09-19", fecha_fin: "10-04", imagen_mostrar: "assets/logos/logo_oktoberfest.png" },
+    { fecha_inicio: "10-25", fecha_fin: "10-31", imagen_mostrar: "assets/logos/logo_halloween.png" },
+	{ fecha_inicio: "11-01", fecha_fin: "11-02", imagen_mostrar: "assets/logos/logo_muetos.png" },
+    { fecha_inicio: "12-10", fecha_fin: "12-30", imagen_mostrar: "assets/logos/logo_navidad.png" },
+    { fecha_inicio: "12-31", fecha_fin: "01-01", imagen_mostrar: "assets/logos/logo_ano_nuevo.png" }
+   
+  ],
+
   // CONFIGURACIÓN DE NIVELES DEL JUGADOR
   playerLevels: [
     { level: 1, maxHp: 10, pexNeeded: 2, blocks: 6, extraDice: null },

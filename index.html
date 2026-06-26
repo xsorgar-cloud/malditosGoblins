@@ -8,14 +8,38 @@
     <link rel="stylesheet" href="css/style.css?v=3.41">
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap"
         rel="stylesheet">
+    <script src="js/database.js?v=3.65"></script>
 </head>
 
 <body>
     <!-- PANTALLA DE PRESENTACIÓN (SPLASH SCREEN) -->
     <div id="splash-screen"
         style="position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: #0a0a0f; z-index: 999999; display: flex; align-items: center; justify-content: center; transition: opacity 0.8s ease-in-out, visibility 0.8s ease-in-out;">
-        <img src="assets/logo.png" alt="Malditos Goblins Logo"
+        <img id="game-logo" src="assets/logo.png" alt="Malditos Goblins Logo"
             style="max-width: 80%; max-height: 80%; animation: splash-intro 0.7s cubic-bezier(0.25, 1, 0.5, 1) forwards;">
+        <script>
+            // Lógica para Logo Estacional inmediata
+            if (typeof DB !== 'undefined' && DB.seasonalLogos) {
+                const now = new Date();
+                const currentMM = String(now.getMonth() + 1).padStart(2, '0');
+                const currentDD = String(now.getDate()).padStart(2, '0');
+                const currentMMDD = `${currentMM}-${currentDD}`;
+          
+                for (let season of DB.seasonalLogos) {
+                    let isActive = false;
+                    if (season.fecha_inicio <= season.fecha_fin) {
+                        isActive = currentMMDD >= season.fecha_inicio && currentMMDD <= season.fecha_fin;
+                    } else {
+                        isActive = currentMMDD >= season.fecha_inicio || currentMMDD <= season.fecha_fin;
+                    }
+          
+                    if (isActive) {
+                        document.getElementById('game-logo').src = season.imagen_mostrar;
+                        break;
+                    }
+                }
+            }
+        </script>
     </div>
 
     <!-- HISTORIAL FLOTANTE GLOBAL -->
@@ -262,7 +286,7 @@
 
                 <div id="game-version-badge"
                     style="position: absolute; top: 28px; left: 70px; z-index: 10; font-family: 'Cinzel', serif; font-size: 0.85rem; font-weight: bold; color: var(--gold); background: rgba(10, 10, 15, 0.8); padding: 4px 12px; border: 1px solid rgba(212, 175, 55, 0.4); border-radius: 20px; box-shadow: 0 2px 10px rgba(0,0,0,0.5); backdrop-filter: blur(5px); letter-spacing: 1px;">
-                    v.3.82
+                    v.3.83
                 </div>
 
                 <h2 class="setup-title" style="margin-top: 0; margin-bottom: 10px; font-size: 2.2rem; text-align: center;">Configura tu Grupo</h2>
@@ -825,13 +849,12 @@
         </div>
     </div>
 
-    <script src="js/database.js?v=3.65"></script>
     <script src="js/GameState.js?v=3.65"></script>
     <script src="js/UIManager.js?v=3.65"></script>
     <script src="js/DragDropManager.js?v=3.65"></script>
-    <script src="js/CombatManager.js?v=3.82"></script>
-    <script src="js/BotManager.js?v=3.82"></script>
-    <script src="js/app.js?v=3.82"></script>
+    <script src="js/CombatManager.js?v=3.83"></script>
+    <script src="js/BotManager.js?v=3.83"></script>
+    <script src="js/app.js?v=3.83"></script>
     <!-- DEBUG COMBAT MODAL -->
     <div id="debug-combat-modal" class="hidden" style="position: fixed; top: 60px; right: 20px; width: 550px; max-height: 85vh; overflow: hidden; display: flex; flex-direction: column; text-align: left; border: 2px solid #ff3366; background: rgba(15, 10, 25, 0.95); box-shadow: 0 0 40px rgba(255, 51, 102, 0.4); border-radius: 15px; padding: 20px; z-index: 99999; backdrop-filter: blur(5px);">
         <div id="debug-combat-header" style="display: flex; justify-content: space-between; align-items: center; cursor: grab; padding-bottom: 5px; border-bottom: 1px solid rgba(255, 51, 102, 0.3);">
