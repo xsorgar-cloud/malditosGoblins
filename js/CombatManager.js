@@ -1821,8 +1821,9 @@ if (!window.combatArrowsResizeRegistered) {
 let prevPlayerStats = [];
 
 function renderPlayer() {
-  // Capturar coordenadas de los indicadores de vida de los jugadores antes de vaciar el contenedor
+  // Capturar coordenadas de los indicadores de vida y monedas de los jugadores antes de vaciar el contenedor
   const hpRects = [];
+  const moRects = [];
   gameState.players.forEach((p, index) => {
     const oldPanel = playersContainer.children[index];
     if (oldPanel) {
@@ -1830,6 +1831,11 @@ function renderPlayer() {
       if (hpEl) {
         const iconEl = hpEl.querySelector('.hp-icon') || hpEl;
         hpRects[index] = iconEl.getBoundingClientRect();
+      }
+      const moEl = oldPanel.querySelector('.stat.gold');
+      if (moEl) {
+        const iconEl = moEl.querySelector('svg') || moEl;
+        moRects[index] = iconEl.getBoundingClientRect();
       }
     }
   });
@@ -1850,6 +1856,17 @@ function renderPlayer() {
       setTimeout(() => {
         if (typeof window.animateHealthLoss === 'function') {
           window.animateHealthLoss(rect, hpLost);
+        }
+      }, 50);
+    }
+
+    // Disparar animación de monedas al perder monedas
+    if (prev.mo !== undefined && p.mo < prev.mo) {
+      const moLost = prev.mo - p.mo;
+      const rect = moRects[index] || { left: window.innerWidth / 2, top: window.innerHeight / 2, width: 0, height: 0 };
+      setTimeout(() => {
+        if (typeof window.animateCoinLoss === 'function') {
+          window.animateCoinLoss(rect, moLost);
         }
       }, 50);
     }

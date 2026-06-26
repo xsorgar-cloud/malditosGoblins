@@ -1559,7 +1559,7 @@ performCombatTurn(bot) {
                 // Intento prioritario de intercepción de ataques peligrosos en cualquier dado disponible
                 let intercepted = false;
                 for (let d of availableDice) {
-                    if (this.tryInterceptDangerousDie(d, bot, plannedAssignments, plannedKills, availableDice)) {
+                    if (this.tryInterceptDangerousDie(d, bot, plannedAssignments, plannedKills, availableDice, planResult.score)) {
                         intercepted = true;
                         break;
                     }
@@ -2168,7 +2168,7 @@ calculateEquipPower(eq, bot) {
     }
 
 // Intenta interceptar un dado peligroso de un goblin, respetando la planificación del combate
-    tryInterceptDangerousDie(die, bot, plannedAssignments = {}, plannedKills = 0, availableDice = []) {
+    tryInterceptDangerousDie(die, bot, plannedAssignments = {}, plannedKills = 0, availableDice = [], planScore = 0) {
         if (!this.gameState.currentCombat || this.gameState.currentCombat.needsCrampResolution) return false;
         
         const goblins = this.gameState.currentCombat.goblins;
@@ -2205,12 +2205,14 @@ calculateEquipPower(eq, bot) {
                     let attacks = gobDB.attacks[detail.val] || [];
                     let hasEffects = attacks.length > 0;
                     let isHighDamage = detail.val >= 3;
+                    let isLethal = planScore < 0; // Si planScore es negativo (-1000000000), el bot muere incluso con la estrategia óptima
                     
-                    if (!hasEffects && !isHighDamage) continue;
+                    // Si el daño nos va a matar, ignoramos las reglas de "bajo daño" para interceptar a toda costa
+                    if (!hasEffects && !isHighDamage && !isLethal) continue;
 
                     // Si NO tiene efectos especiales, y el dado está planificado para conseguir una kill, 
-                    // preferimos hacer la kill en lugar de bloquear daño normal.
-                    if (!hasEffects && plannedKills > 0 && plannedAssignments[die.id]) {
+                    // preferimos hacer la kill en lugar de bloquear daño normal... A MENOS QUE el daño nos mate.
+                    if (!hasEffects && plannedKills > 0 && plannedAssignments[die.id] && !isLethal) {
                         if (availableDice.length > 0) {
                             const remainingDice = availableDice.filter(d => d.id !== die.id);
                             const alternatePlan = this.evaluateOptimalCombatTurn(remainingDice, goblins, bot, false);

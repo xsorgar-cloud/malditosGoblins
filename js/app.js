@@ -3896,6 +3896,97 @@ window.animateHealthLoss = function(sourceElOrRect, hpCount) {
   }
 };
 
+window.animateCoinLoss = function(sourceElOrRect, coinCount) {
+  if (typeof gameState !== 'undefined' && (gameState.isGameOver || gameState.isGameWon)) return;
+  if (!sourceElOrRect || !coinCount || coinCount <= 0) return;
+
+  let rect;
+  if (sourceElOrRect instanceof HTMLElement) {
+    rect = sourceElOrRect.getBoundingClientRect();
+  } else {
+    rect = sourceElOrRect;
+  }
+
+  const startX = rect.left + rect.width / 2;
+  const startY = rect.top + rect.height / 2;
+
+  // Si son muchas monedas, limitamos la animación visual a un máximo de 10 para no saturar
+  const visualCoins = Math.min(coinCount, 10);
+
+  for (let i = 0; i < visualCoins; i++) {
+    const coin = document.createElement('div');
+    coin.style.position = 'fixed';
+    coin.style.zIndex = '99999';
+    coin.style.pointerEvents = 'none';
+    coin.innerHTML = COIN_SVG;
+    
+    // Hacer que el SVG sea un poco más grande para la animación si se desea
+    const svgEl = coin.querySelector('svg');
+    if (svgEl) {
+      svgEl.setAttribute('width', '24');
+      svgEl.setAttribute('height', '24');
+    }
+    
+    // Posición inicial: centro del indicador
+    let x = startX - 12;
+    let y = startY - 12;
+    
+    coin.style.left = `${x}px`;
+    coin.style.top = `${y}px`;
+    coin.style.transform = 'scale(1)';
+    coin.style.opacity = '1';
+    document.body.appendChild(coin);
+
+    // Parámetros de la simulación física (dispersión y caída con rebote)
+    let vx = (Math.random() - 0.5) * 3.5; 
+    let vy = -(Math.random() * 3.0 + 2.0); 
+    const gravity = 0.35;
+    const bounce = 0.5;
+    let rotation = 0;
+    
+    // Suelo virtual para el rebote (parte inferior de la pantalla)
+    const floorY = window.innerHeight - 35 - Math.random() * 10;
+    let bounceCount = 0;
+    let opacity = 1.0;
+    let frames = 0;
+
+    function step() {
+      frames++;
+      vy += gravity;
+      x += vx;
+      y += vy;
+
+      if (y >= floorY && vy > 0) {
+        y = floorY;
+        vy = -vy * bounce;
+        vx *= 0.7; // Fricción
+        if (bounceCount === 0) {
+          rotation = (Math.random() > 0.5 ? 1 : -1) * (Math.random() * 15 + 15); // Inclinación aleatoria
+        }
+        bounceCount++;
+      }
+
+      if (bounceCount >= 2 || frames > 70) {
+        opacity -= 0.05;
+        vx *= 0.85;
+      }
+
+      coin.style.left = `${x}px`;
+      coin.style.top = `${y}px`;
+      coin.style.opacity = `${opacity}`;
+      coin.style.transform = `rotate(${rotation}deg)`;
+
+      if (opacity > 0) {
+        requestAnimationFrame(step);
+      } else {
+        coin.remove();
+      }
+    }
+    
+    requestAnimationFrame(step);
+  }
+};
+
 function renderMarket() {
   marketDecks.innerHTML = '';
   const types = ['ataque', 'escudos', 'curacion'];
