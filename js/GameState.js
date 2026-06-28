@@ -26,6 +26,7 @@ class GameState {
     this.activeSenda = 'iniciacion';
     this.pendingHito1Goblins = 0;
     this.pendingCorrosionChoice = null;
+    this.isFirstTurnOfGame = false;
     this.lastCombatId = 0;
     this.lastActionWasCombat = false;
     this.lastWarlordExtraDmg = 0;

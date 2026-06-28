@@ -1924,6 +1924,7 @@ btnStartGame.addEventListener('click', () => {
   setupModal.classList.add('hidden');
   const versionBadge = document.getElementById('game-version-badge');
   if (versionBadge) versionBadge.style.display = 'none';
+  gameState.isFirstTurnOfGame = true;
   updateUI();
   if (typeof window !== 'undefined' && window.saveGame) {
     window.saveGame(true);
@@ -4001,8 +4002,20 @@ function renderMarket() {
       const deckEl = document.createElement('div');
       deckEl.className = 'deck';
       deckEl.setAttribute('data-deck-type', type);
-      deckEl.style.backgroundImage = `url('${topCard.image}')`;
       deckEl.innerHTML = '';
+
+      if (gameState.isFirstTurnOfGame) {
+        // Set the back image depending on the deck type
+        let backImg = 'assets/Equipo/back_esp.webp';
+        if (type === 'escudos') backImg = 'assets/Equipo/back_esc.webp';
+        if (type === 'curacion') backImg = 'assets/Equipo/back_cure.webp';
+        
+        deckEl.style.backgroundImage = `url('${backImg}')`;
+        deckEl.classList.add('start-covered');
+        deckEl.setAttribute('data-front-image', topCard.image);
+      } else {
+        deckEl.style.backgroundImage = `url('${topCard.image}')`;
+      }
 
       if (p && p.mo >= topCard.cost) {
         deckEl.classList.add('market-affordable');
@@ -6159,6 +6172,37 @@ function highlightInitialFocusButtons() {
       focusHighlightTimeouts.push(t);
     }
   });
+
+  // Just after the button highlights finish (index * 75 is max 225ms), trigger the market card flip
+  if (gameState.isFirstTurnOfGame) {
+    const flipT = setTimeout(() => {
+      flipInitialMarketCards();
+    }, 400);
+    focusHighlightTimeouts.push(flipT);
+  }
+}
+
+function flipInitialMarketCards() {
+  const coveredCards = document.querySelectorAll('.deck.start-covered');
+  if (coveredCards.length === 0) return;
+
+  coveredCards.forEach(card => {
+    card.style.transform = 'scaleX(0)';
+    card.style.transition = 'transform 0.3s ease-in';
+  });
+
+  setTimeout(() => {
+    coveredCards.forEach(card => {
+      const frontImg = card.getAttribute('data-front-image');
+      if (frontImg) {
+        card.style.backgroundImage = `url('${frontImg}')`;
+      }
+      card.classList.remove('start-covered');
+      card.style.transform = 'scaleX(1)';
+      card.style.transition = 'transform 0.3s ease-out';
+    });
+    gameState.isFirstTurnOfGame = false;
+  }, 300);
 }
 
 function removeInitialFocusHighlights() {
