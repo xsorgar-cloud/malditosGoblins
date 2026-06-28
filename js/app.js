@@ -4168,7 +4168,6 @@ function openExploreMarketModal() {
         }
         p.mo -= 1;
         const removedCard = gameState.market[type].shift();
-        gameState.market[type].push(removedCard); // Rotar la carta al fondo del mazo
         gameState.addLog(`🔍 <strong>${p.name}</strong> gastó 1 mo en explorar el mercado, descartando <strong>${removedCard.name}</strong>.`);
         updateUI();
 

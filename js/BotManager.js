@@ -198,7 +198,6 @@ triggerAction(type, target = null, reason = "") {
             if (p.mo >= 1) {
                 p.mo -= 1;
                 const removedCard = this.gameState.market[target].shift();
-                this.gameState.market[target].push(removedCard);
                 let reasonText = reason ? ` <br><span style="font-size:0.9em; color:#888;"><i>(Motivo: ${reason})</i></span>` : '';
                 this.gameState.addLog(`🔄 <strong>${p.name}</strong> gastó 1 mo en explorar el mercado, descartando <strong>${removedCard.name}</strong>.${reasonText}`);
             }
