@@ -3498,10 +3498,14 @@ window.animateCardPurchase = function(sourceEl, onComplete) {
   // Convert source card into its back side immediately
   const type = sourceEl.getAttribute('data-deck-type');
   if (type) {
-    let backImg = 'assets/Equipo/back_esp.webp';
-    if (type === 'escudos') backImg = 'assets/Equipo/back_esc.webp';
-    if (type === 'curacion') backImg = 'assets/Equipo/back_cure.webp';
-    sourceEl.style.backgroundImage = `url('${backImg}')`;
+    if (typeof gameState !== 'undefined' && gameState.market[type] && gameState.market[type].length > 0) {
+      let backImg = 'assets/Equipo/back_esp.webp';
+      if (type === 'escudos') backImg = 'assets/Equipo/back_esc.webp';
+      if (type === 'curacion') backImg = 'assets/Equipo/back_cure.webp';
+      sourceEl.style.backgroundImage = `url('${backImg}')`;
+    } else {
+      sourceEl.style.opacity = '0'; // Hide the source element because the deck is now empty
+    }
   }
   
   clone.style.position = 'fixed';
@@ -4058,7 +4062,7 @@ function renderMarket() {
             animateCardPurchase(deckEl, () => {
               gameState.justBoughtDeck = type;
               updateUI();
-              if (window.flipSingleMarketCard) {
+              if (window.flipSingleMarketCard && gameState.market[type] && gameState.market[type].length > 0) {
                 window.flipSingleMarketCard(type);
               }
               gameState.justBoughtDeck = null;
