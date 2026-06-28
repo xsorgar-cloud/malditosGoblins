@@ -6186,23 +6186,29 @@ function flipInitialMarketCards() {
   const coveredCards = document.querySelectorAll('.deck.start-covered');
   if (coveredCards.length === 0) return;
 
-  coveredCards.forEach(card => {
-    card.style.transform = 'scaleX(0)';
-    card.style.transition = 'transform 0.3s ease-in';
-  });
+  coveredCards.forEach((card, index) => {
+    // Escalonar cada carta (200ms de diferencia entre cada una)
+    setTimeout(() => {
+      card.style.transform = 'scaleX(0)';
+      card.style.transition = 'transform 0.15s ease-in';
 
-  setTimeout(() => {
-    coveredCards.forEach(card => {
-      const frontImg = card.getAttribute('data-front-image');
-      if (frontImg) {
-        card.style.backgroundImage = `url('${frontImg}')`;
-      }
-      card.classList.remove('start-covered');
-      card.style.transform = 'scaleX(1)';
-      card.style.transition = 'transform 0.3s ease-out';
-    });
-    gameState.isFirstTurnOfGame = false;
-  }, 300);
+      // Cambiar la imagen cuando está encogida a la mitad (150ms)
+      setTimeout(() => {
+        const frontImg = card.getAttribute('data-front-image');
+        if (frontImg) {
+          card.style.backgroundImage = `url('${frontImg}')`;
+        }
+        card.classList.remove('start-covered');
+        card.style.transform = 'scaleX(1)';
+        card.style.transition = 'transform 0.15s ease-out';
+
+        // Cuando la última carta termine de voltear, reiniciamos el flag
+        if (index === coveredCards.length - 1) {
+          gameState.isFirstTurnOfGame = false;
+        }
+      }, 150);
+    }, index * 200);
+  });
 }
 
 function removeInitialFocusHighlights() {
