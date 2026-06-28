@@ -736,11 +736,11 @@ window.combatDieOnCombatRoleHandler = (e) => {
 
               eligibleEquips.sort((a, b) => getPriority(b) - getPriority(a));
 
-              // 4. Reparar máximo 1 equipo por combate
               const bestEq = eligibleEquips[0];
               playerObj.mo -= 1;
               bestEq.isBroken = false;
               bestEq.brokenAnimationPlayed = false;
+              bestEq.justRepaired = true;
               gameState.addLog(`🛠️ <strong>${playerObj.name}</strong> (Bot) pagó 1 mo para reparar <strong>${bestEq.name}</strong>.`);
             }
           }
@@ -1896,6 +1896,9 @@ function renderPlayer() {
         extraStyle = 'transform: rotate(0deg); transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);';
       } else if (eq.isBroken) {
         extraStyle = 'transform: rotate(180deg);';
+      } else if (eq.justRepaired) {
+        justBrokenClass = 'just-repaired';
+        extraStyle = 'transform: rotate(180deg); transition: transform 0.8s cubic-bezier(0.34, 1.56, 0.64, 1);';
       }
 
       let activeClass = eq.isActive ? '' : 'inactive';
@@ -2098,6 +2101,7 @@ function renderPlayer() {
             playerObj.mo -= 1;
             eqObj.isBroken = false;
             eqObj.brokenAnimationPlayed = false;
+            eqObj.justRepaired = true;
             gameState.addLog(`🛠️ <strong>${playerObj.name}</strong> pagó 1 mo para reparar <strong>${eqObj.name}</strong>.`);
             updateUI();
           }
@@ -2257,6 +2261,22 @@ function renderPlayer() {
       if (gameState.players[pIdx] && gameState.players[pIdx].equipped[eqIdx]) {
         gameState.players[pIdx].equipped[eqIdx].brokenAnimationPlayed = true;
       }
+    });
+
+    document.querySelectorAll('.equipment-card.just-repaired').forEach(card => {
+      // Trigger the rotation animation to flip back to 0deg (CSS transition will handle the smooth flip)
+      card.style.transform = 'rotate(0deg)';
+      
+      const pIdx = card.dataset.playerIndex;
+      const eqIdx = card.dataset.eqIndex;
+      if (gameState.players[pIdx] && gameState.players[pIdx].equipped[eqIdx]) {
+        gameState.players[pIdx].equipped[eqIdx].justRepaired = false;
+      }
+      
+      // Remove class after animation finishes (1500ms)
+      setTimeout(() => {
+        card.classList.remove('just-repaired');
+      }, 1500);
     });
   }, 100);
 }

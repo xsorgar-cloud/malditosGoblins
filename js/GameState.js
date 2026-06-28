@@ -2529,6 +2529,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
             p.energy -= actualEnergyCost;
             eq.isBroken = false;
             eq.brokenAnimationPlayed = false;
+            eq.justRepaired = true;
             this.addLog(`🔷 <strong>${p.name}</strong> usó su rol (Curandero) para <span style="color:#2a9d8f">REPARAR</span> la carta <strong>${eq.name}</strong> de ${targetP.name}.`);
             return true;
           }
@@ -2554,6 +2555,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
             p.energy -= actualEnergyCost;
             eq.isBroken = false;
             eq.brokenAnimationPlayed = false;
+            eq.justRepaired = true;
             this.addLog(`🔷 <strong>${p.name}</strong> usó su rol (Curandero) para <span style="color:#2a9d8f">REPARAR</span> la carta <strong>${eq.name}</strong> de ${targetP.name}.`);
             return true;
           }
