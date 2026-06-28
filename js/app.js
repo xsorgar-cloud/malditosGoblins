@@ -3495,6 +3495,15 @@ window.animateCardPurchase = function(sourceEl, onComplete) {
   const clone = sourceEl.cloneNode(true);
   console.log("Source rect:", rect);
   
+  // Convert source card into its back side immediately
+  const type = sourceEl.getAttribute('data-deck-type');
+  if (type) {
+    let backImg = 'assets/Equipo/back_esp.webp';
+    if (type === 'escudos') backImg = 'assets/Equipo/back_esc.webp';
+    if (type === 'curacion') backImg = 'assets/Equipo/back_cure.webp';
+    sourceEl.style.backgroundImage = `url('${backImg}')`;
+  }
+  
   clone.style.position = 'fixed';
   clone.style.left = rect.left + 'px';
   clone.style.top = rect.top + 'px';
@@ -4004,7 +4013,7 @@ function renderMarket() {
       deckEl.setAttribute('data-deck-type', type);
       deckEl.innerHTML = '';
 
-      if (gameState.isFirstTurnOfGame) {
+      if (gameState.isFirstTurnOfGame || gameState.justBoughtDeck === type) {
         // Set the back image depending on the deck type
         let backImg = 'assets/Equipo/back_esp.webp';
         if (type === 'escudos') backImg = 'assets/Equipo/back_esc.webp';
@@ -4047,7 +4056,12 @@ function renderMarket() {
             alert(`¡DEMASIADO PESO! No puedes llevar más de ${DB.playerLevels[player.level - 1].blocks} bloques de equipo. Sube de nivel para aumentar tu capacidad.`);
           } else if (result) {
             animateCardPurchase(deckEl, () => {
+              gameState.justBoughtDeck = type;
               updateUI();
+              if (window.flipSingleMarketCard) {
+                window.flipSingleMarketCard(type);
+              }
+              gameState.justBoughtDeck = null;
             });
           }
         };
@@ -6210,6 +6224,24 @@ function flipInitialMarketCards() {
     }, index * 200);
   });
 }
+
+window.flipSingleMarketCard = function(type) {
+  const card = document.querySelector(`.deck.start-covered[data-deck-type="${type}"]`);
+  if (!card) return;
+
+  card.style.transform = 'scaleX(0)';
+  card.style.transition = 'transform 0.15s ease-in';
+
+  setTimeout(() => {
+    const frontImg = card.getAttribute('data-front-image');
+    if (frontImg) {
+      card.style.backgroundImage = `url('${frontImg}')`;
+    }
+    card.classList.remove('start-covered');
+    card.style.transform = 'scaleX(1)';
+    card.style.transition = 'transform 0.15s ease-out';
+  }, 150);
+};
 
 function removeInitialFocusHighlights() {
   const ids = ['btn-confirm-attack', 'btn-gold', 'btn-gold-dmg', 'btn-role'];
