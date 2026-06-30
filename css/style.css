@@ -26,6 +26,8 @@ html, body {
   overflow-x: hidden;
   max-width: 100%;
   position: relative;
+  background-color: var(--bg-color); /* Previene destellos blancos */
+  overscroll-behavior: none; /* Previene el bounce que muestra fondo blanco */
 }
 
 body {
