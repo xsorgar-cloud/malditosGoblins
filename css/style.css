@@ -2801,17 +2801,27 @@ main {
     gap: 8px 15px !important;
     font-size: 1.1rem !important;
     align-items: center !important;
+    justify-content: flex-start !important; /* Fuerza alineación a la izquierda */
+    width: 100% !important;
   }
 
   #combat-player-stats .stats .stat-label {
     display: none !important;
   }
 
+  /* El div de Daño previsto */
   #combat-player-stats .stats > div:not(.stat) {
     margin-top: 0 !important;
     margin-left: 0 !important;
-    width: 100% !important;
+    width: auto !important; /* Deja de forzar el salto de línea */
     text-align: left !important;
+    font-size: 0.95rem !important;
+    order: 10 !important; /* Lo mueve al final de la fila de iconos */
+  }
+
+  #combat-player-stats .stats .stat {
+    margin: 0 !important;
+    justify-content: flex-start !important;
   }
 
   #combat-player-stats > div:nth-child(3) {
