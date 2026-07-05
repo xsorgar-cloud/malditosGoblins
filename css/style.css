@@ -3522,8 +3522,9 @@ main {
 
 @media (max-width: 768px) {
   .role-option-toast {
-    left: 2px;
-    right: 2px;
+    left: -15px;
+    right: -15px;
+    overflow: visible !important;
     height: 18px;
     top: calc(50% - 9px);
     border-radius: 3px;
@@ -3815,3 +3816,5 @@ main {
      1 0 0 %   {   b o x - s h a d o w :   0   0   0 p x   # 2 a 9 d 8 f ,   i n s e t   0   0   0 p x   # 2 a 9 d 8 f ;   f i l t e r :   b r i g h t n e s s ( 1 ) ;   }  
  }  
  
+
+
