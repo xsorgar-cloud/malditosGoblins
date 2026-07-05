@@ -1198,6 +1198,12 @@ main {
   left: 310px !important;
 }
 
+@media (max-width: 1180px) {
+  #card-preview-overlay.in-combat {
+    left: 10px !important;
+  }
+}
+
 @media (max-width: 768px) {
   #card-preview-overlay {
     width: 200px;
