@@ -3672,7 +3672,7 @@ main {
   }
 }
 
-/* Estilos para el Slider de Daño en Modal de Rol */
+/* Estilos para el Slider de Da�o en Modal de Rol */
 .damage-slider-container {
     margin-top: 5px;
     background: rgba(0, 0, 0, 0.6);
@@ -3906,18 +3906,16 @@ main {
 
 
 
- 
- . e q u i p m e n t - c a r d . j u s t - r e p a i r e d   {  
-     a n i m a t i o n :   r e p a i r - f l a s h   1 . 5 s   e a s e - o u t   f o r w a r d s ;  
- }  
- @ k e y f r a m e s   r e p a i r - f l a s h   {  
-     0 %   {   b o x - s h a d o w :   0   0   0 p x   # 2 a 9 d 8 f ,   i n s e t   0   0   0 p x   # 2 a 9 d 8 f ;   }  
-     2 0 %   {   b o x - s h a d o w :   0   0   4 0 p x   # 2 a 9 d 8 f ,   i n s e t   0   0   3 0 p x   # 2 a 9 d 8 f ;   f i l t e r :   b r i g h t n e s s ( 1 . 5 ) ;   }  
-     1 0 0 %   {   b o x - s h a d o w :   0   0   0 p x   # 2 a 9 d 8 f ,   i n s e t   0   0   0 p x   # 2 a 9 d 8 f ;   f i l t e r :   b r i g h t n e s s ( 1 ) ;   }  
- }  
- 
 
 
+.equipment-card.just-repaired {
+  animation: repair-flash 1.5s ease-out forwards;
+}
+@keyframes repair-flash {
+  0% { box-shadow: 0 0 0px #2a9d8f, inset 0 0 0px #2a9d8f; }
+  20% { box-shadow: 0 0 40px #2a9d8f, inset 0 0 30px #2a9d8f; filter: brightness(1.5); }
+  100% { box-shadow: 0 0 0px #2a9d8f, inset 0 0 0px #2a9d8f; filter: brightness(1); }
+}
 
 
 /* Event Modal Mobile Tweaks */
@@ -3929,10 +3927,10 @@ main {
     font-size: 1.4rem !important;
     margin-bottom: 15px !important;
   }
-  #event-modal-desc span[style*="font-size: 2.5rem"] {
+  #event-modal-desc span[style*="2.5rem"] {
     font-size: 1.6rem !important;
   }
-  #event-modal-desc span[style*="font-size: 1.8rem"] {
+  #event-modal-desc span[style*="1.8rem"] {
     font-size: 1.2rem !important;
   }
   #event-modal-desc svg[width="34"] {
@@ -3942,11 +3940,11 @@ main {
   #event-modal-desc div[style*="margin-left: 50px"] {
     margin-left: 10px !important;
   }
-  #event-modal-desc div[style*="font-size: 1.25rem"] {
+  #event-modal-desc div[style*="1.25rem"] {
     font-size: 1.1rem !important;
     margin-top: 15px !important;
   }
-  #event-modal-desc div[style*="font-size: 1.05rem"] {
+  #event-modal-desc div[style*="1.05rem"] {
     font-size: 0.95rem !important;
   }
 }
