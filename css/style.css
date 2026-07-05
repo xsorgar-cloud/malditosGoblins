@@ -3286,7 +3286,6 @@ main {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
-    position: relative !important;
     padding: 20px 15px !important;
     height: auto !important;
     max-height: none !important;
@@ -3825,7 +3824,5 @@ main {
      1 0 0 %   {   b o x - s h a d o w :   0   0   0 p x   # 2 a 9 d 8 f ,   i n s e t   0   0   0 p x   # 2 a 9 d 8 f ;   f i l t e r :   b r i g h t n e s s ( 1 ) ;   }  
  }  
  
-
-
 
 
