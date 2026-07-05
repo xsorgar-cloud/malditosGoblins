@@ -2054,7 +2054,7 @@ function renderPlayer() {
         ${botBubbleHTML}
         <div class="player-hud-header" style="display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid rgba(255, 255, 255, 0.1); padding-bottom: 8px; margin-bottom: 8px; gap: 10px;">
             <div style="display: flex; align-items: center; gap: 10px;">
-                <h3 class="player-name-hover" data-player-index="${index}" style="font-size: 1.2rem; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 60px; max-width: 120px; cursor: pointer;">${p.name}</h3>
+                <h3 class="player-name-hover" data-short-name="${p.name.replace(/Jugador/i, 'JUG').replace(/\\s/g, '')}" data-player-index="${index}" style="font-size: 1.2rem; margin: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; min-width: 60px; max-width: 120px; cursor: pointer;">${p.name}</h3>
                 ${dnaHTML}
                 <div class="status-effects-container">${statusHTML}</div>
             </div>
