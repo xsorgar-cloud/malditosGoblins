@@ -3286,6 +3286,7 @@ main {
     width: 100% !important;
     max-width: 100% !important;
     box-sizing: border-box !important;
+    position: relative !important;
     padding: 20px 15px !important;
     height: auto !important;
     max-height: none !important;
@@ -3328,6 +3329,7 @@ main {
     padding: 12px 5px !important;
     width: 100% !important;
     box-sizing: border-box !important;
+    position: relative !important;
   }
 
   /* leftCol: Etiqueta Jugador e IA en una fila */
@@ -3356,16 +3358,21 @@ main {
 
   /* Opciones de rol: Tamaño ajustado para caber 7 en línea */
   .role-option {
-    width: 48px !important;
-    height: 48px !important;
-    min-width: 48px !important;
+    width: 52px !important;
+    height: 52px !important;
+    min-width: 52px !important;
     background-size: contain !important;
   }
   
   .role-option[title="Rol Aleatorio"] {
-    width: 25px !important;
-    min-width: 25px !important;
-    border-radius: 6px !important;
+    position: absolute !important;
+    top: 10px !important;
+    right: 15px !important;
+    width: 30px !important;
+    height: 30px !important;
+    min-width: 30px !important;
+    border-radius: 8px !important;
+    font-size: 1rem !important;
   }
 
   /* Previsualización del rol */
@@ -3818,6 +3825,7 @@ main {
      1 0 0 %   {   b o x - s h a d o w :   0   0   0 p x   # 2 a 9 d 8 f ,   i n s e t   0   0   0 p x   # 2 a 9 d 8 f ;   f i l t e r :   b r i g h t n e s s ( 1 ) ;   }  
  }  
  
+
 
 
 
