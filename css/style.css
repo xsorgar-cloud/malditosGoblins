@@ -2689,7 +2689,9 @@ main {
   .player-role {
     width: 60px !important;
     height: 90px !important;
-    /* CARTA DE ROL MÁS PEQUEÑA Y VERTICAL */
+    max-height: 90px !important;
+    flex: 0 0 auto !important;
+    /* CARTA DE ROL MÁS PEQUEÑA, VERTICAL Y ESTÁTICA */
     margin: 0 !important;
   }
 
