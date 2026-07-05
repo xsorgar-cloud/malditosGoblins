@@ -3918,3 +3918,35 @@ main {
  
 
 
+
+
+/* Event Modal Mobile Tweaks */
+@media (max-width: 1180px) {
+  .event-modal {
+    padding: 20px !important;
+  }
+  #event-modal-title {
+    font-size: 1.4rem !important;
+    margin-bottom: 15px !important;
+  }
+  #event-modal-desc span[style*="font-size: 2.5rem"] {
+    font-size: 1.6rem !important;
+  }
+  #event-modal-desc span[style*="font-size: 1.8rem"] {
+    font-size: 1.2rem !important;
+  }
+  #event-modal-desc svg[width="34"] {
+    width: 24px !important;
+    height: 24px !important;
+  }
+  #event-modal-desc div[style*="margin-left: 50px"] {
+    margin-left: 10px !important;
+  }
+  #event-modal-desc div[style*="font-size: 1.25rem"] {
+    font-size: 1.1rem !important;
+    margin-top: 15px !important;
+  }
+  #event-modal-desc div[style*="font-size: 1.05rem"] {
+    font-size: 0.95rem !important;
+  }
+}
