@@ -2681,7 +2681,8 @@ main {
   .player-dashboard {
     display: grid !important;
     grid-template-columns: 60px 1fr !important;
-    /* ROL A LA IZQ, EQUIPO A LA DCHA */
+    align-items: flex-start !important;
+    /* ROL A LA IZQ, EQUIPO A LA DCHA Y ARRIBA */
     gap: 12px !important;
   }
 
