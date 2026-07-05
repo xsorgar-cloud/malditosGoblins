@@ -3350,20 +3350,22 @@ main {
     flex-direction: row !important;
     flex-wrap: nowrap !important;
     justify-content: center !important;
-    gap: 5px !important;
+    gap: 2px !important;
     width: 100% !important;
   }
 
   /* Opciones de rol: Tamaño ajustado para caber 7 en línea */
   .role-option {
-    width: 42px !important;
-    height: 42px !important;
-    min-width: 42px !important;
+    width: 48px !important;
+    height: 48px !important;
+    min-width: 48px !important;
     background-size: contain !important;
   }
   
   .role-option[title="Rol Aleatorio"] {
-    border-radius: 50% !important;
+    width: 25px !important;
+    min-width: 25px !important;
+    border-radius: 6px !important;
   }
 
   /* Previsualización del rol */
@@ -3816,5 +3818,6 @@ main {
      1 0 0 %   {   b o x - s h a d o w :   0   0   0 p x   # 2 a 9 d 8 f ,   i n s e t   0   0   0 p x   # 2 a 9 d 8 f ;   f i l t e r :   b r i g h t n e s s ( 1 ) ;   }  
  }  
  
+
 
 
