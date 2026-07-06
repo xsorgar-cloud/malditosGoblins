@@ -866,19 +866,20 @@ triggerAction(type, target = null, reason = "") {
         const healsCount = bot.equipped.filter(eq => eq.type === 'curacion').length;
         const shieldCount = bot.equipped.filter(eq => eq.type === 'escudos' || eq.id === 'escudo_inicial').length;
 
-        // Limites absolutos eliminados: el bot tiene 14 bloques a nivel 5.
-        // Solo mantenemos la proporción para que no compre solo ataque.
-        const maxWeapons = 100;
-        const maxHeals = weaponsCount; // Puede tener tantas curaciones como armas
-        const maxShields = weaponsCount; // Puede tener tantos escudos como armas
+        const maxWeapons = 4; // Límite absoluto
         
-        const currentBlocks = bot.equipped.reduce((sum, eq) => sum + (eq.isActive ? (eq.blocks || 0) : 0), 0);
-        const playerMaxBlocks = this.gameState.DB ? this.gameState.DB.playerLevels[bot.level - 1].blocks : 14;
+        // REGLA 1: "Nunca podrá comprar una 2da curación si no ha comprado un escudo, etc."
+        // REGLA 2: "Compra ataque, después cure, después escudo."
+        // Al restar -1 a weaponsCount obligamos a que el bot TENGA que comprar un arma antes de poder comprar curación.
+        const maxHeals = Math.min(weaponsCount - 1, shieldCount);
+        
+        // REGLA 3: Respetando el máximo de las cartas de ataque.
+        // El escudo no puede superar a las armas, y solo se desbloquea si ya compramos la curación correspondiente.
+        const maxShields = Math.min(weaponsCount, healsCount + 1);
 
         return {
             weaponsCount, healsCount, shieldCount,
-            maxWeapons, maxHeals, maxShields,
-            currentBlocks, playerMaxBlocks
+            maxWeapons, maxHeals, maxShields
         };
     }
 
@@ -1137,15 +1138,8 @@ performMarketTurn(bot) {
 
             const limits = this.getEquipmentLimits(bot);
             
-            const canBuy = (type) => {
-                if (!this.gameState.market[type] || this.gameState.market[type].length === 0) return false;
-                const card = this.gameState.market[type][0];
-                if (bot.mo < card.cost) return false;
-                if (limits.currentBlocks + (card.blocks || 0) > limits.playerMaxBlocks) return false;
-                return true;
-            };
+            const canBuy = (type) => this.gameState.market[type] && this.gameState.market[type].length > 0 && bot.mo >= this.gameState.market[type][0].cost;
             const buyIfPossible = (type) => {
-                // Las restricciones absolutas se han removido a favor de capacidad por bloques
                 if (type === 'ataque' && limits.weaponsCount >= limits.maxWeapons) return false;
                 if (type === 'curacion' && limits.healsCount >= limits.maxHeals) return false;
                 if (type === 'escudos' && limits.shieldCount >= limits.maxShields) return false;
@@ -1234,11 +1228,10 @@ performMarketTurn(bot) {
             if (!bought && !emergencyHealing) {
                 const isWellEq = this.isWellEquipped(bot);
                 
-                // Si ya va bien equipado y la oleada es >= 3, ahorrar oro para pociones, PERO solo si no nos sobra oro.
-                // Guardamos un colchón de 6 mo para pociones, si tenemos más, seguimos comprando equipo.
-                if (isWellEq && this.gameState.battlefield.waveLevel >= 3 && bot.mo <= 6) {
+                // Si ya va bien equipado y la oleada es >= 3, ahorrar oro para pociones
+                if (isWellEq && this.gameState.battlefield.waveLevel >= 3) {
                     if (bot.mo > 0) {
-                        advice = "Guardaré este oro por si necesito una poción de emergencia.";
+                        advice = "Guardaré este oro para cuando realmente nos haga falta.";
                     } else {
                         advice = "Sin oro poca cosa podré hacer.";
                     }
