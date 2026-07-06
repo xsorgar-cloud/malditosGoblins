@@ -866,7 +866,7 @@ triggerAction(type, target = null, reason = "") {
         const healsCount = bot.equipped.filter(eq => eq.type === 'curacion').length;
         const shieldCount = bot.equipped.filter(eq => eq.type === 'escudos' || eq.id === 'escudo_inicial').length;
 
-        const maxWeapons = 4; // Límite absoluto
+        const maxWeapons = 6; // Límite absoluto aumentado a petición del usuario
         
         // REGLA 1: "Nunca podrá comprar una 2da curación si no ha comprado un escudo, etc."
         // REGLA 2: "Compra ataque, después cure, después escudo."
