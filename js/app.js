@@ -1926,11 +1926,6 @@ btnStartGame.addEventListener('click', () => {
   if (versionBadge) versionBadge.style.display = 'none';
   gameState.isFirstTurnOfGame = true;
   updateUI();
-  
-  // Trigger initial market reveal animation
-  setTimeout(() => {
-    flipInitialMarketCards();
-  }, 400);
 
   if (typeof window !== 'undefined' && window.saveGame) {
     window.saveGame(true);
@@ -3093,6 +3088,14 @@ function showActionNotification(count) {
     setTimeout(() => {
       highlightInitialFocusButtons();
     }, 1600); // Lanzar casi al final del hachazo
+  }
+
+  // Trigger market cards flip synchronized with the end of the action notification
+  // This executes for BOTH human and bot players
+  if (gameState && gameState.isFirstTurnOfGame) {
+    setTimeout(() => {
+      flipInitialMarketCards();
+    }, 2000); // 1600ms + 400ms delay to match the original human timing
   }
 
   // Dar tiempo a la animación CSS de corte diagonal completo (1.8s)
