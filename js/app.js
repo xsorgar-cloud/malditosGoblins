@@ -813,10 +813,15 @@ function renderRoleSelection() {
         previewEffect.innerText = randomRole.effect;
       }
       
+      window._randomBtnClickedAt = Date.now();
       renderRoleSelection();
     };
 
     randomBtn.onmouseenter = () => {
+      // Suprimir el efecto hover si se acaba de hacer clic para permitir ver el rol elegido
+      if (window._randomBtnClickedAt && Date.now() - window._randomBtnClickedAt < 1500) {
+        return;
+      }
       const previewName = document.getElementById('setup-role-name');
       const previewCard = document.getElementById('setup-role-card');
       const previewEffect = document.getElementById('setup-role-effect');
