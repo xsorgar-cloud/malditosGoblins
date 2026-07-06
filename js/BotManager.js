@@ -1859,7 +1859,7 @@ calculateEquipPower(eq, bot) {
             let canKillTargets = (totalMaxDamage + (isGuerreroOrMago ? bot.energy : 0)) >= totalTargetsHp;
 
             if (isLastAction && !canKillTargets) {
-                isSafe = false;
+                targets.pop(); // Evita el bucle infinito reduciendo los objetivos
             } else if (remainingHp > 0) {
                 isSafe = true;
             } else {
