@@ -1926,6 +1926,12 @@ btnStartGame.addEventListener('click', () => {
   if (versionBadge) versionBadge.style.display = 'none';
   gameState.isFirstTurnOfGame = true;
   updateUI();
+  
+  // Trigger initial market reveal animation
+  setTimeout(() => {
+    flipInitialMarketCards();
+  }, 400);
+
   if (typeof window !== 'undefined' && window.saveGame) {
     window.saveGame(true);
   }
@@ -6189,14 +6195,6 @@ function highlightInitialFocusButtons() {
       focusHighlightTimeouts.push(t);
     }
   });
-
-  // Just after the button highlights finish (index * 75 is max 225ms), trigger the market card flip
-  if (gameState.isFirstTurnOfGame) {
-    const flipT = setTimeout(() => {
-      flipInitialMarketCards();
-    }, 400);
-    focusHighlightTimeouts.push(flipT);
-  }
 }
 
 function flipInitialMarketCards() {
