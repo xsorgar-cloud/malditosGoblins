@@ -1234,10 +1234,11 @@ performMarketTurn(bot) {
             if (!bought && !emergencyHealing) {
                 const isWellEq = this.isWellEquipped(bot);
                 
-                // Si ya va bien equipado y la oleada es >= 3, ahorrar oro para pociones
-                if (isWellEq && this.gameState.battlefield.waveLevel >= 3) {
+                // Si ya va bien equipado y la oleada es >= 3, ahorrar oro para pociones, PERO solo si no nos sobra oro.
+                // Guardamos un colchón de 6 mo para pociones, si tenemos más, seguimos comprando equipo.
+                if (isWellEq && this.gameState.battlefield.waveLevel >= 3 && bot.mo <= 6) {
                     if (bot.mo > 0) {
-                        advice = "Guardaré este oro para cuando realmente nos haga falta.";
+                        advice = "Guardaré este oro por si necesito una poción de emergencia.";
                     } else {
                         advice = "Sin oro poca cosa podré hacer.";
                     }
