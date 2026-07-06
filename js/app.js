@@ -3452,7 +3452,7 @@ function updateUI() {
   TutorialManager.evaluateSituation();
 
   // Activar turno automático de Bot (si es el jugador actual y no hay animaciones/bloqueos)
-  if (window.botManager) {
+  if (window.botManager && !gameState.isFirstTurnOfGame) {
       window.botManager.handleGameState();
   }
 }
@@ -6222,6 +6222,9 @@ function flipInitialMarketCards() {
         // Cuando la última carta termine de voltear, reiniciamos el flag
         if (index === coveredCards.length - 1) {
           gameState.isFirstTurnOfGame = false;
+          if (window.botManager) {
+            setTimeout(() => { window.botManager.handleGameState(); }, 300);
+          }
         }
       }, 150);
     }, index * 200);
