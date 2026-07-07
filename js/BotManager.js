@@ -1739,7 +1739,12 @@ calculateEquipPower(eq, bot) {
     getSafeCombatTargets(bot, goblinsEnMesa, currentPersonality, isFarmingLife = false) {
         if (!goblinsEnMesa || goblinsEnMesa.length === 0) return [];
         
-        const isGuerreroOrMago = bot.role && (bot.role.id === 'guerrero        // Limitar por la capacidad real del bot de asignar dados a armas/cartas de daño
+        const isGuerreroOrMago = bot.role && (bot.role.id === 'guerrero' || bot.role.id === 'mago');
+        const isProtector = bot.role && bot.role.id === 'protector';
+        const isSanador = bot.role && bot.role.id === 'sanador';
+        const isLadron = bot.role && bot.role.id === 'ladron';
+        
+        // Limitar por la capacidad real del bot de asignar dados a armas/cartas de daño
         let numDice = bot.dicePool ? bot.dicePool.length : 2;
         if (bot.statusEffects) {
             let totalEffects = (bot.statusEffects.escozor || 0) + (bot.statusEffects.calambre || 0) + (bot.statusEffects.tembleque || 0);
