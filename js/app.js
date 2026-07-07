@@ -5149,6 +5149,9 @@ function renderGameWon() {
     <button class="choice-btn" style="background: var(--gold); color: #000; border: none; font-weight: bold; font-size: 1.2rem; padding: 15px 30px; border-radius: 8px; cursor: pointer; transition: transform 0.2s; box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);" onclick="location.reload()" onmouseover="this.style.transform='scale(1.05)'" onmouseout="this.style.transform='scale(1)'">Jugar de Nuevo</button>
   `;
 
+  const eyeBtn = document.getElementById('event-modal-eye-btn');
+  if (eyeBtn) eyeBtn.classList.remove('hidden');
+  
   overlay.classList.remove('hidden');
 }
 
@@ -5183,6 +5186,9 @@ function renderGameOver() {
     </button>
   `;
 
+  const eyeBtn = document.getElementById('event-modal-eye-btn');
+  if (eyeBtn) eyeBtn.classList.remove('hidden');
+  
   overlay.classList.remove('hidden');
 }
 
