@@ -3962,3 +3962,9 @@ main {
 }
 
 .bot-bubble, .combat-bot-bubble, .retaliation-bot-bubble { cursor: pointer; }
+
+/* Fix para lag en la imagen de arrastre en móviles */
+.dnd-poly-drag-image, .dnd-poly-drag-image * {
+  transition: none !important;
+  animation: none !important;
+}
