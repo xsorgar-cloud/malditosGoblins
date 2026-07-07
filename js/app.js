@@ -637,6 +637,7 @@ function renderRoleSelection() {
 
   for (let i = 0; i < 4; i++) {
     let row = document.createElement('div');
+    row.className = 'setup-player-row';
     row.style.display = 'flex';
     row.style.alignItems = 'center';
     row.style.gap = '15px';
@@ -843,6 +844,18 @@ function renderRoleSelection() {
     roleSelectionContainer.appendChild(row);
   }
   
+  // Agregar botón para mostrar/ocultar jugadores extra en móviles
+  if (window.innerWidth <= 1180) {
+    let toggleBtn = document.createElement('button');
+    toggleBtn.className = 'btn secondary toggle-players-btn';
+    toggleBtn.innerText = roleSelectionContainer.classList.contains('show-all-players') ? 'Ocultar jugadores' : 'Añadir más jugadores...';
+    toggleBtn.onclick = () => {
+      roleSelectionContainer.classList.toggle('show-all-players');
+      renderRoleSelection();
+    };
+    roleSelectionContainer.appendChild(toggleBtn);
+  }
+
   // Limpiar justSelectedRole al final de toda la selección
   justSelectedRole = null;
   TutorialManager.evaluateSituation();

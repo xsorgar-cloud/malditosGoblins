@@ -3998,3 +3998,17 @@ main {
 
 
 
+
+@media (max-width: 1180px) {
+  #role-selection-container:not(.show-all-players) .setup-player-row:nth-child(n+2) {
+    display: none !important;
+  }
+  .toggle-players-btn {
+    margin-top: 10px;
+    align-self: center;
+    font-size: 0.9rem !important;
+    padding: 10px 16px !important;
+    width: 90%;
+    max-width: 300px;
+  }
+}
