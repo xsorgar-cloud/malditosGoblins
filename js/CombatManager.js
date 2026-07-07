@@ -2033,7 +2033,6 @@ function renderPlayer() {
                 backdrop-filter: blur(5px);
                 width: 300px;
                 text-align: center;
-                pointer-events: none;
                 opacity: 0;
                 transition: opacity 0.4s ease, transform 0.4s ease;
             ">
