@@ -3299,6 +3299,20 @@ window.updateBotBubble = function(playerIndex, text, actionType = null) {
   }
 };
 
+// Cerrar cualquier bocadillo de bot al hacer click sobre él
+document.addEventListener('click', function(e) {
+  const clickedBubble = e.target.closest('.bot-bubble, .combat-bot-bubble, .retaliation-bot-bubble');
+  if (clickedBubble) {
+      const match = clickedBubble.id.match(/-(\d+)$/);
+      if (match && match[1]) {
+          const playerIndex = parseInt(match[1]);
+          if (window.updateBotBubble) {
+              window.updateBotBubble(playerIndex, null);
+          }
+      }
+  }
+});
+
 function updateUI() {
   // Asegurar que botDNA está inicializado antes de cualquier renderizado
   if (gameState && gameState.players) {

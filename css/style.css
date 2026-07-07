@@ -3957,3 +3957,5 @@ main {
     font-size: 0.95rem !important;
   }
 }
+
+.bot-bubble, .combat-bot-bubble, .retaliation-bot-bubble { cursor: pointer; }
