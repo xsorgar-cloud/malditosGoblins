@@ -3527,7 +3527,7 @@ main {
 
   /* Selector de Senda y Reglas */
   #select-senda {
-    font-size: 0.9rem !important;
+    font-size: 0.7rem !important;
     padding: 8px 10px !important;
   }
 
@@ -3586,7 +3586,7 @@ main {
   }
 
   #setup-senda-preview h4 {
-    font-size: 0.9rem !important;
+    font-size: 0.7rem !important;
   }
 
   #setup-boss-image,
@@ -4003,12 +4003,15 @@ main {
   #role-selection-container:not(.show-all-players) .setup-player-row:nth-child(n+2) {
     display: none !important;
   }
-  .toggle-players-btn {
+  .toggle-players-btn,
+  #btn-load-game {
     margin-top: 10px;
     align-self: center;
-    font-size: 0.9rem !important;
-    padding: 10px 16px !important;
-    width: 90%;
+    font-size: 0.7rem !important;
+    padding: 6px 12px !important;
+    width: auto;
     max-width: 300px;
   }
 }
+
+
