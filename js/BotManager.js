@@ -1088,7 +1088,16 @@ performMainTurn(bot) {
                         if (partner) targetForCombat.push(partner);
                     }
                     chosenAction = 'combat';
-                    decisionText = "Ahhhhhh. ¡Moriré matando!";
+                    let goblinName = easiest.name || 'este goblin';
+                    if (easiest.isBoss) {
+                        decisionText = `¡No tengo escapatoria! ¡Moriré matando a ${goblinName}!`;
+                    } else if (easiest.level >= 3) {
+                        decisionText = `¡Lucharé hasta el final! ¡A por ${goblinName}!`;
+                    } else if (easiest.level === 2) {
+                        decisionText = `¡Me llevaré por delante a ${goblinName} aunque sea lo último que haga!`;
+                    } else {
+                        decisionText = `¡Maldito ${goblinName}! ¡Al menos acabaré contigo!`;
+                    }
                 }
             }
 
