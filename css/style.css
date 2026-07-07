@@ -2478,6 +2478,11 @@ main {
     position: relative !important;
   }
 
+  .goblin-assigned-equipment {
+    display: none !important;
+  }
+
+
   footer {
     z-index: 600 !important;
   }
