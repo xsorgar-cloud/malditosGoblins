@@ -3968,3 +3968,30 @@ main {
   transition: none !important;
   animation: none !important;
 }
+
+.btn-explore-market {
+  position: absolute;
+  left: calc(50% + 295px);
+  top: 10px;
+  padding: 8px 14px;
+  font-size: 1.1rem;
+  border-color: var(--gold);
+  background: rgba(20,20,30,0.85);
+  z-index: 10;
+}
+
+@media (max-width: 1180px) {
+  #market-zone .market-title {
+    top: 60% !important;
+  }
+  #market-zone .market-title h2 {
+    font-size: 0.8rem !important;
+  }
+  .btn-explore-market {
+    left: 5px !important;
+    top: 5px !important;
+    padding: 6px 10px !important;
+    font-size: 0.9rem !important;
+    z-index: 20 !important;
+  }
+}

@@ -4148,13 +4148,13 @@ function renderMarket() {
   if (p && p.mo >= 1) {
     const btnExplore = document.createElement('button');
     btnExplore.className = 'btn secondary btn-explore-market';
-    btnExplore.style.position = 'absolute';
-    btnExplore.style.left = 'calc(50% + 295px)';
-    btnExplore.style.top = '10px';
-    btnExplore.style.padding = '8px 14px';
-    btnExplore.style.fontSize = '1.1rem';
-    btnExplore.style.borderColor = 'var(--gold)';
-    btnExplore.style.background = 'rgba(20,20,30,0.85)';
+    
+    
+    
+    
+    
+    
+    
     btnExplore.innerHTML = '🔍';
     btnExplore.title = 'Paga 1 moneda para descartar una carta del mercado y revelar la siguiente del mazo.';
     btnExplore.onclick = () => openExploreMarketModal();
