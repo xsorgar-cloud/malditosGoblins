@@ -1739,30 +1739,64 @@ calculateEquipPower(eq, bot) {
     getSafeCombatTargets(bot, goblinsEnMesa, currentPersonality, isFarmingLife = false) {
         if (!goblinsEnMesa || goblinsEnMesa.length === 0) return [];
         
-        const isGuerreroOrMago = bot.role && (bot.role.id === 'guerrero' || bot.role.id === 'mago');
-        const isProtector = bot.role && bot.role.id === 'protector';
-        const isSanador = bot.role && bot.role.id === 'sanador';
-        const isLadron = bot.role && bot.role.id === 'ladron';
-        
-        let totalMaxDamage = 0;
+        const isGuerreroOrMago = bot.role && (bot.role.id === 'guerrero        // Limitar por la capacidad real del bot de asignar dados a armas/cartas de daño
+        let numDice = bot.dicePool ? bot.dicePool.length : 2;
+        if (bot.statusEffects) {
+            let totalEffects = (bot.statusEffects.escozor || 0) + (bot.statusEffects.calambre || 0) + (bot.statusEffects.tembleque || 0);
+            numDice = Math.max(0, numDice - totalEffects);
+        }
+
+        let allActivations = [];
+        let totalWeaponSlots = 0;
+
         const weapons = bot.equipped.filter(eq => eq.isActive && this.isWeapon(eq));
-        
         weapons.forEach(w => {
             const power = this.calculateEquipPower(w, bot);
-            totalMaxDamage += power.max;
+            const extra = ((w.isBroken && w.broken ? w.broken.extra : w.extra) || '').toLowerCase();
+            const isReusable = extra.includes('reutilizable');
+            const maxUses = extra.includes('x3') ? 3 : (isReusable ? 3 : 1);
+            totalWeaponSlots += maxUses;
+            for (let i = 0; i < maxUses; i++) {
+                allActivations.push({ type: 'damage', val: power.max });
+            }
         });
         
-        let totalMaxDefense = 0;
         const shields = bot.equipped.filter(eq => eq.isActive && this.isShield(eq));
         shields.forEach(s => {
             const power = this.calculateEquipPower(s, bot);
-            totalMaxDefense += power.max;
+            const extra = ((s.isBroken && s.broken ? s.broken.extra : s.extra) || '').toLowerCase();
+            const isReusable = extra.includes('reutilizable');
+            const maxUses = extra.includes('x3') ? 3 : (isReusable ? 3 : 1);
+            for (let i = 0; i < maxUses; i++) {
+                allActivations.push({ type: 'defense', val: power.max });
+            }
         });
 
-        let totalMaxHealing = 0;
         const heals = bot.equipped.filter(eq => eq.isActive && this.isHeal(eq));
         heals.forEach(h => {
-            totalMaxHealing += this.calculateEquipHealingPower(h, bot);
+            const maxHealing = this.calculateEquipHealingPower(h, bot);
+            const extra = ((h.isBroken && h.broken ? h.broken.extra : h.extra) || '').toLowerCase();
+            const isReusable = extra.includes('reutilizable');
+            const maxUses = extra.includes('x3') ? 3 : (isReusable ? 3 : 1);
+            for (let i = 0; i < maxUses; i++) {
+                allActivations.push({ type: 'heal', val: maxHealing });
+            }
+        });
+
+        // Ordenamos las activaciones de mayor a menor valor para ser "optimistas" pero realistas
+        allActivations.sort((a, b) => b.val - a.val);
+
+        // Nos quedamos solo con las mejores hasta el límite de dados del bot
+        const bestActivations = allActivations.slice(0, numDice);
+
+        let totalMaxDamage = 0;
+        let totalMaxDefense = 0;
+        let totalMaxHealing = 0;
+
+        bestActivations.forEach(act => {
+            if (act.type === 'damage') totalMaxDamage += act.val;
+            else if (act.type === 'defense') totalMaxDefense += act.val;
+            else if (act.type === 'heal') totalMaxHealing += act.val;
         });
 
         // 1. Añadir todos los objetivos posibles inicialmente
@@ -1780,7 +1814,7 @@ calculateEquipPower(eq, bot) {
                     if (a.level !== b.level) return a.level - b.level; // Menor nivel primero
                     return a.currentHp - b.currentHp; // Menor vida primero
                 } else {
-                    // Si buscamos combate normal, priorizamos recompensas, luego DA├æO (para mitigar), y vida
+                    // Si buscamos combate normal, priorizamos recompensas, luego DAÑO (para mitigar), y vida
                     const aCat = this.getGoblinRewardCategory(a, bot);
                     const bCat = this.getGoblinRewardCategory(b, bot);
                     if (aCat !== bCat) return bCat - aCat;
@@ -1796,23 +1830,6 @@ calculateEquipPower(eq, bot) {
                 }
             });
         }
-        
-        // Limitar por la capacidad real del bot de asignar dados a armas/cartas de daño
-        let numDice = bot.dicePool ? bot.dicePool.length : 2;
-        if (bot.statusEffects) {
-            let totalEffects = (bot.statusEffects.escozor || 0) + (bot.statusEffects.calambre || 0) + (bot.statusEffects.tembleque || 0);
-            numDice = Math.max(0, numDice - totalEffects);
-        }
-
-        let totalWeaponSlots = 0;
-        const activeWeapons = bot.equipped.filter(eq => eq.isActive && this.isWeapon(eq));
-        activeWeapons.forEach(w => {
-            const extra = ((w.isBroken && w.broken ? w.broken.extra : w.extra) || '').toLowerCase();
-            const isReusable = extra.includes('reutilizable');
-            const maxUses = extra.includes('x3') ? 3 : (isReusable ? 3 : 1);
-            totalWeaponSlots += maxUses;
-        });
-
         const maxTargetableGoblins = Math.min(numDice, totalWeaponSlots);
         if (targets.length > maxTargetableGoblins) {
             targets = targets.slice(0, maxTargetableGoblins);
