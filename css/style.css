@@ -2519,7 +2519,7 @@ main {
   }
 
   .market-decks .deck {
-    flex: 0 0 calc(33.333% - 6px) !important;
+    flex: 1 1 60px !important;
     width: auto !important;
     min-width: 50px !important;
     max-width: 85px !important;
@@ -4013,6 +4013,7 @@ main {
     max-width: 300px;
   }
 }
+
 
 
 
