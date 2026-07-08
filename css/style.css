@@ -4033,7 +4033,18 @@ main {
   #role-fill-slot .die-placeholder {
     top: 50% !important;
   }
+
+  .dice-container .die.green {
+    width: 30px !important;
+    height: 30px !important;
+    font-size: 1.1rem !important;
+  }
+  .dice-container .mod-green {
+    font-size: 1rem !important;
+    padding: 1px 3px !important;
+  }
 }
+
 
 
 
