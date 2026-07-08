@@ -2882,10 +2882,10 @@ main {
   }
 
   .die {
-    font-size: 1.3rem !important;
-    /* DADOS MÁS PEQUEÑOS */
-    width: 40px !important;
-    height: 40px !important;
+    font-size: 1.1rem !important;
+    /* DADOS MAS PEQUENOS */
+    width: 35px !important;
+    height: 35px !important;
   }
 
   #combat-main {
@@ -4019,5 +4019,15 @@ main {
 
 
 
+
+
+
+@media (max-width: 1180px), (max-height: 720px) {
+  .equip-slot .die-placeholder {
+    width: 35px !important;
+    height: 35px !important;
+    border-width: 1px !important;
+  }
+}
 
 
