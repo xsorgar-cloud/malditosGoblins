@@ -2519,7 +2519,7 @@ main {
   }
 
   .market-decks .deck {
-    flex: 1 1 60px !important;
+    flex: 0 0 calc(33.333% - 6px) !important;
     width: auto !important;
     min-width: 50px !important;
     max-width: 85px !important;
@@ -2720,7 +2720,7 @@ main {
   }
 
   .equipment-card {
-    flex: 1 1 60px !important;
+    flex: 0 0 calc(33.333% - 6px) !important;
     width: auto !important;
     min-width: 50px !important;
     max-width: 90px !important;
@@ -4013,5 +4013,6 @@ main {
     max-width: 300px;
   }
 }
+
 
 
