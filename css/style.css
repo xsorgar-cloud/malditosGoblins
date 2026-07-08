@@ -2720,7 +2720,7 @@ main {
   }
 
   .equipment-card {
-    flex: 0 0 calc(33.333% - 6px) !important;
+    flex: 0 0 calc(30% - 6px) !important;
     width: auto !important;
     min-width: 50px !important;
     max-width: 90px !important;
@@ -4018,9 +4018,6 @@ main {
 
 
 
-@media (max-width: 1180px), (max-height: 720px) {
-  .player-equipment::before,
-  .player-equipment::after {
-    display: none !important;
-  }
-}
+
+
+
