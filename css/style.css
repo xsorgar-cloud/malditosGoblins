@@ -4027,7 +4027,9 @@ main {
     width: 35px !important;
     height: 35px !important;
     border-width: 1px !important;
+    top: 5% !important;
   }
 }
+
 
 
