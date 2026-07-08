@@ -4029,7 +4029,12 @@ main {
     border-width: 1px !important;
     top: 5% !important;
   }
+  #equip-slot-role .die-placeholder,
+  #role-fill-slot .die-placeholder {
+    top: 50% !important;
+  }
 }
+
 
 
 
