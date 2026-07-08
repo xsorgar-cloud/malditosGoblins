@@ -4017,3 +4017,10 @@ main {
 
 
 
+
+@media (max-width: 1180px), (max-height: 720px) {
+  .player-equipment::before,
+  .player-equipment::after {
+    display: none !important;
+  }
+}
