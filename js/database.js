@@ -5,7 +5,7 @@ const DB = {
   
     { fecha_inicio: "01-02", fecha_fin: "01-07", imagen_mostrar: "assets/logos/logo_navidad.webp" },
 	{ fecha_inicio: "02-12", fecha_fin: "02-18", imagen_mostrar: "assets/logos/logo_carnaval.webp" },
-	{ fecha_inicio: "06-01", fecha_fin: "10-24", imagen_mostrar: "assets/logos/logo_verano.webp" },
+	{ fecha_inicio: "08-01", fecha_fin: "09-18", imagen_mostrar: "assets/logos/logo_verano.webp" },
 	{ fecha_inicio: "09-19", fecha_fin: "10-04", imagen_mostrar: "assets/logos/logo_oktoberfest.webp" },
     { fecha_inicio: "10-25", fecha_fin: "10-31", imagen_mostrar: "assets/logos/logo_halloween.webp" },
 	{ fecha_inicio: "11-01", fecha_fin: "11-02", imagen_mostrar: "assets/logos/logo_muetos.webp" },

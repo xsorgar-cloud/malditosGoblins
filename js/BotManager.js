@@ -445,6 +445,9 @@ triggerAction(type, target = null, reason = "") {
             numDice = Math.max(0, numDice - totalEffects);
         }
         
+        let forcedExtraDefenseDice = player._forcedExtraDefenseDice || 0;
+        numDice = Math.max(0, numDice - forcedExtraDefenseDice);
+        
         // Devuelve solo los mejores Math.min(numDice, slots.length) huecos de daño
         const limit = Math.min(numDice, slots.length);
         return slots.slice(0, limit);
@@ -556,6 +559,8 @@ triggerAction(type, target = null, reason = "") {
             numDice = Math.max(0, numDice - totalEffects);
         }
         
+        let forcedExtraDefenseDice = player._forcedExtraDefenseDice || 0;
+        
         const weapons = player.equipped.filter(eq => eq.isActive && this.isWeapon(eq));
         let weaponSlotsCount = 0;
         weapons.forEach(w => {
@@ -565,7 +570,7 @@ triggerAction(type, target = null, reason = "") {
             weaponSlotsCount += maxUses;
         });
         
-        let diceForAttack = Math.min(numDice, weaponSlotsCount);
+        let diceForAttack = Math.min(Math.max(0, numDice - forcedExtraDefenseDice), weaponSlotsCount);
         let diceForDefense = Math.max(0, numDice - diceForAttack);
         
         let maxDefense = 0;
@@ -666,65 +671,80 @@ triggerAction(type, target = null, reason = "") {
                 const numPlayers = this.gameState.players.length;
                 let bossHp = hito.bossStats.hpMultiplier * numPlayers;
 
-                // Simulación de combate jugador a jugador en la wave restante
-                let simulatedBossHp = bossHp;
-                let simulatedPlayers = this.gameState.players.map(p => ({
-                    id: p.id,
-                    name: p.name,
-                    hp: p.hp,
-                    maxHp: p.maxHp,
-                    equipped: p.equipped.map(eq => ({ ...eq })),
-                    dicePool: p.dicePool ? [...p.dicePool] : null,
-                    statusEffects: p.statusEffects ? { ...p.statusEffects } : {}
-                }));
+                // --- ITERATIVE SURVIVAL ALGORITHM (MIN-MAX DICE ALLOCATION) ---
+                let maxPossibleDice = Math.max(0, ...this.gameState.players.map(p => p.dicePool ? p.dicePool.length : 2)); 
+                
+                for (let extraDefenseDice = 0; extraDefenseDice <= maxPossibleDice; extraDefenseDice++) {
+                    let simulatedBossHp = bossHp;
+                    let simulatedPlayers = this.gameState.players.map(p => ({
+                        id: p.id,
+                        name: p.name,
+                        hp: p.hp,
+                        maxHp: p.maxHp,
+                        equipped: p.equipped.map(eq => ({ ...eq })),
+                        dicePool: p.dicePool ? [...p.dicePool] : null,
+                        statusEffects: p.statusEffects ? { ...p.statusEffects } : {},
+                        _forcedExtraDefenseDice: extraDefenseDice
+                    }));
 
-                // Construir la cola de acciones de combate restantes en la ronda
-                let combatActionsQueue = [];
-                for (let a = this.gameState.battlefield.actionCount; a < 3; a++) {
-                    for (let pIdx = 0; pIdx < numPlayers; pIdx++) {
-                        if (a === this.gameState.battlefield.actionCount && pIdx < this.gameState.currentPlayerIndex) {
-                            continue; // Ya actuó en esta acción
+                    // Construir la cola de acciones de combate restantes en la ronda
+                    let combatActionsQueue = [];
+                    for (let a = this.gameState.battlefield.actionCount; a < 3; a++) {
+                        for (let pIdx = 0; pIdx < numPlayers; pIdx++) {
+                            if (a === this.gameState.battlefield.actionCount && pIdx < this.gameState.currentPlayerIndex) {
+                                continue; // Ya actuó en esta acción
+                            }
+                            combatActionsQueue.push(pIdx);
                         }
-                        combatActionsQueue.push(pIdx);
-                    }
-                }
-
-                // Simular las acciones de combate
-                for (let pIdx of combatActionsQueue) {
-                    let p = simulatedPlayers[pIdx];
-                    if (p.hp <= 0) continue; // Jugador muerto no actúa
-
-                    let maxPower = this.getPlayerMaxPowerPerAction(p);
-                    simulatedBossHp -= maxPower;
-
-                    if (simulatedBossHp <= 0) {
-                        this.gameState.addLog(`DEBUG Hito 5 Simulación: ¡El Jefe puede ser eliminado! (HP del Jefe proyectada: ${simulatedBossHp})`);
-                        return true; // Se puede eliminar al jefe antes de terminar la ronda/wave
                     }
 
-                    // El jefe contraataca al jugador que le ataca
-                    let tempBossObj = {
-                        level: 5,
-                        isBoss: true,
-                        name: hito.name,
-                        dice: hito.bossStats.dice,
-                        attacks: hito.bossStats.attacks || DB.goblins[5].attacks
-                    };
-                    let bossDmgProfile = this.getGoblinDamageProfile(tempBossObj);
-                    let playerMaxDefense = this.getPlayerMaxDefense(p);
-                    let expectedDamageTaken = Math.max(0, bossDmgProfile.normal - playerMaxDefense) + bossDmgProfile.direct;
+                    // Simular las acciones de combate
+                    let bossKilled = false;
+                    for (let pIdx of combatActionsQueue) {
+                        let p = simulatedPlayers[pIdx];
+                        if (p.hp <= 0) continue; // Jugador muerto no actúa
 
-                    p.hp = Math.max(0, p.hp - expectedDamageTaken);
+                        let maxPower = this.getPlayerMaxPowerPerAction(p);
+                        simulatedBossHp -= maxPower;
+
+                        if (simulatedBossHp <= 0) {
+                            bossKilled = true;
+                            break;
+                        }
+
+                        // El jefe contraataca al jugador que le ataca
+                        let tempBossObj = {
+                            level: 5,
+                            isBoss: true,
+                            name: hito.name,
+                            dice: hito.bossStats.dice,
+                            attacks: hito.bossStats.attacks || DB.goblins[5].attacks
+                        };
+                        let bossDmgProfile = this.getGoblinDamageProfile(tempBossObj);
+                        let playerMaxDefense = this.getPlayerMaxDefense(p);
+                        let expectedDamageTaken = Math.max(0, bossDmgProfile.normal - playerMaxDefense) + bossDmgProfile.direct;
+
+                        p.hp = Math.max(0, p.hp - expectedDamageTaken);
+                    }
+
+                    if (bossKilled) {
+                        this.gameState.addLog(`DEBUG Hito 5 Simulación: ¡El Jefe puede ser eliminado con ${extraDefenseDice} dados extras en defensa!`);
+                        return true; 
+                    }
+
+                    // Si no se derrotó en las acciones de combate de la wave, se evalúa si el grupo sobrevive a la represalia
+                    let currentGoblins = this.gameState.battlefield.goblins.filter(g => !g.isDying);
+                    let totalRetaliationDmg = 5 + currentGoblins.reduce((sum, g) => sum + g.level, 0); // El jefe (nivel 5) + otros goblins
+                    let totalPlayersHp = simulatedPlayers.reduce((sum, p) => sum + (p.hp > 0 ? p.hp : 0), 0);
+
+                    if (totalRetaliationDmg < totalPlayersHp) {
+                        this.gameState.addLog(`DEBUG Hito 5 Simulación: El grupo sobrevive a la represalia con ${extraDefenseDice} dados extras en defensa.`);
+                        return true;
+                    }
                 }
-
-                // Si no se derrotó en las acciones de combate de la wave, se evalúa si el grupo sobrevive a la represalia
-                let currentGoblins = this.gameState.battlefield.goblins.filter(g => !g.isDying);
-                let totalRetaliationDmg = 5 + currentGoblins.reduce((sum, g) => sum + g.level, 0); // El jefe (nivel 5) + otros goblins
-                let totalPlayersHp = simulatedPlayers.reduce((sum, p) => sum + (p.hp > 0 ? p.hp : 0), 0);
-
-                const safe = totalRetaliationDmg < totalPlayersHp;
-                this.gameState.addLog(`DEBUG Hito 5 Simulación Retaliation: totalPlayersHp=${totalPlayersHp}, totalRetaliationDmg=${totalRetaliationDmg} (Safe: ${safe})`);
-                return safe;
+                
+                this.gameState.addLog(`DEBUG Hito 5 Simulación: Es un suicidio tras simular todas las asignaciones posibles de defensa.`);
+                return false;
             }
         }
 
@@ -1088,7 +1108,7 @@ performMainTurn(bot) {
                         if (partner) targetForCombat.push(partner);
                     }
                     chosenAction = 'combat';
-                    let goblinName = easiest.name || 'este goblin';
+                    let goblinName = easiest.isBoss ? (easiest.name || 'el Jefe') : `Goblin de Nivel ${easiest.level}`;
                     if (easiest.isBoss) {
                         decisionText = `¡No tengo escapatoria! ¡Moriré matando a ${goblinName}!`;
                     } else if (easiest.level >= 3) {
@@ -2463,7 +2483,7 @@ calculateEquipPower(eq, bot) {
             aliveGoblins.forEach(g => {
                 let totalDmg = damageToGoblins[g.uid];
                 if (g.currentHp - totalDmg > 0 && !isLastAction) {
-                    score += totalDmg * 1000;
+                    score += totalDmg * 3000;
                 }
             });
             score += hitoDmgBonus * 500;
