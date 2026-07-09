@@ -2427,13 +2427,17 @@ calculateEquipPower(eq, bot) {
 
             let simulatedIncomingNormal = 0;
             let simulatedIncomingDirect = 0;
+            let hitoKillBonus = 0;
+            let hitoDmgBonus = 0;
             aliveGoblins.forEach(g => {
                 let totalDmg = damageToGoblins[g.uid];
                 if (g.currentHp - totalDmg <= 0) {
                     goblinsKilled++;
                     damageDealt += g.currentHp;
+                    if (g.isHito) hitoKillBonus++;
                 } else {
                     damageDealt += totalDmg;
+                    if (totalDmg > 0 && !isLastAction && g.isHito) hitoDmgBonus += totalDmg;
                 }
                 
                 // En Malditos Goblins, el daño es simultáneo. Incluso los goblins muertos atacan.
@@ -2453,6 +2457,7 @@ calculateEquipPower(eq, bot) {
             else score += simulatedHp * 10000;
             
             score += goblinsKilled * 1000000;
+            score += hitoKillBonus * 500000;
             score += simulatedEnergy * 10000;
             
             aliveGoblins.forEach(g => {
@@ -2461,6 +2466,7 @@ calculateEquipPower(eq, bot) {
                     score += totalDmg * 1000;
                 }
             });
+            score += hitoDmgBonus * 500;
 
             // Sin penalización por usar dados, ya que los no usados se pierden.
             // Los dados usados se valoran por el daño, bloqueo o energía que aportan.
@@ -3557,7 +3563,11 @@ calculateEquipPower(eq, bot) {
                 bot.goblinsFoughtThisTurn.includes(g.uid)
             );
             
-            survivingGobs.sort((a, b) => a.currentHp - b.currentHp);
+            survivingGobs.sort((a, b) => {
+                if (a.isHito && !b.isHito) return -1;
+                if (!a.isHito && b.isHito) return 1;
+                return a.currentHp - b.currentHp;
+            });
             
             for (let gob of survivingGobs) {
                 if (bot.energy <= 0) break;
@@ -3646,3 +3656,4 @@ calculateEquipPower(eq, bot) {
 }
 
 window.BotManager = BotManager;
+
