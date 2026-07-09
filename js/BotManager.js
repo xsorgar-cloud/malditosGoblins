@@ -3563,11 +3563,7 @@ calculateEquipPower(eq, bot) {
                 bot.goblinsFoughtThisTurn.includes(g.uid)
             );
             
-            survivingGobs.sort((a, b) => {
-                if (a.isHito && !b.isHito) return -1;
-                if (!a.isHito && b.isHito) return 1;
-                return a.currentHp - b.currentHp;
-            });
+            survivingGobs.sort((a, b) => a.currentHp - b.currentHp);
             
             for (let gob of survivingGobs) {
                 if (bot.energy <= 0) break;
@@ -3656,4 +3652,5 @@ calculateEquipPower(eq, bot) {
 }
 
 window.BotManager = BotManager;
+
 
