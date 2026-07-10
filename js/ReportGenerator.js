@@ -118,9 +118,6 @@ class ReportGenerator {
         </div>
         `;
 
-        let currentWave = 0;
-        let waveOpen = false;
-
         const combatsByWave = {};
         if (exportData.combatHistory) {
             exportData.combatHistory.forEach(ch => {
@@ -130,51 +127,53 @@ class ReportGenerator {
             });
         }
 
-        const renderCombatsForWave = (waveNum) => {
-            let chs = combatsByWave[waveNum];
-            if (!chs || chs.length === 0) return "";
-            let cHtml = "";
-            chs.forEach((ch, idx) => {
-                let actionNum = idx + 1;
-                cHtml += `<div class="action-block">
-                    <div class="action-title">▶️ Acción ${actionNum}</div>
-                    <div class="battle-flex">
-                        <div class="player-panel">
-                            <div class="player-name">${ch.player.name}</div>
-                            <div class="player-stats">
-                                <span class="stat hp"><span>❤️ HP</span><span>${ch.player.hp}/${ch.player.maxHp || '?'}</span></span>
-                                <span class="stat sh"><span>🛡️ Escudo</span><span>${ch.player.shield}</span></span>
-                                <span class="stat en"><span>⚡ Energía</span><span>${ch.player.energy}</span></span>
-                                <span class="stat mo"><span>💰 Oro</span><span>${ch.player.mo}</span></span>
-                            </div>
-                        </div>
-                        <div class="goblins-container">`;
-                        
-                ch.goblins.forEach(g => {
-                    let imgUrl = g.isBoss && g.bossStats && g.bossStats.image ? g.bossStats.image : `assets/Monstruos/t${g.level || 1}.webp`;
-                    let b64 = this.imageCache[imgUrl] || imgUrl;
-                    
-                    let maxHp = g.maxHp !== undefined ? g.maxHp : (g.isBoss && g.bossStats ? g.bossStats.maxHp : (g.level ? g.level * 5 : 5));
-                    let currentHp = g.currentHp !== undefined ? g.currentHp : (g.hpAfter !== undefined ? g.hpAfter : (g.hp !== undefined ? g.hp : maxHp));
-                    let hpPercent = Math.max(0, Math.min(100, (currentHp / maxHp) * 100));
-                    
-                    cHtml += `
-                    <div class="goblin-card">
-                        <img src="${b64}" class="goblin-img" alt="${g.name || 'Goblin'}">
-                        <div class="gob-name">${g.name || 'Nv. ' + (g.level || 1)}</div>
-                        <div class="hp-text">HP: ${currentHp}/${maxHp}</div>
-                        <div class="hp-bar-container"><div class="hp-bar" style="width: ${hpPercent}%"></div></div>
-                    </div>`;
-                });
+        const renderCombatTable = (ch) => {
+            if (!ch) return "";
+            let cHtml = `<div class="battle-flex" style="margin-top: 15px;">
+                <div class="player-panel">
+                    <div class="player-name">${ch.player.name}</div>
+                    <div class="player-stats">
+                        <span class="stat hp"><span>❤️ HP</span><span>${ch.player.hp}/${ch.player.maxHp || '?'}</span></span>
+                        <span class="stat sh"><span>🛡️ Escudo</span><span>${ch.player.shield}</span></span>
+                        <span class="stat en"><span>⚡ Energía</span><span>${ch.player.energy}</span></span>
+                        <span class="stat mo"><span>💰 Oro</span><span>${ch.player.mo}</span></span>
+                    </div>
+                </div>
+                <div class="goblins-container">`;
                 
-                if (ch.goblins.length === 0) {
-                    cHtml += `<div style="color: #aaa; margin: auto; font-style: italic;">La mesa está limpia...</div>`;
-                }
+            ch.goblins.forEach(g => {
+                let imgUrl = g.isBoss && g.bossStats && g.bossStats.image ? g.bossStats.image : `assets/Monstruos/t${g.level || 1}.webp`;
+                let b64 = this.imageCache[imgUrl] || imgUrl;
                 
-                cHtml += `</div></div></div>`;
+                let maxHp = g.maxHp !== undefined ? g.maxHp : (g.isBoss && g.bossStats ? g.bossStats.maxHp : (g.level ? g.level * 5 : 5));
+                let currentHp = g.currentHp !== undefined ? g.currentHp : (g.hpAfter !== undefined ? g.hpAfter : (g.hp !== undefined ? g.hp : maxHp));
+                let hpPercent = Math.max(0, Math.min(100, (currentHp / maxHp) * 100));
+                
+                cHtml += `
+                <div class="goblin-card">
+                    <img src="${b64}" class="goblin-img" alt="${g.name || 'Goblin'}">
+                    <div class="gob-name">${g.name || 'Nv. ' + (g.level || 1)}</div>
+                    <div class="hp-text">HP: ${currentHp}/${maxHp}</div>
+                    <div class="hp-bar-container"><div class="hp-bar" style="width: ${hpPercent}%"></div></div>
+                </div>`;
             });
+            
+            if (ch.goblins.length === 0) {
+                cHtml += `<div style="color: #aaa; margin: auto; font-style: italic;">La mesa está limpia...</div>`;
+            }
+            
+            cHtml += `</div></div>`;
             return cHtml;
         };
+
+        let currentWave = 0;
+        let waveOpen = false;
+        let inCombatPhase = false;
+        let actionNum = 0;
+        let inAction = false;
+        let currentActionHtml = "";
+        let hasCombat = false;
+        let combatPointer = 0;
 
         logs.forEach(log => {
             let logLine = typeof log === 'string' ? log : log.text;
@@ -182,8 +181,12 @@ class ReportGenerator {
 
             let waveMatch = logLine.match(/RESOLVIENDO FASE DE OLEADA (\d+)/i) || logLine.match(/aventura comienza en la Oleada (\d+)/i);
             if (waveMatch) {
+                if (inAction) {
+                    currentActionHtml += `</div>`;
+                    html += currentActionHtml;
+                    inAction = false;
+                }
                 if (waveOpen) {
-                    html += renderCombatsForWave(currentWave);
                     html += `</div></div>`; // Close previous wave
                 }
                 currentWave = parseInt(waveMatch[1]);
@@ -191,42 +194,85 @@ class ReportGenerator {
                     <h2 class="wave-title">⚔️ OLEADA ${currentWave}</h2>
                     <div class="wave-content">`;
                 waveOpen = true;
+                inCombatPhase = false; // Until RESOLVIENDO is seen (or if it was seen, it will trigger below)
+                actionNum = 0;
+                combatPointer = 0;
             }
             
-            if (logLine.includes("compró y EQUIPÓ") || logLine.includes("compró la poción")) {
-                let pMatch = logLine.match(/<strong>(.*?)<\/strong> compró/);
-                let iMatch = logLine.match(/<em>(.*?)<\/em> por (\d+) mo/);
-                if (pMatch && iMatch) {
-                    let player = pMatch[1];
-                    let item = iMatch[1];
-                    let cost = iMatch[2];
-                    
-                    let eqImgSrc = "";
-                    if (window.DB) {
-                        ['armas', 'escudos', 'curacion', 'pociones'].forEach(cat => {
-                            if (window.DB.equipo[cat]) {
-                                const eq = window.DB.equipo[cat].find(e => e.name === item);
-                                if (eq && eq.image) eqImgSrc = this.imageCache[eq.image] || eq.image;
-                            }
-                        });
+            if (logLine.match(/RESOLVIENDO FASE DE OLEADA (\d+)/i)) {
+                inCombatPhase = true;
+            }
+
+            if (inCombatPhase && logLine.includes(">>> Turno de") && logLine.includes("Vida:")) {
+                if (inAction) {
+                    currentActionHtml += `</div>`;
+                    html += currentActionHtml;
+                }
+                actionNum++;
+                inAction = true;
+                hasCombat = false;
+                currentActionHtml = `<div class="action-block">
+                    <div class="action-title">▶️ Acción ${actionNum}</div>`;
+            }
+            
+            if (inAction) {
+                if (logLine.includes("HITO DESPLEGADO:")) {
+                    let hMatch = logLine.match(/HITO DESPLEGADO:\s*([^<]+)/);
+                    let hitoName = hMatch ? hMatch[1].replace(/|"/g, '').trim() : "Hito";
+                    currentActionHtml += `<div class="event-log hito" style="margin-top: 15px;">🔥 <strong>HITO REVELADO:</strong> ${hitoName}</div>`;
+                }
+                
+                if (logLine.includes("inició un combate") || logLine.includes("¡A por ellos!") || logLine.includes("¡Lucharé hasta el final!") || logLine.includes("¡Me llevaré por delante") || logLine.match(/asigna un .* a .* contra/i)) {
+                    hasCombat = true;
+                }
+            } else {
+                // If not in action (e.g. Market Phase)
+                if (logLine.includes("compró y EQUIPÓ") || logLine.includes("compró la poción")) {
+                    let pMatch = logLine.match(/<strong>(.*?)<\/strong> compró/);
+                    let iMatch = logLine.match(/<em>(.*?)<\/em> por (\d+) mo/);
+                    if (pMatch && iMatch) {
+                        let player = pMatch[1];
+                        let item = iMatch[1];
+                        let cost = iMatch[2];
+                        
+                        let eqImgSrc = "";
+                        if (window.DB) {
+                            ['armas', 'escudos', 'curacion', 'pociones'].forEach(cat => {
+                                if (window.DB.equipo[cat]) {
+                                    const eq = window.DB.equipo[cat].find(e => e.name === item);
+                                    if (eq && eq.image) eqImgSrc = this.imageCache[eq.image] || eq.image;
+                                }
+                            });
+                        }
+                        
+                        html += `<div class="event-log buy">
+                            ${eqImgSrc ? `<img src="${eqImgSrc}" class="eq-img">` : '🛒'} 
+                            <span><strong>${player}</strong> compró <strong>${item}</strong> por <span style="color:#f2e75e">${cost} mo</span>.</span>
+                        </div>`;
                     }
-                    
-                    html += `<div class="event-log buy">
-                        ${eqImgSrc ? `<img src="${eqImgSrc}" class="eq-img">` : '🛒'} 
-                        <span><strong>${player}</strong> compró <strong>${item}</strong> por <span style="color:#f2e75e">${cost} mo</span>.</span>
-                    </div>`;
                 }
             }
             
-            if (logLine.includes("HITO DESPLEGADO:")) {
-                let hMatch = logLine.match(/HITO DESPLEGADO:\s*([^<]+)/);
-                let hitoName = hMatch ? hMatch[1].replace(/|"/g, '').trim() : "Hito";
-                html += `<div class="event-log hito">🔥 <strong>HITO REVELADO:</strong> ${hitoName}</div>`;
+            if (inAction && logLine.includes("<<<") && logLine.includes("ha finalizado su turno")) {
+                if (hasCombat && combatsByWave[currentWave] && combatPointer < combatsByWave[currentWave].length) {
+                    currentActionHtml += renderCombatTable(combatsByWave[currentWave][combatPointer]);
+                    combatPointer++;
+                } else if (!hasCombat) {
+                    currentActionHtml += `<div style="color:#aaa; font-style:italic; margin-top: 15px;">El jugador descansó o evitó el combate en esta acción.</div>`;
+                }
+                currentActionHtml += `</div>`;
+                html += currentActionHtml;
+                inAction = false;
+                hasCombat = false;
             }
         });
 
+        if (inAction) {
+            currentActionHtml += `</div>`;
+            html += currentActionHtml;
+        }
+
         if (waveOpen) {
-            html += renderCombatsForWave(currentWave);
             html += `</div></div>`;
         }
         
