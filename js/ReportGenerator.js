@@ -30,7 +30,7 @@ class ReportGenerator {
                         if (g.isBoss && g.bossStats && g.bossStats.image) {
                             imageUrlsToFetch.add(g.bossStats.image);
                         } else if (g.level) {
-                            imageUrlsToFetch.add(`assets/Monstruos/t${g.level}.webp`);
+                            imageUrlsToFetch.add(`assets/Monstruos/0${g.level}.webp`);
                         }
                     });
                 }
@@ -155,7 +155,8 @@ class ReportGenerator {
             });
             let moAfter = ch.player.mo + moGained;
 
-            let hpStr = ch.player.hp === hpAfter ? `${ch.player.hp}/${ch.player.maxHp || '?'}` : `${ch.player.hp} ➔ ${hpAfter}`;
+            let pMaxHp = ch.player.maxHp || (ch.player.level ? ch.player.level * 5 : '?');
+            let hpStr = ch.player.hp === hpAfter ? `${ch.player.hp}/${pMaxHp}` : `${ch.player.hp} ➔ ${hpAfter}`;
             let enStr = ch.player.energy === energyAfter ? `${ch.player.energy}` : `${ch.player.energy} ➔ ${energyAfter}`;
             let moStr = ch.player.mo === moAfter ? `${ch.player.mo}` : `${ch.player.mo} ➔ ${moAfter}`;
 
@@ -172,7 +173,7 @@ class ReportGenerator {
                 <div class="goblins-container">`;
                 
             ch.goblins.forEach(g => {
-                  let imgUrl = g.isBoss && g.bossStats && g.bossStats.image ? g.bossStats.image : `assets/Monstruos/t${g.level || 1}.webp`;
+                  let imgUrl = g.isBoss && g.bossStats && g.bossStats.image ? g.bossStats.image : `assets/Monstruos/0${g.level || 1}.webp`;
                   let b64 = this.imageCache[imgUrl] || imgUrl;
                   
                   let maxHp = g.maxHp !== undefined ? g.maxHp : (g.isBoss && g.bossStats ? g.bossStats.maxHp : (g.level ? g.level * 5 : 5));
