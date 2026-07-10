@@ -553,7 +553,7 @@ class GameState {
           role: p.role.id,
           equipped: p.equipped.map(eq => ({ id: eq.id, name: eq.name, isBroken: eq.isBroken, isActive: !!eq.isActive }))
         },
-        goblins: this.battlefield.goblins.map(g => ({ uid: g.uid, name: g.name, level: g.level, hp: g.currentHp, maxHp: g.maxHp, isBoss: g.isBoss, bossStats: g.bossStats })),
+        goblins: this.battlefield.goblins.map(g => ({ uid: g.uid, name: g.name, level: g.level, hp: g.currentHp, maxHp: g.maxHp, isBoss: g.isBoss, bossStats: g.bossStats, isHito: g.isHito, isInvocacion: g.isInvocacion })),
         playerDice: c.playerDice,
         goblinDice: c.dice && c.dice.green ? c.dice.green : {},
         assignments: assignments,
@@ -1435,7 +1435,9 @@ class GameState {
             hpAfter: g.currentHp,
             maxHp: g.maxHp,
             isBoss: g.isBoss,
-            bossStats: g.bossStats
+            bossStats: g.bossStats,
+            isHito: g.isHito,
+            isInvocacion: g.isInvocacion
           };
         }),
         playerDice: c.playerDice,
