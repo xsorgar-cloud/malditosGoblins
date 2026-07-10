@@ -37,22 +37,25 @@ class ReportGenerator {
             });
         }
 
-        if (exportData.structuredActions) {
-            exportData.structuredActions.forEach(sa => {
-                if (sa.type === 'buy_equipment') {
-                    if (window.DB) {
-                        let found = null;
-                        ['armas', 'escudos', 'curacion', 'pociones'].forEach(cat => {
-                            if (window.DB.equipo[cat]) {
-                                const eq = window.DB.equipo[cat].find(e => e.name === sa.item);
-                                if (eq && eq.image) found = eq.image;
-                            }
-                        });
-                        if (found) imageUrlsToFetch.add(found);
-                    }
+        // We can scan exportData.logs for equipment purchases to pre-fetch images
+        const logs = exportData.logs || [];
+        logs.forEach(log => {
+            let logLine = typeof log === 'string' ? log : log.text;
+            if (logLine && (logLine.includes("compró y EQUIPÓ") || logLine.includes("compró la poción"))) {
+                let iMatch = logLine.match(/<em>(.*?)<\/em> por/);
+                if (iMatch && window.DB) {
+                    let item = iMatch[1];
+                    let found = null;
+                    ['armas', 'escudos', 'curacion', 'pociones'].forEach(cat => {
+                        if (window.DB.equipo[cat]) {
+                            const eq = window.DB.equipo[cat].find(e => e.name === item);
+                            if (eq && eq.image) found = eq.image;
+                        }
+                    });
+                    if (found) imageUrlsToFetch.add(found);
                 }
-            });
-        }
+            }
+        });
 
         for (let url of Array.from(imageUrlsToFetch)) {
             await this.getBase64Image(url);
@@ -62,27 +65,46 @@ class ReportGenerator {
 <html lang="es">
 <head>
     <meta charset="UTF-8">
-    <title>Reporte de Partida - Malditos Goblins</title>
+    <title>Crónica de Partida - Malditos Goblins</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #121212; color: #e0e0e0; margin: 0; padding: 20px; }
-        .container { max-width: 900px; margin: 0 auto; }
-        .header { text-align: center; border-bottom: 2px solid #ff4444; padding-bottom: 20px; margin-bottom: 30px; }
-        .header h1 { margin: 0 0 10px 0; color: #ff4444; }
-        .game-info { display: flex; justify-content: center; gap: 20px; font-size: 1.1rem; }
-        .wave-block { background: #1e1e1e; border: 1px solid #333; border-radius: 8px; margin-bottom: 25px; padding: 20px; }
-        .wave-title { color: #ff8c00; margin-top: 0; border-bottom: 1px solid #444; padding-bottom: 10px; }
-        .action-block { margin-top: 15px; padding: 15px; background: #252525; border-radius: 6px; border-left: 4px solid #007acc; }
-        .action-title { font-weight: bold; color: #007acc; margin-bottom: 10px; }
-        .goblins-container { display: flex; gap: 15px; flex-wrap: wrap; margin-bottom: 15px; }
-        .goblin-card { text-align: center; background: #333; padding: 10px; border-radius: 6px; border: 1px solid #444; width: 100px; }
-        .goblin-img { height: 80px; object-fit: contain; margin-bottom: 5px; }
-        .hp-bar-container { width: 100%; background: #222; height: 10px; border-radius: 5px; overflow: hidden; margin-top: 5px; }
-        .hp-bar { height: 100%; background: #ff4444; }
-        .player-status { display: flex; gap: 20px; background: #1a1a1a; padding: 10px; border-radius: 6px; border: 1px solid #333; }
-        .status-item { font-size: 0.95rem; }
-        .event-log { padding: 10px; background: #2a2a2a; border-radius: 4px; border-left: 4px solid #ffaa00; margin-bottom: 15px; }
-        .event-log.buy { border-left-color: #44ff44; display: flex; align-items: center; gap: 10px; }
-        .eq-img { height: 40px; border-radius: 4px; }
+        body { font-family: 'Inter', sans-serif; background-color: #0b0714; color: #e0e0e0; margin: 0; padding: 30px 20px; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        .header { text-align: center; border-bottom: 2px solid #ff3366; padding-bottom: 20px; margin-bottom: 40px; }
+        .header h1 { margin: 0 0 10px 0; color: #ff3366; font-family: 'Cinzel', serif; font-size: 2.5rem; text-shadow: 0 0 15px rgba(255, 51, 102, 0.4); }
+        .game-info { display: flex; justify-content: center; gap: 30px; font-size: 1.1rem; color: #ccc; }
+        .game-info strong { color: #fff; }
+        
+        .wave-block { background: rgba(30, 20, 45, 0.6); border: 1px solid rgba(255, 51, 102, 0.3); border-radius: 12px; margin-bottom: 40px; box-shadow: 0 8px 20px rgba(0,0,0,0.5); overflow: hidden; backdrop-filter: blur(5px); }
+        .wave-title { background: linear-gradient(90deg, rgba(255, 51, 102, 0.15), rgba(0,0,0,0)); color: #ff3366; margin: 0; padding: 15px 20px; font-family: 'Cinzel', serif; font-size: 1.6rem; border-bottom: 1px solid rgba(255, 51, 102, 0.3); }
+        .wave-content { padding: 25px; }
+        
+        .event-log { padding: 12px 15px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; font-size: 1.05rem; border-left: 4px solid #fff; }
+        .event-log.buy { border-left-color: #44ff44; background: rgba(68, 255, 68, 0.05); }
+        .event-log.hito { border-left-color: #ffaa00; background: rgba(255, 170, 0, 0.1); color: #ffdd88; font-family: 'Cinzel', serif; }
+        .eq-img { height: 45px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
+        
+        .action-block { margin-top: 25px; padding: 20px; background: rgba(0, 0, 0, 0.5); border-radius: 10px; border-left: 4px solid #007acc; border-top: 1px solid #222; border-right: 1px solid #222; border-bottom: 1px solid #222; }
+        .action-title { font-weight: bold; color: #4cc9f0; margin-bottom: 15px; font-size: 1.2rem; display: flex; align-items: center; gap: 10px; }
+        
+        .battle-flex { display: flex; gap: 30px; align-items: stretch; }
+        
+        .player-panel { background: rgba(255, 255, 255, 0.03); border: 1px solid #444; border-radius: 8px; padding: 15px; width: 220px; display: flex; flex-direction: column; justify-content: center; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); flex-shrink: 0; }
+        .player-name { font-weight: bold; color: #fff; margin-bottom: 15px; font-size: 1.2rem; text-align: center; border-bottom: 1px solid #555; padding-bottom: 10px; }
+        .player-stats { display: flex; flex-direction: column; gap: 10px; }
+        .stat { display: flex; justify-content: space-between; font-weight: 600; font-size: 1rem; }
+        .stat.hp { color: #ff4444; }
+        .stat.sh { color: #88ccff; }
+        .stat.en { color: #ffbb00; }
+        .stat.mo { color: #f2e75e; }
+        
+        .goblins-container { flex-grow: 1; display: flex; gap: 15px; flex-wrap: wrap; background: rgba(255, 51, 102, 0.05); border-radius: 8px; padding: 15px; border: 1px dashed rgba(255, 51, 102, 0.2); justify-content: flex-start; align-items: center; }
+        .goblin-card { background: rgba(0,0,0,0.6); padding: 12px; border-radius: 8px; border: 1px solid #ff3366; width: 110px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .goblin-img { height: 90px; width: 90px; object-fit: contain; margin-bottom: 8px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); }
+        .gob-name { font-size: 0.85rem; font-weight: bold; color: #fff; text-align: center; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; font-family: 'Cinzel', serif; }
+        .hp-text { font-size: 0.8rem; color: #ffaa00; margin-bottom: 3px; font-weight: bold; }
+        .hp-bar-container { width: 100%; background: #222; height: 8px; border-radius: 4px; overflow: hidden; box-shadow: inset 0 1px 3px rgba(0,0,0,0.8); }
+        .hp-bar { height: 100%; background: linear-gradient(90deg, #aa0000, #ff4444); transition: width 0.3s; }
     </style>
 </head>
 <body>
@@ -99,40 +121,74 @@ class ReportGenerator {
 
         let currentWave = 0;
         let combatIndex = 0;
+        let waveOpen = false;
 
-        exportData.structuredActions.forEach(action => {
-            if (action.rawLog && action.rawLog.includes("O L E A D A")) {
-                let match = action.rawLog.match(/O L E A D A\s+(\d+)/);
-                if (match) currentWave = match[1];
-                html += `<!-- END_WAVE --><div class="wave-block"><h2 class="wave-title">Oleada ${currentWave}</h2>`;
-            } else if (action.type === 'deploy_hito') {
-                html += `<div class="event-log">⚔️ <strong>HITO DESPLEGADO:</strong> ${action.hitoName}</div>`;
-            } else if (action.type === 'buy_equipment') {
-                let eqImgSrc = "";
-                if (window.DB) {
-                    ['armas', 'escudos', 'curacion', 'pociones'].forEach(cat => {
-                        if (window.DB.equipo[cat]) {
-                            const eq = window.DB.equipo[cat].find(e => e.name === action.item);
-                            if (eq && eq.image) eqImgSrc = this.imageCache[eq.image] || "";
-                        }
-                    });
+        logs.forEach(log => {
+            let logLine = typeof log === 'string' ? log : log.text;
+            if(!logLine) return;
+
+            let waveMatch = logLine.match(/RESOLVIENDO FASE DE OLEADA (\d+)/i) || logLine.match(/aventura comienza en la Oleada (\d+)/i);
+            if (waveMatch) {
+                if (waveOpen) html += `</div></div>`; // Close previous wave
+                currentWave = waveMatch[1];
+                html += `<div class="wave-block">
+                    <h2 class="wave-title">⚔️ OLEADA ${currentWave}</h2>
+                    <div class="wave-content">`;
+                waveOpen = true;
+            }
+            
+            if (logLine.includes("compró y EQUIPÓ") || logLine.includes("compró la poción")) {
+                let pMatch = logLine.match(/<strong>(.*?)<\/strong> compró/);
+                let iMatch = logLine.match(/<em>(.*?)<\/em> por (\d+) mo/);
+                if (pMatch && iMatch) {
+                    let player = pMatch[1];
+                    let item = iMatch[1];
+                    let cost = iMatch[2];
+                    
+                    let eqImgSrc = "";
+                    if (window.DB) {
+                        ['armas', 'escudos', 'curacion', 'pociones'].forEach(cat => {
+                            if (window.DB.equipo[cat]) {
+                                const eq = window.DB.equipo[cat].find(e => e.name === item);
+                                if (eq && eq.image) eqImgSrc = this.imageCache[eq.image] || "";
+                            }
+                        });
+                    }
+                    
+                    html += `<div class="event-log buy">
+                        ${eqImgSrc ? `<img src="${eqImgSrc}" class="eq-img">` : '🛒'} 
+                        <span><strong>${player}</strong> compró <strong>${item}</strong> por <span style="color:#f2e75e">${cost} mo</span>.</span>
+                    </div>`;
                 }
-                html += `<div class="event-log buy">
-                    ${eqImgSrc ? `<img src="${eqImgSrc}" class="eq-img">` : '🛒'} 
-                    <span><strong>${action.player}</strong> compró <strong>${action.item}</strong> por ${action.cost} mo.</span>
-                </div>`;
-            } else if (action.type === 'group_level_up') {
-                html += `<div class="event-log">⬆️ <strong>¡El grupo ha subido al nivel ${action.level}!</strong></div>`;
-            } else if (action.rawLog && action.rawLog.includes("Turno de combate - Acción")) {
-                let match = action.rawLog.match(/Acción (\d+)/);
+            }
+            
+            if (logLine.includes("HITO DESPLEGADO:")) {
+                let hMatch = logLine.match(/HITO DESPLEGADO:\s*([^<]+)/);
+                let hitoName = hMatch ? hMatch[1].replace(/|"/g, '').trim() : "Hito";
+                html += `<div class="event-log hito">🔥 <strong>HITO REVELADO:</strong> ${hitoName}</div>`;
+            }
+            
+            if (logLine.includes("Turno de combate - Acción")) {
+                let match = logLine.match(/Acción (\d+)/);
                 let actionNum = match ? match[1] : '?';
                 let ch = exportData.combatHistory && exportData.combatHistory.length > combatIndex ? exportData.combatHistory[combatIndex] : null;
                 
                 html += `<div class="action-block">
-                    <div class="action-title">Acción ${actionNum}</div>`;
+                    <div class="action-title">▶️ Acción ${actionNum}</div>`;
                 
                 if (ch) {
-                    html += `<div class="goblins-container">`;
+                    html += `<div class="battle-flex">
+                        <div class="player-panel">
+                            <div class="player-name">${ch.player.name}</div>
+                            <div class="player-stats">
+                                <span class="stat hp"><span>❤️ HP</span><span>${ch.player.hp}/${ch.player.maxHp || '?'}</span></span>
+                                <span class="stat sh"><span>🛡️ Escudo</span><span>${ch.player.shield}</span></span>
+                                <span class="stat en"><span>⚡ Energía</span><span>${ch.player.energy}</span></span>
+                                <span class="stat mo"><span>💰 Oro</span><span>${ch.player.mo}</span></span>
+                            </div>
+                        </div>
+                        <div class="goblins-container">`;
+                        
                     ch.goblins.forEach(g => {
                         let imgUrl = g.isBoss && g.bossStats && g.bossStats.image ? g.bossStats.image : `assets/Monstruos/t${g.level}.webp`;
                         let b64 = this.imageCache[imgUrl] || "";
@@ -140,23 +196,17 @@ class ReportGenerator {
                         html += `
                         <div class="goblin-card">
                             ${b64 ? `<img src="${b64}" class="goblin-img">` : ''}
-                            <div style="font-size: 0.85rem; font-weight: bold;">${g.name || 'Goblin Nv.'+g.level}</div>
-                            <div style="font-size: 0.8rem; color: #ffaa00;">HP: ${g.currentHp}/${g.maxHp}</div>
+                            <div class="gob-name">${g.name || 'Nv. '+g.level}</div>
+                            <div class="hp-text">HP: ${g.currentHp}/${g.maxHp}</div>
                             <div class="hp-bar-container"><div class="hp-bar" style="width: ${hpPercent}%"></div></div>
                         </div>`;
                     });
+                    
                     if (ch.goblins.length === 0) {
-                        html += `<div style="color: #888;">No hay enemigos en la mesa.</div>`;
+                        html += `<div style="color: #aaa; margin: auto; font-style: italic;">La mesa está limpia...</div>`;
                     }
-                    html += `</div>`;
                     
-                    html += `<div class="player-status">
-                        <div class="status-item">❤️ HP: ${ch.player.hp}/${ch.player.maxHp || '?'}</div>
-                        <div class="status-item">🛡️ Escudo: ${ch.player.shield}</div>
-                        <div class="status-item">⚡ Energía: ${ch.player.energy}</div>
-                        <div class="status-item">💰 Oro: ${ch.player.mo}</div>
-                    </div>`;
-                    
+                    html += `</div></div>`;
                     combatIndex++;
                 }
                 
@@ -164,11 +214,9 @@ class ReportGenerator {
             }
         });
 
-        // Clean up unclosed wave blocks
-        html = html.replace('<!-- END_WAVE -->', ''); // first one doesn't need closing
-        html = html.replace(/<!-- END_WAVE -->/g, '</div>'); // remaining ones
-        html += `</div></div></body></html>`;
-
+        if (waveOpen) html += `</div></div>`;
+        
+        html += `</div></body></html>`;
         return html;
     }
 }
