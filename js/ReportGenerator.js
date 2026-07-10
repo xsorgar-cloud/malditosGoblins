@@ -196,7 +196,7 @@ class ReportGenerator {
                         <h2 class="wave-title">⚔️ OLEADA ${currentWave}</h2>
                         <div class="wave-content">`;
                     waveOpen = true;
-                    inCombatPhase = false; // Until RESOLVIENDO is seen
+                    inCombatPhase = true; // Combat phase is effectively always active for actions
                     actionNum = 0;
                     combatPointer = 0;
                 }
