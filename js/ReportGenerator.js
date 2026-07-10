@@ -37,7 +37,6 @@ class ReportGenerator {
             });
         }
 
-        // We can scan exportData.logs for equipment purchases to pre-fetch images
         const logs = exportData.logs || [];
         logs.forEach(log => {
             let logLine = typeof log === 'string' ? log : log.text;
@@ -120,8 +119,58 @@ class ReportGenerator {
         `;
 
         let currentWave = 0;
-        let combatIndex = 0;
         let waveOpen = false;
+
+        const combatsByWave = {};
+        if (exportData.combatHistory) {
+            exportData.combatHistory.forEach(ch => {
+                let w = ch.wave || 1;
+                if (!combatsByWave[w]) combatsByWave[w] = [];
+                combatsByWave[w].push(ch);
+            });
+        }
+
+        const renderCombatsForWave = (waveNum) => {
+            let chs = combatsByWave[waveNum];
+            if (!chs || chs.length === 0) return "";
+            let cHtml = "";
+            chs.forEach((ch, idx) => {
+                let actionNum = idx + 1;
+                cHtml += `<div class="action-block">
+                    <div class="action-title">▶️ Acción ${actionNum}</div>
+                    <div class="battle-flex">
+                        <div class="player-panel">
+                            <div class="player-name">${ch.player.name}</div>
+                            <div class="player-stats">
+                                <span class="stat hp"><span>❤️ HP</span><span>${ch.player.hp}/${ch.player.maxHp || '?'}</span></span>
+                                <span class="stat sh"><span>🛡️ Escudo</span><span>${ch.player.shield}</span></span>
+                                <span class="stat en"><span>⚡ Energía</span><span>${ch.player.energy}</span></span>
+                                <span class="stat mo"><span>💰 Oro</span><span>${ch.player.mo}</span></span>
+                            </div>
+                        </div>
+                        <div class="goblins-container">`;
+                        
+                ch.goblins.forEach(g => {
+                    let imgUrl = g.isBoss && g.bossStats && g.bossStats.image ? g.bossStats.image : `assets/Monstruos/t${g.level}.webp`;
+                    let b64 = this.imageCache[imgUrl] || "";
+                    let hpPercent = Math.max(0, Math.min(100, (g.currentHp / g.maxHp) * 100));
+                    cHtml += `
+                    <div class="goblin-card">
+                        ${b64 ? `<img src="${b64}" class="goblin-img">` : ''}
+                        <div class="gob-name">${g.name || 'Nv. '+g.level}</div>
+                        <div class="hp-text">HP: ${g.currentHp}/${g.maxHp}</div>
+                        <div class="hp-bar-container"><div class="hp-bar" style="width: ${hpPercent}%"></div></div>
+                    </div>`;
+                });
+                
+                if (ch.goblins.length === 0) {
+                    cHtml += `<div style="color: #aaa; margin: auto; font-style: italic;">La mesa está limpia...</div>`;
+                }
+                
+                cHtml += `</div></div></div>`;
+            });
+            return cHtml;
+        };
 
         logs.forEach(log => {
             let logLine = typeof log === 'string' ? log : log.text;
@@ -129,8 +178,11 @@ class ReportGenerator {
 
             let waveMatch = logLine.match(/RESOLVIENDO FASE DE OLEADA (\d+)/i) || logLine.match(/aventura comienza en la Oleada (\d+)/i);
             if (waveMatch) {
-                if (waveOpen) html += `</div></div>`; // Close previous wave
-                currentWave = waveMatch[1];
+                if (waveOpen) {
+                    html += renderCombatsForWave(currentWave);
+                    html += `</div></div>`; // Close previous wave
+                }
+                currentWave = parseInt(waveMatch[1]);
                 html += `<div class="wave-block">
                     <h2 class="wave-title">⚔️ OLEADA ${currentWave}</h2>
                     <div class="wave-content">`;
@@ -167,54 +219,12 @@ class ReportGenerator {
                 let hitoName = hMatch ? hMatch[1].replace(/|"/g, '').trim() : "Hito";
                 html += `<div class="event-log hito">🔥 <strong>HITO REVELADO:</strong> ${hitoName}</div>`;
             }
-            
-            if (logLine.includes("Turno de combate - Acción")) {
-                let match = logLine.match(/Acción (\d+)/);
-                let actionNum = match ? match[1] : '?';
-                let ch = exportData.combatHistory && exportData.combatHistory.length > combatIndex ? exportData.combatHistory[combatIndex] : null;
-                
-                html += `<div class="action-block">
-                    <div class="action-title">▶️ Acción ${actionNum}</div>`;
-                
-                if (ch) {
-                    html += `<div class="battle-flex">
-                        <div class="player-panel">
-                            <div class="player-name">${ch.player.name}</div>
-                            <div class="player-stats">
-                                <span class="stat hp"><span>❤️ HP</span><span>${ch.player.hp}/${ch.player.maxHp || '?'}</span></span>
-                                <span class="stat sh"><span>🛡️ Escudo</span><span>${ch.player.shield}</span></span>
-                                <span class="stat en"><span>⚡ Energía</span><span>${ch.player.energy}</span></span>
-                                <span class="stat mo"><span>💰 Oro</span><span>${ch.player.mo}</span></span>
-                            </div>
-                        </div>
-                        <div class="goblins-container">`;
-                        
-                    ch.goblins.forEach(g => {
-                        let imgUrl = g.isBoss && g.bossStats && g.bossStats.image ? g.bossStats.image : `assets/Monstruos/t${g.level}.webp`;
-                        let b64 = this.imageCache[imgUrl] || "";
-                        let hpPercent = Math.max(0, Math.min(100, (g.currentHp / g.maxHp) * 100));
-                        html += `
-                        <div class="goblin-card">
-                            ${b64 ? `<img src="${b64}" class="goblin-img">` : ''}
-                            <div class="gob-name">${g.name || 'Nv. '+g.level}</div>
-                            <div class="hp-text">HP: ${g.currentHp}/${g.maxHp}</div>
-                            <div class="hp-bar-container"><div class="hp-bar" style="width: ${hpPercent}%"></div></div>
-                        </div>`;
-                    });
-                    
-                    if (ch.goblins.length === 0) {
-                        html += `<div style="color: #aaa; margin: auto; font-style: italic;">La mesa está limpia...</div>`;
-                    }
-                    
-                    html += `</div></div>`;
-                    combatIndex++;
-                }
-                
-                html += `</div>`;
-            }
         });
 
-        if (waveOpen) html += `</div></div>`;
+        if (waveOpen) {
+            html += renderCombatsForWave(currentWave);
+            html += `</div></div>`;
+        }
         
         html += `</div></body></html>`;
         return html;
