@@ -2740,7 +2740,7 @@ document.getElementById('btn-toggle-log').addEventListener('click', () => {
 
 const btnExportJson = document.getElementById('btn-export-json');
 if (btnExportJson) {
-  btnExportJson.addEventListener('click', () => {
+  btnExportJson.addEventListener('click', async () => {
     if (!gameState) return;
     
     const playersClean = gameState.players.map(p => {
@@ -2987,11 +2987,27 @@ if (btnExportJson) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `partida_goblins_${new Date().getTime()}.json`;
+    const baseName = `partida_goblins_${new Date().getTime()}`;
+    a.download = `${baseName}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
+
+    try {
+        const htmlContent = await window.ReportGenerator.generate(exportData);
+        const htmlBlob = new Blob([htmlContent], { type: 'text/html' });
+        const htmlUrl = URL.createObjectURL(htmlBlob);
+        const aHtml = document.createElement('a');
+        aHtml.href = htmlUrl;
+        aHtml.download = `reporte_visual_${baseName}.html`;
+        document.body.appendChild(aHtml);
+        aHtml.click();
+        document.body.removeChild(aHtml);
+        URL.revokeObjectURL(htmlUrl);
+    } catch (e) {
+        console.error("Error generating HTML report", e);
+    }
   });
 }
 

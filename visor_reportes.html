@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visor de Reportes - Malditos Goblins</title>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #0f0a19;
+            color: #e0e0e0;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            overflow: hidden;
+        }
+        
+        header {
+            background: linear-gradient(180deg, #1a1025 0%, #0f0a19 100%);
+            border-bottom: 2px solid #ff3366;
+            padding: 15px 30px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-shrink: 0;
+        }
+
+        header h1 {
+            font-family: 'Cinzel', serif;
+            color: #ff3366;
+            margin: 0;
+            font-size: 1.5rem;
+            text-shadow: 0 0 10px rgba(255, 51, 102, 0.5);
+        }
+
+        .controls {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .btn {
+            background: rgba(255, 51, 102, 0.1);
+            border: 1px solid #ff3366;
+            color: #ff3366;
+            padding: 8px 15px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            transition: all 0.2s ease;
+        }
+
+        .btn:hover {
+            background: #ff3366;
+            color: #fff;
+            box-shadow: 0 0 15px rgba(255, 51, 102, 0.4);
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+            pointer-events: none;
+        }
+
+        #drop-zone {
+            flex-grow: 1;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            border: 2px dashed #ff3366;
+            margin: 20px;
+            border-radius: 15px;
+            background: rgba(255, 51, 102, 0.05);
+            transition: all 0.3s ease;
+        }
+
+        #drop-zone.dragover {
+            background: rgba(255, 51, 102, 0.15);
+            border-color: #fff;
+        }
+
+        #drop-zone h2 {
+            font-family: 'Cinzel', serif;
+            color: #ff3366;
+            font-size: 2rem;
+            margin-bottom: 10px;
+        }
+        
+        #drop-zone p {
+            color: #aaa;
+            font-size: 1.1rem;
+        }
+
+        #report-container {
+            display: none;
+            flex-grow: 1;
+            width: 100%;
+            border: none;
+            background: #fff;
+        }
+        
+        #loading {
+            display: none;
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-family: 'Cinzel', serif;
+            color: #ff3366;
+            font-size: 1.5rem;
+            text-shadow: 0 0 10px rgba(255, 51, 102, 0.5);
+            background: rgba(15, 10, 25, 0.9);
+            padding: 20px 40px;
+            border-radius: 10px;
+            border: 1px solid #ff3366;
+        }
+
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Visor de Crónicas</h1>
+        <div class="controls">
+            <label for="file-input" class="btn">Subir Archivo .json</label>
+            <input type="file" id="file-input" accept=".json">
+            <button id="btn-download" class="btn" style="display: none;">Descargar HTML</button>
+        </div>
+    </header>
+
+    <div id="drop-zone">
+        <h2>Arrastra tu partida aquí</h2>
+        <p>Sube el archivo .json generado al finalizar tu partida</p>
+    </div>
+
+    <iframe id="report-container"></iframe>
+    <div id="loading">Generando crónica visual...</div>
+
+    <!-- Cargar dependencias -->
+    <script src="js/database.js"></script>
+    <script src="js/ReportGenerator.js"></script>
+
+    <script>
+        const dropZone = document.getElementById('drop-zone');
+        const fileInput = document.getElementById('file-input');
+        const reportContainer = document.getElementById('report-container');
+        const btnDownload = document.getElementById('btn-download');
+        const loading = document.getElementById('loading');
+
+        let generatedHtmlContent = "";
+        let currentFileName = "";
+
+        // Click on drop zone triggers file input
+        dropZone.addEventListener('click', () => {
+            fileInput.click();
+        });
+
+        // Drag events
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.classList.add('dragover');
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.classList.remove('dragover');
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.classList.remove('dragover');
+            if (e.dataTransfer.files.length > 0) {
+                processFile(e.dataTransfer.files[0]);
+            }
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                processFile(e.target.files[0]);
+            }
+        });
+
+        btnDownload.addEventListener('click', () => {
+            if (!generatedHtmlContent) return;
+            const blob = new Blob([generatedHtmlContent], { type: 'text/html' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `cronica_visual_${currentFileName.replace('.json', '')}.html`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        });
+
+        async function processFile(file) {
+            if (!file.name.endsWith('.json')) {
+                alert("Por favor, sube un archivo .json válido de Malditos Goblins.");
+                return;
+            }
+
+            currentFileName = file.name;
+            dropZone.style.display = 'none';
+            reportContainer.style.display = 'none';
+            loading.style.display = 'block';
+            btnDownload.style.display = 'none';
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const exportData = JSON.parse(e.target.result);
+                    
+                    // Asegurarse de que el JSON es válido de la partida
+                    if (!exportData.gameInfo || !exportData.structuredActions) {
+                        throw new Error("El archivo JSON no tiene el formato esperado.");
+                    }
+
+                    // Generar reporte
+                    generatedHtmlContent = await window.ReportGenerator.generate(exportData);
+                    
+                    // Mostrar en el iframe
+                    reportContainer.srcdoc = generatedHtmlContent;
+                    
+                    loading.style.display = 'none';
+                    reportContainer.style.display = 'block';
+                    btnDownload.style.display = 'block';
+
+                } catch (err) {
+                    console.error(err);
+                    alert("Hubo un error procesando el archivo: " + err.message);
+                    loading.style.display = 'none';
+                    dropZone.style.display = 'flex';
+                }
+            };
+            reader.readAsText(file);
+        }
+    </script>
+</body>
+</html>
