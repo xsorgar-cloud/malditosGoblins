@@ -154,8 +154,10 @@ class ReportGenerator {
                   
                   let hpPercent = Math.max(0, Math.min(100, (hpAfter / maxHp) * 100));
                   
+                  let borderStyle = g.isHito ? 'border: 2px solid #fca311; box-shadow: 0 0 10px rgba(252,163,17,0.5);' : '';
+                  
                   cHtml += `
-                  <div class="goblin-card">
+                  <div class="goblin-card" style="${borderStyle}">
                       <img src="${b64}" class="goblin-img" alt="${g.name || 'Goblin'}">
                       <div class="gob-name">${g.name || 'Nv. ' + (g.level || 1)}</div>
                       <div class="hp-text">${hpText}</div>
