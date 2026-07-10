@@ -179,24 +179,27 @@ class ReportGenerator {
             let logLine = typeof log === 'string' ? log : log.text;
             if(!logLine) return;
 
-            let waveMatch = logLine.match(/RESOLVIENDO FASE DE OLEADA (\d+)/i) || logLine.match(/aventura comienza en la Oleada (\d+)/i);
+            let waveMatch = logLine.match(/RESOLVIENDO FASE DE OLEADA (\d+)/i) || logLine.match(/Oleada (\d+).*Fase de Mercado/i);
             if (waveMatch) {
-                if (inAction) {
-                    currentActionHtml += `</div>`;
-                    html += currentActionHtml;
-                    inAction = false;
+                let newWave = parseInt(waveMatch[1]);
+                if (newWave !== currentWave) {
+                    if (inAction) {
+                        currentActionHtml += `</div>`;
+                        html += currentActionHtml;
+                        inAction = false;
+                    }
+                    if (waveOpen) {
+                        html += `</div></div>`; // Close previous wave
+                    }
+                    currentWave = newWave;
+                    html += `<div class="wave-block">
+                        <h2 class="wave-title">⚔️ OLEADA ${currentWave}</h2>
+                        <div class="wave-content">`;
+                    waveOpen = true;
+                    inCombatPhase = false; // Until RESOLVIENDO is seen
+                    actionNum = 0;
+                    combatPointer = 0;
                 }
-                if (waveOpen) {
-                    html += `</div></div>`; // Close previous wave
-                }
-                currentWave = parseInt(waveMatch[1]);
-                html += `<div class="wave-block">
-                    <h2 class="wave-title">⚔️ OLEADA ${currentWave}</h2>
-                    <div class="wave-content">`;
-                waveOpen = true;
-                inCombatPhase = false; // Until RESOLVIENDO is seen (or if it was seen, it will trigger below)
-                actionNum = 0;
-                combatPointer = 0;
             }
             
             if (logLine.match(/RESOLVIENDO FASE DE OLEADA (\d+)/i)) {
@@ -215,6 +218,46 @@ class ReportGenerator {
                     <div class="action-title">▶️ Acción ${actionNum}</div>`;
             }
             
+            // Purchase logging (can happen in Market Phase OR in Action)
+            if (logLine.includes("compró y EQUIPÓ") || logLine.includes("compró la poción") || logLine.includes("usó") && logLine.includes("Poción")) {
+                let pMatch = logLine.match(/<strong>(.*?)<\/strong> compró/);
+                let iMatch = logLine.match(/<em>(.*?)<\/em> por (\d+) mo/);
+                let htmlToAppend = "";
+                
+                if (pMatch && iMatch) {
+                    let player = pMatch[1];
+                    let item = iMatch[1];
+                    let cost = iMatch[2];
+                    
+                    let eqImgSrc = "";
+                    if (window.DB) {
+                        ['armas', 'escudos', 'curacion', 'pociones'].forEach(cat => {
+                            if (window.DB.equipo[cat]) {
+                                const eq = window.DB.equipo[cat].find(e => e.name === item);
+                                if (eq && eq.image) eqImgSrc = this.imageCache[eq.image] || eq.image;
+                            }
+                        });
+                    }
+                    
+                    htmlToAppend = `<div class="event-log buy">
+                        ${eqImgSrc ? `<img src="${eqImgSrc}" class="eq-img">` : '🛒'} 
+                        <span><strong>${player}</strong> compró <strong>${item}</strong> por <span style="color:#f2e75e">${cost} mo</span>.</span>
+                    </div>`;
+                } else if (logLine.includes("usó") && logLine.includes("Poción")) {
+                    let pMatch = logLine.match(/<strong>(.*?)<\/strong> usó <em>(.*?)<\/em>/);
+                    if (pMatch) {
+                        htmlToAppend = `<div class="event-log buy">
+                            🧪 <span><strong>${pMatch[1]}</strong> usó <strong>${pMatch[2]}</strong>.</span>
+                        </div>`;
+                    }
+                }
+                
+                if (htmlToAppend) {
+                    if (inAction) currentActionHtml += htmlToAppend;
+                    else html += htmlToAppend;
+                }
+            }
+            
             if (inAction) {
                 if (logLine.includes("HITO DESPLEGADO:")) {
                     let hMatch = logLine.match(/HITO DESPLEGADO:\s*([^<]+)/);
@@ -224,32 +267,6 @@ class ReportGenerator {
                 
                 if (logLine.includes("inició un combate") || logLine.includes("¡A por ellos!") || logLine.includes("¡Lucharé hasta el final!") || logLine.includes("¡Me llevaré por delante") || logLine.match(/asigna un .* a .* contra/i)) {
                     hasCombat = true;
-                }
-            } else {
-                // If not in action (e.g. Market Phase)
-                if (logLine.includes("compró y EQUIPÓ") || logLine.includes("compró la poción")) {
-                    let pMatch = logLine.match(/<strong>(.*?)<\/strong> compró/);
-                    let iMatch = logLine.match(/<em>(.*?)<\/em> por (\d+) mo/);
-                    if (pMatch && iMatch) {
-                        let player = pMatch[1];
-                        let item = iMatch[1];
-                        let cost = iMatch[2];
-                        
-                        let eqImgSrc = "";
-                        if (window.DB) {
-                            ['armas', 'escudos', 'curacion', 'pociones'].forEach(cat => {
-                                if (window.DB.equipo[cat]) {
-                                    const eq = window.DB.equipo[cat].find(e => e.name === item);
-                                    if (eq && eq.image) eqImgSrc = this.imageCache[eq.image] || eq.image;
-                                }
-                            });
-                        }
-                        
-                        html += `<div class="event-log buy">
-                            ${eqImgSrc ? `<img src="${eqImgSrc}" class="eq-img">` : '🛒'} 
-                            <span><strong>${player}</strong> compró <strong>${item}</strong> por <span style="color:#f2e75e">${cost} mo</span>.</span>
-                        </div>`;
-                    }
                 }
             }
             
