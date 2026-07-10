@@ -142,21 +142,26 @@ class ReportGenerator {
                 <div class="goblins-container">`;
                 
             ch.goblins.forEach(g => {
-                let imgUrl = g.isBoss && g.bossStats && g.bossStats.image ? g.bossStats.image : `assets/Monstruos/t${g.level || 1}.webp`;
-                let b64 = this.imageCache[imgUrl] || imgUrl;
-                
-                let maxHp = g.maxHp !== undefined ? g.maxHp : (g.isBoss && g.bossStats ? g.bossStats.maxHp : (g.level ? g.level * 5 : 5));
-                let currentHp = g.currentHp !== undefined ? g.currentHp : (g.hpAfter !== undefined ? g.hpAfter : (g.hp !== undefined ? g.hp : maxHp));
-                let hpPercent = Math.max(0, Math.min(100, (currentHp / maxHp) * 100));
-                
-                cHtml += `
-                <div class="goblin-card">
-                    <img src="${b64}" class="goblin-img" alt="${g.name || 'Goblin'}">
-                    <div class="gob-name">${g.name || 'Nv. ' + (g.level || 1)}</div>
-                    <div class="hp-text">HP: ${currentHp}/${maxHp}</div>
-                    <div class="hp-bar-container"><div class="hp-bar" style="width: ${hpPercent}%"></div></div>
-                </div>`;
-            });
+                  let imgUrl = g.isBoss && g.bossStats && g.bossStats.image ? g.bossStats.image : `assets/Monstruos/t${g.level || 1}.webp`;
+                  let b64 = this.imageCache[imgUrl] || imgUrl;
+                  
+                  let maxHp = g.maxHp !== undefined ? g.maxHp : (g.isBoss && g.bossStats ? g.bossStats.maxHp : (g.level ? g.level * 5 : 5));
+                  
+                  let hpBefore = g.hp !== undefined ? g.hp : (g.currentHp !== undefined ? g.currentHp : maxHp);
+                  let hpAfter = g.hpAfter !== undefined ? g.hpAfter : hpBefore;
+                  
+                  let hpText = hpBefore === hpAfter ? `HP: ${hpBefore}/${maxHp}` : `HP: ${hpBefore} ➔ ${hpAfter}`;
+                  
+                  let hpPercent = Math.max(0, Math.min(100, (hpAfter / maxHp) * 100));
+                  
+                  cHtml += `
+                  <div class="goblin-card">
+                      <img src="${b64}" class="goblin-img" alt="${g.name || 'Goblin'}">
+                      <div class="gob-name">${g.name || 'Nv. ' + (g.level || 1)}</div>
+                      <div class="hp-text">${hpText}</div>
+                      <div class="hp-bar-container"><div class="hp-bar" style="width: ${hpPercent}%"></div></div>
+                  </div>`;
+              });
             
             if (ch.goblins.length === 0) {
                 cHtml += `<div style="color: #aaa; margin: auto; font-style: italic;">La mesa está limpia...</div>`;
