@@ -180,6 +180,7 @@ class ReportGenerator {
         let inAction = false;
         let currentActionHtml = "";
         let hasCombat = false;
+        let combatRendered = false;
         let combatPointer = 0;
 
         logs.forEach(log => {
@@ -203,7 +204,7 @@ class ReportGenerator {
                         <h2 class="wave-title">⚔️ OLEADA ${currentWave}</h2>
                         <div class="wave-content">`;
                     waveOpen = true;
-                    inCombatPhase = true; // Combat phase is effectively always active for actions
+                    inCombatPhase = true;
                     actionNum = 0;
                     combatPointer = 0;
                 }
@@ -221,6 +222,7 @@ class ReportGenerator {
                 actionNum++;
                 inAction = true;
                 hasCombat = false;
+                combatRendered = false;
                 currentActionHtml = `<div class="action-block">
                     <div class="action-title">▶️ Acción ${actionNum}</div>`;
             }
@@ -274,13 +276,20 @@ class ReportGenerator {
                 
                 if (logLine.includes("inició un combate") || logLine.includes("¡A por ellos!") || logLine.includes("¡Lucharé hasta el final!") || logLine.includes("¡Me llevaré por delante") || logLine.match(/asigna un .* a .* contra/i)) {
                     hasCombat = true;
+                    if (!combatRendered && combatsByWave[currentWave] && combatPointer < combatsByWave[currentWave].length) {
+                        currentActionHtml += renderCombatTable(combatsByWave[currentWave][combatPointer]);
+                        combatPointer++;
+                        combatRendered = true;
+                    }
                 }
             }
             
             if (inAction && logLine.includes("<<<") && logLine.includes("ha finalizado su turno")) {
-                if (hasCombat && combatsByWave[currentWave] && combatPointer < combatsByWave[currentWave].length) {
+                if (!combatRendered && hasCombat && combatsByWave[currentWave] && combatPointer < combatsByWave[currentWave].length) {
+                    // Fallback just in case
                     currentActionHtml += renderCombatTable(combatsByWave[currentWave][combatPointer]);
                     combatPointer++;
+                    combatRendered = true;
                 } else if (!hasCombat) {
                     currentActionHtml += `<div style="color:#aaa; font-style:italic; margin-top: 15px;">El jugador descansó o evitó el combate en esta acción.</div>`;
                 }
@@ -288,6 +297,7 @@ class ReportGenerator {
                 html += currentActionHtml;
                 inAction = false;
                 hasCombat = false;
+                combatRendered = false;
             }
         });
 
