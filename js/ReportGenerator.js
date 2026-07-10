@@ -118,7 +118,7 @@ class ReportGenerator {
                     });
                 }
                 html += `<div class="event-log buy">
-                    ${eqImgSrc ? \`<img src="\${eqImgSrc}" class="eq-img">\` : '🛒'} 
+                    ${eqImgSrc ? `<img src="${eqImgSrc}" class="eq-img">` : '🛒'} 
                     <span><strong>${action.player}</strong> compró <strong>${action.item}</strong> por ${action.cost} mo.</span>
                 </div>`;
             } else if (action.type === 'group_level_up') {
@@ -134,12 +134,12 @@ class ReportGenerator {
                 if (ch) {
                     html += `<div class="goblins-container">`;
                     ch.goblins.forEach(g => {
-                        let imgUrl = g.isBoss && g.bossStats && g.bossStats.image ? g.bossStats.image : \`assets/Monstruos/t\${g.level}.webp\`;
+                        let imgUrl = g.isBoss && g.bossStats && g.bossStats.image ? g.bossStats.image : `assets/Monstruos/t${g.level}.webp`;
                         let b64 = this.imageCache[imgUrl] || "";
                         let hpPercent = Math.max(0, Math.min(100, (g.currentHp / g.maxHp) * 100));
                         html += `
                         <div class="goblin-card">
-                            ${b64 ? \`<img src="\${b64}" class="goblin-img">\` : ''}
+                            ${b64 ? `<img src="${b64}" class="goblin-img">` : ''}
                             <div style="font-size: 0.85rem; font-weight: bold;">${g.name || 'Goblin Nv.'+g.level}</div>
                             <div style="font-size: 0.8rem; color: #ffaa00;">HP: ${g.currentHp}/${g.maxHp}</div>
                             <div class="hp-bar-container"><div class="hp-bar" style="width: ${hpPercent}%"></div></div>
