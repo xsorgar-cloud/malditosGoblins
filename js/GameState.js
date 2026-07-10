@@ -536,7 +536,7 @@ class GameState {
     let playerDiceDetails = [];
     let goblinDiceDetails = [];
     let escozorDamageDealt = 0;
-    const goblinHpsBefore = c.goblins.map(g => ({ uid: g.uid, hp: g.currentHp }));
+    const goblinHpsBefore = this.battlefield.goblins.map(g => ({ uid: g.uid, hp: g.currentHp }));
 
     // Guardar estado inicial del combate para depuración (se actualizará al final)
     try {
@@ -553,7 +553,7 @@ class GameState {
           role: p.role.id,
           equipped: p.equipped.map(eq => ({ id: eq.id, name: eq.name, isBroken: eq.isBroken, isActive: !!eq.isActive }))
         },
-        goblins: c.goblins.map(g => ({ uid: g.uid, name: g.name, level: g.level, hp: g.currentHp })),
+        goblins: this.battlefield.goblins.map(g => ({ uid: g.uid, name: g.name, level: g.level, hp: g.currentHp, maxHp: g.maxHp, isBoss: g.isBoss, bossStats: g.bossStats })),
         playerDice: c.playerDice,
         goblinDice: c.dice && c.dice.green ? c.dice.green : {},
         assignments: assignments,
@@ -1425,14 +1425,17 @@ class GameState {
           role: p.role.id,
           equipped: equippedBefore // Equipamiento al inicio
         },
-        goblins: c.goblins.map(g => {
+        goblins: this.battlefield.goblins.map(g => {
           const beforeGob = goblinHpsBefore.find(bg => bg.uid === g.uid);
           return {
             uid: g.uid,
             name: g.name,
             level: g.level,
             hp: beforeGob ? beforeGob.hp : g.currentHp,
-            hpAfter: g.currentHp
+            hpAfter: g.currentHp,
+            maxHp: g.maxHp,
+            isBoss: g.isBoss,
+            bossStats: g.bossStats
           };
         }),
         playerDice: c.playerDice,
