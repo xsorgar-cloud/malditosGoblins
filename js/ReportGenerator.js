@@ -89,13 +89,15 @@ class ReportGenerator {
         .battle-flex { display: flex; gap: 30px; align-items: stretch; }
         
         .player-panel { background: rgba(255, 255, 255, 0.03); border: 1px solid #444; border-radius: 8px; padding: 15px; width: 220px; display: flex; flex-direction: column; justify-content: center; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); flex-shrink: 0; }
-        .player-name { font-weight: bold; color: #fff; margin-bottom: 15px; font-size: 1.2rem; text-align: center; border-bottom: 1px solid #555; padding-bottom: 10px; }
-        .player-stats { display: flex; flex-direction: column; gap: 10px; }
-        .stat { display: flex; justify-content: space-between; font-weight: 600; font-size: 1rem; }
+        .player-name { font-weight: bold; color: #fff; margin-bottom: 15px; font-size: 0.95rem; text-align: center; border-bottom: 1px solid #555; padding-bottom: 10px; }
+        .player-stats { display: flex; flex-direction: column; gap: 8px; }
+        .stat { display: flex; justify-content: space-between; font-weight: 600; font-size: 0.95rem; }
         .stat.hp { color: #ff4444; }
         .stat.sh { color: #88ccff; }
         .stat.en { color: #ffbb00; }
         .stat.mo { color: #f2e75e; }
+        .stat.lvl { color: #44ff44; }
+        .stat.pex { color: #cc88ff; }
         
         .goblins-container { flex-grow: 1; display: flex; gap: 15px; flex-wrap: wrap; background: rgba(255, 51, 102, 0.05); border-radius: 8px; padding: 15px; border: 1px dashed rgba(255, 51, 102, 0.2); justify-content: flex-start; align-items: center; }
         .goblin-card { background: rgba(0,0,0,0.6); padding: 12px; border-radius: 8px; border: 1px solid #ff3366; width: 110px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
@@ -144,21 +146,36 @@ class ReportGenerator {
             let energyAfter = ch.player.energy + energyGained;
 
             let moGained = 0;
+            let pexGained = 0;
             ch.goblins.forEach(g => {
                 if (g.hpAfter !== undefined && g.hpAfter <= 0) {
                     let isNormal = g.isHito || g.level >= ch.player.level;
                     if (isNormal && !g.isInvocacion) {
                         let baseMo = window.DB && window.DB.goblins[g.level] ? window.DB.goblins[g.level].mo : (g.level || 1);
+                        let basePex = window.DB && window.DB.goblins[g.level] ? window.DB.goblins[g.level].pex : (g.level || 1);
                         moGained += baseMo;
+                        pexGained += basePex;
                     }
                 }
             });
             let moAfter = ch.player.mo + moGained;
+            
+            let pexAfter = ch.player.pex + pexGained;
+            let lvlAfter = ch.player.level;
+            if (ch.resolvedDetails && ch.resolvedDetails.finalPlayerOutcome) {
+                lvlAfter = ch.resolvedDetails.finalPlayerOutcome.levelAfter || ch.player.level;
+            }
+            while (pexAfter >= lvlAfter * 10) {
+                pexAfter -= lvlAfter * 10;
+                // lvlAfter shouldn't normally exceed what the engine computed, but we cap it.
+            }
 
             let pMaxHp = ch.player.maxHp || (ch.player.level ? ch.player.level * 5 : '?');
             let hpStr = ch.player.hp === hpAfter ? `${ch.player.hp}/${pMaxHp}` : `${ch.player.hp} ➔ ${hpAfter}`;
             let enStr = ch.player.energy === energyAfter ? `${ch.player.energy}` : `${ch.player.energy} ➔ ${energyAfter}`;
             let moStr = ch.player.mo === moAfter ? `${ch.player.mo}` : `${ch.player.mo} ➔ ${moAfter}`;
+            let pexStr = ch.player.pex === pexAfter ? `${ch.player.pex}` : `${ch.player.pex} ➔ ${pexAfter}`;
+            let lvlStr = ch.player.level === lvlAfter ? `${ch.player.level}` : `${ch.player.level} ➔ ${lvlAfter}`;
 
             let cHtml = `<div class="battle-flex" style="margin-top: 15px;">
                 <div class="player-panel">
@@ -168,6 +185,8 @@ class ReportGenerator {
                         <span class="stat sh"><span>🛡️ Escudo</span><span>${ch.player.shield}</span></span>
                         <span class="stat en"><span>⚡ Energía</span><span>${enStr}</span></span>
                         <span class="stat mo"><span>💰 Oro</span><span>${moStr}</span></span>
+                        <span class="stat pex"><span>✨ PEX</span><span>${pexStr}</span></span>
+                        <span class="stat lvl"><span>🌟 Nivel</span><span>${lvlStr}</span></span>
                     </div>
                 </div>
                 <div class="goblins-container">`;
