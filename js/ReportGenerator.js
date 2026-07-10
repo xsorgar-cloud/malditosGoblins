@@ -170,7 +170,7 @@ class ReportGenerator {
                 // lvlAfter shouldn't normally exceed what the engine computed, but we cap it.
             }
 
-            let pMaxHp = ch.player.maxHp || (ch.player.level ? ch.player.level * 5 : '?');
+            let pMaxHp = ch.player.maxHp || (ch.player.level ? 10 + (ch.player.level - 1) * 5 : '?');
             let hpStr = ch.player.hp === hpAfter ? `${ch.player.hp}/${pMaxHp}` : `${ch.player.hp} ➔ ${hpAfter}`;
             let enStr = ch.player.energy === energyAfter ? `${ch.player.energy}` : `${ch.player.energy} ➔ ${energyAfter}`;
             let moStr = ch.player.mo === moAfter ? `${ch.player.mo}` : `${ch.player.mo} ➔ ${moAfter}`;
