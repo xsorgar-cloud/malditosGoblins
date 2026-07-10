@@ -129,14 +129,44 @@ class ReportGenerator {
 
         const renderCombatTable = (ch) => {
             if (!ch) return "";
+
+            let hpAfter = ch.player.hp;
+            if (ch.resolvedDetails && ch.resolvedDetails.finalPlayerOutcome) {
+                hpAfter = ch.resolvedDetails.finalPlayerOutcome.hpAfter;
+            }
+
+            let energyGained = 0;
+            if (ch.resolvedDetails && ch.resolvedDetails.playerDiceDetails) {
+                ch.resolvedDetails.playerDiceDetails.forEach(d => {
+                    if (d.energyGained) energyGained += d.energyGained;
+                });
+            }
+            let energyAfter = ch.player.energy + energyGained;
+
+            let moGained = 0;
+            ch.goblins.forEach(g => {
+                if (g.hpAfter !== undefined && g.hpAfter <= 0) {
+                    let isNormal = g.isHito || g.level >= ch.player.level;
+                    if (isNormal && !g.isInvocacion) {
+                        let baseMo = window.DB && window.DB.goblins[g.level] ? window.DB.goblins[g.level].mo : (g.level || 1);
+                        moGained += baseMo;
+                    }
+                }
+            });
+            let moAfter = ch.player.mo + moGained;
+
+            let hpStr = ch.player.hp === hpAfter ? `${ch.player.hp}/${ch.player.maxHp || '?'}` : `${ch.player.hp} ➔ ${hpAfter}`;
+            let enStr = ch.player.energy === energyAfter ? `${ch.player.energy}` : `${ch.player.energy} ➔ ${energyAfter}`;
+            let moStr = ch.player.mo === moAfter ? `${ch.player.mo}` : `${ch.player.mo} ➔ ${moAfter}`;
+
             let cHtml = `<div class="battle-flex" style="margin-top: 15px;">
                 <div class="player-panel">
                     <div class="player-name">${ch.player.name}</div>
                     <div class="player-stats">
-                        <span class="stat hp"><span>❤️ HP</span><span>${ch.player.hp}/${ch.player.maxHp || '?'}</span></span>
+                        <span class="stat hp"><span>❤️ HP</span><span>${hpStr}</span></span>
                         <span class="stat sh"><span>🛡️ Escudo</span><span>${ch.player.shield}</span></span>
-                        <span class="stat en"><span>⚡ Energía</span><span>${ch.player.energy}</span></span>
-                        <span class="stat mo"><span>💰 Oro</span><span>${ch.player.mo}</span></span>
+                        <span class="stat en"><span>⚡ Energía</span><span>${enStr}</span></span>
+                        <span class="stat mo"><span>💰 Oro</span><span>${moStr}</span></span>
                     </div>
                 </div>
                 <div class="goblins-container">`;
@@ -154,7 +184,7 @@ class ReportGenerator {
                   
                   let hpPercent = Math.max(0, Math.min(100, (hpAfter / maxHp) * 100));
                   
-                  let borderStyle = g.isHito ? 'border: 2px solid #fca311; box-shadow: 0 0 10px rgba(252,163,17,0.5);' : '';
+                  let borderStyle = g.isHito ? 'border: 2px solid #a545d1; box-shadow: 0 0 10px rgba(165,69,209,0.6);' : '';
                   
                   cHtml += `
                   <div class="goblin-card" style="${borderStyle}">
