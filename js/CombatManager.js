@@ -24,14 +24,6 @@ if (dieData.type === 'silver') {
       return;
     }
 
-    // Restricción de asignación de dado en modo cazador: solo valores >=4
-if (gameState.activeSenda === 'cazador' && dieData.value < 4) {
-      if (doesEquipmentDealDamage(eq, 6, {dieId: dieData.id, value: 6})) {
-        alert("Camuflaje y Reflejos: Solo puedes asignar un 4, 5 o 6 a cartas de ataque.");
-        return;
-      }
-    }
-
     // Verifica que el dado sea válido para el equipamiento seleccionado
 if (!gameState.isValidDieForEquipment(dieData.value, eq)) return;
 

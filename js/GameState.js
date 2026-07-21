@@ -635,6 +635,20 @@ class GameState {
 
         this.applyEquipmentEffect(p, eq, asg, tempDamagePerTarget, healObj, shieldObj);
 
+        // Toxina Goblin (Senda Cazador) - Camuflaje y Reflejos
+        if (this.activeSenda === 'cazador' && asg.value < 4) {
+          let missed = false;
+          for (let uid in tempDamagePerTarget) {
+            if (tempDamagePerTarget[uid].damage > 0) {
+              tempDamagePerTarget[uid].damage = 0;
+              missed = true;
+            }
+          }
+          if (missed) {
+            this.addLog(`💀 <strong>Camuflaje y Reflejos:</strong> El ataque de <em>${eq.name}</em> falló porque el dado (${asg.value}) es menor que 4.`);
+          }
+        }
+
         let damageDealt = 0;
         let targetGoblinName = "Sin objetivo";
         if (asg.targetUid) {

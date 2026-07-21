@@ -172,8 +172,8 @@ const DB = {
       { name: "· Saqueo Experto", desc: "Cada vez que mates a un Goblin ganas +1 mo EXTRA." }
     ],
     cazador: [
-      { name: "· Camuflaje y Reflejos", desc: "Los Goblins tienen grandes reflejos y son difíciles de alcanzar. NO puedes asignar un dado de combate a una carta de ataque con valor de 1, 2 o 3." },
-      { name: "· Toxina Goblin", desc: "La senda está cubierta de una toxina nociva que no te deja respirar. Al final de tu turno recibes 1 Daño por cada Goblin vivo en la mesa." }
+      { name: "💀 Camuflaje y Reflejos", desc: "Para que cualquier ataque impacte a un Goblin, el resultado natural del dado debe ser 4, 5 o 6." },
+      { name: "💀 Toxina Goblin", desc: "La senda está cubierta de una toxina nociva que no te deja respirar. Al final de tu turno recibes 1 Daño por cada Goblin vivo en la mesa." }
     ]
   },
 

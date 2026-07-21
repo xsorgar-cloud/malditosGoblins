@@ -2074,6 +2074,7 @@ calculateEquipPower(eq, bot) {
 // Calcula el daño que un dado aporta al equipamiento dado
     getDamageForDieInEquip(val, eq) {
         if (!this.gameState.isValidDieForEquipment(val, eq)) return 0;
+        if (this.gameState.activeSenda === 'cazador' && val < 4) return 0;
         let effectStr = (eq.isBroken && eq.broken ? eq.broken.effect : eq.effect).toLowerCase();
         let dmg = 0;
         if (effectStr.includes('daño')) {

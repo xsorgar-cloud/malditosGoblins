@@ -4692,10 +4692,6 @@ function renderBattlefield() {
 function doesEquipmentDealDamage(eq, value, asg) {
   if (!eq) return false;
   
-  if (typeof gameState !== 'undefined' && gameState.activeSenda === 'cazador' && value < 4) {
-    return false;
-  }
-  
   const effectStr = (eq.isBroken && eq.broken ? eq.broken.effect : eq.effect).toLowerCase();
   
   if (eq.id === 'corazon_elastico') {
