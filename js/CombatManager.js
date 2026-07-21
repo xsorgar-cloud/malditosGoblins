@@ -294,6 +294,13 @@ window.combatDieOnCombatRoleHandler = (e) => {
           c.goblins.forEach(g => { tempDamage[g.uid] = { damage: 0, shield: 0 }; });
 
           gameState.applyEquipmentEffect(p, eq, simulatedAsg, tempDamage, healObj, shieldObj);
+          
+          if (gameState.activeSenda === 'cazador' && simulatedAsg.value < 4) {
+            for (let uid in tempDamage) {
+              tempDamage[uid].damage = 0;
+            }
+          }
+
           projHeal += healObj.heal;
           projShield += shieldObj.shield;
 
