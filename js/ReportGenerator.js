@@ -233,7 +233,7 @@ class ReportGenerator {
                       hpBarBg = 'linear-gradient(90deg, #c79500, #ffc107)';
                   }
                   
-                  let cardStyle = g.isHito ? 'border: 2px solid #a545d1; box-shadow: 0 0 10px rgba(165,69,209,0.6);' : '';
+                  let cardStyle = g.isHito ? 'border: 2px solid #a545d1;' : '';
                   let isInCombat = g.inCombat || (ch.goblinDice && ch.goblinDice[g.uid]);
                   
                   if (isPostCombatKill) {
