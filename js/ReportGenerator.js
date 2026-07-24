@@ -15,8 +15,9 @@ class ReportGenerator {
                 reader.readAsDataURL(blob);
             });
         } catch (e) {
-            console.warn("Could not load image: " + url);
-            return "";
+            console.warn("Could not load image as base64, falling back to URL: " + url);
+            this.imageCache[url] = url;
+            return url;
         }
     }
 
