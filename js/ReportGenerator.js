@@ -3,6 +3,13 @@ class ReportGenerator {
 
     static async getBase64Image(url) {
         if (this.imageCache[url]) return this.imageCache[url];
+        
+        // Evitar el error rojo en consola provocado por CORS al usar fetch en file:///
+        if (window.location && window.location.protocol === 'file:') {
+            this.imageCache[url] = url;
+            return url;
+        }
+
         try {
             const response = await fetch(url);
             const blob = await response.blob();
