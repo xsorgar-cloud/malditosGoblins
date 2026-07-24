@@ -342,10 +342,11 @@ class ReportGenerator {
                         <span><strong>${player}</strong> compró <strong>${item}</strong> por <span style="color:#f2e75e">${cost} mo</span>.</span>
                     </div>`;
                 } else if (logLine.includes("usó") && logLine.includes("Poción")) {
-                    let pMatch = logLine.match(/<strong>(.*?)<\/strong> usó <em>(.*?)<\/em>/);
+                    let pMatch = logLine.match(/<strong>(.*?)<\/strong> usó <em>(.*?)<\/em>(?: y recuperó (\d+) PV)?/);
                     if (pMatch) {
+                        let healText = pMatch[3] ? ` (Recupera <span style="color:#44ff44">+${pMatch[3]} PV</span>)` : '';
                         htmlToAppend = `<div class="event-log potion">
-                            🧪 <span><strong>${pMatch[1]}</strong> usó <strong>${pMatch[2]}</strong>.</span>
+                            🧪 <span><strong>${pMatch[1]}</strong> usó <strong>${pMatch[2]}</strong>${healText}.</span>
                         </div>`;
                     }
                 }
