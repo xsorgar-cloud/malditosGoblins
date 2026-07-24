@@ -229,7 +229,7 @@ class ReportGenerator {
                   let isInCombat = g.inCombat || (ch.goblinDice && ch.goblinDice[g.uid]);
                   
                   if (isPostCombatKill) {
-                      cardStyle += ' background: rgb(0, 120, 215);';
+                      cardStyle += ' background: rgb(14, 36, 53);';
                   } else if (isInCombat) {
                       cardStyle += ' background: rgb(61, 22, 32);';
                   }
