@@ -88,6 +88,7 @@ class ReportGenerator {
         
         .event-log { padding: 12px 15px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; font-size: 1.05rem; border-left: 4px solid #fff; }
         .event-log.buy { border-left-color: #44ff44; background: rgba(68, 255, 68, 0.33); }
+        .event-log.potion { border-left-color: #ff44aa; background: rgba(255, 68, 170, 0.33); }
         .event-log.hito { border-left-color: #ffaa00; background: rgba(255, 170, 0, 0.1); color: #ffdd88; font-family: 'Cinzel', serif; }
         .eq-img { height: 45px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
         
@@ -267,6 +268,7 @@ class ReportGenerator {
         let hasCombat = false;
         let combatRendered = false;
         let combatPointer = 0;
+        let hitoCounter = 1;
 
         logs.forEach(log => {
             let logLine = typeof log === 'string' ? log : log.text;
@@ -333,14 +335,16 @@ class ReportGenerator {
                         });
                     }
                     
-                    htmlToAppend = `<div class="event-log buy">
+                    let logClass = item.toLowerCase().includes("poci") ? "event-log potion" : "event-log buy";
+                    
+                    htmlToAppend = `<div class="${logClass}">
                         ${eqImgSrc ? `<img src="${eqImgSrc}" class="eq-img">` : '🛒'} 
                         <span><strong>${player}</strong> compró <strong>${item}</strong> por <span style="color:#f2e75e">${cost} mo</span>.</span>
                     </div>`;
                 } else if (logLine.includes("usó") && logLine.includes("Poción")) {
                     let pMatch = logLine.match(/<strong>(.*?)<\/strong> usó <em>(.*?)<\/em>/);
                     if (pMatch) {
-                        htmlToAppend = `<div class="event-log buy">
+                        htmlToAppend = `<div class="event-log potion">
                             🧪 <span><strong>${pMatch[1]}</strong> usó <strong>${pMatch[2]}</strong>.</span>
                         </div>`;
                     }
@@ -356,7 +360,8 @@ class ReportGenerator {
                 if (logLine.includes("HITO DESPLEGADO:")) {
                     let hMatch = logLine.match(/HITO DESPLEGADO:\s*([^<]+)/);
                     let hitoName = hMatch ? hMatch[1].replace(/|"/g, '').trim() : "Hito";
-                    currentActionHtml += `<div class="event-log hito" style="margin-top: 15px;">🔥 <strong>HITO REVELADO:</strong> ${hitoName}</div>`;
+                    currentActionHtml += `<div class="event-log hito" style="margin-top: 15px;">🌟 <strong>HITO ${hitoCounter} REVELADO:</strong> ${hitoName}</div>`;
+                    hitoCounter++;
                 }
                 
                 if (logLine.includes("inició un combate") || logLine.includes("¡A por ellos!") || logLine.includes("¡Lucharé hasta el final!") || logLine.includes("¡Me llevaré por delante") || logLine.match(/asigna un .* a .* contra/i)) {
