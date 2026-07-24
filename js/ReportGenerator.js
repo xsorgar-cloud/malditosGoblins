@@ -112,10 +112,12 @@ class ReportGenerator {
     <div class="container">
         <div class="header">
             <h1>Crónica de la Partida</h1>
-            <div class="game-info">
+            <div class="game-info" style="flex-wrap: wrap;">
                 <div><strong>Resultado:</strong> ${exportData.gameInfo.isGameWon ? '<span style="color:#44ff44">Victoria</span>' : '<span style="color:#ff4444">Derrota</span>'}</div>
                 <div><strong>Senda:</strong> ${exportData.gameInfo.activeSenda}</div>
                 <div><strong>Hito Final:</strong> ${exportData.gameInfo.currentHito}</div>
+                ${exportData.gameInfo.startTime ? `<div><strong>Inicio:</strong> ${new Date(exportData.gameInfo.startTime).toLocaleTimeString()}</div>` : ''}
+                ${exportData.gameInfo.endTime ? `<div><strong>Fin:</strong> ${new Date(exportData.gameInfo.endTime).toLocaleTimeString()} (${Math.floor((new Date(exportData.gameInfo.endTime) - new Date(exportData.gameInfo.startTime)) / 60000)}m ${Math.floor(((new Date(exportData.gameInfo.endTime) - new Date(exportData.gameInfo.startTime)) % 60000) / 1000)}s)</div>` : ''}
             </div>
         </div>
         `;

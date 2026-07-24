@@ -104,7 +104,8 @@ class GameState {
   checkGameOver() {
     if (this.players.length > 0 && !this.players.some(p => p.hp > 0)) {
       this.isGameOver = true;
-      this.addLog(`🛑 <span style="color: #e63946;"><strong>PARTIDA FINALIZADA</strong></span>: El grupo ha sido derrotado.`);
+      if (!this.endTime) this.endTime = new Date().toISOString();
+      this.addLog(`💀 <span style="color: #e63946;"><strong>PARTIDA FINALIZADA</strong></span>: El grupo ha sido derrotado.`);
       return true;
     }
     return false;
@@ -1236,6 +1237,7 @@ class GameState {
         goblinsDefeated++;
         if (targetGoblin.isBoss) {
           this.isGameWon = true;
+          if (!this.endTime) this.endTime = new Date().toISOString();
         }
         this.checkSpawnNextHito1Goblin(targetGoblin);
         if (!targetGoblin.gaveReward) {
@@ -1531,6 +1533,8 @@ class GameState {
   }
 
   setupPlayers(numPlayers, selectedRoles = [], customSettings = { hp: 10, maxHp: 10, energy: 0, mo: 2, hito: 1, level: 1, senda: 'iniciacion', difficulty: 'facil' }, selectedBots = []) {
+    this.startTime = new Date().toISOString();
+    this.endTime = null;
     this.currentHito = customSettings.hito !== undefined ? customSettings.hito : 1;
     this.activeSenda = customSettings.senda || 'iniciacion';
     this.difficulty = customSettings.difficulty || 'facil';
@@ -2486,6 +2490,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
             }
             if (gob.isBoss) {
               this.isGameWon = true;
+              if (!this.endTime) this.endTime = new Date().toISOString();
             }
             this.checkSpawnNextHito1Goblin(gob);
             let isNormalReward = (gob.isHito || gob.level >= p.level);

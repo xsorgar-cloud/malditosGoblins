@@ -2970,6 +2970,8 @@ if (btnExportJson) {
 
     const exportData = {
       gameInfo: {
+        startTime: gameState.startTime,
+        endTime: gameState.endTime,
         activeSenda: gameState.activeSenda,
         currentHito: gameState.currentHito,
         isGameOver: !!gameState.isGameOver,
