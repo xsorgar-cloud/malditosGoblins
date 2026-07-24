@@ -210,13 +210,29 @@ class ReportGenerator {
                   let hpBefore = g.hp !== undefined ? g.hp : (g.currentHp !== undefined ? g.currentHp : maxHp);
                   let hpAfter = g.hpAfter !== undefined ? g.hpAfter : hpBefore;
                   
+                  let isPostCombatKill = false;
+                  if (hpAfter > 0) {
+                      let nextCh = exportData.combatHistory.find(x => x.id === ch.id + 1);
+                      if (nextCh && nextCh.wave === ch.wave) {
+                          if (!nextCh.goblins.some(ng => ng.uid === g.uid)) {
+                              isPostCombatKill = true;
+                              hpAfter = 0;
+                          }
+                      }
+                  }
+                  
                   let hpText = hpBefore === hpAfter ? `HP: ${hpBefore}/${maxHp}` : `HP: ${hpBefore} ➔ ${hpAfter}`;
                   
                   let hpPercent = Math.max(0, Math.min(100, (hpAfter / maxHp) * 100));
                   
                   let cardStyle = g.isHito ? 'border: 2px solid #a545d1; box-shadow: 0 0 10px rgba(165,69,209,0.6);' : '';
                   let isInCombat = g.inCombat || (ch.goblinDice && ch.goblinDice[g.uid]);
-                  if (isInCombat) cardStyle += ' background: rgb(61, 22, 32);';
+                  
+                  if (isPostCombatKill) {
+                      cardStyle += ' background: rgb(0, 120, 215);';
+                  } else if (isInCombat) {
+                      cardStyle += ' background: rgb(61, 22, 32);';
+                  }
                   
                   cHtml += `
                   <div class="goblin-card" style="${cardStyle}">
