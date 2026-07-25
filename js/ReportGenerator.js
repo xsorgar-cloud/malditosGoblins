@@ -167,11 +167,18 @@ class ReportGenerator {
             }
 
             let pMaxHp = ch.player.maxHp || (ch.player.level ? 10 + (ch.player.level - 1) * 5 : '?');
-            let hpStr = ch.player.hp === hpAfter ? `${ch.player.hp}/${pMaxHp}` : `${ch.player.hp} ➔ ${hpAfter}`;
-            let enStr = ch.player.energy === energyAfter ? `${ch.player.energy}` : `${ch.player.energy} ➔ ${energyAfter}`;
-            let moStr = ch.player.mo === moAfter ? `${ch.player.mo}` : `${ch.player.mo} ➔ ${moAfter}`;
-            let pexStr = ch.player.pex === pexAfter ? `${ch.player.pex}` : `${ch.player.pex} ➔ ${pexAfter}`;
-            let lvlStr = ch.player.level === lvlAfter ? `${ch.player.level}` : `${ch.player.level} ➔ ${lvlAfter}`;
+            
+            const formatStatChange = (before, after, appendMax = "") => {
+                if (before === after) return `${before}${appendMax}`;
+                const color = after > before ? "#44ff44" : "#ff4444";
+                return `${before} ➔ <span style="color:${color}">${after}${appendMax}</span>`;
+            };
+
+            let hpStr = formatStatChange(ch.player.hp, hpAfter, `/${pMaxHp}`);
+            let enStr = formatStatChange(ch.player.energy, energyAfter);
+            let moStr = formatStatChange(ch.player.mo, moAfter);
+            let pexStr = formatStatChange(ch.player.pex, pexAfter);
+            let lvlStr = formatStatChange(ch.player.level, lvlAfter);
 
             let cHtml = `<div class="battle-flex" style="margin-top: 15px;">
                 <div class="player-panel">
