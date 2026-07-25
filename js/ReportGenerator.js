@@ -85,7 +85,7 @@ class ReportGenerator {
         .player-panel { background: rgba(255, 255, 255, 0.03); border: 1px solid #444; border-radius: 8px; padding: 15px; width: 220px; display: flex; flex-direction: column; justify-content: center; box-shadow: inset 0 0 10px rgba(0,0,0,0.5); flex-shrink: 0; }
         .player-name { font-weight: bold; color: #fff; margin-bottom: 15px; font-size: 0.95rem; text-align: center; border-bottom: 1px solid #555; padding-bottom: 10px; }
         .player-stats { display: flex; flex-direction: column; gap: 8px; }
-        .stat { display: flex; justify-content: space-between; font-weight: 600; font-size: 0.95rem; }
+        .stat { display: grid; grid-template-columns: 1fr auto 15px; gap: 5px; font-weight: 600; font-size: 0.95rem; align-items: center; }
         .stat.hp { color: #ff4444; }
         .stat.sh { color: #88ccff; }
         .stat.en { color: #ffbb00; }
@@ -169,29 +169,29 @@ class ReportGenerator {
             let pMaxHp = ch.player.maxHp || (ch.player.level ? 10 + (ch.player.level - 1) * 5 : '?');
             
             const formatStatChange = (before, after) => {
-                if (before === after) return `${before}`;
+                if (before === after) return { text: `${before}`, arrow: "" };
                 const isUp = after > before;
                 const color = isUp ? "#44ff44" : "#ff4444";
                 const arrow = isUp ? "▲" : "▼";
-                return `${before} ➔ ${after}<span style="display:inline-block; width:15px; text-align:right; color:${color}; margin-left:4px; font-size:0.9em;">${arrow}</span>`;
+                return { text: `${before} ➔ ${after}`, arrow: `<span style="color:${color}; font-size:0.9em;">${arrow}</span>` };
             };
 
-            let hpStr = ch.player.hp === hpAfter ? `${ch.player.hp}/${pMaxHp}` : formatStatChange(ch.player.hp, hpAfter);
-            let enStr = formatStatChange(ch.player.energy, energyAfter);
-            let moStr = formatStatChange(ch.player.mo, moAfter);
-            let pexStr = formatStatChange(ch.player.pex, pexAfter);
-            let lvlStr = formatStatChange(ch.player.level, lvlAfter);
+            let hpObj = ch.player.hp === hpAfter ? { text: `${ch.player.hp}/${pMaxHp}`, arrow: "" } : formatStatChange(ch.player.hp, hpAfter);
+            let enObj = formatStatChange(ch.player.energy, energyAfter);
+            let moObj = formatStatChange(ch.player.mo, moAfter);
+            let pexObj = formatStatChange(ch.player.pex, pexAfter);
+            let lvlObj = formatStatChange(ch.player.level, lvlAfter);
 
             let cHtml = `<div class="battle-flex" style="margin-top: 15px;">
                 <div class="player-panel">
                     <div class="player-name">${ch.player.name}</div>
                     <div class="player-stats">
-                        <span class="stat hp"><span>❤️ HP</span><span>${hpStr}</span></span>
-                        <span class="stat sh"><span>🛡️ Escudo</span><span>${ch.player.shield}</span></span>
-                        <span class="stat en"><span>⚡ Energía</span><span>${enStr}</span></span>
-                        <span class="stat mo"><span>💰 Oro</span><span>${moStr}</span></span>
-                        <span class="stat pex"><span>✨ PEX</span><span>${pexStr}</span></span>
-                        <span class="stat lvl"><span>🌟 Nivel</span><span>${lvlStr}</span></span>
+                        <span class="stat hp"><span>❤️ HP</span><span style="text-align:right">${hpObj.text}</span><span style="text-align:center">${hpObj.arrow}</span></span>
+                        <span class="stat sh"><span>🛡️ Escudo</span><span style="text-align:right">${ch.player.shield}</span><span></span></span>
+                        <span class="stat en"><span>⚡ Energía</span><span style="text-align:right">${enObj.text}</span><span style="text-align:center">${enObj.arrow}</span></span>
+                        <span class="stat mo"><span>💰 Oro</span><span style="text-align:right">${moObj.text}</span><span style="text-align:center">${moObj.arrow}</span></span>
+                        <span class="stat pex"><span>🌟 PEX</span><span style="text-align:right">${pexObj.text}</span><span style="text-align:center">${pexObj.arrow}</span></span>
+                        <span class="stat lvl"><span>🔰 Nivel</span><span style="text-align:right">${lvlObj.text}</span><span style="text-align:center">${lvlObj.arrow}</span></span>
                     </div>
                 </div>
                 <div class="goblins-container">`;
