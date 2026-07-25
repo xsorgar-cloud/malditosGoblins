@@ -417,7 +417,7 @@ class ReportGenerator {
                 svg.style.height = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) + 'px';
 
                 let defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-                defs.innerHTML = '<marker id="arrowhead" markerWidth="8" markerHeight="6" refX="0" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#ff3366" opacity="0.8"/></marker>';
+                defs.innerHTML = '<marker id="arrowhead" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="10" refX="0" refY="5" orient="auto"><polygon points="0 0, 14 5, 0 10" fill="#ff3366" opacity="0.8"/></marker>';
                 svg.appendChild(defs);
 
                 const groups = {};
@@ -448,10 +448,10 @@ class ReportGenerator {
                         const x1 = startRect.left + startRect.width / 2 + window.scrollX;
                         const y1 = startRect.bottom + window.scrollY;
                         const x2 = endRect.left + endRect.width / 2 + window.scrollX;
-                        const y2 = endRect.top + window.scrollY - 2;
+                        const y2 = endRect.top + window.scrollY - 3; // Tip target
 
                         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                        const y2_path = y2 - 8;
+                        const y2_path = y2 - 14; // Shorten by the 14px length of the marker
                         const d = 'M ' + x1 + ' ' + y1 + ' C ' + x1 + ' ' + (y1 + 40) + ', ' + x2 + ' ' + (y2 - 40) + ', ' + x2 + ' ' + y2_path;
                         
                         path.setAttribute('d', d);
