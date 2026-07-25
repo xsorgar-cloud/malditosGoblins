@@ -417,7 +417,7 @@ class ReportGenerator {
                 svg.style.height = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) + 'px';
 
                 let defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-                defs.innerHTML = '<marker id="arrowhead" markerWidth="6" markerHeight="4.5" refX="5.5" refY="2.25" orient="auto"><polygon points="0 0, 6 2.25, 0 4.5" fill="#ff3366" opacity="0.8"/></marker>';
+                defs.innerHTML = '<marker id="arrowhead" markerWidth="8" markerHeight="6" refX="0" refY="3" orient="auto"><polygon points="0 0, 8 3, 0 6" fill="#ff3366" opacity="0.8"/></marker>';
                 svg.appendChild(defs);
 
                 const groups = {};
@@ -448,10 +448,11 @@ class ReportGenerator {
                         const x1 = startRect.left + startRect.width / 2 + window.scrollX;
                         const y1 = startRect.bottom + window.scrollY;
                         const x2 = endRect.left + endRect.width / 2 + window.scrollX;
-                        const y2 = endRect.top + window.scrollY - 5;
+                        const y2 = endRect.top + window.scrollY - 2;
 
                         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                        const d = 'M ' + x1 + ' ' + y1 + ' C ' + x1 + ' ' + (y1 + 40) + ', ' + x2 + ' ' + (y2 - 40) + ', ' + x2 + ' ' + y2;
+                        const y2_path = y2 - 8;
+                        const d = 'M ' + x1 + ' ' + y1 + ' C ' + x1 + ' ' + (y1 + 40) + ', ' + x2 + ' ' + (y2 - 40) + ', ' + x2 + ' ' + y2_path;
                         
                         path.setAttribute('d', d);
                         path.setAttribute('stroke', '#ff3366');
