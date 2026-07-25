@@ -170,8 +170,10 @@ class ReportGenerator {
             
             const formatStatChange = (before, after) => {
                 if (before === after) return `${before}`;
-                const color = after > before ? "#44ff44" : "#ff4444";
-                return `${before} ➔ <span style="color:${color}">${after}</span>`;
+                const isUp = after > before;
+                const color = isUp ? "#44ff44" : "#ff4444";
+                const arrow = isUp ? "▲" : "▼";
+                return `${before} ➔ ${after}<span style="display:inline-block; width:15px; text-align:right; color:${color}; margin-left:4px; font-size:0.9em;">${arrow}</span>`;
             };
 
             let hpStr = ch.player.hp === hpAfter ? `${ch.player.hp}/${pMaxHp}` : formatStatChange(ch.player.hp, hpAfter);
