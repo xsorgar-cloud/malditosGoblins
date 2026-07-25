@@ -256,6 +256,7 @@ class ReportGenerator {
         let combatPointer = 0;
         let hitoCounter = 1;
 
+        const logs = exportData.logs || [];
         logs.forEach(log => {
             let logLine = typeof log === 'string' ? log : log.text;
             if(!logLine) return;
