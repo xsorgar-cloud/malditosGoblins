@@ -71,8 +71,8 @@ class ReportGenerator {
         .wave-content { padding: 25px; }
         
         .event-log { padding: 12px 15px; background: rgba(255, 255, 255, 0.05); border-radius: 8px; margin-bottom: 15px; display: flex; align-items: center; gap: 15px; font-size: 1.05rem; border-left: 4px solid #fff; }
-        .event-log.buy { border-left-color: #44ff44; background: rgba(68, 255, 68, 0.33); }
-        .event-log.potion { border-left-color: #ff44aa; background: rgba(255, 68, 170, 0.33); }
+        .event-log.buy { border-left-color: #44ff44; background: rgba(68, 255, 68, 0.33); margin-top: 15px; }
+        .event-log.potion { border-left-color: #ff44aa; background: rgba(255, 68, 170, 0.33); margin-top: 15px; }
         .event-log.gold { border-left-color: #f2e75e; background: rgba(242, 255, 68, 0.33); }
         .event-log.hito { border-left-color: #ffaa00; background: rgba(255, 170, 0, 0.1); color: #ffdd88; font-family: 'Cinzel', serif; }
         .eq-img { height: 45px; border-radius: 6px; box-shadow: 0 2px 5px rgba(0,0,0,0.5); }
