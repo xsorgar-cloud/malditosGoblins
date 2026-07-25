@@ -46,7 +46,7 @@ class ReportGenerator {
                 }
             });
         }
-        }
+
 
         for (let url of Array.from(imageUrlsToFetch)) {
             await this.getBase64Image(url);
