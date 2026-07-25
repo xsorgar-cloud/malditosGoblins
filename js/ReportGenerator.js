@@ -55,8 +55,8 @@ class ReportGenerator {
                     let item = iMatch[1];
                     let found = null;
                     ['armas', 'escudos', 'curacion', 'pociones'].forEach(cat => {
-                        if (gameDB.equipo[cat]) {
-                            const eq = gameDB.equipo[cat].find(e => e.name === item);
+                        if (gameDB.equipment[cat]) {
+                            const eq = gameDB.equipment[cat].find(e => e.name === item);
                             if (eq && eq.image) found = eq.image;
                         }
                     });
@@ -331,8 +331,8 @@ class ReportGenerator {
                     let eqImgSrc = "";
                     if (gameDB) {
                         ['armas', 'escudos', 'curacion', 'pociones'].forEach(cat => {
-                            if (gameDB.equipo[cat]) {
-                                const eq = gameDB.equipo[cat].find(e => e.name === item);
+                            if (gameDB.equipment[cat]) {
+                                const eq = gameDB.equipment[cat].find(e => e.name === item);
                                 if (eq && eq.image) eqImgSrc = this.imageCache[eq.image] || eq.image;
                             }
                         });
