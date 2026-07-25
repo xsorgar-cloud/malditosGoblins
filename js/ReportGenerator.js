@@ -33,7 +33,8 @@ class ReportGenerator {
         let imageUrlsToFetch = new Set();
         
         if (exportData.combatHistory) {
-            exportData.combatHistory.forEach(ch => {
+            exportData.combatHistory.forEach((ch, idx) => {
+                if (ch.id === undefined) ch.id = idx + 1;
                 if (ch.goblins) {
                     ch.goblins.forEach(g => {
                         if (g.isBoss && g.bossStats && g.bossStats.image) {
@@ -419,6 +420,15 @@ class ReportGenerator {
         </div>
         <script>
             function drawArrows() {
+                const cards = Array.from(document.querySelectorAll('.goblin-card'));
+                if (cards.length === 0) return;
+                
+                // Si aún no se han renderizado en pantalla (ej: display none temporal del iframe), reintentar
+                if (cards[0].getBoundingClientRect().width === 0) {
+                    setTimeout(drawArrows, 200);
+                    return;
+                }
+
                 let svg = document.getElementById('arrows-svg');
                 if (!svg) {
                     svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
@@ -435,23 +445,25 @@ class ReportGenerator {
                 svg.style.height = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) + 'px';
 
                 let defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-                defs.innerHTML = '<marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#ff3366" opacity="0.6"/></marker>';
+                defs.innerHTML = '<marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#ff3366" opacity="0.8"/></marker>';
                 svg.appendChild(defs);
 
-                const cards = Array.from(document.querySelectorAll('.goblin-card'));
                 const groups = {};
                 cards.forEach(c => {
                     if (c.id && c.id.startsWith('gob-card-')) {
                         const parts = c.id.split('-');
-                        if (parts.length === 4) {
+                        if (parts.length >= 4) {
                             const chId = parseInt(parts[2]);
-                            const uid = parts[3];
-                            if (!groups[uid]) groups[uid] = [];
-                            groups[uid].push({ el: c, chId });
+                            const uid = parts.slice(3).join('-'); // Soporte por si uid tiene guiones
+                            if (!isNaN(chId) && uid) {
+                                if (!groups[uid]) groups[uid] = [];
+                                groups[uid].push({ el: c, chId });
+                            }
                         }
                     }
                 });
 
+                let arrowsDrawn = 0;
                 for (let uid in groups) {
                     groups[uid].sort((a, b) => a.chId - b.chId);
                     for (let i = 0; i < groups[uid].length - 1; i++) {
@@ -464,26 +476,34 @@ class ReportGenerator {
                         const x1 = startRect.left + startRect.width / 2 + window.scrollX;
                         const y1 = startRect.bottom + window.scrollY;
                         const x2 = endRect.left + endRect.width / 2 + window.scrollX;
-                        const y2 = endRect.top + window.scrollY;
+                        const y2 = endRect.top + window.scrollY - 5;
 
                         const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-                        const d = 'M ' + x1 + ' ' + y1 + ' C ' + x1 + ' ' + (y1 + 40) + ', ' + x2 + ' ' + (y2 - 40) + ', ' + x2 + ' ' + (y2 - 4);
+                        const d = 'M ' + x1 + ' ' + y1 + ' C ' + x1 + ' ' + (y1 + 40) + ', ' + x2 + ' ' + (y2 - 40) + ', ' + x2 + ' ' + y2;
                         
                         path.setAttribute('d', d);
                         path.setAttribute('stroke', '#ff3366');
-                        path.setAttribute('stroke-width', '2');
-                        path.setAttribute('stroke-dasharray', '4,4');
+                        path.setAttribute('stroke-width', '3');
+                        path.setAttribute('stroke-dasharray', '5,5');
                         path.setAttribute('fill', 'none');
-                        path.setAttribute('opacity', '0.5');
+                        path.setAttribute('opacity', '0.7');
                         path.setAttribute('marker-end', 'url(#arrowhead)');
                         
                         svg.appendChild(path);
+                        arrowsDrawn++;
                     }
                 }
+                console.log("Arrows drawn:", arrowsDrawn);
             }
 
-            window.addEventListener('load', () => setTimeout(drawArrows, 100));
+            window.addEventListener('load', drawArrows);
             window.addEventListener('resize', drawArrows);
+            if (typeof ResizeObserver !== 'undefined') {
+                new ResizeObserver(() => {
+                    if (document.body.scrollHeight > 0) drawArrows();
+                }).observe(document.body);
+            }
+            setTimeout(drawArrows, 100);
         </script>
         </body>
         </html>`;
