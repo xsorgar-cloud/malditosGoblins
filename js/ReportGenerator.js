@@ -168,13 +168,13 @@ class ReportGenerator {
 
             let pMaxHp = ch.player.maxHp || (ch.player.level ? 10 + (ch.player.level - 1) * 5 : '?');
             
-            const formatStatChange = (before, after, appendMax = "") => {
-                if (before === after) return `${before}${appendMax}`;
+            const formatStatChange = (before, after) => {
+                if (before === after) return `${before}`;
                 const color = after > before ? "#44ff44" : "#ff4444";
-                return `${before} ➔ <span style="color:${color}">${after}${appendMax}</span>`;
+                return `${before} ➔ <span style="color:${color}">${after}</span>`;
             };
 
-            let hpStr = formatStatChange(ch.player.hp, hpAfter, `/${pMaxHp}`);
+            let hpStr = ch.player.hp === hpAfter ? `${ch.player.hp}/${pMaxHp}` : formatStatChange(ch.player.hp, hpAfter);
             let enStr = formatStatChange(ch.player.energy, energyAfter);
             let moStr = formatStatChange(ch.player.mo, moAfter);
             let pexStr = formatStatChange(ch.player.pex, pexAfter);
