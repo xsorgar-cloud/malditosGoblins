@@ -245,7 +245,7 @@ class ReportGenerator {
                   }
                   
                   cHtml += `
-                  <div class="goblin-card" style="${cardStyle}">
+                  <div id="gob-card-${ch.id}-${g.uid}" class="goblin-card" style="${cardStyle}">
                       <img src="${b64}" class="goblin-img" alt="${g.name || 'Goblin'}">
                       <div class="gob-name">${g.name || 'Nv. ' + (g.level || 1)}</div>
                       <div class="hp-text">${hpText}</div>
@@ -415,9 +415,85 @@ class ReportGenerator {
             html += `</div></div>`;
         }
         
-        html += `</div></body></html>`;
+        html += `
+        </div>
+        <script>
+            function drawArrows() {
+                let svg = document.getElementById('arrows-svg');
+                if (!svg) {
+                    svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+                    svg.id = 'arrows-svg';
+                    svg.style.position = 'absolute';
+                    svg.style.top = '0';
+                    svg.style.left = '0';
+                    svg.style.width = '100%';
+                    svg.style.pointerEvents = 'none';
+                    svg.style.zIndex = '9999';
+                    document.body.appendChild(svg);
+                }
+                svg.innerHTML = '';
+                svg.style.height = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) + 'px';
+
+                let defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
+                defs.innerHTML = '<marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#ff3366" opacity="0.6"/></marker>';
+                svg.appendChild(defs);
+
+                const cards = Array.from(document.querySelectorAll('.goblin-card'));
+                const groups = {};
+                cards.forEach(c => {
+                    if (c.id && c.id.startsWith('gob-card-')) {
+                        const parts = c.id.split('-');
+                        if (parts.length === 4) {
+                            const chId = parseInt(parts[2]);
+                            const uid = parts[3];
+                            if (!groups[uid]) groups[uid] = [];
+                            groups[uid].push({ el: c, chId });
+                        }
+                    }
+                });
+
+                for (let uid in groups) {
+                    groups[uid].sort((a, b) => a.chId - b.chId);
+                    for (let i = 0; i < groups[uid].length - 1; i++) {
+                        const start = groups[uid][i].el;
+                        const end = groups[uid][i+1].el;
+
+                        const startRect = start.getBoundingClientRect();
+                        const endRect = end.getBoundingClientRect();
+
+                        const x1 = startRect.left + startRect.width / 2 + window.scrollX;
+                        const y1 = startRect.bottom + window.scrollY;
+                        const x2 = endRect.left + endRect.width / 2 + window.scrollX;
+                        const y2 = endRect.top + window.scrollY;
+
+                        const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                        const d = 'M ' + x1 + ' ' + y1 + ' C ' + x1 + ' ' + (y1 + 40) + ', ' + x2 + ' ' + (y2 - 40) + ', ' + x2 + ' ' + (y2 - 4);
+                        
+                        path.setAttribute('d', d);
+                        path.setAttribute('stroke', '#ff3366');
+                        path.setAttribute('stroke-width', '2');
+                        path.setAttribute('stroke-dasharray', '4,4');
+                        path.setAttribute('fill', 'none');
+                        path.setAttribute('opacity', '0.5');
+                        path.setAttribute('marker-end', 'url(#arrowhead)');
+                        
+                        svg.appendChild(path);
+                    }
+                }
+            }
+
+            window.addEventListener('load', () => setTimeout(drawArrows, 100));
+            window.addEventListener('resize', drawArrows);
+        </script>
+        </body>
+        </html>`;
+
         return html;
     }
 }
 
-window.ReportGenerator = ReportGenerator;
+if (typeof module !== 'undefined' && module.exports) {
+    module.exports = ReportGenerator;
+} else if (typeof window !== 'undefined') {
+    window.ReportGenerator = ReportGenerator;
+}
