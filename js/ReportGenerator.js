@@ -29,6 +29,7 @@ class ReportGenerator {
     }
 
     static async generate(exportData) {
+        const gameDB = typeof window !== 'undefined' && window.DB ? window.DB : (typeof DB !== 'undefined' ? DB : null);
         let imageUrlsToFetch = new Set();
         
         if (exportData.combatHistory) {
@@ -50,12 +51,12 @@ class ReportGenerator {
             let logLine = typeof log === 'string' ? log : log.text;
             if (logLine && (logLine.includes("compró y EQUIPÓ") || logLine.includes("compró la poción"))) {
                 let iMatch = logLine.match(/<em>(.*?)<\/em> por/);
-                if (iMatch && window.DB) {
+                if (iMatch && gameDB) {
                     let item = iMatch[1];
                     let found = null;
                     ['armas', 'escudos', 'curacion', 'pociones'].forEach(cat => {
-                        if (window.DB.equipo[cat]) {
-                            const eq = window.DB.equipo[cat].find(e => e.name === item);
+                        if (gameDB.equipo[cat]) {
+                            const eq = gameDB.equipo[cat].find(e => e.name === item);
                             if (eq && eq.image) found = eq.image;
                         }
                     });
@@ -109,7 +110,7 @@ class ReportGenerator {
         .stat.lvl { color: #44ff44; }
         .stat.pex { color: #cc88ff; }
         
-        .goblins-container { flex-grow: 1; display: flex; gap: 15px; flex-wrap: wrap; background: rgba(255, 51, 102, 0.05); border-radius: 8px; padding: 15px; border: 1px dashed rgba(255, 51, 102, 0.2); justify-content: flex-start; align-items: center; }
+        .goblins-container { flex-grow: 1; display: flex; gap: 15px; flex-wrap: wrap; background: rgba(255, 51, 102, 0.05); border-radius: 8px; padding: 15px; border: 1px dashed rgba(255, 51, 102, 0.2); justify-content: center; align-items: center; }
         .goblin-card { background: rgba(0,0,0,0.6); padding: 12px; border-radius: 8px; border: 1px solid #ff3366; width: 110px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
         .goblin-img { height: 90px; width: 90px; object-fit: contain; margin-bottom: 8px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); }
         .gob-name { font-size: 0.85rem; font-weight: bold; color: #fff; text-align: center; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; font-family: 'Cinzel', serif; }
@@ -163,8 +164,8 @@ class ReportGenerator {
                 if (g.hpAfter !== undefined && g.hpAfter <= 0) {
                     let isNormal = g.isHito || g.level >= ch.player.level;
                     if (isNormal && !g.isInvocacion) {
-                        let baseMo = window.DB && window.DB.goblins[g.level] ? window.DB.goblins[g.level].mo : (g.level || 1);
-                        let basePex = window.DB && window.DB.goblins[g.level] ? window.DB.goblins[g.level].pex : (g.level || 1);
+                        let baseMo = gameDB && gameDB.goblins[g.level] ? gameDB.goblins[g.level].mo : (g.level || 1);
+                        let basePex = gameDB && gameDB.goblins[g.level] ? gameDB.goblins[g.level].pex : (g.level || 1);
                         moGained += baseMo;
                         pexGained += basePex;
                     }
@@ -328,10 +329,10 @@ class ReportGenerator {
                     let cost = iMatch[2];
                     
                     let eqImgSrc = "";
-                    if (window.DB) {
+                    if (gameDB) {
                         ['armas', 'escudos', 'curacion', 'pociones'].forEach(cat => {
-                            if (window.DB.equipo[cat]) {
-                                const eq = window.DB.equipo[cat].find(e => e.name === item);
+                            if (gameDB.equipo[cat]) {
+                                const eq = gameDB.equipo[cat].find(e => e.name === item);
                                 if (eq && eq.image) eqImgSrc = this.imageCache[eq.image] || eq.image;
                             }
                         });
