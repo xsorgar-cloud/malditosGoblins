@@ -46,25 +46,7 @@ class ReportGenerator {
                 }
             });
         }
-
-        const logs = exportData.logs || [];
-        logs.forEach(log => {
-            let logLine = typeof log === 'string' ? log : log.text;
-            if (logLine && (logLine.includes("compró y EQUIPÓ") || logLine.includes("compró la poción"))) {
-                let iMatch = logLine.match(/<em>(.*?)<\/em> por/);
-                if (iMatch && gameDB) {
-                    let item = iMatch[1];
-                    let found = null;
-                    ['armas', 'escudos', 'curacion', 'pociones'].forEach(cat => {
-                        if (gameDB.equipment[cat]) {
-                            const eq = gameDB.equipment[cat].find(e => e.name === item);
-                            if (eq && eq.image) found = eq.image;
-                        }
-                    });
-                    if (found) imageUrlsToFetch.add(found);
-                }
-            }
-        });
+        }
 
         for (let url of Array.from(imageUrlsToFetch)) {
             await this.getBase64Image(url);
@@ -329,21 +311,10 @@ class ReportGenerator {
                     let item = iMatch[1];
                     let cost = iMatch[2];
                     
-                    let eqImgSrc = "";
-                    if (gameDB) {
-                        ['armas', 'escudos', 'curacion', 'pociones'].forEach(cat => {
-                            if (gameDB.equipment[cat]) {
-                                const eq = gameDB.equipment[cat].find(e => e.name === item);
-                                if (eq && eq.image) eqImgSrc = this.imageCache[eq.image] || eq.image;
-                            }
-                        });
-                    }
-                    
                     let logClass = item.toLowerCase().includes("poci") ? "event-log potion" : "event-log buy";
                     
                     htmlToAppend = `<div class="${logClass}">
-                        ${eqImgSrc ? `<img src="${eqImgSrc}" class="eq-img">` : '🛒'} 
-                        <span><strong>${player}</strong> compró <strong>${item}</strong> por <span style="color:#f2e75e">${cost} mo</span>.</span>
+                        🛒 <span><strong>${player}</strong> compró <strong>${item}</strong> por <span style="color:#f2e75e">${cost} mo</span>.</span>
                     </div>`;
                 } else if (logLine.includes("usó") && logLine.includes("Poción")) {
                     let pMatch = logLine.match(/<strong>(.*?)<\/strong> usó <em>(.*?)<\/em>(?: y recuperó (\d+) PV)?/);
@@ -445,7 +416,7 @@ class ReportGenerator {
                 svg.style.height = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) + 'px';
 
                 let defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-                defs.innerHTML = '<marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto"><polygon points="0 0, 10 3.5, 0 7" fill="#ff3366" opacity="0.8"/></marker>';
+                defs.innerHTML = '<marker id="arrowhead" markerWidth="6" markerHeight="4.5" refX="5.5" refY="2.25" orient="auto"><polygon points="0 0, 6 2.25, 0 4.5" fill="#ff3366" opacity="0.8"/></marker>';
                 svg.appendChild(defs);
 
                 const groups = {};
