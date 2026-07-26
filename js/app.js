@@ -2171,9 +2171,6 @@ btnDeployHito.addEventListener('click', () => {
 
   window.showHitoConfirmModal(hitoToDeploy, () => {
     if (gameState.deployHito()) {
-      if (hitoToDeploy && hitoToDeploy.ruleDesc) {
-        showHitoRuleNotification(hitoToDeploy);
-      }
       updateUI();
     }
   });
@@ -4439,9 +4436,6 @@ function renderBattlefield() {
       const hitoToDeploy = sendaHitos[gameState.currentHito - 1];
 
       if (gameState.deployHito()) {
-        if (hitoToDeploy && hitoToDeploy.ruleDesc) {
-          showHitoRuleNotification(hitoToDeploy);
-        }
         updateUI();
       }
     });
