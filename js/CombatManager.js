@@ -2800,36 +2800,68 @@ window.handleLevelUpChoice = function (playerIndex, dieType) {
 };
 
 // Global Hover Preview para las cartas y Tooltip de Dados
+let isTouchDevice = false;
+let touchTimer = null;
+
+function showCardPreview(card) {
+  const preview = document.getElementById('card-preview-overlay');
+  if (!preview) return;
+  let bg = card.style.backgroundImage;
+  if (bg && bg !== 'none') {
+    // Si es un rol mini, mostrar la versión normal en el preview
+    const fullResBg = bg.replace('mini_rol_', 'rol_');
+    preview.style.backgroundImage = fullResBg;
+    preview.style.display = 'block';
+
+    // Sincronizar rotación si la carta está rota
+    if (card.classList.contains('broken') || card.style.transform.includes('180deg')) {
+      preview.style.transform = 'rotate(180deg)';
+    } else {
+      preview.style.transform = 'none';
+    }
+
+    const combatOverlay = document.getElementById('combat-overlay');
+    if (combatOverlay && !combatOverlay.classList.contains('hidden')) {
+      preview.classList.add('in-combat');
+    } else {
+      preview.classList.remove('in-combat');
+    }
+  }
+}
+
+document.addEventListener('touchstart', (e) => {
+  isTouchDevice = true;
+  const card = e.target.closest('.equipment-card, .deck, .goblin-card, .equip-slot, .player-role, .mini-equip-icon');
+  if (card) {
+    touchTimer = setTimeout(() => {
+      showCardPreview(card);
+    }, 400); // 400ms para considerar long-press
+  }
+}, {passive: true});
+
+const clearTouchTimer = () => {
+  if (touchTimer) {
+    clearTimeout(touchTimer);
+    touchTimer = null;
+  }
+};
+
+document.addEventListener('touchend', clearTouchTimer);
+document.addEventListener('touchmove', clearTouchTimer);
+document.addEventListener('touchcancel', clearTouchTimer);
+
 document.addEventListener('mouseover', (e) => {
   const card = e.target.closest('.equipment-card, .deck, .goblin-card, .equip-slot, .player-role, .mini-equip-icon');
   const preview = document.getElementById('card-preview-overlay');
 
-  if (card) {
-    let bg = card.style.backgroundImage;
-    if (bg && bg !== 'none') {
-      // Si es un rol mini, mostrar la versión normal en el preview
-      const fullResBg = bg.replace('mini_rol_', 'rol_');
-      preview.style.backgroundImage = fullResBg;
-      preview.style.display = 'block';
-
-      // Sincronizar rotación si la carta está rota
-      if (card.classList.contains('broken') || card.style.transform.includes('180deg')) {
-        preview.style.transform = 'rotate(180deg)';
-      } else {
-        preview.style.transform = 'none';
-      }
-
-      const combatOverlay = document.getElementById('combat-overlay');
-      if (combatOverlay && !combatOverlay.classList.contains('hidden')) {
-        preview.classList.add('in-combat');
-      } else {
-        preview.classList.remove('in-combat');
-      }
+  if (!isTouchDevice) {
+    if (card) {
+      showCardPreview(card);
+    } else if (e.target.closest('#card-preview-overlay')) {
+      // Keep it visible if hovering over the overlay itself
+    } else {
+      if (preview) preview.style.display = 'none';
     }
-  } else if (e.target.closest('#card-preview-overlay')) {
-    // Keep it visible if hovering over the overlay itself
-  } else {
-    preview.style.display = 'none';
   }
 
   // Tooltip de Dados del Jugador al pasar por su nombre

@@ -1217,32 +1217,41 @@ main {
 
 @media (max-width: 768px) {
   #card-preview-overlay {
-    width: 200px;
-    height: 275px;
-    left: 10px;
-    top: 10px;
-    border-radius: 8px;
-    box-shadow: 0 0 0 6px rgba(0, 0, 0, 0.85), 0 0 0 8px var(--gold), 0 6px 20px 8px rgba(0, 0, 0, 1);
+    width: 280px;
+    height: 395px;
+    left: 0 !important;
+    right: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    margin: auto !important;
+    border-radius: 10px;
+    box-shadow: 0 0 0 6px rgba(0, 0, 0, 0.85), 0 0 0 8px var(--gold), 0 6px 30px 10px rgba(0, 0, 0, 1);
   }
 }
 
 @media (max-width: 480px) {
   #card-preview-overlay {
-    width: 150px;
-    height: 206px;
-    left: 10px;
-    top: 10px;
-    border-radius: 6px;
-    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.85), 0 0 0 5px var(--gold), 0 4px 12px 5px rgba(0, 0, 0, 1);
+    width: 260px;
+    height: 366px;
+    left: 0 !important;
+    right: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    margin: auto !important;
+    border-radius: 8px;
+    box-shadow: 0 0 0 6px rgba(0, 0, 0, 0.85), 0 0 0 8px var(--gold), 0 6px 30px 10px rgba(0, 0, 0, 1);
   }
 }
 
 @media (max-height: 500px) {
   #card-preview-overlay {
-    height: 60vh;
-    width: calc(60vh * 340 / 468);
-    left: 10px;
-    top: 10px;
+    height: 80vh;
+    width: calc(80vh * 340 / 468);
+    left: 0 !important;
+    right: 0 !important;
+    top: 0 !important;
+    bottom: 0 !important;
+    margin: auto !important;
     box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.85), 0 0 0 5px var(--gold), 0 4px 12px 5px rgba(0, 0, 0, 1);
   }
 }
