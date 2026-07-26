@@ -2826,6 +2826,8 @@ document.addEventListener('mouseover', (e) => {
         preview.classList.remove('in-combat');
       }
     }
+  } else if (e.target.closest('#card-preview-overlay')) {
+    // Keep it visible if hovering over the overlay itself
   } else {
     preview.style.display = 'none';
   }
@@ -2839,6 +2841,13 @@ document.addEventListener('mouseover', (e) => {
     window.hidePlayerDiceTooltip();
   }
 });
+
+const previewOverlayEl = document.getElementById('card-preview-overlay');
+if (previewOverlayEl) {
+  previewOverlayEl.addEventListener('click', () => {
+    previewOverlayEl.style.display = 'none';
+  });
+}
 
 let activeSelectedOrbUids = [];
 
