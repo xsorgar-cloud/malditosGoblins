@@ -4070,8 +4070,8 @@ main {
     
     #action-buttons .mobile-btn-icon {
         display: inline-block !important;
-        width: 40px !important;
-        height: 40px !important;
+        width: 55px !important;
+        height: 55px !important;
     }
     
     /* Quitar padding excesivo en móvil para los botones con solo icono */
