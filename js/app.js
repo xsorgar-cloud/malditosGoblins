@@ -4608,6 +4608,12 @@ function renderBattlefield() {
             return;
           }
 
+          // Check general de invulnerabilidad
+          if (gameState.isGoblinInvulnerable(goblin) && !goblin.isDying) {
+            alert("Este Goblin es Invulnerable. No puedes seleccionarlo como objetivo de tus ataques.");
+            return;
+          }
+
           selectedGoblins.push(goblin);
           gobEl.classList.add('selected');
 
