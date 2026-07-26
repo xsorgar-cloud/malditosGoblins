@@ -2474,8 +2474,13 @@ calculateEquipPower(eq, bot) {
             if (simulatedHp > 0) simulatedHp = Math.min(bot.maxHp, simulatedHp + healAmount);
 
             let score = 0;
-            if (simulatedHp <= 0) score -= 1000000000;
-            else score += simulatedHp * 10000;
+            if (simulatedHp <= 0) {
+                score -= 1000000000;
+            } else {
+                let missingHp = bot.maxHp - simulatedHp;
+                // Penalización cuadrática por daño recibido
+                score -= Math.pow(missingHp, 2) * 500;
+            }
             
             score += goblinsKilled * 1000000;
             score += hitoKillBonus * 500000;
@@ -2484,7 +2489,8 @@ calculateEquipPower(eq, bot) {
             aliveGoblins.forEach(g => {
                 let totalDmg = damageToGoblins[g.uid];
                 if (g.currentHp - totalDmg > 0 && !isLastAction) {
-                    score += totalDmg * 3000;
+                    // Daño no letal empata con energía a 10.000 para priorizar el ataque al estar sano
+                    score += totalDmg * 10000;
                 }
             });
             score += hitoDmgBonus * 500;

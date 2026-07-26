@@ -2620,10 +2620,10 @@ main {
   }
 
   #hito-actions { order: 1 !important; }
-  #btn-gold { order: 2 !important; }
-  #btn-gold-dmg { order: 3 !important; }
-  #btn-role { order: 4 !important; }
-  #btn-confirm-attack { order: 5 !important; }
+  #btn-confirm-attack { order: 2 !important; }
+  #btn-gold { order: 3 !important; }
+  #btn-gold-dmg { order: 4 !important; }
+  #btn-role { order: 5 !important; }
   #btn-end-turn { order: 6 !important; }
 
   #action-buttons button,
@@ -3963,7 +3963,7 @@ main {
 
 .bot-bubble, .combat-bot-bubble, .retaliation-bot-bubble { cursor: pointer; }
 
-/* Fix para lag en la imagen de arrastre en m�viles */
+/* Fix para lag en la imagen de arrastre en m�viles */
 .dnd-poly-drag-image, .dnd-poly-drag-image * {
   transition: none !important;
   animation: none !important;
@@ -4048,4 +4048,43 @@ main {
 
 
 
+
+
+
+/* Estilos para los iconos de botones en móvil */
+.mobile-btn-icon {
+    display: none;
+    width: 24px;
+    height: 24px;
+    vertical-align: middle;
+}
+
+@media (max-width: 768px) {
+    #btn-deploy-hito .btn-text,
+    #btn-gold .txt-largo, #btn-gold .txt-corto,
+    #btn-gold-dmg .txt-largo, #btn-gold-dmg .txt-corto,
+    #btn-confirm-attack .txt-largo, #btn-confirm-attack .txt-corto,
+    #btn-role .btn-text {
+        display: none !important;
+    }
+    
+    #action-buttons .mobile-btn-icon {
+        display: inline-block !important;
+        width: 40px !important;
+        height: 40px !important;
+    }
+    
+    /* Quitar padding excesivo en móvil para los botones con solo icono */
+    #action-buttons #btn-deploy-hito, 
+    #action-buttons #btn-gold, 
+    #action-buttons #btn-gold-dmg, 
+    #action-buttons #btn-confirm-attack,
+    #action-buttons #btn-role {
+        padding: 0 !important;
+        min-width: 0 !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+    }
+}
 

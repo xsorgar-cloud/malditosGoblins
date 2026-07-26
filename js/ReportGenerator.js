@@ -117,12 +117,49 @@ class ReportGenerator {
         `;
 
         const combatsByWave = {};
+        let computedMutationsHistory = [];
         if (exportData.combatHistory) {
+            let lastChByWave = {};
+            let firstChByWave = {};
             exportData.combatHistory.forEach(ch => {
                 let w = ch.wave || 1;
+                if (!firstChByWave[w]) firstChByWave[w] = ch;
+                lastChByWave[w] = ch;
                 if (!combatsByWave[w]) combatsByWave[w] = [];
                 combatsByWave[w].push(ch);
             });
+            
+            let maxWave = Math.max(...Object.keys(lastChByWave).map(Number));
+            for (let w = 1; w < maxWave; w++) {
+                let lastCh = lastChByWave[w];
+                let firstChNext = firstChByWave[w + 1];
+                if (lastCh && firstChNext) {
+                    let missing = lastCh.goblins.filter(g => (g.hpAfter !== undefined ? g.hpAfter : (g.currentHp !== undefined ? g.currentHp : g.hp)) > 0 && !firstChNext.goblins.some(ng => ng.uid === g.uid));
+                    let newGobs = firstChNext.goblins.filter(ng => !lastCh.goblins.some(g => g.uid === ng.uid));
+                    
+                    if (missing.length >= 2) {
+                        let missingByLvl = {};
+                        missing.forEach(g => {
+                            if (!missingByLvl[g.level]) missingByLvl[g.level] = [];
+                            missingByLvl[g.level].push(g);
+                        });
+                        
+                        for (let lvl in missingByLvl) {
+                            if (missingByLvl[lvl].length >= 2) {
+                                let candidates = newGobs.filter(ng => ng.level == parseInt(lvl) + 1);
+                                for (let i = 0; i < Math.floor(missingByLvl[lvl].length / 2); i++) {
+                                    if (candidates[i]) {
+                                        computedMutationsHistory.push({
+                                            fromUids: [missingByLvl[lvl][i*2].uid, missingByLvl[lvl][i*2+1].uid],
+                                            toUid: candidates[i].uid
+                                        });
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
         }
 
         const renderCombatTable = (ch) => {
@@ -208,10 +245,13 @@ class ReportGenerator {
                   let isPostCombatKill = false;
                   if (hpAfter > 0) {
                       let nextCh = exportData.combatHistory.find(x => x.id === ch.id + 1);
-                      if (nextCh && nextCh.wave === ch.wave) {
+                      if (nextCh) {
                           if (!nextCh.goblins.some(ng => ng.uid === g.uid)) {
-                              isPostCombatKill = true;
-                              hpAfter = 0;
+                              let mutated = computedMutationsHistory.some(m => m.fromUids.includes(g.uid));
+                              if (!mutated) {
+                                  isPostCombatKill = true;
+                                  hpAfter = 0;
+                              }
                           }
                       }
                   }
@@ -397,9 +437,11 @@ class ReportGenerator {
             html += `</div></div>`;
         }
         
+        let mutationsHistoryStr = JSON.stringify(computedMutationsHistory);
         html += `
         </div>
         <script>
+            const mutationsHistory = ${mutationsHistoryStr};
             function drawArrows() {
                 const cards = Array.from(document.querySelectorAll('.goblin-card'));
                 if (cards.length === 0) return;
@@ -426,7 +468,8 @@ class ReportGenerator {
                 svg.style.height = Math.max(document.body.scrollHeight, document.documentElement.scrollHeight) + 'px';
 
                 let defs = document.createElementNS('http://www.w3.org/2000/svg', 'defs');
-                defs.innerHTML = '<marker id="arrowhead" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="10" refX="0" refY="5" orient="auto"><polygon points="0 0, 14 5, 0 10" fill="#ff3366" opacity="0.8"/></marker>';
+                defs.innerHTML = '<marker id="arrowhead" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="10" refX="0" refY="5" orient="auto"><polygon points="0 0, 14 5, 0 10" fill="#ff3366" opacity="0.8"/></marker>' +
+                                 '<marker id="arrowhead-mut" markerUnits="userSpaceOnUse" markerWidth="14" markerHeight="10" refX="0" refY="5" orient="auto"><polygon points="0 0, 14 5, 0 10" fill="#a545d1" opacity="0.9"/></marker>';
                 svg.appendChild(defs);
 
                 const groups = {};
@@ -475,6 +518,44 @@ class ReportGenerator {
                         arrowsDrawn++;
                     }
                 }
+
+                // Draw mutation arrows
+                mutationsHistory.forEach(mut => {
+                    const fromCards = mut.fromUids.map(uid => {
+                        return groups[uid] ? groups[uid][groups[uid].length - 1].el : null; // The LAST appearance of fromUid
+                    });
+                    const toCardEntry = groups[mut.toUid] ? groups[mut.toUid][0] : null; // The FIRST appearance of toUid
+                    
+                    if (toCardEntry && fromCards[0] && fromCards[1]) {
+                        const end = toCardEntry.el;
+                        const endRect = end.getBoundingClientRect();
+                        const x2 = endRect.left + endRect.width / 2 + window.scrollX;
+                        const y2 = endRect.top + window.scrollY - 3;
+                        const y2_path = y2 - 14;
+
+                        fromCards.forEach(start => {
+                            if (!start) return;
+                            const startRect = start.getBoundingClientRect();
+                            const x1 = startRect.left + startRect.width / 2 + window.scrollX;
+                            const y1 = startRect.bottom + window.scrollY;
+
+                            const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+                            const d = 'M ' + x1 + ' ' + y1 + ' C ' + x1 + ' ' + (y1 + 40) + ', ' + x2 + ' ' + (y2 - 40) + ', ' + x2 + ' ' + y2_path;
+                            
+                            path.setAttribute('d', d);
+                            path.setAttribute('stroke', '#a545d1');
+                            path.setAttribute('stroke-width', '4');
+                            path.setAttribute('stroke-dasharray', '8,4');
+                            path.setAttribute('fill', 'none');
+                            path.setAttribute('opacity', '0.9');
+                            path.setAttribute('marker-end', 'url(#arrowhead-mut)');
+                            
+                            svg.appendChild(path);
+                            arrowsDrawn++;
+                        });
+                    }
+                });
+
                 console.log("Arrows drawn:", arrowsDrawn);
             }
 

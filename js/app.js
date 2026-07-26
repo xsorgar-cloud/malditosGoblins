@@ -3438,13 +3438,16 @@ function updateUI() {
   }
 
   const hitoBtn = document.getElementById('btn-deploy-hito');
+  const hitoBtnText = document.querySelector('#btn-deploy-hito .btn-text');
   if (gameState.currentHito > 5) {
-    hitoBtn.innerText = "Senda Completada";
+    if (hitoBtnText) hitoBtnText.innerText = "Senda Completada";
+    else hitoBtn.innerText = "Senda Completada";
     hitoBtn.disabled = true;
   } else {
     const sendaHitos = DB.hitos[gameState.activeSenda] || DB.hitos.iniciacion;
     let hito = sendaHitos[gameState.currentHito - 1];
-    hitoBtn.innerText = `Enfrentar Hito ${gameState.currentHito}`;
+    if (hitoBtnText) hitoBtnText.innerText = `Enfrentar Hito ${gameState.currentHito}`;
+    else hitoBtn.innerText = `Enfrentar Hito ${gameState.currentHito}`;
     hitoBtn.disabled = false;
   }
 
@@ -3466,7 +3469,7 @@ function updateUI() {
     btnRole.disabled = true;
   } else {
     btnConfirmAttack.disabled = !hasGoblinsAlive;
-    btnConfirmAttack.innerHTML = `<span class="txt-largo">Atacar Goblins (${selectedGoblins.length})</span><span class="txt-corto">Atacar (${selectedGoblins.length})</span>`;
+    btnConfirmAttack.innerHTML = `<span class="txt-largo">Atacar Goblins (${selectedGoblins.length})</span><span class="txt-corto">Atacar (${selectedGoblins.length})</span><img src="assets/ico_combat.png" class="mobile-btn-icon" alt="Atacar">`;
 
     if (gameState.activeSenda === 'guerrero' && hasGoblinsAlive) {
       // Si hay goblins vivos, obligatorio luchar: las demás acciones se desactivan
@@ -4320,7 +4323,11 @@ function renderBattlefield() {
   if (gameState.currentHito <= 5) {
     const sendaHitos = DB.hitos[gameState.activeSenda] || DB.hitos.iniciacion;
     let hito = sendaHitos[gameState.currentHito - 1];
-    btnDeployHito.innerText = `Enfrentar Hito ${gameState.currentHito}`;
+    
+    const hitoBtnText = document.querySelector('#btn-deploy-hito .btn-text');
+    if (hitoBtnText) hitoBtnText.innerText = `Enfrentar Hito ${gameState.currentHito}`;
+    else btnDeployHito.innerText = `Enfrentar Hito ${gameState.currentHito}`;
+    
     if (hitoActionsDiv) hitoActionsDiv.style.display = 'flex';
     btnDeployHito.style.display = 'inline-block';
 
@@ -4616,7 +4623,7 @@ function renderBattlefield() {
           }
         }
         const btn = document.getElementById('btn-confirm-attack');
-        if (btn) btn.innerHTML = `<span class="txt-largo">Atacar Goblins (${selectedGoblins.length})</span><span class="txt-corto">Atacar (${selectedGoblins.length})</span>`;
+        if (btn) btn.innerHTML = `<span class="txt-largo">Atacar Goblins (${selectedGoblins.length})</span><span class="txt-corto">Atacar (${selectedGoblins.length})</span><img src="assets/ico_combat.png" class="mobile-btn-icon" alt="Atacar">`;
       });
     }
 
