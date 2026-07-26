@@ -4255,7 +4255,7 @@ function openExploreMarketModal() {
   modal.classList.remove('hidden');
 }
 
-let animatedGoblinUids = new Set();
+let animatedGoblinUids = new Map();
 let previousGoblinHps = new Map();
 
 function getGoblinImageWithHpState(goblin, imageUrl) {
@@ -4539,8 +4539,15 @@ function renderBattlefield() {
       }
 
       // Comprobar si es un goblin nuevo para aplicarle la animación correspondiente
-      if (!animatedGoblinUids.has(goblin.uid)) {
-        animatedGoblinUids.add(goblin.uid);
+      const spawnTime = animatedGoblinUids.get(goblin.uid);
+      if (!spawnTime) {
+        animatedGoblinUids.set(goblin.uid, Date.now());
+        if (goblin.isMutated) {
+          gobEl.classList.add('goblin-mutation-active');
+        } else {
+          gobEl.classList.add('goblin-wobble-active');
+        }
+      } else if (Date.now() - spawnTime < 850) {
         if (goblin.isMutated) {
           gobEl.classList.add('goblin-mutation-active');
         } else {
