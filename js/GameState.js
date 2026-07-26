@@ -1342,7 +1342,7 @@ class GameState {
         g.isDying = true;
         
         // Nido de Víboras (Hito 3, Senda Cazador)
-        if (this.activeSenda === 'cazador' && this.currentHito === 4 && g.isHito && g.level === 1) {
+        if (this.activeSenda === 'cazador' && this.currentHito === 4 && g.isHito && g.level === 1 && !g.isInvocacion) {
           this.battlefield.goblins.push({
             ...DB.goblins[1],
             uid: Date.now() + '-' + Math.random().toString(36).substring(2),
