@@ -330,6 +330,18 @@ main {
   animation: goblin-wobble 0.85s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards !important;
 }
 
+.goblin-card.invulnerable.goblin-wobble-active {
+  animation: goblin-wobble 0.85s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards, border-pulse-red 2s infinite ease-in-out !important;
+}
+
+.goblin-card.invulnerable.goblin-hito.goblin-wobble-active {
+  animation: goblin-wobble 0.85s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards, border-pulse-purple 2s infinite ease-in-out !important;
+}
+
+.goblin-card.invulnerable.goblin-no-reward.goblin-wobble-active {
+  animation: goblin-wobble 0.85s cubic-bezier(0.36, 0.07, 0.19, 0.97) forwards, border-pulse-black 2s infinite ease-in-out !important;
+}
+
 @keyframes goblin-mutation {
   0% {
     transform: scale(0.4) rotate(0deg);
