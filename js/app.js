@@ -3507,6 +3507,18 @@ function updateUI() {
     removeInitialFocusHighlights();
   }
 
+  const hasObsoleteAnim = document.querySelector('.goblin-obsolete-anim');
+  if (hasObsoleteAnim) {
+    if (!window._obsoleteDelayActive) {
+      window._obsoleteDelayActive = true;
+      setTimeout(() => {
+        window._obsoleteDelayActive = false;
+        updateUI();
+      }, 2500);
+    }
+    return;
+  }
+
   checkLevelUpChoice();
   TutorialManager.evaluateSituation();
 
