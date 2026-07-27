@@ -4467,6 +4467,31 @@ function renderBattlefield() {
         if (!goblin.isInvocacion && !imageUrl.includes('invocacion')) {
           imageUrl = imageUrl.replace(/([^\/]+)$/, 'nomo_$1');
         }
+
+        if (!goblin.obsoleteAnimationPlayed) {
+          goblin.obsoleteAnimationPlayed = true;
+          gobEl.classList.add('goblin-obsolete-anim');
+          
+          const overlay = document.createElement('div');
+          overlay.className = 'broken-rewards-overlay';
+          
+          const goldIcon = document.createElement('div');
+          goldIcon.className = 'icon-crack';
+          goldIcon.innerHTML = `<div class="half-left">💰</div><div class="half-right">💰</div>`;
+          
+          const pexIcon = document.createElement('div');
+          pexIcon.className = 'icon-crack';
+          pexIcon.innerHTML = `<div class="half-left">💠</div><div class="half-right">💠</div>`;
+          
+          overlay.appendChild(goldIcon);
+          overlay.appendChild(pexIcon);
+          gobEl.appendChild(overlay);
+          
+          setTimeout(() => {
+            if (overlay.parentNode) overlay.remove();
+            gobEl.classList.remove('goblin-obsolete-anim');
+          }, 2500);
+        }
       }
     }
     imageUrl = getGoblinImageWithHpState(goblin, imageUrl);
