@@ -1936,7 +1936,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
             let extraProps = {};
             if (this.activeSenda === 'la_madre' && this.currentHito === 3) {
               extraProps.mo = 0;
-              extraProps.image = 'assets/Monstruos/nomo_01.webp';
+              extraProps.image = 'assets/Monstruos/invocacion_01.webp';
             }
             let gob = {
               ...DB.goblins[lvl],
