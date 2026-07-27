@@ -1215,44 +1215,17 @@ main {
   }
 }
 
-@media (max-width: 768px) {
+@media (max-width: 768px), (max-height: 500px) {
   #card-preview-overlay {
-    width: 280px;
-    height: 395px;
+    width: min(90vw, calc(90vh * 340 / 479));
+    height: min(90vh, calc(90vw * 479 / 340));
     left: 0 !important;
     right: 0 !important;
     top: 0 !important;
     bottom: 0 !important;
     margin: auto !important;
-    border-radius: 10px;
+    border-radius: 12px;
     box-shadow: 0 0 0 6px rgba(0, 0, 0, 0.85), 0 0 0 8px var(--gold), 0 6px 30px 10px rgba(0, 0, 0, 1);
-  }
-}
-
-@media (max-width: 480px) {
-  #card-preview-overlay {
-    width: 260px;
-    height: 366px;
-    left: 0 !important;
-    right: 0 !important;
-    top: 0 !important;
-    bottom: 0 !important;
-    margin: auto !important;
-    border-radius: 8px;
-    box-shadow: 0 0 0 6px rgba(0, 0, 0, 0.85), 0 0 0 8px var(--gold), 0 6px 30px 10px rgba(0, 0, 0, 1);
-  }
-}
-
-@media (max-height: 500px) {
-  #card-preview-overlay {
-    height: 80vh;
-    width: calc(80vh * 340 / 468);
-    left: 0 !important;
-    right: 0 !important;
-    top: 0 !important;
-    bottom: 0 !important;
-    margin: auto !important;
-    box-shadow: 0 0 0 4px rgba(0, 0, 0, 0.85), 0 0 0 5px var(--gold), 0 4px 12px 5px rgba(0, 0, 0, 1);
   }
 }
 
