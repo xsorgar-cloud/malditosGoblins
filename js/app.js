@@ -4477,7 +4477,7 @@ function renderBattlefield() {
           
           const goldIcon = document.createElement('div');
           goldIcon.className = 'icon-crack';
-          goldIcon.innerHTML = `<div class="half-left">💰</div><div class="half-right">💰</div>`;
+          goldIcon.innerHTML = `<div class="half-left" style="background-image: url('assets/mo.png')"></div><div class="half-right" style="background-image: url('assets/mo.png')"></div>`;
           
           const pexIcon = document.createElement('div');
           pexIcon.className = 'icon-crack';
