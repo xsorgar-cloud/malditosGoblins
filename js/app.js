@@ -3342,6 +3342,7 @@ document.addEventListener('click', function(e) {
 });
 
 function updateUI() {
+  if (window._obsoleteDelayActive) return;
   // Asegurar que botDNA está inicializado antes de cualquier renderizado
   if (gameState && gameState.players) {
       gameState.players.forEach(p => {
@@ -4726,14 +4727,19 @@ function renderBattlefield() {
 
   // Cleanup: eliminar del array los que ya han terminado la animación
   const hasDying = gameState.battlefield.goblins.some(g => g.isDying);
-  if (hasDying && !window._dyingCleanupActive) {
-    window._dyingCleanupActive = true;
-    setTimeout(() => {
-      gameState.battlefield.goblins = gameState.battlefield.goblins.filter(g => !g.isDying);
-      window._dyingCleanupActive = false;
-      renderBattlefield();
-    }, 850);
-  }
+    if (hasDying && !window._dyingCleanupActive) {
+      window._dyingCleanupActive = true;
+      setTimeout(() => {
+        gameState.battlefield.goblins = gameState.battlefield.goblins.filter(g => !g.isDying);
+        window._dyingCleanupActive = false;
+        
+        if (window._obsoleteDelayActive) {
+          document.querySelectorAll('.goblin-card.dying, .goblin-card.dying-reward').forEach(el => el.remove());
+        } else {
+          renderBattlefield();
+        }
+      }, 850);
+    }
 
   // Actualizar el historial de vidas de los goblins para la detección de daño en el siguiente render
   previousGoblinHps.clear();
