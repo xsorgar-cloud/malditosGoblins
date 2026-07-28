@@ -1934,7 +1934,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
           let pairGoblins = [];
           for (let lvl of hito.goblins) {
             let extraProps = {};
-            if (this.activeSenda === 'la_madre' && this.currentHito === 3) {
+            if (this.activeSenda === 'la_madre' && hito.id === 3) {
               extraProps.mo = 0;
               extraProps.image = 'assets/Monstruos/invocacion_01.webp';
             }

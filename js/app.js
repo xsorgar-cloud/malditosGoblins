@@ -4471,6 +4471,8 @@ function renderBattlefield() {
     gobEl.className = 'goblin-card';
     gobEl.dataset.uid = goblin.uid;
     let imageUrl = goblin.image;
+    let needsObsoleteOverlay = false;
+
     if (goblin.isHito) {
       gobEl.classList.add('goblin-hito');
     } else {
@@ -4481,29 +4483,9 @@ function renderBattlefield() {
           imageUrl = imageUrl.replace(/([^\/]+)$/, 'nomo_$1');
         }
 
-        if (!goblin.obsoleteAnimationPlayed) {
+        if (!goblin.obsoleteAnimationPlayed && !goblin.isDying) {
           goblin.obsoleteAnimationPlayed = true;
-          gobEl.classList.add('goblin-obsolete-anim');
-          
-          const overlay = document.createElement('div');
-          overlay.className = 'broken-rewards-overlay';
-          
-          const goldIcon = document.createElement('div');
-          goldIcon.className = 'icon-crack';
-          goldIcon.innerHTML = `<div class="half-left" style="background-image: url('assets/mo.png')"></div><div class="half-right" style="background-image: url('assets/mo.png')"></div>`;
-          
-          const pexIcon = document.createElement('div');
-          pexIcon.className = 'icon-crack';
-          pexIcon.innerHTML = `<div class="half-left">💠</div><div class="half-right">💠</div>`;
-          
-          overlay.appendChild(goldIcon);
-          overlay.appendChild(pexIcon);
-          gobEl.appendChild(overlay);
-          
-          setTimeout(() => {
-            if (overlay.parentNode) overlay.remove();
-            gobEl.classList.remove('goblin-obsolete-anim');
-          }, 2500);
+          needsObsoleteOverlay = true;
         }
       }
     }
@@ -4570,7 +4552,32 @@ function renderBattlefield() {
         gobEl.appendChild(payBtn);
       }
 
-      // Comprobar si es un goblin nuevo para aplicarle la animación correspondiente
+    if (needsObsoleteOverlay) {
+      gobEl.classList.add('goblin-obsolete-anim');
+      
+      const overlay = document.createElement('div');
+      overlay.className = 'broken-rewards-overlay';
+      
+      const goldIcon = document.createElement('div');
+      goldIcon.className = 'icon-crack';
+      const coinSvgLarge = COIN_SVG.replace('width="18" height="18"', 'width="34" height="34"').replace('margin-right: 3px;', 'margin-right: 0px;');
+      goldIcon.innerHTML = `<div class="half-left" style="display:flex;align-items:center;justify-content:center;">${coinSvgLarge}</div><div class="half-right" style="display:flex;align-items:center;justify-content:center;">${coinSvgLarge}</div>`;
+      
+      const pexIcon = document.createElement('div');
+      pexIcon.className = 'icon-crack';
+      pexIcon.innerHTML = `<div class="half-left">⭐</div><div class="half-right">⭐</div>`;
+      
+      overlay.appendChild(goldIcon);
+      overlay.appendChild(pexIcon);
+      gobEl.appendChild(overlay);
+      
+      setTimeout(() => {
+        if (overlay.parentNode) overlay.remove();
+        gobEl.classList.remove('goblin-obsolete-anim');
+      }, 2500);
+    }
+
+    // Comprobar si es un goblin nuevo para aplicarle la animación correspondiente
       const spawnTime = animatedGoblinUids.get(goblin.uid);
       if (!spawnTime) {
         animatedGoblinUids.set(goblin.uid, Date.now());

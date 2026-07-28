@@ -40,7 +40,10 @@ class ReportGenerator {
                         if (g.isBoss && g.bossStats && g.bossStats.image) {
                             imageUrlsToFetch.add(g.bossStats.image);
                         } else if (g.level) {
-                            imageUrlsToFetch.add(`assets/Monstruos/0${g.level}.webp`);
+                            let expectedImg = `assets/Monstruos/0${g.level}.webp`;
+                            if (g.isInvocacion) expectedImg = `assets/Monstruos/invocacion_0${g.level}.webp`;
+                            else if (!g.isHito && ch.player && g.level < ch.player.level) expectedImg = `assets/Monstruos/nomo_0${g.level}.webp`;
+                            imageUrlsToFetch.add(expectedImg);
                         }
                     });
                 }
@@ -60,7 +63,7 @@ class ReportGenerator {
     <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@400;700&family=Inter:wght@300;400;600&display=swap" rel="stylesheet">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #0b0714; color: #e0e0e0; margin: 0; padding: 30px 20px; }
-        .container { max-width: 1200px; margin: 0 auto; }
+        .container { max-width: 1400px; margin: 0 auto; }
         .header { text-align: center; border-bottom: 2px solid #ff3366; padding-bottom: 20px; margin-bottom: 40px; }
         .header h1 { margin: 0 0 10px 0; color: #ff3366; font-family: 'Cinzel', serif; font-size: 2.5rem; text-shadow: 0 0 15px rgba(255, 51, 102, 0.4); }
         .game-info { display: flex; justify-content: center; gap: 30px; font-size: 1.1rem; color: #ccc; }
@@ -94,7 +97,10 @@ class ReportGenerator {
         .stat.pex { color: #cc88ff; }
         
         .goblins-container { flex-grow: 1; display: flex; gap: 15px; flex-wrap: wrap; background: rgba(255, 51, 102, 0.05); border-radius: 8px; padding: 15px; border: 1px dashed rgba(255, 51, 102, 0.2); justify-content: center; align-items: center; }
-        .goblin-card { background: rgba(0,0,0,0.6); padding: 12px; border-radius: 8px; border: 1px solid #ff3366; width: 110px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); }
+        .goblin-card { background: rgba(0,0,0,0.6); padding: 12px; border-radius: 8px; border: 2px solid #ff3366; width: 110px; display: flex; flex-direction: column; align-items: center; box-shadow: 0 4px 10px rgba(0,0,0,0.5); position: relative; }
+        .goblin-card.obsolete { border-color: #555 !important; }
+        .goblin-card.obsolete .gob-name { color: #888; }
+        .goblin-card.invocacion { box-shadow: 0 0 12px rgba(76, 201, 240, 0.6) !important; border-color: #4cc9f0 !important; }
         .goblin-img { height: 90px; width: 90px; object-fit: contain; margin-bottom: 8px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.8)); }
         .gob-name { font-size: 0.85rem; font-weight: bold; color: #fff; text-align: center; margin-bottom: 5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; width: 100%; font-family: 'Cinzel', serif; }
         .hp-text { font-size: 0.8rem; color: #ffaa00; margin-bottom: 3px; font-weight: bold; }
@@ -235,6 +241,10 @@ class ReportGenerator {
                 
             ch.goblins.forEach(g => {
                   let imgUrl = g.isBoss && g.bossStats && g.bossStats.image ? g.bossStats.image : `assets/Monstruos/0${g.level || 1}.webp`;
+                  if (!g.isBoss) {
+                      if (g.isInvocacion) imgUrl = `assets/Monstruos/invocacion_0${g.level || 1}.webp`;
+                      else if (!g.isHito && ch.player && g.level < ch.player.level) imgUrl = `assets/Monstruos/nomo_0${g.level || 1}.webp`;
+                  }
                   let b64 = this.imageCache[imgUrl] || imgUrl;
                   
                   let maxHp = g.maxHp !== undefined ? g.maxHp : (g.isBoss && g.bossStats ? g.bossStats.maxHp : (g.level ? g.level * 5 : 5));
@@ -276,8 +286,12 @@ class ReportGenerator {
                       cardStyle += ' background: rgb(61, 22, 32);';
                   }
                   
+                  let extraClasses = [];
+                  if (g.isInvocacion) extraClasses.push('invocacion');
+                  if (!g.isHito && !g.isInvocacion && ch.player && g.level < ch.player.level) extraClasses.push('obsolete');
+                  
                   cHtml += `
-                  <div id="gob-card-${ch.id}-${g.uid}" class="goblin-card" style="${cardStyle}">
+                  <div id="gob-card-${ch.id}-${g.uid}" class="goblin-card ${extraClasses.join(' ')}" style="${cardStyle}">
                       <img src="${b64}" class="goblin-img" alt="${g.name || 'Goblin'}">
                       <div class="gob-name">${g.name || 'Nv. ' + (g.level || 1)}</div>
                       <div class="hp-text">${hpText}</div>
