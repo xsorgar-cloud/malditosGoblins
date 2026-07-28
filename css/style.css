@@ -3407,16 +3407,31 @@ main {
   }
 
   /* Contenedores de selección */
+  #setup-header-wrapper {
+    display: contents !important;
+  }
+
   #setup-columns-container {
-    flex-direction: column !important;
-    gap: 20px !important;
-    align-items: center !important;
-    width: 100% !important;
+    display: contents !important;
   }
 
   #role-selection-container {
     width: 100% !important;
     flex-grow: 0 !important;
+    order: 1 !important;
+  }
+
+  #setup-start-buttons {
+    order: 2 !important;
+    width: 100% !important;
+    margin-top: 15px !important;
+    margin-bottom: 25px !important;
+  }
+
+  #setup-role-preview {
+    order: 3 !important;
+    width: 100% !important;
+    margin-bottom: 15px !important;
   }
 
   /* Filas de jugador */
