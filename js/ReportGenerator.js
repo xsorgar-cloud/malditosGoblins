@@ -4,14 +4,17 @@ class ReportGenerator {
     static async getBase64Image(url) {
         if (this.imageCache[url]) return this.imageCache[url];
         
+        const absoluteUrl = url.startsWith('http') ? url : 'https://xsorgar-cloud.github.io/malditosGoblins/' + url;
+
         // Evitar el error rojo en consola provocado por CORS al usar fetch en file:///
         if (window.location && window.location.protocol === 'file:') {
-            this.imageCache[url] = url;
-            return url;
+            this.imageCache[url] = absoluteUrl;
+            return absoluteUrl;
         }
 
         try {
             const response = await fetch(url);
+            if (!response.ok) throw new Error("Network error");
             const blob = await response.blob();
             return new Promise((resolve) => {
                 const reader = new FileReader();
@@ -22,9 +25,9 @@ class ReportGenerator {
                 reader.readAsDataURL(blob);
             });
         } catch (e) {
-            console.warn("Could not load image as base64, falling back to URL: " + url);
-            this.imageCache[url] = url;
-            return url;
+            console.warn("Could not load image as base64, falling back to absolute URL: " + absoluteUrl);
+            this.imageCache[url] = absoluteUrl;
+            return absoluteUrl;
         }
     }
 
