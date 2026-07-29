@@ -3389,6 +3389,30 @@ document.addEventListener('click', function(e) {
   }
 });
 
+window.syncHitoButtonState = function() {
+  const hitoBtn = document.getElementById('btn-deploy-hito');
+  if (!hitoBtn || !gameState) return;
+
+  if (gameState.currentHito > 5) {
+    hitoBtn.disabled = true;
+    return;
+  }
+
+  if (gameState.isMarketPhase) {
+    hitoBtn.disabled = true;
+    return;
+  }
+
+  const isAnyHitoAlive = gameState.battlefield.goblins.some(g => g.isHito && !g.isDying);
+  hitoBtn.disabled = isAnyHitoAlive;
+  
+  if (isAnyHitoAlive) {
+    hitoBtn.title = "Debes derrotar a todos los Goblins de Hito actuales antes de iniciar uno nuevo.";
+  } else {
+    hitoBtn.title = "Desplegar el siguiente Hito.";
+  }
+};
+
 function updateUI() {
   if (window._obsoleteDelayActive) return;
   // Asegurar que botDNA está inicializado antes de cualquier renderizado
@@ -3488,13 +3512,11 @@ function updateUI() {
   if (gameState.currentHito > 5) {
     if (hitoBtnText) hitoBtnText.innerText = "Senda Completada";
     else hitoBtn.innerText = "Senda Completada";
-    hitoBtn.disabled = true;
   } else {
     const sendaHitos = DB.hitos[gameState.activeSenda] || DB.hitos.iniciacion;
     let hito = sendaHitos[gameState.currentHito - 1];
     if (hitoBtnText) hitoBtnText.innerText = `Enfrentar Hito ${gameState.currentHito}`;
     else hitoBtn.innerText = `Enfrentar Hito ${gameState.currentHito}`;
-    hitoBtn.disabled = false;
   }
 
   const btnConfirmAttack = document.getElementById('btn-confirm-attack');
@@ -3575,6 +3597,8 @@ function updateUI() {
   if (window.botManager && !gameState.isFirstTurnOfGame) {
       window.botManager.handleGameState();
   }
+
+  window.syncHitoButtonState();
 }
 
 // Botones de acción
@@ -4388,19 +4412,9 @@ function renderBattlefield() {
     
     if (hitoActionsDiv) hitoActionsDiv.style.display = 'flex';
     btnDeployHito.style.display = 'inline-block';
-
-    // Desactivar si ya hay goblins de hito vivos
-    let hasHitoGoblins = gameState.battlefield.goblins.some(g => g.isHito);
-    btnDeployHito.disabled = hasHitoGoblins;
-    if (hasHitoGoblins) {
-      btnDeployHito.title = "Debes derrotar a todos los Goblins de Hito actuales antes de iniciar uno nuevo.";
-    } else {
-      btnDeployHito.title = "Desplegar el siguiente Hito.";
-    }
   } else {
     if (hitoActionsDiv) hitoActionsDiv.style.display = 'flex';
     btnDeployHito.innerText = "Senda Completada";
-    btnDeployHito.disabled = true;
   }
 
   // Capturar coordenadas de los goblins que están muriendo antes de limpiar el contenedor
@@ -4793,6 +4807,7 @@ function renderBattlefield() {
         } else {
           renderBattlefield();
         }
+        window.syncHitoButtonState();
       }, 850);
     }
 
@@ -4801,6 +4816,8 @@ function renderBattlefield() {
   gameState.battlefield.goblins.forEach(gob => {
     previousGoblinHps.set(gob.uid, gob.currentHp);
   });
+
+  window.syncHitoButtonState();
 }
 
 function doesEquipmentDealDamage(eq, value, asg) {
