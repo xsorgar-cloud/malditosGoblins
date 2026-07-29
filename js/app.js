@@ -2206,8 +2206,8 @@ btnDeployHito.addEventListener('click', () => {
   if (gameState.currentHito > 5) return;
 
   // Validar si ya hay Goblins de Hito activos
-  if (gameState.battlefield.goblins.some(g => g.isHito && !g.isDying)) {
-    gameState.addLog("🚫 No se puede desplegar un nuevo Hito mientras haya Goblins de Hito en la mesa.");
+  if (gameState.battlefield.goblins.some(g => g.isHito)) {
+    gameState.addLog("⚠️ No se puede desplegar un nuevo Hito mientras haya Goblins de Hito en la mesa.");
     updateUI();
     return;
   }
@@ -3389,24 +3389,6 @@ document.addEventListener('click', function(e) {
   }
 });
 
-window.syncHitoButtonState = function() {
-  const hitoBtn = document.getElementById('btn-deploy-hito');
-  if (!hitoBtn || !gameState) return;
-
-  if (gameState.currentHito > 5) {
-    hitoBtn.disabled = true;
-    return;
-  }
-
-  if (gameState.isMarketPhase) {
-    hitoBtn.disabled = true;
-    return;
-  }
-
-  hitoBtn.disabled = false;
-  hitoBtn.title = "Desplegar el siguiente Hito.";
-};
-
 function updateUI() {
   if (window._obsoleteDelayActive) return;
   // Asegurar que botDNA está inicializado antes de cualquier renderizado
@@ -3504,15 +3486,15 @@ function updateUI() {
   const hitoBtn = document.getElementById('btn-deploy-hito');
   const hitoBtnText = document.querySelector('#btn-deploy-hito .btn-text');
   if (gameState.currentHito > 5) {
-    const sendaHitos = DB.hitos[gameState.activeSenda] || DB.hitos.iniciacion;
-    let hito = sendaHitos[gameState.currentHito - 1];
     if (hitoBtnText) hitoBtnText.innerText = "Senda Completada";
     else hitoBtn.innerText = "Senda Completada";
+    hitoBtn.disabled = true;
   } else {
     const sendaHitos = DB.hitos[gameState.activeSenda] || DB.hitos.iniciacion;
     let hito = sendaHitos[gameState.currentHito - 1];
     if (hitoBtnText) hitoBtnText.innerText = `Enfrentar Hito ${gameState.currentHito}`;
     else hitoBtn.innerText = `Enfrentar Hito ${gameState.currentHito}`;
+    hitoBtn.disabled = false;
   }
 
   const btnConfirmAttack = document.getElementById('btn-confirm-attack');
@@ -3531,9 +3513,6 @@ function updateUI() {
     btnGold.disabled = true;
     btnGoldDmg.disabled = true;
     btnRole.disabled = true;
-    
-    // El botón de hito se desactiva en el mercado, pero NO en Warlord Choice Phase
-    // para que el Warlord pueda pedir hito si la mesa está vacía.
   } else {
     btnConfirmAttack.disabled = !hasGoblinsAlive;
     btnConfirmAttack.innerHTML = `<span class="txt-largo">Atacar Goblins (${selectedGoblins.length})</span><span class="txt-corto">Atacar (${selectedGoblins.length})</span><img src="assets/ico_combat.png" class="mobile-btn-icon" alt="Atacar">`;
@@ -3596,8 +3575,6 @@ function updateUI() {
   if (window.botManager && !gameState.isFirstTurnOfGame) {
       window.botManager.handleGameState();
   }
-
-  window.syncHitoButtonState();
 }
 
 // Botones de acción
@@ -4411,11 +4388,20 @@ function renderBattlefield() {
     
     if (hitoActionsDiv) hitoActionsDiv.style.display = 'flex';
     btnDeployHito.style.display = 'inline-block';
+
+    // Desactivar si ya hay goblins de hito vivos
+    let hasHitoGoblins = gameState.battlefield.goblins.some(g => g.isHito);
+    btnDeployHito.disabled = hasHitoGoblins;
+    if (hasHitoGoblins) {
+      btnDeployHito.title = "Debes derrotar a todos los Goblins de Hito actuales antes de iniciar uno nuevo.";
+    } else {
+      btnDeployHito.title = "Desplegar el siguiente Hito.";
+    }
   } else {
     if (hitoActionsDiv) hitoActionsDiv.style.display = 'flex';
     btnDeployHito.innerText = "Senda Completada";
+    btnDeployHito.disabled = true;
   }
-  window.syncHitoButtonState();
 
   // Capturar coordenadas de los goblins que están muriendo antes de limpiar el contenedor
   const dyingGoblinCoords = new Map();
@@ -4805,10 +4791,8 @@ function renderBattlefield() {
         if (window._obsoleteDelayActive) {
           document.querySelectorAll('.goblin-card.dying, .goblin-card.dying-reward').forEach(el => el.remove());
         } else {
-          updateUI();
+          renderBattlefield();
         }
-
-        window.syncHitoButtonState();
       }, 850);
     }
 
