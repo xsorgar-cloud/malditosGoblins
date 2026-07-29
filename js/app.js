@@ -3506,8 +3506,11 @@ function updateUI() {
   const hitoBtnText = document.querySelector('#btn-deploy-hito .btn-text');
   const hitoBtnMobileNum = document.querySelector('#btn-deploy-hito .hito-mobile-number');
   if (gameState.currentHito > 5) {
-    if (hitoBtnText) hitoBtnText.innerText = "Senda Completada";
-    else hitoBtn.innerText = "Senda Completada";
+    if (!hitoBtnText && hitoBtn) {
+      hitoBtn.innerHTML = `<span class="btn-text">Senda Completada</span><img src="assets/btn_hito.png" class="mobile-btn-icon" alt="Hito"><span class="hito-mobile-number"></span>`;
+    } else if (hitoBtnText) {
+      hitoBtnText.innerText = "Senda Completada";
+    }
     if (hitoBtnMobileNum) hitoBtnMobileNum.innerText = "";
   } else {
     const sendaHitos = DB.hitos[gameState.activeSenda] || DB.hitos.iniciacion;
@@ -4417,9 +4420,15 @@ function renderBattlefield() {
   } else {
     if (hitoActionsDiv) hitoActionsDiv.style.display = 'flex';
     const hitoBtnText = document.querySelector('#btn-deploy-hito .btn-text');
-    const hitoBtnMobileNum = document.querySelector('#btn-deploy-hito .hito-mobile-number');
-    if (hitoBtnText) hitoBtnText.innerText = "Senda Completada";
-    else btnDeployHito.innerText = "Senda Completada";
+    let hitoBtnMobileNum = document.querySelector('#btn-deploy-hito .hito-mobile-number');
+    
+    if (!hitoBtnText && btnDeployHito) {
+      btnDeployHito.innerHTML = `<span class="btn-text">Senda Completada</span><img src="assets/btn_hito.png" class="mobile-btn-icon" alt="Hito"><span class="hito-mobile-number"></span>`;
+      hitoBtnMobileNum = document.querySelector('#btn-deploy-hito .hito-mobile-number');
+    } else if (hitoBtnText) {
+      hitoBtnText.innerText = "Senda Completada";
+    }
+    
     if (hitoBtnMobileNum) hitoBtnMobileNum.innerText = "";
   }
   // Capturar coordenadas de los goblins que están muriendo antes de limpiar el contenedor
