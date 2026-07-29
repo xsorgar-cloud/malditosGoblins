@@ -3514,7 +3514,8 @@ function updateUI() {
     let hito = sendaHitos[gameState.currentHito - 1];
     if (hitoBtnText) hitoBtnText.innerText = `Enfrentar Hito ${gameState.currentHito}`;
     else hitoBtn.innerText = `Enfrentar Hito ${gameState.currentHito}`;
-    if (hitoBtnMobileNum) hitoBtnMobileNum.innerText = gameState.currentHito;
+    const romanNumerals = ["", "I", "II", "III", "IV", "V"];
+    if (hitoBtnMobileNum) hitoBtnMobileNum.innerText = romanNumerals[gameState.currentHito] || gameState.currentHito;
   }
 
   const btnConfirmAttack = document.getElementById('btn-confirm-attack');
@@ -4408,7 +4409,8 @@ function renderBattlefield() {
     const hitoBtnMobileNum = document.querySelector('#btn-deploy-hito .hito-mobile-number');
     if (hitoBtnText) hitoBtnText.innerText = `Enfrentar Hito ${gameState.currentHito}`;
     else btnDeployHito.innerText = `Enfrentar Hito ${gameState.currentHito}`;
-    if (hitoBtnMobileNum) hitoBtnMobileNum.innerText = gameState.currentHito;
+    const romanNumerals = ["", "I", "II", "III", "IV", "V"];
+    if (hitoBtnMobileNum) hitoBtnMobileNum.innerText = romanNumerals[gameState.currentHito] || gameState.currentHito;
     
     if (hitoActionsDiv) hitoActionsDiv.style.display = 'flex';
     btnDeployHito.style.display = 'inline-block';
