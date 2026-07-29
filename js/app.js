@@ -1597,9 +1597,14 @@ function initSendaSelectionScreen() {
         padding: 15px 10px;
       }
       .split-card-container {
-        gap: 12px;
-        padding: 10px 5px;
-        scroll-snap-type: x mandatory;
+        flex-direction: column;
+        overflow-y: auto;
+        overflow-x: hidden;
+        scroll-snap-type: y mandatory;
+        width: 100%;
+        align-items: center;
+        gap: 15px;
+        padding: 10px 0;
         scroll-behavior: smooth;
       }
       .senda-card-wrapper {
