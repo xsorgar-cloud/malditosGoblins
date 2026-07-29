@@ -1964,9 +1964,57 @@ document.getElementById('btn-gold-dmg').addEventListener('click', () => {
   updateUI();
 });
 
+function openEndTurnWarningModal(onConfirm) {
+  window.resetEventModalTransparency();
+  const overlay = document.getElementById('global-event-overlay');
+  const title = document.getElementById('event-modal-title');
+  const desc = document.getElementById('event-modal-desc');
+  const container = document.getElementById('event-choices-container');
+
+  title.innerText = "¡ACCIÓN DISPONIBLE!";
+  title.style.color = "var(--gold)";
+  desc.innerHTML = `Aún puedes realizar acciones en tu turno.<br><br>¿Estás seguro de que quieres finalizar tu turno sin realizar ninguna acción?`;
+
+  container.innerHTML = '';
+  
+  const marker = document.createElement('div');
+  marker.className = 'end-turn-warning-card';
+  container.appendChild(marker);
+
+  const btnYes = document.createElement('button');
+  btnYes.className = 'btn primary';
+  btnYes.style.marginRight = '10px';
+  btnYes.innerText = "SÍ, FINALIZAR TURNO";
+  btnYes.onclick = () => {
+    overlay.classList.add('hidden');
+    window.resetEventModalTransparency();
+    onConfirm();
+  };
+
+  const btnNo = document.createElement('button');
+  btnNo.className = 'btn secondary';
+  btnNo.innerText = "CANCELAR";
+  btnNo.onclick = () => {
+    overlay.classList.add('hidden');
+    window.resetEventModalTransparency();
+  };
+
+  container.appendChild(btnYes);
+  container.appendChild(btnNo);
+  overlay.classList.remove('hidden');
+}
+
 document.getElementById('btn-end-turn').addEventListener('click', () => {
-  gameState.nextTurn();
-  updateUI();
+  const btnRole = document.getElementById('btn-role');
+  if (!btnRole.disabled) {
+    openEndTurnWarningModal(() => {
+      gameState.nextTurn();
+      updateUI();
+    });
+  } else {
+    gameState.nextTurn();
+    updateUI();
+  }
 });
 
 window.showHitoGoblinsTooltip = function(e) {
@@ -2158,8 +2206,8 @@ btnDeployHito.addEventListener('click', () => {
   if (gameState.currentHito > 5) return;
 
   // Validar si ya hay Goblins de Hito activos
-  if (gameState.battlefield.goblins.some(g => g.isHito)) {
-    gameState.addLog("⚠️ No se puede desplegar un nuevo Hito mientras haya Goblins de Hito en la mesa.");
+  if (gameState.battlefield.goblins.some(g => g.isHito && !g.isDying)) {
+    gameState.addLog("🚫 No se puede desplegar un nuevo Hito mientras haya Goblins de Hito en la mesa.");
     updateUI();
     return;
   }
@@ -3446,7 +3494,7 @@ function updateUI() {
     let hito = sendaHitos[gameState.currentHito - 1];
     if (hitoBtnText) hitoBtnText.innerText = `Enfrentar Hito ${gameState.currentHito}`;
     else hitoBtn.innerText = `Enfrentar Hito ${gameState.currentHito}`;
-    hitoBtn.disabled = false;
+    hitoBtn.disabled = gameState.battlefield.goblins.some(g => g.isHito && !g.isDying);
   }
 
   const btnConfirmAttack = document.getElementById('btn-confirm-attack');
@@ -3465,6 +3513,12 @@ function updateUI() {
     btnGold.disabled = true;
     btnGoldDmg.disabled = true;
     btnRole.disabled = true;
+    
+    // El botón de hito se desactiva en el mercado, pero NO en Warlord Choice Phase
+    // para que el Warlord pueda pedir hito si la mesa está vacía.
+    if (gameState.isMarketPhase && hitoBtn) {
+      hitoBtn.disabled = true;
+    }
   } else {
     btnConfirmAttack.disabled = !hasGoblinsAlive;
     btnConfirmAttack.innerHTML = `<span class="txt-largo">Atacar Goblins (${selectedGoblins.length})</span><span class="txt-corto">Atacar (${selectedGoblins.length})</span><img src="assets/ico_combat.png" class="mobile-btn-icon" alt="Atacar">`;
@@ -4342,7 +4396,7 @@ function renderBattlefield() {
     btnDeployHito.style.display = 'inline-block';
 
     // Desactivar si ya hay goblins de hito vivos
-    let hasHitoGoblins = gameState.battlefield.goblins.some(g => g.isHito);
+    let hasHitoGoblins = gameState.battlefield.goblins.some(g => g.isHito && !g.isDying);
     btnDeployHito.disabled = hasHitoGoblins;
     if (hasHitoGoblins) {
       btnDeployHito.title = "Debes derrotar a todos los Goblins de Hito actuales antes de iniciar uno nuevo.";
@@ -4743,7 +4797,7 @@ function renderBattlefield() {
         if (window._obsoleteDelayActive) {
           document.querySelectorAll('.goblin-card.dying, .goblin-card.dying-reward').forEach(el => el.remove());
         } else {
-          renderBattlefield();
+          updateUI();
         }
       }, 850);
     }
