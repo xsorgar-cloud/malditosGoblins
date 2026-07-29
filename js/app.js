@@ -1592,8 +1592,8 @@ function initSendaSelectionScreen() {
 
     @media (max-width: 768px) {
       .split-card-screen {
-        --senda-card-w: 180px;
-        --senda-card-h: 252px;
+        --senda-card-w: 88vw;
+        --senda-card-h: calc(88vw * 1.4);
         padding: 15px 10px;
       }
       .split-card-container {
@@ -1603,28 +1603,28 @@ function initSendaSelectionScreen() {
         scroll-snap-type: y mandatory;
         width: 100%;
         align-items: center;
-        gap: 15px;
+        gap: 25px;
         padding: 10px 0;
         scroll-behavior: smooth;
       }
       .senda-card-wrapper {
         scroll-snap-align: center;
-        gap: 6px;
+        gap: 8px;
       }
       .split-card-screen h2 {
-        font-size: 1.3rem !important;
+        font-size: 1.5rem !important;
       }
       .split-card-screen p {
-        font-size: 0.8rem !important;
+        font-size: 0.9rem !important;
         margin-bottom: 2px !important;
       }
       .senda-card-header {
-        font-size: 0.75rem;
-        min-height: 32px;
+        font-size: 1.1rem;
+        min-height: 40px;
       }
       .senda-card-stars {
-        font-size: 0.65rem;
-        letter-spacing: 1px;
+        font-size: 0.9rem;
+        letter-spacing: 1.5px;
       }
       .split-card-btn-container button {
         padding: 6px 16px !important;
