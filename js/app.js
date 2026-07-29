@@ -3581,6 +3581,18 @@ function updateUI() {
   if (window.botManager && !gameState.isFirstTurnOfGame) {
       window.botManager.handleGameState();
   }
+
+  // FORCE HITO BUTTON SYNC
+  const forcedHitoBtn = document.getElementById('btn-deploy-hito');
+  if (forcedHitoBtn && gameState.currentHito <= 5 && !gameState.isMarketPhase) {
+      const isAnyHitoAlive = gameState.battlefield.goblins.some(g => g.isHito && !g.isDying);
+      forcedHitoBtn.disabled = isAnyHitoAlive;
+      if (isAnyHitoAlive) {
+          forcedHitoBtn.title = "Debes derrotar a todos los Goblins de Hito actuales antes de iniciar uno nuevo.";
+      } else {
+          forcedHitoBtn.title = "Desplegar el siguiente Hito.";
+      }
+  }
 }
 
 // Botones de acción
@@ -4798,6 +4810,13 @@ function renderBattlefield() {
           document.querySelectorAll('.goblin-card.dying, .goblin-card.dying-reward').forEach(el => el.remove());
         } else {
           updateUI();
+        }
+
+        // Force Hito Button Sync even if updateUI returned early
+        const forcedHitoBtn = document.getElementById('btn-deploy-hito');
+        if (forcedHitoBtn && gameState.currentHito <= 5 && !gameState.isMarketPhase) {
+            const isAnyHitoAlive = gameState.battlefield.goblins.some(g => g.isHito && !g.isDying);
+            forcedHitoBtn.disabled = isAnyHitoAlive;
         }
       }, 850);
     }
