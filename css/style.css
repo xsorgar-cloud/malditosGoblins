@@ -4073,6 +4073,10 @@ main {
     vertical-align: middle;
 }
 
+.hito-mobile-number {
+    display: none;
+}
+
 @media (max-width: 768px) {
     #btn-deploy-hito .btn-text,
     #btn-gold .txt-largo, #btn-gold .txt-corto,
@@ -4099,6 +4103,20 @@ main {
         background: transparent !important;
         border: none !important;
         box-shadow: none !important;
+    }
+    
+    .hito-mobile-number {
+        display: inline-block !important;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        font-size: 1.8rem;
+        font-weight: 900;
+        color: white;
+        text-shadow: 1px 1px 3px rgba(0,0,0,0.8), -1px -1px 3px rgba(0,0,0,0.8), 1px -1px 3px rgba(0,0,0,0.8), -1px 1px 3px rgba(0,0,0,0.8);
+        pointer-events: none;
+        margin-top: 2px;
     }
 }
 

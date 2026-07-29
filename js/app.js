@@ -3504,14 +3504,17 @@ function updateUI() {
 
   const hitoBtn = document.getElementById('btn-deploy-hito');
   const hitoBtnText = document.querySelector('#btn-deploy-hito .btn-text');
+  const hitoBtnMobileNum = document.querySelector('#btn-deploy-hito .hito-mobile-number');
   if (gameState.currentHito > 5) {
     if (hitoBtnText) hitoBtnText.innerText = "Senda Completada";
     else hitoBtn.innerText = "Senda Completada";
+    if (hitoBtnMobileNum) hitoBtnMobileNum.innerText = "✓";
   } else {
     const sendaHitos = DB.hitos[gameState.activeSenda] || DB.hitos.iniciacion;
     let hito = sendaHitos[gameState.currentHito - 1];
     if (hitoBtnText) hitoBtnText.innerText = `Enfrentar Hito ${gameState.currentHito}`;
     else hitoBtn.innerText = `Enfrentar Hito ${gameState.currentHito}`;
+    if (hitoBtnMobileNum) hitoBtnMobileNum.innerText = gameState.currentHito;
   }
 
   const btnConfirmAttack = document.getElementById('btn-confirm-attack');
@@ -4402,8 +4405,10 @@ function renderBattlefield() {
     let hito = sendaHitos[gameState.currentHito - 1];
     
     const hitoBtnText = document.querySelector('#btn-deploy-hito .btn-text');
+    const hitoBtnMobileNum = document.querySelector('#btn-deploy-hito .hito-mobile-number');
     if (hitoBtnText) hitoBtnText.innerText = `Enfrentar Hito ${gameState.currentHito}`;
     else btnDeployHito.innerText = `Enfrentar Hito ${gameState.currentHito}`;
+    if (hitoBtnMobileNum) hitoBtnMobileNum.innerText = gameState.currentHito;
     
     if (hitoActionsDiv) hitoActionsDiv.style.display = 'flex';
     btnDeployHito.style.display = 'inline-block';
