@@ -4805,7 +4805,7 @@ function renderBattlefield() {
         if (window._obsoleteDelayActive) {
           document.querySelectorAll('.goblin-card.dying, .goblin-card.dying-reward').forEach(el => el.remove());
         } else {
-          renderBattlefield();
+          updateUI();
         }
         window.syncHitoButtonState();
       }, 850);
