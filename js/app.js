@@ -3403,14 +3403,8 @@ window.syncHitoButtonState = function() {
     return;
   }
 
-  const isAnyHitoAlive = gameState.battlefield.goblins.some(g => g.isHito && !g.isDying);
-  hitoBtn.disabled = isAnyHitoAlive;
-  
-  if (isAnyHitoAlive) {
-    hitoBtn.title = "Debes derrotar a todos los Goblins de Hito actuales antes de iniciar uno nuevo.";
-  } else {
-    hitoBtn.title = "Desplegar el siguiente Hito.";
-  }
+  hitoBtn.disabled = false;
+  hitoBtn.title = "Desplegar el siguiente Hito.";
 };
 
 function updateUI() {
