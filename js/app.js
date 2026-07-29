@@ -3391,35 +3391,20 @@ document.addEventListener('click', function(e) {
 
 window.syncHitoButtonState = function() {
   const hitoBtn = document.getElementById('btn-deploy-hito');
-  if (!hitoBtn) { console.log("SYNC: No hitoBtn found"); return; }
-  if (!gameState) { console.log("SYNC: No gameState found"); return; }
-
-  console.log("SYNC: Called. Array length:", gameState.battlefield.goblins.length);
-  gameState.battlefield.goblins.forEach(g => console.log(` - Goblin: isHito=${g.isHito}, isDying=${g.isDying}`));
+  if (!hitoBtn || !gameState) return;
 
   if (gameState.currentHito > 5) {
-    console.log("SYNC: Returned early because currentHito > 5. currentHito =", gameState.currentHito);
     hitoBtn.disabled = true;
     return;
   }
 
-  if (gameState.isMarketPhase) {
-    console.log("SYNC: Returned early because isMarketPhase is TRUE");
-    hitoBtn.disabled = true;
-    return;
-  }
-
-  console.log("SYNC: Reached isAnyHitoAlive check.");
   const isAnyHitoAlive = gameState.battlefield.goblins.some(g => g.isHito && !g.isDying);
-  console.log("SYNC: -> isAnyHitoAlive evaluated to:", isAnyHitoAlive);
   hitoBtn.disabled = isAnyHitoAlive;
   
   if (isAnyHitoAlive) {
     hitoBtn.title = "Debes derrotar a todos los Goblins de Hito actuales antes de iniciar uno nuevo.";
-    hitoBtn.style.boxShadow = "0 0 10px red";
   } else {
     hitoBtn.title = "Desplegar el siguiente Hito.";
-    hitoBtn.style.boxShadow = "0 0 10px #00ff00";
   }
 };
 
@@ -4809,7 +4794,6 @@ function renderBattlefield() {
     if (hasDying && !window._dyingCleanupActive) {
       window._dyingCleanupActive = true;
       setTimeout(() => {
-        console.log("TIMEOUT FIRED! Filtering array...");
         gameState.battlefield.goblins = gameState.battlefield.goblins.filter(g => !g.isDying);
         window._dyingCleanupActive = false;
         
