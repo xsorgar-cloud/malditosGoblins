@@ -3371,6 +3371,26 @@ main {
    RESPONSIVO PARA PANTALLAS PEQUEÑAS (SETUP MODAL)
    =================================================== */
 @media (max-width: 768px) {
+  #log-panel {
+      position: fixed !important;
+      top: 60px !important;
+      left: 50% !important;
+      right: auto !important;
+      transform: translateX(-50%) !important;
+      width: 95vw !important;
+      max-width: 95vw !important;
+      box-sizing: border-box !important;
+  }
+  
+  #debug-combat-modal {
+      left: 50% !important;
+      right: auto !important;
+      transform: translateX(-50%) !important;
+      width: 95vw !important;
+      max-width: 95vw !important;
+      box-sizing: border-box !important;
+  }
+
   #setup-modal-layout {
     flex-direction: column !important;
     align-items: center !important;
