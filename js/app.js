@@ -3508,7 +3508,7 @@ function updateUI() {
   if (gameState.currentHito > 5) {
     if (hitoBtnText) hitoBtnText.innerText = "Senda Completada";
     else hitoBtn.innerText = "Senda Completada";
-    if (hitoBtnMobileNum) hitoBtnMobileNum.innerText = "✓";
+    if (hitoBtnMobileNum) hitoBtnMobileNum.innerText = "";
   } else {
     const sendaHitos = DB.hitos[gameState.activeSenda] || DB.hitos.iniciacion;
     let hito = sendaHitos[gameState.currentHito - 1];
@@ -4416,9 +4416,12 @@ function renderBattlefield() {
     btnDeployHito.style.display = 'inline-block';
   } else {
     if (hitoActionsDiv) hitoActionsDiv.style.display = 'flex';
-    btnDeployHito.innerText = "Senda Completada";
+    const hitoBtnText = document.querySelector('#btn-deploy-hito .btn-text');
+    const hitoBtnMobileNum = document.querySelector('#btn-deploy-hito .hito-mobile-number');
+    if (hitoBtnText) hitoBtnText.innerText = "Senda Completada";
+    else btnDeployHito.innerText = "Senda Completada";
+    if (hitoBtnMobileNum) hitoBtnMobileNum.innerText = "";
   }
-
   // Capturar coordenadas de los goblins que están muriendo antes de limpiar el contenedor
   const dyingGoblinCoords = new Map();
   if (gameState && gameState.battlefield && gameState.battlefield.goblins) {
