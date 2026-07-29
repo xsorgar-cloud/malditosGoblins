@@ -3391,23 +3391,27 @@ document.addEventListener('click', function(e) {
 
 window.syncHitoButtonState = function() {
   const hitoBtn = document.getElementById('btn-deploy-hito');
-  if (!hitoBtn || !gameState) return;
+  if (!hitoBtn) { console.log("SYNC: No hitoBtn found"); return; }
+  if (!gameState) { console.log("SYNC: No gameState found"); return; }
 
-  console.log("syncHitoButtonState() called. Array length:", gameState.battlefield.goblins.length);
+  console.log("SYNC: Called. Array length:", gameState.battlefield.goblins.length);
   gameState.battlefield.goblins.forEach(g => console.log(` - Goblin: isHito=${g.isHito}, isDying=${g.isDying}`));
 
   if (gameState.currentHito > 5) {
+    console.log("SYNC: Returned early because currentHito > 5. currentHito =", gameState.currentHito);
     hitoBtn.disabled = true;
     return;
   }
 
   if (gameState.isMarketPhase) {
+    console.log("SYNC: Returned early because isMarketPhase is TRUE");
     hitoBtn.disabled = true;
     return;
   }
 
+  console.log("SYNC: Reached isAnyHitoAlive check.");
   const isAnyHitoAlive = gameState.battlefield.goblins.some(g => g.isHito && !g.isDying);
-  console.log(" -> isAnyHitoAlive evaluated to:", isAnyHitoAlive);
+  console.log("SYNC: -> isAnyHitoAlive evaluated to:", isAnyHitoAlive);
   hitoBtn.disabled = isAnyHitoAlive;
   
   if (isAnyHitoAlive) {
