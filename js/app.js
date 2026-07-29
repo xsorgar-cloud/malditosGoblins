@@ -3510,7 +3510,6 @@ function updateUI() {
   const hitoBtn = document.getElementById('btn-deploy-hito');
   const hitoBtnText = document.querySelector('#btn-deploy-hito .btn-text');
   if (gameState.currentHito > 5) {
-  if (gameState.currentHito > 5) {
     const sendaHitos = DB.hitos[gameState.activeSenda] || DB.hitos.iniciacion;
     let hito = sendaHitos[gameState.currentHito - 1];
     if (hitoBtnText) hitoBtnText.innerText = "Senda Completada";
