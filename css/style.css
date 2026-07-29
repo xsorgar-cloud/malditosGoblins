@@ -4105,6 +4105,11 @@ main {
         box-shadow: none !important;
     }
     
+    #action-buttons #btn-deploy-hito {
+        font-size: 0 !important;
+        color: transparent !important;
+    }
+    
     .hito-mobile-number {
         display: inline-block !important;
         position: absolute;
