@@ -5949,7 +5949,6 @@ if (btnDownloadGame) {
     window.saveGame();
     
     const exportData = {
-      gameState: gameState,
       achievements: Achievements.load()
     };
     
@@ -5957,13 +5956,13 @@ if (btnDownloadGame) {
     const url = URL.createObjectURL(blob);
     const a = document.createElement('a');
     a.href = url;
-    a.download = `malditos_goblins_save_${new Date().getTime()}.json`;
+    a.download = `malditos_goblins_logros_${new Date().getTime()}.json`;
     document.body.appendChild(a);
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
     
-    gameState.addLog(`&#128190; <strong>Partida descargada a archivo local.</strong>`);
+    gameState.addLog(`&#128190; <strong>Progreso (logros) descargado a archivo local.</strong>`);
     updateUI();
   });
 }
@@ -6024,41 +6023,28 @@ if (btnLoadFile && inputLoadFile) {
     reader.onload = (event) => {
       try {
         const data = JSON.parse(event.target.result);
-        if (data.gameState) {
-          if (data.achievements) {
-            const currentAchieve = Achievements.load();
-            for (let senda in data.achievements) {
-              if (!currentAchieve[senda]) currentAchieve[senda] = [];
-              data.achievements[senda].forEach(role => {
-                if (typeof role === 'number') {
-                  const p = data.gameState.players.find(pl => pl.id === role);
-                  if (p && p.role && p.role.id) role = p.role.id;
-                  else return;
-                }
-                if (typeof role === 'string' && !currentAchieve[senda].includes(role)) {
-                  currentAchieve[senda].push(role);
-                }
-              });
-            }
-            Achievements.save(currentAchieve);
-          }
-          
-          Object.assign(gameState, data.gameState);
-          
-          if (!gameState.combatHistory) {
-            gameState.combatHistory = [];
-          }
-          
-          if (gameState.players) {
-            gameState.players.forEach(p => {
-                if (p.level >= 4 && !p.dicePool.some(d => d.type === 'silver')) {
-                    p.dicePool.push({ type: 'silver', faces: 3 });
-                }
+        if (data.achievements || (data.gameState && data.achievements)) {
+          const sourceAchieve = data.achievements || {};
+          const currentAchieve = Achievements.load();
+          for (let senda in sourceAchieve) {
+            if (!currentAchieve[senda]) currentAchieve[senda] = [];
+            sourceAchieve[senda].forEach(role => {
+              if (typeof role === 'number' && data.gameState) {
+                const p = data.gameState.players.find(pl => pl.id === role);
+                if (p && p.role && p.role.id) role = p.role.id;
+                else return;
+              }
+              if (typeof role === 'string' && !currentAchieve[senda].includes(role)) {
+                currentAchieve[senda].push(role);
+              }
             });
           }
+          Achievements.save(currentAchieve);
           
-          window.saveGame(); // Guardar en localStorage también
-          gameState.addLog(`&#128190; <strong>Partida cargada desde archivo local.</strong>`);
+          if (gameState && typeof gameState.addLog === 'function') {
+            gameState.addLog(`&#128190; <strong>Progreso (logros) cargado desde archivo.</strong>`);
+          }
+
           
           document.querySelectorAll('.modal, .overlay').forEach(el => {
             el.classList.add('hidden');
