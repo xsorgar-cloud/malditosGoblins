@@ -1,0 +1,11 @@
+{
+  "achievements": {
+    "iniciacion": [
+      1,
+      "guerrero"
+    ],
+    "guerrero": [
+      "mago"
+    ]
+  }
+}

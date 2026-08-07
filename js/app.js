@@ -6045,22 +6045,8 @@ if (btnLoadFile && inputLoadFile) {
             gameState.addLog(`&#128190; <strong>Progreso (logros) cargado desde archivo.</strong>`);
           }
 
-          
-          document.querySelectorAll('.modal, .overlay').forEach(el => {
-            el.classList.add('hidden');
-            el.style.display = '';
-          });
-          
-          const splash = document.getElementById('splash-screen');
-          if (splash) {
-            splash.style.opacity = '0';
-            splash.style.visibility = 'hidden';
-            setTimeout(() => {
-              splash.style.display = 'none';
-            }, 800);
-          }
-          
-          updateUI();
+          alert('Progreso cargado correctamente. Se recargará la página.');
+          location.reload();
         } else {
           alert('El archivo no contiene un guardado válido de Malditos Goblins.');
         }
