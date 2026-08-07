@@ -1,0 +1,1172 @@
+{
+  "gameState": {
+    "players": [
+      {
+        "id": 1,
+        "name": "Jugador 1",
+        "hp": 14,
+        "maxHp": 20,
+        "mo": 10,
+        "pex": 8,
+        "level": 3,
+        "isBot": false,
+        "shield": 0,
+        "role": {
+          "id": "guerrero",
+          "name": "Guerrero",
+          "image": "assets/Roles/rol_guerrero.webp",
+          "icon": "assets/Roles/ico_rol_guerrero.webp",
+          "effect": "Inflige Daño Directo a un Goblin en combate.",
+          "energyRates": [
+            0,
+            0,
+            2,
+            3,
+            4,
+            4
+          ]
+        },
+        "energy": 57,
+        "equipped": [
+          {
+            "id": "espada_inicial",
+            "type": "inicial",
+            "name": "Espada Inicial",
+            "cost": 0,
+            "blocks": 2,
+            "limit": "-",
+            "effect": "Daño dado",
+            "extra": "",
+            "image": "assets/Equipo/inicial/!1-Espada.webp",
+            "broken": {
+              "limit": "MAX 5",
+              "effect": "Daño dado"
+            },
+            "isBroken": false,
+            "isActive": true
+          },
+          {
+            "id": "escudo_inicial",
+            "type": "inicial",
+            "name": "Escudo Madera",
+            "cost": 0,
+            "blocks": 1,
+            "limit": "-",
+            "effect": "Escudo dado MAX 4",
+            "extra": "",
+            "image": "assets/Equipo/inicial/!2-EscudoMadera.webp",
+            "broken": {
+              "limit": "-",
+              "effect": "Escudo dado MAX 3"
+            },
+            "isBroken": true,
+            "isActive": true,
+            "usedInCombatId": 1,
+            "brokenAnimationPlayed": true,
+            "brokenInCombatId": 1
+          }
+        ],
+        "statusEffects": {
+          "escozor": 0,
+          "calambre": 1,
+          "tembleque": 0,
+          "eliminaRojo": 0
+        },
+        "dicePool": [
+          {
+            "type": "red",
+            "faces": 6
+          },
+          {
+            "type": "black",
+            "faces": 6
+          }
+        ],
+        "pendingLevelUpChoices": 2,
+        "pendingLevelUpChoice": true,
+        "goblinsFoughtThisTurn": [
+          "1786113123866-smnyoix9ump"
+        ]
+      }
+    ],
+    "currentPlayerIndex": 0,
+    "market": {
+      "ataque": [
+        {
+          "id": "cuchillo",
+          "type": "ataque",
+          "name": "Cuchillo",
+          "cost": 3,
+          "blocks": 1,
+          "limit": "-",
+          "effect": "Daño 3",
+          "extra": "",
+          "image": "assets/Equipo/ataque/a5-Cuchillo.webp",
+          "broken": {
+            "limit": "-",
+            "effect": "Daño 3",
+            "extra": ""
+          }
+        },
+        {
+          "id": "afilado",
+          "type": "ataque",
+          "name": "Afilado",
+          "cost": 6,
+          "blocks": 2,
+          "limit": "PAR",
+          "effect": "Daño dado",
+          "extra": "Con un 4: daño 6",
+          "image": "assets/Equipo/ataque/a4-Afilado.webp",
+          "broken": {
+            "limit": "PAR",
+            "effect": "Daño dado",
+            "extra": ""
+          }
+        },
+        {
+          "id": "afilado",
+          "type": "ataque",
+          "name": "Afilado",
+          "cost": 6,
+          "blocks": 2,
+          "limit": "PAR",
+          "effect": "Daño dado",
+          "extra": "Con un 4: daño 6",
+          "image": "assets/Equipo/ataque/a4-Afilado.webp",
+          "broken": {
+            "limit": "PAR",
+            "effect": "Daño dado",
+            "extra": ""
+          }
+        },
+        {
+          "id": "cuchillo",
+          "type": "ataque",
+          "name": "Cuchillo",
+          "cost": 3,
+          "blocks": 1,
+          "limit": "-",
+          "effect": "Daño 3",
+          "extra": "",
+          "image": "assets/Equipo/ataque/a5-Cuchillo.webp",
+          "broken": {
+            "limit": "-",
+            "effect": "Daño 3",
+            "extra": ""
+          }
+        },
+        {
+          "id": "anadir_pinchos",
+          "type": "ataque",
+          "name": "Añadir Pinchos",
+          "cost": 6,
+          "blocks": 2,
+          "limit": "IMPAR",
+          "effect": "Daño dado",
+          "extra": "Con un 5: daño 6",
+          "image": "assets/Equipo/ataque/a3-AnadirPinchos.webp",
+          "broken": {
+            "limit": "IMPAR",
+            "effect": "Daño dado",
+            "extra": ""
+          }
+        },
+        {
+          "id": "serrado",
+          "type": "ataque",
+          "name": "Serrado",
+          "cost": 6,
+          "blocks": 2,
+          "limit": "-",
+          "effect": "Daño dado",
+          "extra": "",
+          "image": "assets/Equipo/ataque/a2-Serrado.webp",
+          "broken": {
+            "limit": "MAX 4",
+            "effect": "Daño dado",
+            "extra": ""
+          }
+        },
+        {
+          "id": "oxidado",
+          "type": "ataque",
+          "name": "Oxidado",
+          "cost": 3,
+          "blocks": 2,
+          "limit": "-",
+          "effect": "Daño dado Max 4 +1",
+          "extra": "",
+          "image": "assets/Equipo/ataque/a1-Oxidado.webp",
+          "broken": {
+            "limit": "MAX 4",
+            "effect": "Daño dado",
+            "extra": ""
+          }
+        },
+        {
+          "id": "oxidado",
+          "type": "ataque",
+          "name": "Oxidado",
+          "cost": 3,
+          "blocks": 2,
+          "limit": "-",
+          "effect": "Daño dado Max 4 +1",
+          "extra": "",
+          "image": "assets/Equipo/ataque/a1-Oxidado.webp",
+          "broken": {
+            "limit": "MAX 4",
+            "effect": "Daño dado",
+            "extra": ""
+          }
+        },
+        {
+          "id": "anadir_pinchos",
+          "type": "ataque",
+          "name": "Añadir Pinchos",
+          "cost": 6,
+          "blocks": 2,
+          "limit": "IMPAR",
+          "effect": "Daño dado",
+          "extra": "Con un 5: daño 6",
+          "image": "assets/Equipo/ataque/a3-AnadirPinchos.webp",
+          "broken": {
+            "limit": "IMPAR",
+            "effect": "Daño dado",
+            "extra": ""
+          }
+        },
+        {
+          "id": "daga",
+          "type": "ataque",
+          "name": "Daga",
+          "cost": 6,
+          "blocks": 1,
+          "limit": "MAX 4",
+          "effect": "Daño dado +1",
+          "extra": "Reutilizable x3",
+          "image": "assets/Equipo/ataque/a6-Daga.webp",
+          "broken": {
+            "limit": "MAX 2",
+            "effect": "Daño dado +1",
+            "extra": "Reutilizable"
+          }
+        },
+        {
+          "id": "serrado",
+          "type": "ataque",
+          "name": "Serrado",
+          "cost": 6,
+          "blocks": 2,
+          "limit": "-",
+          "effect": "Daño dado",
+          "extra": "",
+          "image": "assets/Equipo/ataque/a2-Serrado.webp",
+          "broken": {
+            "limit": "MAX 4",
+            "effect": "Daño dado",
+            "extra": ""
+          }
+        },
+        {
+          "id": "daga",
+          "type": "ataque",
+          "name": "Daga",
+          "cost": 6,
+          "blocks": 1,
+          "limit": "MAX 4",
+          "effect": "Daño dado +1",
+          "extra": "Reutilizable x3",
+          "image": "assets/Equipo/ataque/a6-Daga.webp",
+          "broken": {
+            "limit": "MAX 2",
+            "effect": "Daño dado +1",
+            "extra": "Reutilizable"
+          }
+        }
+      ],
+      "escudos": [
+        {
+          "id": "reforzado_pinchos",
+          "type": "escudos",
+          "name": "Reforzado de Pinchos",
+          "cost": 6,
+          "blocks": 2,
+          "limit": "MAX 5",
+          "effect": "Par: daño dado",
+          "extra": "Impar: Escudo dado",
+          "image": "assets/Equipo/escudos/e6-ReforzadoDePinchos.webp",
+          "broken": {
+            "limit": "MAX 3",
+            "effect": "Par: daño dado",
+            "extra": "Impar: Escudo dado"
+          }
+        },
+        {
+          "id": "reforzado_hierro",
+          "type": "escudos",
+          "name": "Reforzado de Hierro",
+          "cost": 6,
+          "blocks": 2,
+          "limit": "-",
+          "effect": "Escudo dado",
+          "extra": "",
+          "image": "assets/Equipo/escudos/e5-ReforzadoDeHierro.webp",
+          "broken": {
+            "limit": "-",
+            "effect": "Escudo dado",
+            "extra": ""
+          }
+        },
+        {
+          "id": "rodela",
+          "type": "escudos",
+          "name": "Rodela",
+          "cost": 3,
+          "blocks": 1,
+          "limit": "MAX 4",
+          "effect": "Escudo dado +1",
+          "extra": "Reutilizable x3",
+          "image": "assets/Equipo/escudos/e4-Rodela.webp",
+          "broken": {
+            "limit": "MAX 3",
+            "effect": "Escudo dado",
+            "extra": ""
+          }
+        },
+        {
+          "id": "reforzado_hierro",
+          "type": "escudos",
+          "name": "Reforzado de Hierro",
+          "cost": 6,
+          "blocks": 2,
+          "limit": "-",
+          "effect": "Escudo dado",
+          "extra": "",
+          "image": "assets/Equipo/escudos/e5-ReforzadoDeHierro.webp",
+          "broken": {
+            "limit": "-",
+            "effect": "Escudo dado",
+            "extra": ""
+          }
+        },
+        {
+          "id": "rodela",
+          "type": "escudos",
+          "name": "Rodela",
+          "cost": 3,
+          "blocks": 1,
+          "limit": "MAX 4",
+          "effect": "Escudo dado +1",
+          "extra": "Reutilizable x3",
+          "image": "assets/Equipo/escudos/e4-Rodela.webp",
+          "broken": {
+            "limit": "MAX 3",
+            "effect": "Escudo dado",
+            "extra": ""
+          }
+        },
+        {
+          "id": "doble_reforzado",
+          "type": "escudos",
+          "name": "Doble Reforzado",
+          "cost": 3,
+          "blocks": 2,
+          "limit": "MAX 3",
+          "effect": "Escudo dado x2",
+          "extra": "",
+          "image": "assets/Equipo/escudos/e3-DobleReforzado.webp",
+          "broken": {
+            "limit": "MAX 2",
+            "effect": "Escudo dado x2",
+            "extra": ""
+          }
+        },
+        {
+          "id": "reforzado_pinchos",
+          "type": "escudos",
+          "name": "Reforzado de Pinchos",
+          "cost": 6,
+          "blocks": 2,
+          "limit": "MAX 5",
+          "effect": "Par: daño dado",
+          "extra": "Impar: Escudo dado",
+          "image": "assets/Equipo/escudos/e6-ReforzadoDePinchos.webp",
+          "broken": {
+            "limit": "MAX 3",
+            "effect": "Par: daño dado",
+            "extra": "Impar: Escudo dado"
+          }
+        },
+        {
+          "id": "reforzado_cuero",
+          "type": "escudos",
+          "name": "Reforzado de Cuero",
+          "cost": 6,
+          "blocks": 1,
+          "limit": "-",
+          "effect": "Escudo dado -1",
+          "extra": "",
+          "image": "assets/Equipo/escudos/e2-ReforzadoDeCuero.webp",
+          "broken": {
+            "limit": "MAX 4",
+            "effect": "Escudo dado -1",
+            "extra": ""
+          }
+        },
+        {
+          "id": "reforzado_placas",
+          "type": "escudos",
+          "name": "Reforzado de Placas",
+          "cost": 3,
+          "blocks": 1,
+          "limit": "-",
+          "effect": "Escudo dado MAX 4",
+          "extra": "",
+          "image": "assets/Equipo/escudos/e1-ReforzadoDePlacas.webp",
+          "broken": {
+            "limit": "-",
+            "effect": "Escudo dado MAX 3",
+            "extra": ""
+          }
+        },
+        {
+          "id": "doble_reforzado",
+          "type": "escudos",
+          "name": "Doble Reforzado",
+          "cost": 3,
+          "blocks": 2,
+          "limit": "MAX 3",
+          "effect": "Escudo dado x2",
+          "extra": "",
+          "image": "assets/Equipo/escudos/e3-DobleReforzado.webp",
+          "broken": {
+            "limit": "MAX 2",
+            "effect": "Escudo dado x2",
+            "extra": ""
+          }
+        },
+        {
+          "id": "reforzado_cuero",
+          "type": "escudos",
+          "name": "Reforzado de Cuero",
+          "cost": 6,
+          "blocks": 1,
+          "limit": "-",
+          "effect": "Escudo dado -1",
+          "extra": "",
+          "image": "assets/Equipo/escudos/e2-ReforzadoDeCuero.webp",
+          "broken": {
+            "limit": "MAX 4",
+            "effect": "Escudo dado -1",
+            "extra": ""
+          }
+        },
+        {
+          "id": "reforzado_placas",
+          "type": "escudos",
+          "name": "Reforzado de Placas",
+          "cost": 3,
+          "blocks": 1,
+          "limit": "-",
+          "effect": "Escudo dado MAX 4",
+          "extra": "",
+          "image": "assets/Equipo/escudos/e1-ReforzadoDePlacas.webp",
+          "broken": {
+            "limit": "-",
+            "effect": "Escudo dado MAX 3",
+            "extra": ""
+          }
+        }
+      ],
+      "curacion": [
+        {
+          "id": "vendaje",
+          "type": "curacion",
+          "name": "Vendaje",
+          "cost": 4,
+          "blocks": 1,
+          "limit": "-",
+          "effect": "Cura 2",
+          "extra": "Reutilizable",
+          "image": "assets/Equipo/curacion/c3-Vendaje.webp",
+          "broken": {
+            "limit": "-",
+            "effect": "Cura 1",
+            "extra": ""
+          }
+        },
+        {
+          "id": "cristal_curacion",
+          "type": "curacion",
+          "name": "Cristal de Curación",
+          "cost": 4,
+          "blocks": 1,
+          "limit": "-",
+          "effect": "Cura dado Max 4",
+          "extra": "",
+          "image": "assets/Equipo/curacion/c6-CristalDeCuracion.webp",
+          "broken": {
+            "limit": "-",
+            "effect": "Cura dado Max 3",
+            "extra": ""
+          }
+        },
+        {
+          "id": "drenar_justo",
+          "type": "curacion",
+          "name": "Drenar Justo",
+          "cost": 4,
+          "blocks": 2,
+          "limit": "MAX 4",
+          "effect": "Daño 2",
+          "extra": "Con un 3: cura 3",
+          "image": "assets/Equipo/curacion/c1-DrenaJusto.webp",
+          "broken": {
+            "limit": "MAX 3",
+            "effect": "Daño 1",
+            "extra": "Con un 2: cura 2"
+          }
+        },
+        {
+          "id": "cristal_curacion",
+          "type": "curacion",
+          "name": "Cristal de Curación",
+          "cost": 4,
+          "blocks": 1,
+          "limit": "-",
+          "effect": "Cura dado Max 4",
+          "extra": "",
+          "image": "assets/Equipo/curacion/c6-CristalDeCuracion.webp",
+          "broken": {
+            "limit": "-",
+            "effect": "Cura dado Max 3",
+            "extra": ""
+          }
+        },
+        {
+          "id": "vendaje",
+          "type": "curacion",
+          "name": "Vendaje",
+          "cost": 4,
+          "blocks": 1,
+          "limit": "-",
+          "effect": "Cura 2",
+          "extra": "Reutilizable",
+          "image": "assets/Equipo/curacion/c3-Vendaje.webp",
+          "broken": {
+            "limit": "-",
+            "effect": "Cura 1",
+            "extra": ""
+          }
+        },
+        {
+          "id": "gema_regeneracion",
+          "type": "curacion",
+          "name": "Gema Regeneración",
+          "cost": 4,
+          "blocks": 2,
+          "limit": "MAX 4",
+          "effect": "Daño dado",
+          "extra": "Con un impar: cura 2",
+          "image": "assets/Equipo/curacion/c5-GemaRegeneracion.webp",
+          "broken": {
+            "limit": "MAX 3",
+            "effect": "Daño dado",
+            "extra": "Con un impar: cura 1"
+          }
+        },
+        {
+          "id": "corazon_elastico",
+          "type": "curacion",
+          "name": "Corazón Elástico",
+          "cost": 4,
+          "blocks": 2,
+          "limit": "MAX 4",
+          "effect": "Varia entre daño y vida",
+          "extra": "",
+          "image": "assets/Equipo/curacion/c4-CorazonElastico.webp",
+          "broken": {
+            "limit": "MAX 3",
+            "effect": "Varia entre daño y vida",
+            "extra": ""
+          }
+        },
+        {
+          "id": "drenar_justo",
+          "type": "curacion",
+          "name": "Drenar Justo",
+          "cost": 4,
+          "blocks": 2,
+          "limit": "MAX 4",
+          "effect": "Daño 2",
+          "extra": "Con un 3: cura 3",
+          "image": "assets/Equipo/curacion/c1-DrenaJusto.webp",
+          "broken": {
+            "limit": "MAX 3",
+            "effect": "Daño 1",
+            "extra": "Con un 2: cura 2"
+          }
+        },
+        {
+          "id": "corazon_elastico",
+          "type": "curacion",
+          "name": "Corazón Elástico",
+          "cost": 4,
+          "blocks": 2,
+          "limit": "MAX 4",
+          "effect": "Varia entre daño y vida",
+          "extra": "",
+          "image": "assets/Equipo/curacion/c4-CorazonElastico.webp",
+          "broken": {
+            "limit": "MAX 3",
+            "effect": "Varia entre daño y vida",
+            "extra": ""
+          }
+        },
+        {
+          "id": "drenar",
+          "type": "curacion",
+          "name": "Drenar",
+          "cost": 4,
+          "blocks": 2,
+          "limit": "MAX 4",
+          "effect": "Daño dado",
+          "extra": "Cura Max 2",
+          "image": "assets/Equipo/curacion/c2-Drenar.webp",
+          "broken": {
+            "limit": "MAX 3",
+            "effect": "Daño dado",
+            "extra": "Cura Max 2"
+          }
+        },
+        {
+          "id": "gema_regeneracion",
+          "type": "curacion",
+          "name": "Gema Regeneración",
+          "cost": 4,
+          "blocks": 2,
+          "limit": "MAX 4",
+          "effect": "Daño dado",
+          "extra": "Con un impar: cura 2",
+          "image": "assets/Equipo/curacion/c5-GemaRegeneracion.webp",
+          "broken": {
+            "limit": "MAX 3",
+            "effect": "Daño dado",
+            "extra": "Con un impar: cura 1"
+          }
+        },
+        {
+          "id": "drenar",
+          "type": "curacion",
+          "name": "Drenar",
+          "cost": 4,
+          "blocks": 2,
+          "limit": "MAX 4",
+          "effect": "Daño dado",
+          "extra": "Cura Max 2",
+          "image": "assets/Equipo/curacion/c2-Drenar.webp",
+          "broken": {
+            "limit": "MAX 3",
+            "effect": "Daño dado",
+            "extra": "Cura Max 2"
+          }
+        }
+      ]
+    },
+    "battlefield": {
+      "waveLevel": 1,
+      "actionCount": 0,
+      "goblins": [
+        {
+          "level": 1,
+          "hp": 5,
+          "mo": 2,
+          "pex": 1,
+          "dice": [
+            "1d4"
+          ],
+          "image": "assets/Monstruos/01.webp",
+          "attacks": {
+            "1": [
+              "Daño Directo"
+            ],
+            "2": [],
+            "3": [],
+            "4": [
+              "Rotura no esquivable"
+            ],
+            "5": [],
+            "6": []
+          },
+          "uid": 1786113100177,
+          "currentHp": 5,
+          "letterAssigned": "A",
+          "name": "Goblin A",
+          "obsoleteAnimationPlayed": true
+        }
+      ]
+    },
+    "currentCombat": null,
+    "isMarketPhase": true,
+    "currentHito": 6,
+    "isRetaliationPhase": false,
+    "retaliationQueue": [],
+    "retaliationEscudoDeOroTriggeredPlayers": [],
+    "isGameOver": false,
+    "isGameWon": true,
+    "activeSenda": "iniciacion",
+    "pendingHito1Goblins": 0,
+    "pendingCorrosionChoice": null,
+    "isFirstTurnOfGame": false,
+    "lastCombatId": 1,
+    "lastActionWasCombat": true,
+    "lastWarlordExtraDmg": 0,
+    "difficulty": "facil",
+    "lastCombatAcquiredEffects": {
+      "escozor": 0,
+      "calambre": 1,
+      "tembleque": 0
+    },
+    "lastWaveLevel": 0,
+    "lastActionCount": 0,
+    "activeSelectedDieId": null,
+    "activeSelectedEquipId": null,
+    "selectedSetupRoles": [
+      "guerrero",
+      null,
+      null,
+      null
+    ],
+    "justSelectedRole": null,
+    "selectedGoblins": [],
+    "selectedSendaValue": "iniciacion",
+    "currentSendaTargetSelectId": "select-senda",
+    "roleFillDice": {
+      "red1": 0,
+      "red2": 0,
+      "black": 0
+    },
+    "roleFillAssigned": null,
+    "roleFillBlackRerolled": false,
+    "roleFillSilverSelected": null,
+    "isRollingRoleFillDice": false,
+    "animatedGoblinUids": {},
+    "previousGoblinHps": {},
+    "currentAssignments": {},
+    "interceptionAssignments": {},
+    "isRollingCombatDice": false,
+    "prevPlayerStats": [],
+    "activeSelectedOrbUids": [],
+    "combatHistory": [
+      {
+        "player": {
+          "name": "Jugador 1",
+          "playerNum": 1,
+          "hp": 10,
+          "shield": 0,
+          "energy": 82,
+          "mo": 2,
+          "pex": 0,
+          "level": 1,
+          "role": "guerrero",
+          "equipped": [
+            {
+              "id": "espada_inicial",
+              "name": "Espada Inicial",
+              "isBroken": false,
+              "isActive": true
+            },
+            {
+              "id": "escudo_inicial",
+              "name": "Escudo Madera",
+              "isBroken": false,
+              "isActive": true
+            }
+          ]
+        },
+        "goblins": [
+          {
+            "uid": 1786113100177,
+            "name": "Goblin A",
+            "level": 1,
+            "hp": 5,
+            "hpAfter": 5
+          },
+          {
+            "uid": "1786113123866-smnyoix9ump",
+            "name": "Desafío Final",
+            "level": 5,
+            "hp": 25,
+            "hpAfter": 25,
+            "maxHp": 25,
+            "isBoss": true,
+            "isHito": true
+          }
+        ],
+        "playerDice": [
+          {
+            "type": "red",
+            "faces": 6,
+            "id": "die-0",
+            "value": 1,
+            "rerolled": false,
+            "assignedTo": "escudo_inicial"
+          },
+          {
+            "type": "black",
+            "faces": 6,
+            "id": "die-1",
+            "value": 6,
+            "rerolled": false,
+            "assignedTo": "intercept-1786113123866-smnyoix9ump-1"
+          }
+        ],
+        "goblinDice": {
+          "1786113123866-smnyoix9ump": {
+            "total": 15,
+            "details": [
+              {
+                "type": "die",
+                "faces": 6,
+                "val": 5
+              },
+              {
+                "type": "mod",
+                "val": 2
+              },
+              {
+                "type": "die",
+                "faces": 6,
+                "val": 6
+              },
+              {
+                "type": "mod",
+                "val": 2
+              }
+            ]
+          }
+        },
+        "assignments": {
+          "escudo_inicial": [
+            {
+              "dieId": "die-0",
+              "value": 1,
+              "targetUid": null,
+              "elasticDamage": null
+            }
+          ]
+        },
+        "interceptions": {
+          "1786113123866-smnyoix9ump": [
+            {
+              "dieId": "die-1",
+              "value": 6,
+              "goblinDieIndex": 1
+            }
+          ]
+        },
+        "resolvedDetails": {
+          "playerDiceDetails": [
+            {
+              "dieId": "die-0",
+              "value": 1,
+              "assignedTo": "Escudo Madera",
+              "isRole": false,
+              "damage": 0,
+              "shield": 1,
+              "heal": 0,
+              "target": "Sin objetivo"
+            },
+            {
+              "dieId": "die-1",
+              "value": 6,
+              "assignedTo": "Intercepción contra Desafío Final",
+              "isRole": false,
+              "isIntercept": true,
+              "damage": 0,
+              "shield": 0,
+              "heal": 0,
+              "energyGained": 0,
+              "target": "Desafío Final"
+            }
+          ],
+          "goblinDiceDetails": [
+            {
+              "goblinName": "Desafío Final",
+              "val": 5,
+              "isIntercepted": false,
+              "interceptedBy": null,
+              "interceptedByDieId": null,
+              "effects": [
+                {
+                  "text": "1 rotura [Se rompió: Escudo Madera]",
+                  "status": "aplicado"
+                },
+                {
+                  "text": "1 calambre",
+                  "status": "aplicado"
+                }
+              ]
+            },
+            {
+              "goblinName": "Desafío Final",
+              "val": 6,
+              "isIntercepted": true,
+              "interceptedBy": 6,
+              "interceptedByDieId": "die-1",
+              "effects": [
+                {
+                  "text": "1 rotura",
+                  "status": "mitigado"
+                },
+                {
+                  "text": "1 tembleque",
+                  "status": "mitigado"
+                }
+              ]
+            }
+          ],
+          "finalPlayerOutcome": {
+            "hpBefore": 10,
+            "hpAfter": 4,
+            "levelBefore": 1,
+            "levelAfter": 1,
+            "directDamageReceived": 0,
+            "normalDamageIncoming": 7,
+            "damageBlocked": 1,
+            "netNormalDamageReceived": 6,
+            "escozorDamageDealt": 0,
+            "warlordExtraDmg": 0,
+            "finalDamageHpChange": 6
+          }
+        },
+        "id": 1,
+        "timestamp": "7/8/2026, 16:32:12",
+        "wave": 1
+      }
+    ],
+    "logs": [
+      "[16:31:40] ¡La aventura comienza en la Oleada 1! Fase de Mercado.",
+      "[16:31:40] <span style=\"color: #4cc9f0;\">➡️>>> Turno de <strong>Jugador 1</strong> (Vida: 10/10, Oro: 2).</span>",
+      "[16:32:03] 🔥 <strong>HITO DESPLEGADO: Desafío Final</strong> 🔥",
+      "[16:32:05] <span style=\"color:#B81D1D\">*****<strong>Jugador 1</strong> inició un combate contra: G5.*****</span>",
+      "[16:32:12] 💔 ¡CRACK! El equipo <strong>Escudo Madera</strong> de <strong>Jugador 1</strong> se ha <span style=\"color:var(--accent-red)\">ROTO</span>.",
+      "[16:32:12] ⚡ <strong>Jugador 1</strong> ha recibido <span style=\"color:#ffcc00\">CALAMBRE</span>.",
+      "[16:32:12] 🛡️ Un dado natural de <strong>6</strong> y su modificador de +2 de G5 fue interceptado.",
+      "[16:32:12] Frente a <strong>Jugador 1</strong>, el G5 contraataca con 7 daño.",
+      "[16:32:12] 🛡️ <strong>Jugador 1</strong> bloquea <span style=\"color:#3a7bd5\"><strong>1 daño</strong></span> con sus escudos (Defensa total: 1).",
+      "[16:32:12] 💥 <strong>Jugador 1</strong> recibe <span style=\"color:#ff4d4d\"><strong>6 daño</strong></span> sobrante.",
+      "[16:32:17] 🔷 <strong>Jugador 1</strong> usó su rol para infligir 25 daño directo a Desafío Final.",
+      "[16:32:17] ⚔️ ¡El ataque de rol eliminó a Desafío Final! (+8 mo, +8 PEX).",
+      "[16:32:17] 🎉 <span style=\"color:#ecf542\">¡<strong>Los jugadores subieron al Nivel 2!  ❤️+5</strong></span> 🎉",
+      "[16:32:17] 🎉 <span style=\"color:#ecf542\">¡<strong>Los jugadores subieron al Nivel 3!  ❤️+5</strong></span> 🎉",
+      "[16:32:58] &#128190; <strong>Partida guardada correctamente.</strong>"
+    ],
+    "startTime": "2026-08-07T14:31:40.177Z",
+    "endTime": "2026-08-07T14:32:17.046Z",
+    "goblinLetterCounter": 2,
+    "isCombat": true,
+    "isResolvingCombat": false,
+    "lastCombatBossEffects": [],
+    "lastCombatPiromanteBombs": 0,
+    "lastCombatGoldPrevented": 0,
+    "lastCombatExtraGoldDamage": 0,
+    "lastCombatSaqueoExperto": 0,
+    "lastCombatLosCarteristasRobo": 0,
+    "lastCombatLosCarteristasDmg": 0,
+    "lastCombatArmaduraMonedasGold": 0,
+    "lastCombatDebugState": {
+      "player": {
+        "name": "Jugador 1",
+        "playerNum": 1,
+        "hp": 10,
+        "shield": 0,
+        "energy": 82,
+        "mo": 2,
+        "pex": 0,
+        "level": 1,
+        "role": "guerrero",
+        "equipped": [
+          {
+            "id": "espada_inicial",
+            "name": "Espada Inicial",
+            "isBroken": false,
+            "isActive": true
+          },
+          {
+            "id": "escudo_inicial",
+            "name": "Escudo Madera",
+            "isBroken": false,
+            "isActive": true
+          }
+        ]
+      },
+      "goblins": [
+        {
+          "uid": 1786113100177,
+          "name": "Goblin A",
+          "level": 1,
+          "hp": 5,
+          "hpAfter": 5
+        },
+        {
+          "uid": "1786113123866-smnyoix9ump",
+          "name": "Desafío Final",
+          "level": 5,
+          "hp": 25,
+          "hpAfter": 25,
+          "maxHp": 25,
+          "isBoss": true,
+          "isHito": true
+        }
+      ],
+      "playerDice": [
+        {
+          "type": "red",
+          "faces": 6,
+          "id": "die-0",
+          "value": 1,
+          "rerolled": false,
+          "assignedTo": "escudo_inicial"
+        },
+        {
+          "type": "black",
+          "faces": 6,
+          "id": "die-1",
+          "value": 6,
+          "rerolled": false,
+          "assignedTo": "intercept-1786113123866-smnyoix9ump-1"
+        }
+      ],
+      "goblinDice": {
+        "1786113123866-smnyoix9ump": {
+          "total": 15,
+          "details": [
+            {
+              "type": "die",
+              "faces": 6,
+              "val": 5
+            },
+            {
+              "type": "mod",
+              "val": 2
+            },
+            {
+              "type": "die",
+              "faces": 6,
+              "val": 6
+            },
+            {
+              "type": "mod",
+              "val": 2
+            }
+          ]
+        }
+      },
+      "assignments": {
+        "escudo_inicial": [
+          {
+            "dieId": "die-0",
+            "value": 1,
+            "targetUid": null,
+            "elasticDamage": null
+          }
+        ]
+      },
+      "interceptions": {
+        "1786113123866-smnyoix9ump": [
+          {
+            "dieId": "die-1",
+            "value": 6,
+            "goblinDieIndex": 1
+          }
+        ]
+      },
+      "resolvedDetails": {
+        "playerDiceDetails": [
+          {
+            "dieId": "die-0",
+            "value": 1,
+            "assignedTo": "Escudo Madera",
+            "isRole": false,
+            "damage": 0,
+            "shield": 1,
+            "heal": 0,
+            "target": "Sin objetivo"
+          },
+          {
+            "dieId": "die-1",
+            "value": 6,
+            "assignedTo": "Intercepción contra Desafío Final",
+            "isRole": false,
+            "isIntercept": true,
+            "damage": 0,
+            "shield": 0,
+            "heal": 0,
+            "energyGained": 0,
+            "target": "Desafío Final"
+          }
+        ],
+        "goblinDiceDetails": [
+          {
+            "goblinName": "Desafío Final",
+            "val": 5,
+            "isIntercepted": false,
+            "interceptedBy": null,
+            "interceptedByDieId": null,
+            "effects": [
+              {
+                "text": "1 rotura [Se rompió: Escudo Madera]",
+                "status": "aplicado"
+              },
+              {
+                "text": "1 calambre",
+                "status": "aplicado"
+              }
+            ]
+          },
+          {
+            "goblinName": "Desafío Final",
+            "val": 6,
+            "isIntercepted": true,
+            "interceptedBy": 6,
+            "interceptedByDieId": "die-1",
+            "effects": [
+              {
+                "text": "1 rotura",
+                "status": "mitigado"
+              },
+              {
+                "text": "1 tembleque",
+                "status": "mitigado"
+              }
+            ]
+          }
+        ],
+        "finalPlayerOutcome": {
+          "hpBefore": 10,
+          "hpAfter": 4,
+          "levelBefore": 1,
+          "levelAfter": 1,
+          "directDamageReceived": 0,
+          "normalDamageIncoming": 7,
+          "damageBlocked": 1,
+          "netNormalDamageReceived": 6,
+          "escozorDamageDealt": 0,
+          "warlordExtraDmg": 0,
+          "finalDamageHpChange": 6
+        }
+      },
+      "id": 1,
+      "timestamp": "7/8/2026, 16:32:12",
+      "wave": 1
+    },
+    "lastDamageAppliedEscudoDeOro": false
+  },
+  "achievements": {
+    "iniciacion": [
+      1
+    ]
+  }
+}

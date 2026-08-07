@@ -5,6 +5,33 @@ let focusHighlightTimeouts = [];
 const gameState = new GameState();
 const botManager = typeof BotManager !== 'undefined' ? new BotManager(gameState) : null;
 window.botManager = botManager;
+
+const Achievements = {
+  load: function() {
+    const raw = localStorage.getItem('malditosGoblins_Logros');
+    return raw ? JSON.parse(raw) : {};
+  },
+  save: function(data) {
+    localStorage.setItem('malditosGoblins_Logros', JSON.stringify(data));
+  },
+  recordWin: function(sendaId, roleIds) {
+    const data = this.load();
+    if (!data[sendaId]) data[sendaId] = [];
+    let updated = false;
+    roleIds.forEach(role => {
+      if (!data[sendaId].includes(role)) {
+        data[sendaId].push(role);
+        updated = true;
+      }
+    });
+    if (updated) this.save(data);
+  },
+  hasWon: function(sendaId, roleId) {
+    const data = this.load();
+    return data[sendaId] && data[sendaId].includes(roleId);
+  }
+};
+window.Achievements = Achievements;
 const COIN_SVG = `<svg viewBox="0 0 24 24" width="18" height="18" style="vertical-align: middle; margin-right: 3px;"><circle cx="12" cy="12" r="10" fill="#ffd700" stroke="#c79a32" stroke-width="2"/><circle cx="12" cy="12" r="7" fill="none" stroke="#e6c200" stroke-width="1" stroke-dasharray="2,2"/><path d="M12 7v10" stroke="#c79a32" stroke-width="2" stroke-linecap="round"/></svg>`;
 const SACK_SVG = `<svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align: middle; margin-right: 3px;"><path d="M9 3C8.5 3 8 4 8.5 5.5C9 7 9 7 9 7C6 8 4 12 4 18C4 20.5 6 21 12 21C18 21 20 20.5 20 18C20 12 18 8 15 7C15 7 15 7 15.5 5.5C16 4 15.5 3 15 3C13 3 11 3.5 9 3Z" fill="#ffffff" stroke="#000000" stroke-width="1.8" stroke-linejoin="round"/><rect x="8" y="6.5" width="8" height="2.5" rx="1" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"/><path d="M13 9C13 11 12 12 12 12C12 12 14 11 14 9Z" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"/><path d="M11 9C11 11 12 12 12 12C12 12 10 11 10 9Z" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"/></svg>`;
 const SHIELD_SVG = `<svg viewBox="0 0 24 24" width="18" height="18" style="vertical-align: middle;"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="var(--accent-blue)" stroke="#023e8a" stroke-width="2" stroke-linejoin="round"/><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z" fill="url(#shieldGrad)" stroke="none"/><defs><linearGradient id="shieldGrad" x1="0" y1="0" x2="1" y2="1"><stop offset="0%" stop-color="rgba(255,255,255,0.4)"/><stop offset="50%" stop-color="rgba(255,255,255,0)"/></linearGradient></defs></svg>`;
@@ -725,6 +752,33 @@ function renderRoleSelection() {
     optionsDiv.style.gap = '6px'; // Reducir un poco el espacio para evitar que desplace elementos
     optionsDiv.style.flexWrap = 'nowrap';
 
+    const updateRoleAchievements = (roleId) => {
+      const container = document.getElementById('setup-role-achievements');
+      if (!container) return;
+      container.innerHTML = '';
+      if (!roleId) return;
+      
+      const sendas = [
+        { value: 'iniciacion', img: 'assets/Monstruos/Jefes/Inicicion.webp', name: 'Iniciación' },
+        { value: 'guerrero', img: 'assets/Monstruos/Jefes/Señor-de-la-Guerra.webp', name: 'Zeñor de la Guerra' },
+        { value: 'rey_brujo', img: 'assets/Monstruos/Jefes/Rey-Brujo.webp', name: 'Rey Brujo' },
+        { value: 'recaudador', img: 'assets/Monstruos/Jefes/Gran-Recaudador.webp', name: 'Gran Recaudador' },
+        { value: 'piromante', img: 'assets/Monstruos/Jefes/El-Piromante.webp', name: 'El Piromante' },
+        { value: 'cazador', img: 'assets/Monstruos/Jefes/El-Cazador.webp', name: 'El Cazador' },
+        { value: 'la_madre', img: 'assets/Monstruos/Jefes/La-Madre.webp', name: 'La Madre' }
+      ];
+      
+      sendas.forEach(s => {
+        if (Achievements.hasWon(s.value, roleId)) {
+          const div = document.createElement('div');
+          div.title = `Victoria: ${s.name}`;
+          const rColor = window.botManager ? window.botManager.getRoleColor(roleId) : 'var(--gold)';
+          div.style.cssText = `width: 32px; height: 48px; border-radius: 4px; border: 1.5px solid ${rColor}; box-shadow: 0 0 5px ${rColor}; background-image: url('${s.bossImg || s.img}'); background-size: 200% auto; background-position: left top;`;
+          container.appendChild(div);
+        }
+      });
+    };
+
     DB.roles.forEach(r => {
       let img = document.createElement('div');
       img.className = 'role-option' + (selectedSetupRoles[i] === r.id ? ' selected' : '');
@@ -746,6 +800,7 @@ function renderRoleSelection() {
         
         renderRoleSelection();
       };
+      
       img.onmouseenter = () => {
         const previewName = document.getElementById('setup-role-name');
         const previewCard = document.getElementById('setup-role-card');
@@ -755,6 +810,7 @@ function renderRoleSelection() {
           const miniImage = r.image.replace('rol_', 'mini_rol_');
           previewCard.style.backgroundImage = `url('${miniImage}')`;
           previewEffect.innerText = r.effect;
+          updateRoleAchievements(r.id);
         }
       };
 
@@ -812,6 +868,7 @@ function renderRoleSelection() {
         const miniImage = randomRole.image.replace('rol_', 'mini_rol_');
         previewCard.style.backgroundImage = `url('${miniImage}')`;
         previewEffect.innerText = randomRole.effect;
+        updateRoleAchievements(randomRole.id);
       }
       
       window._randomBtnClickedAt = Date.now();
@@ -831,6 +888,7 @@ function renderRoleSelection() {
         previewCard.style.backgroundImage = "url('assets/Roles/back_rol.webp')";
         previewCard.style.backgroundColor = '';
         previewEffect.innerText = 'El sistema elegirá un rol al azar para este jugador.';
+        updateRoleAchievements(null);
       }
     };
     randomBtn.onmouseleave = () => {
@@ -1672,6 +1730,22 @@ function initSendaSelectionScreen() {
       <div>${senda.name}</div>
       <div class="senda-card-stars">${senda.stars}</div>
     `;
+
+    const achievementsBar = document.createElement('div');
+    achievementsBar.style.cssText = "display: flex; gap: 6px; justify-content: center; padding: 2px 0 6px 0; margin-top: -5px;";
+    if (typeof DB !== 'undefined' && DB.roles) {
+      DB.roles.forEach(role => {
+        const hasWon = Achievements.hasWon(senda.value, role.id);
+        const img = document.createElement('img');
+        img.src = `assets/Roles/ico_${role.id}.png`;
+        img.onerror = () => { img.src = role.icon; }; // fallback si no existe
+        img.title = role.name;
+        const rColor = window.botManager ? window.botManager.getRoleColor(role.id) : 'var(--gold)';
+        img.style.cssText = `width: 28px; height: 28px; border-radius: 50%; border: 1.5px solid ${hasWon ? rColor : '#333'}; opacity: ${hasWon ? '1' : '0.3'}; filter: ${hasWon ? 'drop-shadow(0 0 3px ' + rColor + ')' : 'grayscale(100%)'}; transition: all 0.3s ease;`;
+        achievementsBar.appendChild(img);
+      });
+    }
+    header.appendChild(achievementsBar);
     wrapper.appendChild(header);
 
     const card = document.createElement('div');
@@ -5311,6 +5385,11 @@ function renderGameWon() {
 
   const phrase = DB.victoryPhrases ? DB.victoryPhrases[Math.floor(Math.random() * DB.victoryPhrases.length)] : "¡Habéis limpiado la senda y la gloria es vuestra!";
 
+  if (gameState && gameState.activeSenda && gameState.players) {
+    const roleIds = gameState.players.map(p => p.role && p.role.id ? p.role.id : null).filter(id => id !== null);
+    Achievements.recordWin(gameState.activeSenda, roleIds);
+  }
+
   desc.innerHTML = `
     <img src="assets/victoria.jpg" style="width: 100%; max-height: 500px; object-fit: cover; border-radius: 8px; margin-bottom: 20px; border: 1px solid rgba(212, 175, 55, 0.5); pointer-events: none; -webkit-user-drag: none; user-select: none;" onerror="this.src='assets/final.jpg'">
     <div style="font-size: 1.5rem; margin-bottom: 20px; color: #fff;">¡El Jefe ha caído!</div>
@@ -5861,6 +5940,34 @@ if (btnSaveGame) {
   });
 };
 
+const btnDownloadGame = document.getElementById('btn-download-game');
+if (btnDownloadGame) {
+  btnDownloadGame.addEventListener('click', () => {
+    if (!gameState || gameState.players.length === 0) return;
+    
+    // Guardar para asegurar que tenemos el estado más reciente
+    window.saveGame();
+    
+    const exportData = {
+      gameState: gameState,
+      achievements: Achievements.load()
+    };
+    
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `malditos_goblins_save_${new Date().getTime()}.json`;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+    
+    gameState.addLog(`&#128190; <strong>Partida descargada a archivo local.</strong>`);
+    updateUI();
+  });
+}
+
 window.loadGame = function() {
   const saveData = localStorage.getItem('malditosGoblinsSave');
   if (saveData) {
@@ -5901,6 +6008,86 @@ if (btnLoadGame) {
     window.loadGame();
   });
 }
+
+const btnLoadFile = document.getElementById('btn-load-file');
+const inputLoadFile = document.getElementById('input-load-file');
+if (btnLoadFile && inputLoadFile) {
+  btnLoadFile.addEventListener('click', () => {
+    inputLoadFile.click();
+  });
+  
+  inputLoadFile.addEventListener('change', (e) => {
+    const file = e.target.files[0];
+    if (!file) return;
+    
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const data = JSON.parse(event.target.result);
+        if (data.gameState) {
+          if (data.achievements) {
+            const currentAchieve = Achievements.load();
+            for (let senda in data.achievements) {
+              if (!currentAchieve[senda]) currentAchieve[senda] = [];
+              data.achievements[senda].forEach(role => {
+                if (typeof role === 'number') {
+                  const p = data.gameState.players.find(pl => pl.id === role);
+                  if (p && p.role && p.role.id) role = p.role.id;
+                  else return;
+                }
+                if (typeof role === 'string' && !currentAchieve[senda].includes(role)) {
+                  currentAchieve[senda].push(role);
+                }
+              });
+            }
+            Achievements.save(currentAchieve);
+          }
+          
+          Object.assign(gameState, data.gameState);
+          
+          if (!gameState.combatHistory) {
+            gameState.combatHistory = [];
+          }
+          
+          if (gameState.players) {
+            gameState.players.forEach(p => {
+                if (p.level >= 4 && !p.dicePool.some(d => d.type === 'silver')) {
+                    p.dicePool.push({ type: 'silver', faces: 3 });
+                }
+            });
+          }
+          
+          window.saveGame(); // Guardar en localStorage también
+          gameState.addLog(`&#128190; <strong>Partida cargada desde archivo local.</strong>`);
+          
+          document.querySelectorAll('.modal, .overlay').forEach(el => {
+            el.classList.add('hidden');
+            el.style.display = '';
+          });
+          
+          const splash = document.getElementById('splash-screen');
+          if (splash) {
+            splash.style.opacity = '0';
+            splash.style.visibility = 'hidden';
+            setTimeout(() => {
+              splash.style.display = 'none';
+            }, 800);
+          }
+          
+          updateUI();
+        } else {
+          alert('El archivo no contiene un guardado válido de Malditos Goblins.');
+        }
+      } catch (err) {
+        console.error(err);
+        alert('Error al leer el archivo JSON: ' + err.message);
+      }
+      inputLoadFile.value = '';
+    };
+    reader.readAsText(file);
+  });
+}
+
 
 setInterval(() => {
   const btnSave = document.getElementById('btn-save-game');
