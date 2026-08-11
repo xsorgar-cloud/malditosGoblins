@@ -2088,28 +2088,8 @@ function openEndTurnWarningModal(onConfirm) {
 }
 
 document.getElementById('btn-end-turn').addEventListener('click', () => {
-  const hasGoblinsAlive = gameState.battlefield.goblins.some(g => !g.isDying);
-  const isWarlordChoicePhase = gameState.activeSenda === 'guerrero' && !hasGoblinsAlive && !gameState.isMarketPhase && !gameState.isRetaliationPhase && !gameState.isGameOver;
-
-  if (isWarlordChoicePhase) {
-    alert("¡No puedes finalizar el turno! Debes elegir una recompensa de Zeñor de la Guerra.");
-    return;
-  }
-
-  if (gameState.activeSenda === 'guerrero' && hasGoblinsAlive) {
-    alert("¡No puedes finalizar el turno! En la senda de Zeñor de la Guerra es obligatorio atacar si hay goblins vivos.");
-    return;
-  }
-
-  if (gameState.isMarketPhase) {
-    // En la fase de mercado, pueden finalizar cuando quieran sin advertencia de "acciones"
-    gameState.nextTurn();
-    updateUI();
-    return;
-  }
-
-  // Si no es fase obligatoria, comprobamos si han hecho acciones
-  if (gameState.battlefield.actionCount < 3) {
+  const btnRole = document.getElementById('btn-role');
+  if (!btnRole.disabled) {
     openEndTurnWarningModal(() => {
       gameState.nextTurn();
       updateUI();
