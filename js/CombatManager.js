@@ -2385,7 +2385,8 @@ window.showTargetSelectionModal = function (playerIndex) {
     const activeGoblins = allGoblins.filter(g => !g.isDying);
 
     if (activeGoblins.length === 0) {
-      options.innerHTML = '<p style="color:#ccc; padding: 20px;">No hay goblins activos a los que atacar.</p>';
+      document.getElementById('target-modal').classList.add('hidden');
+      return;
     } else {
       const gobGrid = document.createElement('div');
       gobGrid.className = 'others-grid';
