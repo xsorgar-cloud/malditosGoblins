@@ -2088,8 +2088,7 @@ function openEndTurnWarningModal(onConfirm) {
 }
 
 document.getElementById('btn-end-turn').addEventListener('click', () => {
-  const btnRole = document.getElementById('btn-role');
-  if (!btnRole.disabled) {
+  if (!gameState.isTurnoCompleted) {
     openEndTurnWarningModal(() => {
       gameState.nextTurn();
       updateUI();

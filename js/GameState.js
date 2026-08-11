@@ -29,6 +29,7 @@ class GameState {
     this.isFirstTurnOfGame = false;
     this.lastCombatId = 0;
     this.lastActionWasCombat = false;
+    this.isTurnoCompleted = false;
     this.lastWarlordExtraDmg = 0;
     this.difficulty = 'facil';
     this.lastCombatAcquiredEffects = { escozor: 0, calambre: 0, tembleque: 0 };
@@ -503,6 +504,7 @@ class GameState {
   }
 
   resolveCombat(assignments, interceptions = {}) {
+    this.isTurnoCompleted = true;
     this.isResolvingCombat = true;
     this.lastActionWasCombat = true;
     const c = this.currentCombat;
@@ -1695,6 +1697,8 @@ class GameState {
     // Evitar iniciar turno si ya se está en represalia o resolución de oleada (doble salvaguarda)
     if (this.isRetaliationPhase || this.isResolvingWaveSequentially) return;
 
+    this.isTurnoCompleted = false;
+
     const color = this.getPlayerColor(player);
     this.addLog(`<span style="color: ${color};">➡️>>> Turno de <strong>${player.name}</strong> (Vida: ${player.hp}/${player.maxHp}, Oro: ${player.mo}).</span>`);
     
@@ -1714,6 +1718,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
   }
 
   consumeAction() {
+    this.isTurnoCompleted = true;
     this.postActionPhase();
   }
 
