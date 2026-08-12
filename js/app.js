@@ -929,6 +929,28 @@ var selectedGoblins = [];
 // Initial render
 renderRoleSelection();
 
+// Forzar previsualización inicial del rol del Jugador 1
+(function() {
+  if (selectedSetupRoles[0]) {
+    const roleId = selectedSetupRoles[0];
+    const r = typeof DB !== 'undefined' && DB.roles ? DB.roles.find(role => role.id === roleId) : null;
+    if (r) {
+      const previewName = document.getElementById('setup-role-name');
+      const previewCard = document.getElementById('setup-role-card');
+      const previewEffect = document.getElementById('setup-role-effect');
+      if (previewName && previewCard && previewEffect) {
+        previewName.innerText = r.name.toUpperCase();
+        const miniImage = r.image.replace('rol_', 'mini_rol_');
+        previewCard.style.backgroundImage = `url('${miniImage}')`;
+        previewEffect.innerText = r.effect;
+        if (typeof updateRoleAchievements === 'function') {
+          updateRoleAchievements(r.id);
+        }
+      }
+    }
+  }
+})();
+
 // Previsualizacion dinamica de reglas de senda en la pantalla de inicio
 function updateSetupSendaPreview() {
   const selectSenda = document.getElementById('select-senda');
