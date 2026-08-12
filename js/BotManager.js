@@ -2898,9 +2898,9 @@ calculateEquipPower(eq, bot) {
     getRoleColor(roleId) {
         const colors = {
             'guerrero': '#e63946',   // Rojo
-            'mago': '#023e8a',       // Azul oscuro
-            'protector': '#111111',  // Negro
-            'sanador': '#ffb3c6',    // Rosado
+            'mago': '#00bfff',       // Azul
+            'protector': 'rgb(151, 151, 151)', // Gris
+            'sanador': 'rgb(255, 38, 218)',    // Rosa/Magenta
             'ladron': '#e09f3e',     // Amarillo oscuro
             'curandero': '#00ff00'   // Verde brillante
         };

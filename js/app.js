@@ -774,7 +774,7 @@ function renderRoleSelection() {
         if (hasWon) {
           div.title = `Victoria: ${s.name}`;
           const rColor = window.botManager ? window.botManager.getRoleColor(roleId) : 'var(--gold)';
-          div.style.cssText = `width: 32px; height: 48px; border-radius: 4px; border: 1.5px solid ${rColor}; box-shadow: 0 0 5px ${rColor}; background-image: url('${s.bossImg || s.img}'); background-size: 200% auto; background-position: left top;`;
+          div.style.cssText = `width: 32px; height: 48px; border-radius: 4px; border: 1.5px solid ${rColor}; box-shadow: 0 0 5px ${rColor}; filter: drop-shadow(0 0 5px ${rColor}); background-image: url('${s.bossImg || s.img}'); background-size: 200% auto; background-position: left top;`;
         } else {
           div.title = `Falta superar: ${s.name}`;
           div.style.cssText = `width: 32px; height: 48px; border-radius: 4px; border: 1.5px solid rgba(255,255,255,0.2); background-image: url('${s.bossImg || s.img}'); background-size: 200% auto; background-position: left top; filter: grayscale(100%) opacity(40%);`;
