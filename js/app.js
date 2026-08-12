@@ -1656,7 +1656,20 @@ function initSendaSelectionScreen() {
       .split-card-screen {
         --senda-card-w: 88vw;
         --senda-card-h: calc(88vw * 1.4);
-        padding: 15px 10px;
+        padding: 0 10px 15px 10px;
+      }
+      .split-card-btn-container {
+        order: -1;
+        position: sticky;
+        top: 0;
+        z-index: 1000;
+        background: rgba(10, 10, 10, 0.95);
+        padding: 10px 0;
+        width: 100vw;
+        justify-content: center;
+        border-bottom: 2px solid var(--gold);
+        margin: 0 -10px 15px -10px;
+        box-shadow: 0 5px 15px rgba(0,0,0,0.8);
       }
       .split-card-container {
         flex-direction: column;
