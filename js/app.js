@@ -659,6 +659,59 @@ let selectedSetupRoles = ['guerrero', null, null, null];
 let selectedSetupBots = [false, true, true, true];
 let justSelectedRole = null;
 
+window.updateRoleAchievements = function(roleId) {
+  const container = document.getElementById('setup-role-achievements');
+  if (!container) return;
+  container.innerHTML = '';
+  if (!roleId) return;
+  
+  const sendas = [
+    { value: 'iniciacion', img: 'assets/Monstruos/Jefes/Inicicion.webp', name: 'Iniciación' },
+    { value: 'guerrero', img: 'assets/Monstruos/Jefes/Señor-de-la-Guerra.webp', name: 'Zeñor de la Guerra' },
+    { value: 'rey_brujo', img: 'assets/Monstruos/Jefes/Rey-Brujo.webp', name: 'Rey Brujo' },
+    { value: 'recaudador', img: 'assets/Monstruos/Jefes/Gran-Recaudador.webp', name: 'Gran Recaudador' },
+    { value: 'piromante', img: 'assets/Monstruos/Jefes/El-Piromante.webp', name: 'El Piromante' },
+    { value: 'cazador', img: 'assets/Monstruos/Jefes/El-Cazador.webp', name: 'El Cazador' },
+    { value: 'la_madre', img: 'assets/Monstruos/Jefes/La-Madre.webp', name: 'La Madre' }
+  ];
+  
+  sendas.forEach(s => {
+    const hasWon = Achievements.hasWon(s.value, roleId);
+    const div = document.createElement('div');
+    if (hasWon) {
+      div.title = `Victoria: ${s.name}`;
+      const rColor = window.botManager ? window.botManager.getRoleColor(roleId) : 'var(--gold)';
+      div.style.cssText = `width: 32px; height: 48px; border-radius: 4px; border: 1.5px solid ${rColor}; box-shadow: 0 0 5px ${rColor}; filter: drop-shadow(0 0 5px ${rColor}); background-image: url('${s.bossImg || s.img}'); background-size: 200% auto; background-position: left top;`;
+    } else {
+      div.title = `Falta superar: ${s.name}`;
+      div.style.cssText = `width: 32px; height: 48px; border-radius: 4px; border: 1.5px solid rgba(255,255,255,0.2); background-image: url('${s.bossImg || s.img}'); background-size: 200% auto; background-position: left top; filter: grayscale(100%) opacity(40%);`;
+    }
+    container.appendChild(div);
+  });
+};
+
+window.updateSetupRolePreview = function(roleData) {
+  const previewName = document.getElementById('setup-role-name');
+  const previewCard = document.getElementById('setup-role-card');
+  const previewEffect = document.getElementById('setup-role-effect');
+  
+  if (previewName && previewCard && previewEffect) {
+    if (!roleData) {
+      previewName.innerText = 'ALEATORIO';
+      previewCard.style.backgroundImage = "url('assets/Roles/back_rol.webp')";
+      previewCard.style.backgroundColor = '';
+      previewEffect.innerText = 'El sistema elegirá un rol al azar para este jugador.';
+      window.updateRoleAchievements(null);
+    } else {
+      previewName.innerText = roleData.name.toUpperCase();
+      const miniImage = roleData.image.replace('rol_', 'mini_rol_');
+      previewCard.style.backgroundImage = `url('${miniImage}')`;
+      previewEffect.innerText = roleData.effect;
+      window.updateRoleAchievements(roleData.id);
+    }
+  }
+};
+
 function renderRoleSelection() {
   roleSelectionContainer.innerHTML = '';
 
@@ -752,36 +805,7 @@ function renderRoleSelection() {
     optionsDiv.style.gap = '6px'; // Reducir un poco el espacio para evitar que desplace elementos
     optionsDiv.style.flexWrap = 'nowrap';
 
-    const updateRoleAchievements = (roleId) => {
-      const container = document.getElementById('setup-role-achievements');
-      if (!container) return;
-      container.innerHTML = '';
-      if (!roleId) return;
-      
-      const sendas = [
-        { value: 'iniciacion', img: 'assets/Monstruos/Jefes/Inicicion.webp', name: 'Iniciación' },
-        { value: 'guerrero', img: 'assets/Monstruos/Jefes/Señor-de-la-Guerra.webp', name: 'Zeñor de la Guerra' },
-        { value: 'rey_brujo', img: 'assets/Monstruos/Jefes/Rey-Brujo.webp', name: 'Rey Brujo' },
-        { value: 'recaudador', img: 'assets/Monstruos/Jefes/Gran-Recaudador.webp', name: 'Gran Recaudador' },
-        { value: 'piromante', img: 'assets/Monstruos/Jefes/El-Piromante.webp', name: 'El Piromante' },
-        { value: 'cazador', img: 'assets/Monstruos/Jefes/El-Cazador.webp', name: 'El Cazador' },
-        { value: 'la_madre', img: 'assets/Monstruos/Jefes/La-Madre.webp', name: 'La Madre' }
-      ];
-      
-      sendas.forEach(s => {
-        const hasWon = Achievements.hasWon(s.value, roleId);
-        const div = document.createElement('div');
-        if (hasWon) {
-          div.title = `Victoria: ${s.name}`;
-          const rColor = window.botManager ? window.botManager.getRoleColor(roleId) : 'var(--gold)';
-          div.style.cssText = `width: 32px; height: 48px; border-radius: 4px; border: 1.5px solid ${rColor}; box-shadow: 0 0 5px ${rColor}; filter: drop-shadow(0 0 5px ${rColor}); background-image: url('${s.bossImg || s.img}'); background-size: 200% auto; background-position: left top;`;
-        } else {
-          div.title = `Falta superar: ${s.name}`;
-          div.style.cssText = `width: 32px; height: 48px; border-radius: 4px; border: 1.5px solid rgba(255,255,255,0.2); background-image: url('${s.bossImg || s.img}'); background-size: 200% auto; background-position: left top; filter: grayscale(100%) opacity(40%);`;
-        }
-        container.appendChild(div);
-      });
-    };
+    // updateRoleAchievements moved to global scope
 
     DB.roles.forEach(r => {
       let img = document.createElement('div');
@@ -800,22 +824,14 @@ function renderRoleSelection() {
         } else {
           selectedSetupRoles[i] = r.id;
           justSelectedRole = { playerIndex: i, roleId: r.id };
+          window.updateSetupRolePreview(r);
         }
         
         renderRoleSelection();
       };
       
       img.onmouseenter = () => {
-        const previewName = document.getElementById('setup-role-name');
-        const previewCard = document.getElementById('setup-role-card');
-        const previewEffect = document.getElementById('setup-role-effect');
-        if (previewName && previewCard && previewEffect) {
-          previewName.innerText = r.name.toUpperCase();
-          const miniImage = r.image.replace('rol_', 'mini_rol_');
-          previewCard.style.backgroundImage = `url('${miniImage}')`;
-          previewEffect.innerText = r.effect;
-          updateRoleAchievements(r.id);
-        }
+        window.updateSetupRolePreview(r);
       };
 
       // Si este rol acaba de ser seleccionado (o deseleccionado), mostramos la segunda mitad del giro y el cartel
@@ -864,16 +880,7 @@ function renderRoleSelection() {
       justSelectedRole = { playerIndex: i, roleId: randomRole.id, isRandom: true };
       
       // Actualizar visor inmediatamente al elegir aleatorio (sin animación en la carta)
-      const previewName = document.getElementById('setup-role-name');
-      const previewCard = document.getElementById('setup-role-card');
-      const previewEffect = document.getElementById('setup-role-effect');
-      if (previewName && previewCard && previewEffect) {
-        previewName.innerText = randomRole.name.toUpperCase();
-        const miniImage = randomRole.image.replace('rol_', 'mini_rol_');
-        previewCard.style.backgroundImage = `url('${miniImage}')`;
-        previewEffect.innerText = randomRole.effect;
-        updateRoleAchievements(randomRole.id);
-      }
+      window.updateSetupRolePreview(randomRole);
       
       window._randomBtnClickedAt = Date.now();
       renderRoleSelection();
@@ -884,16 +891,7 @@ function renderRoleSelection() {
       if (window._randomBtnClickedAt && Date.now() - window._randomBtnClickedAt < 1500) {
         return;
       }
-      const previewName = document.getElementById('setup-role-name');
-      const previewCard = document.getElementById('setup-role-card');
-      const previewEffect = document.getElementById('setup-role-effect');
-      if (previewName && previewCard && previewEffect) {
-        previewName.innerText = 'ALEATORIO';
-        previewCard.style.backgroundImage = "url('assets/Roles/back_rol.webp')";
-        previewCard.style.backgroundColor = '';
-        previewEffect.innerText = 'El sistema elegirá un rol al azar para este jugador.';
-        updateRoleAchievements(null);
-      }
+      window.updateSetupRolePreview(null);
     };
     randomBtn.onmouseleave = () => {
       const previewCard = document.getElementById('setup-role-card');
@@ -934,19 +932,8 @@ renderRoleSelection();
   if (selectedSetupRoles[0]) {
     const roleId = selectedSetupRoles[0];
     const r = typeof DB !== 'undefined' && DB.roles ? DB.roles.find(role => role.id === roleId) : null;
-    if (r) {
-      const previewName = document.getElementById('setup-role-name');
-      const previewCard = document.getElementById('setup-role-card');
-      const previewEffect = document.getElementById('setup-role-effect');
-      if (previewName && previewCard && previewEffect) {
-        previewName.innerText = r.name.toUpperCase();
-        const miniImage = r.image.replace('rol_', 'mini_rol_');
-        previewCard.style.backgroundImage = `url('${miniImage}')`;
-        previewEffect.innerText = r.effect;
-        if (typeof updateRoleAchievements === 'function') {
-          updateRoleAchievements(r.id);
-        }
-      }
+    if (r && typeof window.updateSetupRolePreview === 'function') {
+      window.updateSetupRolePreview(r);
     }
   }
 })();
