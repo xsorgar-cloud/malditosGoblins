@@ -3989,6 +3989,28 @@ main {
   #event-modal-desc div[style*="1.05rem"] {
     font-size: 0.95rem !important;
   }
+
+  /* Hito Confirm Layout for Mobile - Sticky buttons at the top */
+  #hito-confirm-modal .event-modal {
+    display: flex;
+    flex-direction: column;
+  }
+  #hito-confirm-header {
+    order: 1;
+  }
+  #hito-confirm-buttons {
+    order: 2;
+    position: sticky;
+    top: -20px;
+    z-index: 100;
+    background: rgba(15, 10, 25, 0.98);
+    padding: 15px 0 10px 0;
+    margin-bottom: 15px;
+    border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+  }
+  #hito-confirm-body {
+    order: 3;
+  }
 }
 
 .bot-bubble, .combat-bot-bubble, .retaliation-bot-bubble { cursor: pointer; }
