@@ -1990,6 +1990,17 @@ document.getElementById('btn-save-settings').addEventListener('click', () => {
   settingsModal.classList.add('hidden');
 });
 
+const btnClearProgress = document.getElementById('btn-clear-progress');
+if (btnClearProgress) {
+  btnClearProgress.addEventListener('click', () => {
+    if (confirm('¿Estás seguro de que quieres borrar TODO el progreso de los logros? Esta acción no se puede deshacer.')) {
+      Achievements.save({});
+      alert('Progreso borrado correctamente. La página se recargará.');
+      location.reload();
+    }
+  });
+}
+
 btnStartGame.addEventListener('click', () => {
   const finalRoles = [];
   const finalBots = [];
