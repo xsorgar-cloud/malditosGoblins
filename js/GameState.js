@@ -33,6 +33,8 @@ class GameState {
     this.lastWarlordExtraDmg = 0;
     this.difficulty = 'facil';
     this.lastCombatAcquiredEffects = { escozor: 0, calambre: 0, tembleque: 0 };
+    this.hordaPR = 0;
+    this.hordaActionLog = '';
 
     // --- VARIABLES DE INTERFAZ Y ESTADO TRASLADADAS DESDE APP.JS ---
     this.lastWaveLevel = 0;
@@ -720,6 +722,11 @@ class GameState {
 
       // Aplicar Daño al Goblin
       if (stats.damage > 0) {
+        if (targetGoblin.armaduraReactiva && totalPlayerShield === 0) {
+          this.damagePlayer(p, 1, true, 'Armadura Reactiva');
+          this.addLog(`⚡ <strong>Armadura Reactiva:</strong> ¡${p.name} recibe 1 de daño directo por atacar a ${targetGoblin.name || ('G' + targetGoblin.level)} sin escudos!`);
+        }
+
         if (this.isGoblinInvulnerable(targetGoblin)) {
           this.addLog(`🛡️ ${targetGoblin.name || ('G' + targetGoblin.level)} es invulnerable y no recibe daño.`);
         } else {
@@ -758,8 +765,18 @@ class GameState {
           if (damageNegated) {
             msgParts.push(`evita el daño por Campo de Fuerza`);
           } else {
-            targetGoblin.currentHp -= stats.damage;
-            msgParts.push(`recibe ${stats.damage} daño`);
+            if (targetGoblin.pielDeCuero > 0) {
+              let absorbed = Math.min(stats.damage, targetGoblin.pielDeCuero);
+              targetGoblin.pielDeCuero -= absorbed;
+              stats.damage -= absorbed;
+              this.addLog(`🛡️ <strong>Piel de Cuero:</strong> Absorbe ${absorbed} de daño (restante: ${targetGoblin.pielDeCuero}).`);
+            }
+            if (stats.damage > 0) {
+              targetGoblin.currentHp -= stats.damage;
+              msgParts.push(`recibe ${stats.damage} daño`);
+            } else {
+              msgParts.push(`el daño fue absorbido por Piel de Cuero`);
+            }
             
             // Defensa del Nido (Senda de La Madre)
             if (targetGoblin.isBoss && (this.activeSenda === 'la_madre' || targetGoblin.name.includes("La Madre")) && stats.damage > 0) {
@@ -1581,7 +1598,12 @@ class GameState {
     }
     this.battlefield.waveLevel = customSettings.wave !== undefined ? customSettings.wave : 1;
     this.currentPlayerIndex = 0;
-    this.spawnInitialGoblins();
+    
+    if (this.activeSenda === 'horda') {
+      this.calculateAndAddHordaPR();
+    } else {
+      this.spawnInitialGoblins();
+    }
     this.addLog(`¡La aventura comienza en la Oleada ${this.battlefield.waveLevel}! Fase de Mercado.`);
     this.startPlayerTurn(this.getCurrentPlayer());
   }
@@ -1606,6 +1628,18 @@ class GameState {
         });
       }
     }
+  }
+
+  calculateAndAddHordaPR() {
+    if (this.activeSenda !== 'horda') return;
+    let sumNiveles = 0;
+    let maxLevel = Math.min(this.battlefield.waveLevel, 5);
+    for (let i = 1; i <= maxLevel; i++) {
+      sumNiveles += i;
+    }
+    const prIngreso = (this.players.length + 1) + sumNiveles;
+    this.hordaPR += prIngreso;
+    this.addLog(`💀 <strong>El Señor de la Horda</strong> obtiene ${prIngreso} PR (Total: ${this.hordaPR}).`);
   }
 
   getCurrentPlayer() {
@@ -1702,6 +1736,16 @@ class GameState {
     const color = this.getPlayerColor(player);
     this.addLog(`<span style="color: ${color};">➡️>>> Turno de <strong>${player.name}</strong> (Vida: ${player.hp}/${player.maxHp}, Oro: ${player.mo}).</span>`);
     
+    // Mini-turno del Señor de la Horda (Modo Horda)
+    if (this.activeSenda === 'horda') {
+      if (typeof window !== 'undefined' && typeof window.executeHordeLordTurn === 'function') {
+        window.executeHordeLordTurn();
+      } else {
+        // IA pospuesta a una fase posterior
+        this.addLog(`💀 <strong>El Señor de la Horda</strong> evalúa la mesa en silencio... (La IA llegará pronto)`);
+      }
+    }
+
     if (this.activeSenda === 'rey_brujo') {
       const brokenCount = player.equipped.filter(eq => eq.isActive && eq.isBroken).length;
       if (brokenCount >= 2) {
@@ -1898,6 +1942,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
   }
 
   deployHito() {
+    if (this.activeSenda === 'horda') return false;
     if (this.currentHito > 5) return false;
 
     // Validar que no haya Goblins de Hito activos
@@ -2022,7 +2067,12 @@ Daño directo: Sufres ${brokenCount} de daño.`);
     const player = this.players[playerIndex];
 
     if (player) {
-      const damage = goblin.level;
+      let damage = goblin.level;
+      if (goblin.frenesi) {
+        damage += 1;
+        this.addLog(`🩸 <strong>Frenesí:</strong> El ataque de ${goblin.name || ('G' + goblin.level)} hace +1 de daño.`);
+      }
+
       if (this.activeSenda !== 'recaudador') {
         this.addLog(`💀 <strong>Represalia:</strong> Causó ${damage} daño a <strong>${player.name}</strong>.`);
       }
@@ -2034,6 +2084,11 @@ Daño directo: Sufres ${brokenCount} de daño.`);
       const moBefore = player.mo;
 
       this.damagePlayer(player, damage, false, 'Represalia');
+
+      if (goblin.imbuirAlteracion && damage > 0) {
+        player.statusEffects[goblin.imbuirAlteracion] = (player.statusEffects[goblin.imbuirAlteracion] || 0) + 1;
+        this.addLog(`🧪 <strong>Alteración Imbuida:</strong> ${player.name} sufre ${goblin.imbuirAlteracion}.`);
+      }
 
       if (this.activeSenda === 'recaudador') {
         if (this.lastDamageAppliedEscudoDeOro) {
@@ -2102,6 +2157,9 @@ Daño directo: Sufres ${brokenCount} de daño.`);
     }
 
     this.battlefield.waveLevel++;
+    if (this.activeSenda === 'horda') {
+      this.calculateAndAddHordaPR();
+    }
 
     this.addLog(`<span style="color:#f54281"><strong>*******************************************</strong></span>`);
     this.addLog(`<span style="color:#f54281"><strong>RESOLVIENDO FASE DE OLEADA ${this.battlefield.waveLevel} </strong></span>`);
@@ -2211,6 +2269,13 @@ Daño directo: Sufres ${brokenCount} de daño.`);
     }
 
     if (this.wavePhaseState.phase === 'spawns') {
+      if (this.activeSenda === 'horda') {
+        // En modo Señor de la Horda no hay aparición automática en la fase de oleada.
+        this.wavePhaseState.phase = 'done';
+        this.wavePhaseState.active = false;
+        return { type: 'finish' };
+      }
+
       let spawns = [];
       const diff = this.difficulty || 'facil';
 

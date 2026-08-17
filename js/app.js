@@ -4517,10 +4517,20 @@ function renderBattlefield() {
   }
 
 
+  const hordaInfoDiv = document.getElementById('horda-info');
   const hitoActionsDiv = document.getElementById('hito-actions');
 
-  if (gameState.currentHito <= 5) {
-    const sendaHitos = DB.hitos[gameState.activeSenda] || DB.hitos.iniciacion;
+  if (gameState.activeSenda === 'horda') {
+    if (hitoActionsDiv) hitoActionsDiv.style.display = 'none';
+    if (hordaInfoDiv) {
+      hordaInfoDiv.classList.remove('hidden');
+      document.getElementById('horda-pr').innerText = gameState.hordaPR || 0;
+      document.getElementById('horda-action-log').innerText = gameState.hordaActionLog || '';
+    }
+  } else {
+    if (hordaInfoDiv) hordaInfoDiv.classList.add('hidden');
+    if (gameState.currentHito <= 5) {
+      const sendaHitos = DB.hitos[gameState.activeSenda] || DB.hitos.iniciacion;
     let hito = sendaHitos[gameState.currentHito - 1];
     
     const hitoBtnText = document.querySelector('#btn-deploy-hito .btn-text');
@@ -4545,6 +4555,7 @@ function renderBattlefield() {
     }
     
     if (hitoBtnMobileNum) hitoBtnMobileNum.innerText = "";
+  }
   }
   // Capturar coordenadas de los goblins que están muriendo antes de limpiar el contenedor
   const dyingGoblinCoords = new Map();
