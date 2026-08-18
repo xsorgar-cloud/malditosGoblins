@@ -1,6 +1,6 @@
 // Lógica de Inteligencia Artificial para el Señor de la Horda
 
-window.executeHordeLordTurn = function() {
+window.executeHordeLordTurn = function() { console.log('Starting executeHordeLordTurn');
   if (!gameState || gameState.activeSenda !== 'horda' || gameState.hordaPR <= 0) {
     if (gameState && gameState.activeSenda === 'horda') {
       gameState.addLog(`💀 <strong>El Señor de la Horda</strong> te observa sin suficientes Puntos de Rencor para actuar.`);

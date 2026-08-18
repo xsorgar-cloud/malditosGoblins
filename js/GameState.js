@@ -1611,7 +1611,7 @@ class GameState {
       this.spawnInitialGoblins();
     }
     this.addLog(`¡La aventura comienza en la Oleada ${this.battlefield.waveLevel}! Fase de Mercado.`);
-    this.startPlayerTurn(this.getCurrentPlayer());
+    console.log('nextTurn calling startPlayerTurn'); this.startPlayerTurn(this.getCurrentPlayer());
   }
 
   spawnInitialGoblins() {
@@ -1687,7 +1687,7 @@ class GameState {
     return colors[(player.id - 1) % colors.length];
   }
 
-  nextTurn() {
+  nextTurn() { console.log('nextTurn start');
     let previousPlayer = this.getCurrentPlayer();
     if (previousPlayer && previousPlayer.isBot && window.botManager) {
       window.botManager.executeEndTurnRoleAbilities(previousPlayer);
@@ -1725,7 +1725,7 @@ class GameState {
       }
 
       if (!this.isGameOver && !this.isRetaliationPhase && !this.isResolvingWaveSequentially) {
-        this.startPlayerTurn(this.getCurrentPlayer());
+        console.log('nextTurn calling startPlayerTurn'); this.startPlayerTurn(this.getCurrentPlayer());
       }
       
       // Auto-guardado silencioso al iniciar el turno
@@ -2209,7 +2209,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
   }
 
   // Ejecuta 1 paso visual de la fase de oleada. Devuelve un objeto detallando el evento.
-  executeNextWaveStep() {
+  executeNextWaveStep() { console.log('executeNextWaveStep', this.wavePhaseState.phase);
     if (!this.wavePhaseState.active) return null;
 
     if (this.wavePhaseState.phase === 'mutations') {

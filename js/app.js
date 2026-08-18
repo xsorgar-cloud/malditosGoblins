@@ -3311,7 +3311,7 @@ function showActionNotification(count) {
   }, 1800);
 }
 
-async function processWaveSequence() {
+async function processWaveSequence() { console.log('Starting processWaveSequence');
   while (gameState.isResolvingWaveSequentially) {
     let stepResult = gameState.executeNextWaveStep();
     if (!stepResult) break;
@@ -3349,7 +3349,7 @@ async function processWaveSequence() {
     }
   }
 
-  window.isAnimatingWave = false;
+  console.log('Ending processWaveSequence'); window.isAnimatingWave = false;
   
   if (!gameState.isGameOver) {
     gameState.startPlayerTurn(gameState.getCurrentPlayer());
