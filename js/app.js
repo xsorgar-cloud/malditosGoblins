@@ -1743,8 +1743,7 @@ function initSendaSelectionScreen() {
     { value: 'recaudador', name: 'Senda de El Gran Recaudador', stars: '★★★', bossImg: 'assets/Monstruos/Jefes/Gran-Recaudador.webp', rulesImg: 'assets/Monstruos/Jefes/reglas_Gran-Recaudador.webp' },
     { value: 'piromante', name: 'Senda de El Piromante', stars: '★★★★', bossImg: 'assets/Monstruos/Jefes/El-Piromante.webp', rulesImg: 'assets/Monstruos/Jefes/reglas_El-Piromante.webp' },
     { value: 'cazador', name: 'Senda de El Cazador', stars: '★★★★', bossImg: 'assets/Monstruos/Jefes/El-Cazador.webp', rulesImg: 'assets/Monstruos/Jefes/reglas_El-Cazador.webp' },
-    { value: 'la_madre', name: 'Senda de La Madre', stars: '★★★★★', bossImg: 'assets/Monstruos/Jefes/La-Madre.webp', rulesImg: 'assets/Monstruos/Jefes/reglas_La-Madre.webp' },
-    { value: 'horda', name: 'Modalidad: Señor de la Horda', stars: '', bossImg: 'assets/Monstruos/Jefes/SenorHorda.jpg', rulesImg: 'assets/Monstruos/Jefes/SenorHorda.jpg' }
+    { value: 'la_madre', name: 'Senda de La Madre', stars: '★★★★★', bossImg: 'assets/Monstruos/Jefes/La-Madre.webp', rulesImg: 'assets/Monstruos/Jefes/reglas_La-Madre.webp' }
   ];
 
   sendasData.forEach(senda => {
@@ -1844,6 +1843,16 @@ function initSendaSelectionScreen() {
   btnCancel.addEventListener('click', () => {
     screen.classList.remove('visible');
   });
+  const btnHordeMode = document.createElement('button');
+  btnHordeMode.className = 'btn';
+  btnHordeMode.style.cssText = 'padding: 0; border-radius: 50%; width: 50px; height: 50px; background: transparent; border: 2px solid #555; cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden; margin: 0 15px; display: flex; align-items: center; justify-content: center;';
+  btnHordeMode.title = "Modalidad: Señor de la Horda";
+  btnHordeMode.innerHTML = '<img src="assets/icoSH.png" style="width:100%; height:100%; object-fit:cover; transition: all 0.3s ease;">';
+  
+  btnHordeMode.addEventListener('click', () => {
+    selectedSendaValue = 'horda';
+    btnConfirm.click();
+  });
 
   const btnConfirm = document.createElement('button');
   btnConfirm.className = 'btn primary';
@@ -1868,8 +1877,9 @@ function initSendaSelectionScreen() {
     }
     screen.classList.remove('visible');
   });
-  btnContainer.appendChild(btnConfirm);
   btnContainer.appendChild(btnCancel);
+  btnContainer.appendChild(btnHordeMode);
+  btnContainer.appendChild(btnConfirm);
 
   screen.appendChild(btnContainer);
   document.body.appendChild(screen);
