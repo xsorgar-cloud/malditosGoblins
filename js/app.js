@@ -4717,7 +4717,19 @@ function renderBattlefield() {
       const badgeHTML = isInvulnerable 
         ? `<div class="goblin-invulnerable-badge" title="${invulnTitle}">🛡️</div>` 
         : '';
-      gobEl.innerHTML = `<div class="goblin-hp">${goblin.currentHp}</div>${badgeHTML}`;
+      let buffsHTML = '';
+if (goblin.pielDeCuero > 0) buffsHTML += `<span title="Piel de Cuero (${goblin.pielDeCuero} PV extras)" style="filter: drop-shadow(0 0 2px #fff);">🛡️</span>`;
+if (goblin.frenesi) buffsHTML += `<span title="Frenesí (+1 Daño en Represalia)" style="filter: drop-shadow(0 0 2px #ff0000);">⚔️</span>`;
+if (goblin.armaduraReactiva) buffsHTML += `<span title="Armadura Reactiva (Daño al atacar sin escudo)" style="filter: drop-shadow(0 0 2px #ffaa00);">💥</span>`;
+if (goblin.imbuirAlteracion) {
+  let altIcon = goblin.imbuirAlteracion === 'tembleque' ? '❄️' : (goblin.imbuirAlteracion === 'escozor' ? '🔥' : '⚡');
+  buffsHTML += `<span title="Imbuido con ${goblin.imbuirAlteracion}" style="filter: drop-shadow(0 0 2px #00ffff);">${altIcon}</span>`;
+}
+if (buffsHTML) {
+  buffsHTML = `<div class="goblin-buffs" style="position: absolute; bottom: 5px; left: 5px; display: flex; gap: 4px; font-size: 1.1rem; background: rgba(20,0,0,0.8); padding: 3px 6px; border-radius: 8px; border: 1px solid #ff3333; box-shadow: 0 0 5px rgba(255,51,51,0.8); z-index: 10;">${buffsHTML}</div>`;
+}
+
+gobEl.innerHTML = `<div class="goblin-hp">${goblin.currentHp}</div>${badgeHTML}${buffsHTML}`;
 
       // Botón de pago del peaje (Hito 2 Senda Recaudador)
       if (gameState.activeSenda === 'recaudador' && gameState.currentHito === 3 && goblin.level === 2 && !goblin.peajePagado) {
