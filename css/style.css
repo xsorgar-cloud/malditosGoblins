@@ -3384,6 +3384,8 @@ main {
    RESPONSIVO PARA PANTALLAS PEQUEÑAS (SETUP MODAL)
    =================================================== */
 @media (max-width: 768px) {
+    #btn-horda-pr { border: none !important; background: transparent !important; box-shadow: none !important; }
+
   #log-panel {
       position: fixed !important;
       top: 60px !important;
