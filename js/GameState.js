@@ -2193,7 +2193,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
 
     this.battlefield.waveLevel++;
     if (this.activeSenda === 'horda') {
-      this.setupHordaWave();
+      
     }
 
     this.addLog(`<span style="color:#f54281"><strong>*******************************************</strong></span>`);
