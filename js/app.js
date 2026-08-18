@@ -6759,3 +6759,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
 
 
+
+
+// FAILSAFE: Evitar que la UI se quede bloqueada permanentemente
+setInterval(() => {
+  if (window.gameState && !gameState.isResolvingWaveSequentially && !window.isAnimatingWave) {
+    if (document.body.style.pointerEvents === 'none') {
+      console.warn('Failsafe: Unlocking UI that was stuck with pointer-events: none');
+      document.body.style.pointerEvents = 'auto';
+    }
+  }
+}, 1000);
