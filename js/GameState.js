@@ -2273,6 +2273,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
         // En modo Señor de la Horda no hay aparición automática en la fase de oleada.
         this.wavePhaseState.phase = 'done';
         this.wavePhaseState.active = false;
+        this.isResolvingWaveSequentially = false;
         return { type: 'finish' };
       }
 
