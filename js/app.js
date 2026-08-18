@@ -1744,7 +1744,7 @@ function initSendaSelectionScreen() {
     { value: 'piromante', name: 'Senda de El Piromante', stars: '★★★★', bossImg: 'assets/Monstruos/Jefes/El-Piromante.webp', rulesImg: 'assets/Monstruos/Jefes/reglas_El-Piromante.webp' },
     { value: 'cazador', name: 'Senda de El Cazador', stars: '★★★★', bossImg: 'assets/Monstruos/Jefes/El-Cazador.webp', rulesImg: 'assets/Monstruos/Jefes/reglas_El-Cazador.webp' },
     { value: 'la_madre', name: 'Senda de La Madre', stars: '★★★★★', bossImg: 'assets/Monstruos/Jefes/La-Madre.webp', rulesImg: 'assets/Monstruos/Jefes/reglas_La-Madre.webp' },
-    { value: 'horda', name: 'Modalidad: Señor de la Horda', stars: '', bossImg: 'assets/btn_hito.png', rulesImg: 'assets/btn_hito.png' }
+    { value: 'horda', name: 'Modalidad: Señor de la Horda', stars: '', bossImg: 'assets/Monstruos/Jefes/SenorHorda.jpg', rulesImg: 'assets/Monstruos/Jefes/SenorHorda.jpg' }
   ];
 
   sendasData.forEach(senda => {
