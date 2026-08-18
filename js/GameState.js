@@ -1601,6 +1601,12 @@ class GameState {
     
     if (this.activeSenda === 'horda') {
       this.calculateAndAddHordaPR();
+      this.battlefield.goblins.push({
+        ...DB.goblins[1],
+        uid: Date.now() + '-horda',
+        currentHp: DB.goblins[1].hp
+      });
+      this.addLog(`🔥 La Horda envía su primera avanzadilla (1 x G1).`);
     } else {
       this.spawnInitialGoblins();
     }
