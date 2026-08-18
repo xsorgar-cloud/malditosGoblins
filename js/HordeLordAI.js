@@ -1,6 +1,7 @@
 // Lógica de Inteligencia Artificial para el Señor de la Horda
 
 window.executeHordeLordTurn = function() { console.log('Starting executeHordeLordTurn');
+  try {
   if (!gameState || gameState.activeSenda !== 'horda' || gameState.hordaPR <= 0) {
     if (gameState && gameState.activeSenda === 'horda') {
       gameState.addLog(`💀 <strong>El Señor de la Horda</strong> te observa sin suficientes Puntos de Rencor para actuar.`);
@@ -15,9 +16,11 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
 
   // Limite de seguridad para evitar bucles infinitos
   let safety = 20; 
+  console.log('AI starting while loop. budget:', budget);
   
   while (budget > 0 && safety > 0) {
     safety--;
+    console.log('AI loop iteration, safety:', safety, 'budget:', budget);
     let possibleActions = [];
     let boardGoblins = gameState.battlefield.goblins.filter(g => !g.isDying && g.currentHp > 0);
 
@@ -103,18 +106,15 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
         let altCost = 1;
         let altWeight = 30;
 
-        if (player.statusEffects.tembleque === 0 && budget >= 2) {
-          altType = 'tembleque';
+        if (budget >= 2 && Math.random() > 0.5) {
+          altType = 'Maldición';
           altCost = 2;
-          altWeight = 55;
-        } else if (player.statusEffects.escozor === 0) {
-          altType = 'escozor';
-          altCost = 1;
-          altWeight = 45;
+          altWeight = 20;
         } else {
-          altType = 'calambre';
-          altCost = 1;
-          altWeight = 35;
+          let rnd = Math.random();
+          if (rnd < 0.33) altType = 'Escozor';
+          else if (rnd < 0.66) altType = 'Tembleque';
+          else altType = 'Calambre';
         }
 
         possibleActions.push({
@@ -168,11 +168,14 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
       let alertMsg = `¡EL SEÑOR DE LA HORDA HA ACTUADO!\n\n` + 
                      `Ha gastado ${totalSpent} Puntos de Rencor:\n` +
                      actionsTaken.join('\n') + 
-                     `\n\n(PR restantes: ${budget})`;
-      window.alert(alertMsg);
+                     `\n\n(Revisa el registro para más detalles)`;
+      // alert(alertMsg);
     }
     
   } else {
     gameState.addLog(`💀 <strong>El Señor de la Horda</strong> ahorra sus PR para el futuro. (Conserva ${budget} PR).`);
+  }
+  } catch (err) {
+    console.error("AI ERROR CRASH:", err);
   }
 };
