@@ -4528,18 +4528,25 @@ function renderBattlefield() {
   }
 
 
-  const hordaInfoDiv = document.getElementById('horda-info');
   const hitoActionsDiv = document.getElementById('hito-actions');
+  const btnDeployHito = document.getElementById('btn-deploy-hito');
+  const btnInfoHitos = document.getElementById('btn-info-hitos');
+  const btnHordaPr = document.getElementById('btn-horda-pr');
 
   if (gameState.activeSenda === 'horda') {
-    if (hitoActionsDiv) hitoActionsDiv.style.display = 'none';
-    if (hordaInfoDiv) {
-      hordaInfoDiv.classList.remove('hidden');
+    if (hitoActionsDiv) hitoActionsDiv.style.display = 'flex';
+    if (btnDeployHito) btnDeployHito.style.display = 'none';
+    if (btnInfoHitos) btnInfoHitos.style.display = 'none';
+    
+    if (btnHordaPr) {
+      btnHordaPr.classList.remove('hidden');
       document.getElementById('horda-pr').innerText = gameState.hordaPR || 0;
-    // Removed horda-action-log update
+      document.getElementById('horda-pr-mobile').innerText = gameState.hordaPR || 0;
     }
   } else {
-    if (hordaInfoDiv) hordaInfoDiv.classList.add('hidden');
+    if (btnHordaPr) btnHordaPr.classList.add('hidden');
+    if (btnInfoHitos) btnInfoHitos.style.display = 'inline-block';
+    
     if (gameState.currentHito <= 5) {
       const sendaHitos = DB.hitos[gameState.activeSenda] || DB.hitos.iniciacion;
     let hito = sendaHitos[gameState.currentHito - 1];

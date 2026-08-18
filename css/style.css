@@ -4137,7 +4137,7 @@ main {
     #btn-gold .txt-largo, #btn-gold .txt-corto,
     #btn-gold-dmg .txt-largo, #btn-gold-dmg .txt-corto,
     #btn-confirm-attack .txt-largo, #btn-confirm-attack .txt-corto,
-    #btn-role .btn-text {
+    #btn-role .btn-text, #btn-horda-pr .btn-text {
         display: none !important;
     }
     

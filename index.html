@@ -145,9 +145,7 @@
             </div>
 
             <!-- Señor de la Horda Info -->
-            <div id="horda-info" class="hidden" style="position: absolute; top: 40px; right: 20px; z-index: 20; background: rgba(0, 0, 0, 0.7); padding: 5px 15px; border-radius: 10px; border: 1px solid #ff3333; text-align: right; box-shadow: 0 0 10px rgba(255,51,51,0.3);">
-                <h2 style="margin: 0; font-size: 1.1rem; color: #ff3333; text-shadow: 0 0 5px rgba(255,51,51,0.5);">Puntos de Rencor: <span id="horda-pr" style="font-size: 1.3rem;">0</span></h2>
-            </div>
+            
 
             <!-- Action Notification (Centered in Battlefield) -->
             <div id="action-notification" class="hidden">
@@ -175,6 +173,11 @@
                         style="font-size: 0.85rem; padding: 5px 10px; position: relative;"><span class="btn-text">Enfrentar Hito 1</span><img src="assets/btn_hito.png" class="mobile-btn-icon" alt="Hito"><span class="hito-mobile-number">1</span></button>
                     <button id="btn-info-hitos" class="btn secondary"
                         style="font-size: 0.85rem; border-radius: 50%; width: 30px; padding: 0;">?</button>
+                <button id="btn-horda-pr" class="btn secondary hidden" style="font-size: 0.85rem; padding: 5px 10px; position: relative; border-color: #ff3333; color: #ff3333; pointer-events: none;">
+                    <span class="btn-text" style="color: #ff3333; font-weight: bold;">PUNTOS DE RENCOR: <span id="horda-pr">0</span></span>
+                    <img src="assets/icoSH.png" class="mobile-btn-icon" alt="Rencor" style="filter: drop-shadow(0 0 2px red);">
+                    <span class="hito-mobile-number" id="horda-pr-mobile" style="color: white; text-shadow: 0 0 2px red;">0</span>
+                </button>
                 </div>
 
                 <button id="btn-confirm-attack" class="btn primary"
