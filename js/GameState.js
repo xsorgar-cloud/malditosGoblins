@@ -1239,6 +1239,11 @@ class GameState {
         totalNormalGoblinDamage += normalDmg;
         msgParts.push(`contraataca con ${normalDmg} daño`);
       }
+      
+      if (targetGoblin.imbuirAlteracion && (normalDmg > 0 || directDmg > 0)) {
+        p.statusEffects[targetGoblin.imbuirAlteracion] = (p.statusEffects[targetGoblin.imbuirAlteracion] || 0) + 1;
+        msgParts.push(`e <span style="color:#00ffff">imbuye ${targetGoblin.imbuirAlteracion}</span>`);
+      }
       if (directDmg === 0 && normalDmg === 0) {
         if (goblinInterceptions.length > 0) {
           msgParts.push(`ve su ataque anulado por intercepción`);
