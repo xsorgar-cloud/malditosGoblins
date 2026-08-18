@@ -1845,7 +1845,7 @@ function initSendaSelectionScreen() {
   });
   const btnHordeMode = document.createElement('button');
   btnHordeMode.className = 'btn';
-  btnHordeMode.style.cssText = 'padding: 0; border-radius: 50%; width: 50px; height: 50px; background: transparent; border: 2px solid #555; cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden; margin: 0 15px; display: flex; align-items: center; justify-content: center;';
+  btnHordeMode.style.cssText = 'padding: 0 !important; border-radius: 50%; width: 50px !important; height: 50px !important; min-height: 50px !important; flex-shrink: 0; background: transparent; border: 2px solid #555; cursor: pointer; transition: all 0.3s ease; position: relative; overflow: hidden; margin: 0 15px; display: flex; align-items: center; justify-content: center;';
   btnHordeMode.title = "Modalidad: Señor de la Horda";
   btnHordeMode.innerHTML = '<img src="assets/icoSH.png" style="width:100%; height:100%; object-fit:cover; transition: all 0.3s ease;">';
   
