@@ -2655,7 +2655,7 @@ main {
 
   #hito-actions {
     position: relative !important;
-    display: flex !important;
+  /* display removed to let JS handle it */
     flex-direction: row !important;
     justify-content: center !important;
     align-items: center !important;
