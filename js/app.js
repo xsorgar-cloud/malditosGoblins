@@ -4526,7 +4526,7 @@ function renderBattlefield() {
     if (hordaInfoDiv) {
       hordaInfoDiv.classList.remove('hidden');
       document.getElementById('horda-pr').innerText = gameState.hordaPR || 0;
-      document.getElementById('horda-action-log').innerText = gameState.hordaActionLog || '';
+    // Removed horda-action-log update
     }
   } else {
     if (hordaInfoDiv) hordaInfoDiv.classList.add('hidden');
