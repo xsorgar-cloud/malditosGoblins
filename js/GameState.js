@@ -2096,11 +2096,6 @@ Daño directo: Sufres ${brokenCount} de daño.`);
 
       this.damagePlayer(player, damage, false, 'Represalia');
 
-      if (goblin.imbuirAlteracion && damage > 0) {
-        player.statusEffects[goblin.imbuirAlteracion] = (player.statusEffects[goblin.imbuirAlteracion] || 0) + 1;
-        this.addLog(`🧪 <strong>Alteración Imbuida:</strong> ${player.name} sufre ${goblin.imbuirAlteracion}.`);
-      }
-
       if (this.activeSenda === 'recaudador') {
         if (this.lastDamageAppliedEscudoDeOro) {
           const hpDiff = hpBefore - player.hp;
