@@ -2597,7 +2597,7 @@ main {
     right: -10px !important;
   }
   
-  .goblin-hp {
+  #goblins-container .goblin-hp, #combat-goblins-container .goblin-hp {
     top: 4% !important;
     left: 33% !important; right: auto !important;
   }
