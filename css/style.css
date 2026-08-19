@@ -2580,12 +2580,16 @@ main {
     aspect-ratio: 180 / 255 !important;
   }
 
-  .goblin-hp,
   .goblin-invulnerable-badge {
     font-size: 1.1rem !important;
-    /* VIDA DE GOBLINS MÁS PEQUEÑA */
     width: 32px !important;
     height: 32px !important;
+  }
+  
+  .goblin-hp {
+    font-size: 0.85rem !important;
+    width: 22px !important;
+    height: 22px !important;
   }
   
   .goblin-invulnerable-badge {
