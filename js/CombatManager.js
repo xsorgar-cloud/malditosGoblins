@@ -2443,7 +2443,7 @@ window.showTargetSelectionModal = function (playerIndex) {
         gbtn.style.display = 'block';
 
         gbtn.innerHTML = `
-          <div class="goblin-hp" style="width: 44px !important; height: 44px !important; top: 19px !important; left: 26% !important; right: auto !important; font-size: 1.3rem !important; padding-bottom: 4px; box-shadow: none !important;">${gob.currentHp}</div>
+          <div class="goblin-hp" style="width: 44px !important; height: 44px !important; top: 14px !important; left: 26% !important; right: auto !important; font-size: 1.3rem !important; padding-bottom: 4px; box-shadow: none !important;">${gob.currentHp}</div>
           <div style="position: absolute; bottom: 0; left: 0; width: 100%; background: rgba(0,0,0,0.8); color: ${isDisabled ? '#ff4d4d' : 'var(--gold)'}; text-align: center; font-size: 1.0rem; padding: 8px 0; font-weight: bold; text-shadow: 0 0 4px black;">COSTE: <span class="cost-val">1</span>&#9889;</div>
           ${isMagoRestricted ? '<div style="position: absolute; top: 0; left: 0; width: 100%; height: 100%; background: rgba(255,0,0,0.5); display: flex; justify-content: center; align-items: center; font-size: 5rem; text-shadow: 0 0 15px black; z-index: 5;">&#10060;</div>' : ''}
           ${isInCombat ? '<div style="position: absolute; top: 10px; left: 10px; font-size: 1.8rem; filter: drop-shadow(0 0 5px black); z-index: 5;">&#9876;&#65039;</div>' : ''}
