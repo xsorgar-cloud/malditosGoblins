@@ -1241,7 +1241,12 @@ class GameState {
       }
       
       if (targetGoblin.imbuirAlteracion && (normalDmg > 0 || directDmg > 0)) {
-        p.statusEffects[targetGoblin.imbuirAlteracion] = (p.statusEffects[targetGoblin.imbuirAlteracion] || 0) + 1;
+        let altKey = targetGoblin.imbuirAlteracion.toLowerCase();
+        if (altKey === 'maldición' || altKey === 'maldicion') {
+          p.statusEffects.eliminaRojo = (p.statusEffects.eliminaRojo || 0) + 1;
+        } else {
+          p.statusEffects[altKey] = (p.statusEffects[altKey] || 0) + 1;
+        }
         msgParts.push(`e <span style="color:#00ffff">imbuye ${targetGoblin.imbuirAlteracion}</span>`);
       }
       if (directDmg === 0 && normalDmg === 0) {

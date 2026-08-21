@@ -4739,7 +4739,8 @@ if (goblin.pielDeCuero > 0) buffsHTML += `<span title="Piel de Cuero (${goblin.p
 if (goblin.frenesi) buffsHTML += `<span title="Frenesí (+1 Daño en Represalia)" style="filter: drop-shadow(0 0 2px #ff0000);">⚔️</span>`;
 if (goblin.armaduraReactiva) buffsHTML += `<span title="Armadura Reactiva (Daño al atacar sin escudo)" style="filter: drop-shadow(0 0 2px #ffaa00);">💥</span>`;
 if (goblin.imbuirAlteracion) {
-  let altIcon = goblin.imbuirAlteracion === 'tembleque' ? '❄️' : (goblin.imbuirAlteracion === 'escozor' ? '🔥' : '⚡');
+  let altLower = goblin.imbuirAlteracion.toLowerCase();
+  let altIcon = altLower === 'tembleque' ? '❄️' : (altLower === 'escozor' ? '🔥' : (altLower === 'maldición' || altLower === 'maldicion' ? '🔮' : '⚡'));
   buffsHTML += `<span title="Imbuido con ${goblin.imbuirAlteracion}" style="filter: drop-shadow(0 0 2px #00ffff);">${altIcon}</span>`;
 }
 if (buffsHTML) {
