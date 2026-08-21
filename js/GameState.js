@@ -331,7 +331,7 @@ class GameState {
         }
       }
       if (removedCount > 0) {
-        this.addLog(`🔮 <strong>Efecto Rey Brujo:</strong> Pierdes ${removedCount} dado(s) <span style="color:#ef233c">ROJO(S)</span> por la maldición.`);
+        this.addLog(`🔮 <strong>Efecto de Maldición:</strong> Pierdes ${removedCount} dado(s) <span style="color:#ef233c">ROJO(S)</span> por la maldición.`);
       }
       p.statusEffects.eliminaRojo = 0; // Se consume el efecto
     }
