@@ -166,10 +166,6 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
     if (typeof updateUI === 'function') {
       updateUI();
     }
-  } else if (availablePR > 0) {
-    gameState.addLog(`💀 <strong>El Señor de la Horda</strong> reserva sus ${availablePR} PR para más adelante...`);
-  }
-    
     if (typeof window !== 'undefined' && window.alert) {
       let alertMsg = `¡EL SEÑOR DE LA HORDA HA ACTUADO!\n\n` + 
                      `Ha gastado ${totalSpent} Puntos de Rencor:\n` +
@@ -177,6 +173,10 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
                      `\n\n(Revisa el registro para más detalles)`;
       window.alert(alertMsg);
     }
+    
+  } else if (availablePR > 0) {
+    gameState.addLog(`💀 <strong>El Señor de la Horda</strong> reserva sus ${availablePR} PR para más adelante...`);
+  }
     
   } catch (err) {
     console.error("AI ERROR CRASH:", err);
