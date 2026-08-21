@@ -1666,8 +1666,8 @@ class GameState {
   generateHordaPRPerRound() {
     if (this.activeSenda !== 'horda') return;
     let P = this.players.length;
-    let W = Math.min(this.battlefield.waveLevel, 5);
-    let prToGain = Math.max(1, W + P - 1);
+    let W = this.battlefield.waveLevel;
+    let prToGain = W + P - 1;
     this.hordaPR += prToGain;
     this.addLog(`🩸 <strong>Rencor Creciente:</strong> Nueva ronda. El Señor de la Horda gana ${prToGain} PR (Total: ${this.hordaPR}).`);
     
