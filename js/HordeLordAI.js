@@ -178,9 +178,6 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
       window.alert(alertMsg);
     }
     
-  } else {
-    gameState.addLog(`💀 <strong>El Señor de la Horda</strong> ahorra sus PR para el futuro. (Conserva ${budget} PR).`);
-  }
   } catch (err) {
     console.error("AI ERROR CRASH:", err);
   }
