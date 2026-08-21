@@ -174,7 +174,6 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
       window.alert(alertMsg);
     }
     
-  } else if (availablePR > 0) {
     gameState.addLog(`💀 <strong>El Señor de la Horda</strong> reserva sus ${availablePR} PR para más adelante...`);
   }
     
