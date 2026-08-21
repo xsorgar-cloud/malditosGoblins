@@ -181,4 +181,3 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
     console.error("AI ERROR CRASH:", err);
   }
 };
-\n    if (typeof window !== 'undefined' && window.alert) {\n      let alertMsg = `¡EL SEÑOR DE LA HORDA HA ACTUADO!\n\nHa gastado ${totalSpent} Puntos de Rencor:\n` + actionsTaken.join('\n');\n      window.alert(alertMsg);\n    }\n  } else if (availablePR > 0) {\n    gameState.addLog(`💀 <strong>El Señor de la Horda</strong> reserva sus ${availablePR} PR para más adelante...`);\n  }\n} catch (err) {\n  console.error('AI ERROR CRASH:', err);\n}\n};
