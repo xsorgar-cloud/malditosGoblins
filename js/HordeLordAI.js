@@ -173,7 +173,7 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
                      `Ha gastado ${totalSpent} Puntos de Rencor:\n` +
                      actionsTaken.join('\n') + 
                      `\n\n(Revisa el registro para más detalles)`;
-      // alert(alertMsg);
+      window.alert(alertMsg);
     }
     
   } else {
