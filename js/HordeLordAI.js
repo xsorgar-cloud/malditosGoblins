@@ -44,7 +44,8 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
           let newGob = {
             ...DB.goblins[targetLvl],
             uid: Date.now() + '-' + Math.random().toString(36).substring(2),
-            currentHp: DB.goblins[targetLvl].hp
+            currentHp: DB.goblins[targetLvl].hp,
+            isHito: true
           };
           gameState.battlefield.goblins.push(newGob);
           return `Invocación (G${targetLvl})`;
