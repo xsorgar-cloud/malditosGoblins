@@ -56,7 +56,9 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
     // 2. MEJORAS A GOBLINS EXISTENTES
     if (boardGoblins.length > 0) {
       boardGoblins.sort((a, b) => b.level - a.level);
-      let targetGob = boardGoblins[0];
+      let buffable = boardGoblins.filter(g => !g.pielDeCuero || !g.frenesi || !g.armaduraReactiva || !g.imbuirAlteracion);
+      if (buffable.length === 0) buffable = boardGoblins;
+      let targetGob = buffable[0];
       let gobName = targetGob.name || ('G' + targetGob.level);
 
       // Piel de Cuero (+2 PV temp) - Costo: 1 PR
@@ -140,7 +142,7 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
     possibleActions.sort((a, b) => b.score - a.score);
     let chosenAction = possibleActions[0];
 
-    if (chosenAction.score < 25 && boardGoblins.length > 0) {
+    if (chosenAction.score < 10 && boardGoblins.length > 0) {
       break; 
     }
 
