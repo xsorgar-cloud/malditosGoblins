@@ -164,6 +164,9 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
     if (typeof updateUI === 'function') {
       updateUI();
     }
+  } else if (availablePR > 0) {
+    gameState.addLog(`💀 <strong>El Señor de la Horda</strong> reserva sus ${availablePR} PR para más adelante...`);
+  }
     
     if (typeof window !== 'undefined' && window.alert) {
       let alertMsg = `¡EL SEÑOR DE LA HORDA HA ACTUADO!\n\n` + 
