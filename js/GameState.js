@@ -2138,17 +2138,6 @@ Daño directo: Sufres ${brokenCount} de daño.`);
 
       this.damagePlayer(player, damage, false, 'Represalia');
 
-      if (goblin.imbuirAlteracion && player.hp < hpBefore) {
-        let alt = goblin.imbuirAlteracion;
-        let altKey = alt.toLowerCase();
-        if (altKey === 'maldición' || altKey === 'maldicion') {
-          player.statusEffects.eliminaRojo = (player.statusEffects.eliminaRojo || 0) + 1;
-        } else {
-          player.statusEffects[altKey] = (player.statusEffects[altKey] || 0) + 1;
-        }
-        this.addLog(`☣️ <strong>¡Imbuición exitosa!</strong> Sufres el efecto de <span style="color:#00ffff">${alt}</span> porque el daño penetró tus escudos en la Represalia.`);
-      }
-
 
       if (this.activeSenda === 'recaudador') {
         if (this.lastDamageAppliedEscudoDeOro) {
