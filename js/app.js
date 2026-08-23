@@ -4735,7 +4735,7 @@ function renderBattlefield() {
         ? `<div class="goblin-invulnerable-badge" title="${invulnTitle}">🛡️</div>` 
         : '';
       let buffsHTML = '';
-if (goblin.pielDeCuero > 0) buffsHTML += `<span title="Piel de Cuero (${goblin.pielDeCuero} PV extras)" style="filter: drop-shadow(0 0 2px #fff);">🛡️</span>`;
+if (goblin.pielDeCuero > 0) buffsHTML += `<span title="Piel de Cuero (Absorbe ${goblin.pielDeCuero} de daño)" style="filter: drop-shadow(0 0 2px #fff);">🛡️</span>`;
 if (goblin.frenesi) buffsHTML += `<span title="Frenesí (+1 Daño en Represalia)" style="filter: drop-shadow(0 0 2px #ff0000);">⚔️</span>`;
 if (goblin.armaduraReactiva) buffsHTML += `<span title="Armadura Reactiva (Daño al atacar sin escudo)" style="filter: drop-shadow(0 0 2px #ffaa00);">💥</span>`;
 if (goblin.imbuirAlteracion) {

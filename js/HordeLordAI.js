@@ -70,7 +70,7 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
           weight: player.hp > 3 ? 50 : 20,
           execute: () => {
             targetGob.pielDeCuero = 2;
-            return `Piel de Cuero a ${gobName} (+2 PV temporales)`;
+            return `Piel de Cuero a ${gobName} (Absorbe 2 de daño)`;
           }
         });
       }
