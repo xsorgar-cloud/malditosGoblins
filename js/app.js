@@ -951,12 +951,14 @@ function updateSetupSendaPreview() {
       <strong style="color: #fff; font-size: 0.95rem; display: block; margin-bottom: 5px;">Poderes del Señor de la Horda (Bot)</strong>
       <p style="margin: 0 0 10px 0; color: #ccc; font-size: 0.9rem; line-height: 1.4;">El Señor de la Horda obtiene Puntos de Rencor (PR) y evalúa la mesa al principio de cada ronda para gastarlos de forma inteligente:</p>
       <ul style="margin: 0; padding-left: 20px; color: #ddd; font-size: 0.85rem; line-height: 1.5;">
-        <li><strong style="color:#ff4d4d;">1 PR</strong>: Piel de Cuero (Absorbe 2 daño)</li>
-        <li><strong style="color:#ff4d4d;">1 PR</strong>: Imbuir Alteración Menor (Tembleque, Escozor o Calambre)</li>
-        <li><strong style="color:#ff4d4d;">2 PR</strong>: Frenesí (+1 Daño en Represalia)</li>
+        <li><strong style="color:#ff4d4d;">1 PR</strong>: Piel de Cuero (+1 Absorción de daño, acumulable)</li>
+        <li><strong style="color:#ff4d4d;">1 PR</strong>: Frenesí (+1 Daño en Represalia)</li>
+        <li><strong style="color:#ff4d4d;">1 PR</strong>: Imbuir Escozor (Escozor al impactar)</li>
+        <li><strong style="color:#ff4d4d;">1 PR</strong>: Imbuir Calambre (Calambre al impactar)</li>
+        <li><strong style="color:#ff4d4d;">2 PR</strong>: Imbuir Tembleque (Tembleque al impactar)</li>
         <li><strong style="color:#ff4d4d;">2 PR</strong>: Armadura Reactiva (1 Daño al atacarle sin escudo)</li>
-        <li><strong style="color:#ff4d4d;">2 PR</strong>: Imbuir Maldición (Maldición al impactar)</li>
-        <li><strong style="color:#ff4d4d;">Nx2 PR</strong>: Invocar un Goblin de Nivel N a la mesa</li>
+        <li><strong style="color:#ff4d4d;">NxPR</strong>: Invocar Goblin Normal (Niveles 1-5: 1, 2, 4, 6, 9 PR)</li>
+        <li><strong style="color:#ff4d4d;">10-16 PR</strong>: Invocar Jefes (El Cazador, El Rey Brujo, La Madre...)</li>
       </ul>
     </div>`;
   } else {
