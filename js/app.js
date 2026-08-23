@@ -4740,8 +4740,14 @@ if (goblin.frenesi) buffsHTML += `<span title="Frenesí (+1 Daño en Represalia)
 if (goblin.armaduraReactiva) buffsHTML += `<span title="Armadura Reactiva (Daño al atacar sin escudo)" style="filter: drop-shadow(0 0 2px #ffaa00);">💥</span>`;
 if (goblin.imbuirAlteracion) {
   let altLower = goblin.imbuirAlteracion.toLowerCase();
+  let iconTitle = `Imbuido con ${goblin.imbuirAlteracion}`;
+  if (altLower === 'tembleque') iconTitle += `: Si te daña, te contagia Tembleque (Fuerza 1 dado rojo a valor 1 en tu próximo ataque).`;
+  else if (altLower === 'escozor') iconTitle += `: Si te daña, te contagia Escozor (Sufres 2 Daño Directo si usas el dado rojo infectado).`;
+  else if (altLower === 'calambre') iconTitle += `: Si te daña, te contagia Calambre (Infecta 1 dado negro, impidiendo relanzarlo o modificarlo).`;
+  else if (altLower === 'maldición' || altLower === 'maldicion') iconTitle += `: Si te daña, te contagia Maldición (Pierdes 1 dado rojo entero en tu próximo ataque).`;
+
   let altIcon = altLower === 'tembleque' ? '❄️' : (altLower === 'escozor' ? '🔥' : (altLower === 'maldición' || altLower === 'maldicion' ? '🔮' : '⚡'));
-  buffsHTML += `<span title="Imbuido con ${goblin.imbuirAlteracion}" style="filter: drop-shadow(0 0 2px #00ffff);">${altIcon}</span>`;
+  buffsHTML += `<span title="${iconTitle}" style="filter: drop-shadow(0 0 2px #00ffff);">${altIcon}</span>`;
 }
 if (buffsHTML) {
   buffsHTML = `<div class="goblin-buffs" style="position: absolute; bottom: 5px; left: 5px; display: flex; gap: 4px; font-size: 1.1rem; background: rgba(20,0,0,0.8); padding: 3px 6px; border-radius: 8px; border: 1px solid #ff3333; box-shadow: 0 0 5px rgba(255,51,51,0.8); z-index: 10;">${buffsHTML}</div>`;
