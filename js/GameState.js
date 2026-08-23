@@ -1667,13 +1667,7 @@ class GameState {
       }
     }
     
-    // 2. La Bolsa de Rencor Inicial
-    let initialPR = this.players.length;
-    if (this.difficulty === 'pesadilla') initialPR += 2;
-    this.hordaPR += initialPR;
     
-    this.addLog(`🤖 <strong>La Avanzadilla:</strong> Llegan ${spawnedCount} Goblins de Nivel ${waveLv}.`);
-    this.addLog(`💀 <strong>Bolsa de Rencor:</strong> El Señor de la Horda recibe ${initialPR} PR iniciales (Total: ${this.hordaPR}).`);
   }
 
   generateHordaPRPerRound() {

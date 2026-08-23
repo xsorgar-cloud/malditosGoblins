@@ -952,7 +952,6 @@ function updateSetupSendaPreview() {
       <p style="margin: 0 0 10px 0; color: #ccc; font-size: 0.9rem; line-height: 1.4;">El Señor de la Horda obtiene Puntos de Rencor (PR) y evalúa la mesa al principio de cada ronda para gastarlos de forma inteligente.</p>
       <div style="background: rgba(255, 77, 77, 0.1); border-left: 3px solid #ff4d4d; padding: 8px 12px; margin-bottom: 12px; border-radius: 4px;">
         <strong style="color: #ff4d4d; font-size: 0.85rem; display: block; margin-bottom: 4px;">Generación de PR:</strong>
-        <p style="margin: 0 0 4px 0; color: #ddd; font-size: 0.8rem;"><strong>Bolsa Inicial (cada Oleada):</strong> +1 PR por Jugador (+2 extra en Pesadilla).</p>
         <p style="margin: 0; color: #ddd; font-size: 0.8rem;"><strong>Goteo (cada Ronda):</strong> Oleada + Jugadores - 1 (mínimo 1).</p>
       </div>
       <ul style="margin: 0; padding-left: 20px; color: #ddd; font-size: 0.85rem; line-height: 1.5;">
