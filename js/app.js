@@ -945,18 +945,32 @@ function updateSetupSendaPreview() {
   if (!selectSenda || !previewContainer) return;
 
   const sendaVal = selectSenda.value;
-  const rules = DB.sendaReglasGenerales[sendaVal] || [];
-  
   let html = `<h4 style="margin: 0 0 12px 0; color: var(--gold); font-family: 'Cinzel', serif; border-bottom: 1px solid rgba(212,175,55,0.2); padding-bottom: 6px; font-size: 1.1rem; letter-spacing: 0.5px;">Reglas Especiales</h4>`;
-  if (rules.length === 0 || (rules.length === 1 && rules[0].name === "Sin reglas especiales")) {
-    html += `<p style="margin: 0; color: #aaa; font-style: italic; font-size: 0.95rem;">Esta senda no aplica ninguna regla de entorno adicional.</p>`;
+  if (sendaVal === 'horda') {
+    html += `<div style="margin-bottom: 15px;">
+      <strong style="color: #fff; font-size: 0.95rem; display: block; margin-bottom: 5px;">Poderes del Señor de la Horda (Bot)</strong>
+      <p style="margin: 0 0 10px 0; color: #ccc; font-size: 0.9rem; line-height: 1.4;">El Señor de la Horda obtiene Puntos de Rencor (PR) y evalúa la mesa al principio de cada ronda para gastarlos de forma inteligente:</p>
+      <ul style="margin: 0; padding-left: 20px; color: #ddd; font-size: 0.85rem; line-height: 1.5;">
+        <li><strong style="color:#ff4d4d;">1 PR</strong>: Piel de Cuero (Absorbe 2 daño)</li>
+        <li><strong style="color:#ff4d4d;">1 PR</strong>: Imbuir Alteración Menor (Tembleque, Escozor o Calambre)</li>
+        <li><strong style="color:#ff4d4d;">2 PR</strong>: Frenesí (+1 Daño en Represalia)</li>
+        <li><strong style="color:#ff4d4d;">2 PR</strong>: Armadura Reactiva (1 Daño al atacarle sin escudo)</li>
+        <li><strong style="color:#ff4d4d;">2 PR</strong>: Imbuir Maldición (Maldición al impactar)</li>
+        <li><strong style="color:#ff4d4d;">Nx2 PR</strong>: Invocar un Goblin de Nivel N a la mesa</li>
+      </ul>
+    </div>`;
   } else {
-    rules.forEach(rule => {
-      html += `<div style="margin-bottom: 15px;">
-        <strong style="color: #fff; font-size: 0.95rem; display: block; margin-bottom: 2px;">${rule.name}</strong>
-        <p style="margin: 0; color: #ccc; font-size: 0.9rem; line-height: 1.4;">${rule.desc}</p>
-      </div>`;
-    });
+    const rules = DB.sendaReglasGenerales[sendaVal] || [];
+    if (rules.length === 0 || (rules.length === 1 && rules[0].name === "Sin reglas especiales")) {
+      html += `<p style="margin: 0; color: #aaa; font-style: italic; font-size: 0.95rem;">Esta senda no aplica ninguna regla de entorno adicional.</p>`;
+    } else {
+      rules.forEach(rule => {
+        html += `<div style="margin-bottom: 15px;">
+          <strong style="color: #fff; font-size: 0.95rem; display: block; margin-bottom: 2px;">${rule.name}</strong>
+          <p style="margin: 0; color: #ccc; font-size: 0.9rem; line-height: 1.4;">${rule.desc}</p>
+        </div>`;
+      });
+    }
   }
 
   const sendaHitos = DB.hitos[sendaVal] || [];
