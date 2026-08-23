@@ -956,14 +956,19 @@ function updateSetupSendaPreview() {
         <p style="margin: 0; color: #ddd; font-size: 0.8rem;"><strong>Goteo (cada Ronda):</strong> Oleada + Jugadores - 1 (mínimo 1).</p>
       </div>
       <ul style="margin: 0; padding-left: 20px; color: #ddd; font-size: 0.85rem; line-height: 1.5;">
+        <li><strong style="color:#ff4d4d;">X PR</strong>: Invocar Goblin Nivel 1 a 5 (Costo: 1, 2, 4, 6, 9 PR)</li>
+        <li><strong style="color:#ff4d4d;">10 PR</strong>: Invocar Jefe: El Cazador</li>
+        <li><strong style="color:#ff4d4d;">11 PR</strong>: Invocar Jefe: El Gran Recaudador</li>
+        <li><strong style="color:#ff4d4d;">12 PR</strong>: Invocar Jefe: El Rey Brujo</li>
+        <li><strong style="color:#ff4d4d;">13 PR</strong>: Invocar Jefe: El Piromante</li>
+        <li><strong style="color:#ff4d4d;">14 PR</strong>: Invocar Jefe: El Zeñor de la Guerra</li>
+        <li><strong style="color:#ff4d4d;">16 PR</strong>: Invocar Jefe: La Madre</li>
         <li><strong style="color:#ff4d4d;">1 PR</strong>: Piel de Cuero (+1 Absorción de daño, acumulable)</li>
         <li><strong style="color:#ff4d4d;">1 PR</strong>: Frenesí (+1 Daño en Represalia)</li>
         <li><strong style="color:#ff4d4d;">1 PR</strong>: Imbuir Escozor (Escozor al impactar)</li>
         <li><strong style="color:#ff4d4d;">1 PR</strong>: Imbuir Calambre (Calambre al impactar)</li>
         <li><strong style="color:#ff4d4d;">2 PR</strong>: Imbuir Tembleque (Tembleque al impactar)</li>
         <li><strong style="color:#ff4d4d;">2 PR</strong>: Armadura Reactiva (1 Daño al atacarle sin escudo)</li>
-        <li><strong style="color:#ff4d4d;">NxPR</strong>: Invocar Goblin Normal (Niveles 1-5: 1, 2, 4, 6, 9 PR)</li>
-        <li><strong style="color:#ff4d4d;">10-16 PR</strong>: Invocar Jefes (El Cazador, El Rey Brujo, La Madre...)</li>
       </ul>
     </div>`;
   } else {
