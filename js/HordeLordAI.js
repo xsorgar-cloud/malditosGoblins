@@ -56,7 +56,7 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
             uid: Date.now() + '-' + Math.random().toString(36).substring(2),
             currentHp: DB.goblins[targetLvl].hp,
             isHito: true,
-            isInvocacion: true
+            
           };
           gameState.battlefield.goblins.push(newGob);
           return `Invocación (G${targetLvl})`;
@@ -108,7 +108,7 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
              damage: chosenBoss.bossHito.bossStats.damage,
              image: chosenBoss.bossHito.bossStats.image,
              isHito: true,
-             isInvocacion: true,
+             
              isBoss: true
            };
            gameState.battlefield.goblins.push(bossGob);
