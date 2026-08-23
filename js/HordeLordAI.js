@@ -84,7 +84,7 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
           weight: player.hp <= 3 ? 90 : 35,
           execute: () => {
             targetGob.frenesi = true;
-            return `Frenesí a ${gobName} (+1 Daño al contraatacar)`;
+            return `Frenesí a ${gobName} (+1 Daño en Represalia)`;
           }
         });
       }
