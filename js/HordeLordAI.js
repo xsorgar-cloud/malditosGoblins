@@ -70,7 +70,7 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
           weight: player.hp > 3 ? 50 : 20,
           execute: () => {
             targetGob.pielDeCuero = 2;
-            return `Piel de Cuero a ${gobName} (+2 PV)`;
+            return `Piel de Cuero a ${gobName} (+2 PV temporales)`;
           }
         });
       }
@@ -84,7 +84,7 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
           weight: player.hp <= 3 ? 90 : 35,
           execute: () => {
             targetGob.frenesi = true;
-            return `Frenesí a ${gobName} (+1 Daño)`;
+            return `Frenesí a ${gobName} (+1 Daño al contraatacar)`;
           }
         });
       }
@@ -98,7 +98,7 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
           weight: 40,
           execute: () => {
             targetGob.armaduraReactiva = true;
-            return `Armadura Reactiva a ${gobName}`;
+            return `Armadura Reactiva a ${gobName} (Sufres 1 daño si le atacas sin escudo)`;
           }
         });
       }
@@ -127,7 +127,12 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
           weight: altWeight,
           execute: () => {
             targetGob.imbuirAlteracion = altType;
-            return `Imbuye ${altType} a ${gobName}`;
+            let expl = '';
+            if (altType === 'Escozor') expl = ' (Si te daña, sufres 2 daño al usar dado rojo)';
+            else if (altType === 'Tembleque') expl = ' (Si te daña, tu próximo dado rojo valdrá 1)';
+            else if (altType === 'Calambre') expl = ' (Si te daña, bloquea un dado negro)';
+            else expl = ' (Si te daña, pierdes un dado rojo)';
+            return `Imbuye ${altType} a ${gobName}${expl}`;
           }
         });
       }
