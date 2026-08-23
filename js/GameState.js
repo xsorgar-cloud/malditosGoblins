@@ -714,6 +714,7 @@ class GameState {
     let goblinsDefeated = 0;
     let totalNormalGoblinDamage = 0;
     let totalDirectGoblinDamage = 0;
+    let pendingImbuements = [];
 
     c.goblins.forEach(targetGoblin => {
       let targetUid = targetGoblin.uid;
@@ -1241,13 +1242,8 @@ class GameState {
       }
       
       if (targetGoblin.imbuirAlteracion && (normalDmg > 0 || directDmg > 0)) {
-        let altKey = targetGoblin.imbuirAlteracion.toLowerCase();
-        if (altKey === 'maldición' || altKey === 'maldicion') {
-          p.statusEffects.eliminaRojo = (p.statusEffects.eliminaRojo || 0) + 1;
-        } else {
-          p.statusEffects[altKey] = (p.statusEffects[altKey] || 0) + 1;
-        }
-        msgParts.push(`e <span style="color:#00ffff">imbuye ${targetGoblin.imbuirAlteracion}</span>`);
+        pendingImbuements.push(targetGoblin.imbuirAlteracion);
+        msgParts.push(`e intenta imbuir <span style="color:#00ffff">${targetGoblin.imbuirAlteracion}</span>`);
       }
       if (directDmg === 0 && normalDmg === 0) {
         if (goblinInterceptions.length > 0) {
@@ -1337,6 +1333,18 @@ class GameState {
       } else {
         this.addLog(`🛡️ <strong>${p.name}</strong> bloqueó todo el daño entrante.`);
       }
+    }
+
+    if ((directDmgTaken > 0 || netDmgTaken > 0) && pendingImbuements.length > 0) {
+      pendingImbuements.forEach(alt => {
+        let altKey = alt.toLowerCase();
+        if (altKey === 'maldición' || altKey === 'maldicion') {
+          p.statusEffects.eliminaRojo = (p.statusEffects.eliminaRojo || 0) + 1;
+        } else {
+          p.statusEffects[altKey] = (p.statusEffects[altKey] || 0) + 1;
+        }
+        this.addLog(`☣️ <strong>¡Imbuición exitosa!</strong> Sufres el efecto de <span style="color:#00ffff">${alt}</span> porque el daño penetró tus escudos.`);
+      });
     }
 
     // Hito 1: Los Carteristas (Senda Recaudador)
@@ -2129,6 +2137,18 @@ Daño directo: Sufres ${brokenCount} de daño.`);
       const moBefore = player.mo;
 
       this.damagePlayer(player, damage, false, 'Represalia');
+
+      if (goblin.imbuirAlteracion && player.hp < hpBefore) {
+        let alt = goblin.imbuirAlteracion;
+        let altKey = alt.toLowerCase();
+        if (altKey === 'maldición' || altKey === 'maldicion') {
+          player.statusEffects.eliminaRojo = (player.statusEffects.eliminaRojo || 0) + 1;
+        } else {
+          player.statusEffects[altKey] = (player.statusEffects[altKey] || 0) + 1;
+        }
+        this.addLog(`☣️ <strong>¡Imbuición exitosa!</strong> Sufres el efecto de <span style="color:#00ffff">${alt}</span> porque el daño penetró tus escudos en la Represalia.`);
+      }
+
 
       if (this.activeSenda === 'recaudador') {
         if (this.lastDamageAppliedEscudoDeOro) {
