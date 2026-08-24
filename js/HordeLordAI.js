@@ -203,6 +203,27 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
       }
     }
 
+    // Accion de Ahorrar PR
+    let saveWeight = 0;
+    if (budget >= 3) saveWeight += 15;
+    if (budget >= 6) saveWeight += 35; // Quiere ahorrar para un jefe (costes 10-16)
+    if (budget >= 9) saveWeight += 80; // MUY cerca del jefe
+    
+    // Reducimos las ganas de ahorrar si hay pocos goblins para defenderle (emergencia)
+    if (boardGoblins.length === 0) saveWeight -= 50;
+
+    if (saveWeight > 0) {
+      possibleActions.push({
+        id: 'ahorrar',
+        name: 'Ahorrar PR',
+        cost: 0,
+        weight: saveWeight,
+        execute: () => {
+          return 'AHORRAR';
+        }
+      });
+    }
+
     if (possibleActions.length === 0) break;
 
     possibleActions.forEach(a => {
@@ -218,6 +239,11 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
 
     budget -= chosenAction.cost;
     let logMsg = chosenAction.execute();
+    
+    if (logMsg === 'AHORRAR') {
+      break;
+    }
+    
     actionsTaken.push(`- ${logMsg} <font color="#ff4d4d">(-${chosenAction.cost} PR)</font>`);
   }
 
