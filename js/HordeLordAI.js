@@ -204,13 +204,14 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
     }
 
     // Accion de Ahorrar PR
-    let saveWeight = 0;
-    if (budget >= 3) saveWeight += 15;
-    if (budget >= 6) saveWeight += 35; // Quiere ahorrar para un jefe (costes 10-16)
-    if (budget >= 9) saveWeight += 80; // MUY cerca del jefe
+    let saveWeight = 25; // Base fuerte desde el principio para que acumule
+    if (budget >= 3) saveWeight += 20;
+    if (budget >= 6) saveWeight += 25; // Quiere ahorrar para un jefe (costes 10-16)
+    if (budget >= 9) saveWeight += 40; // MUY cerca del jefe
     
     // Reducimos las ganas de ahorrar si hay pocos goblins para defenderle (emergencia)
     if (boardGoblins.length === 0) saveWeight -= 50;
+    else if (boardGoblins.length === 1) saveWeight -= 15;
 
     if (saveWeight > 0) {
       possibleActions.push({
