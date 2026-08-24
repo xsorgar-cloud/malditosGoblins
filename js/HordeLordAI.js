@@ -140,29 +140,29 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
       }
 
       // Frenesí (+1 Daño en Represalia) - Costo: 1 PR (antes 2)
-      if (budget >= 1 && !targetGob.frenesi) {
+      if (budget >= 1) {
         possibleActions.push({
           id: 'frenesi',
           name: `Frenesí`,
           cost: 1,
           weight: player.hp <= 3 ? 90 : 35,
           execute: () => {
-            targetGob.frenesi = true;
-            return `Frenesí a ${gobName} (+1 Daño en Represalia)`;
+            targetGob.frenesi = (targetGob.frenesi || 0) + 1;
+            return `Frenesí a ${gobName} (+${targetGob.frenesi} Daño en Represalia)`;
           }
         });
       }
 
       // Armadura Reactiva (1 Daño al atacarle sin escudo) - Costo: 2 PR
-      if (budget >= 2 && !targetGob.armaduraReactiva) {
+      if (budget >= 2) {
         possibleActions.push({
           id: 'armadura',
           name: `Armadura Reactiva`,
           cost: 2,
           weight: 40,
           execute: () => {
-            targetGob.armaduraReactiva = true;
-            return `Armadura Reactiva a ${gobName} (Sufres 1 daño si le atacas sin escudo)`;
+            targetGob.armaduraReactiva = (targetGob.armaduraReactiva || 0) + 1;
+            return `Armadura Reactiva a ${gobName} (Sufres ${targetGob.armaduraReactiva} daño si le atacas sin escudo)`;
           }
         });
       }

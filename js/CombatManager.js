@@ -880,8 +880,8 @@ window.combatDieOnCombatRoleHandler = (e) => {
     
     let buffsHTML = '';
     if (gob.pielDeCuero > 0) buffsHTML += `<span title="Piel de Cuero (Absorbe ${gob.pielDeCuero} de daño)"><span style="filter: drop-shadow(0 0 2px #fff);">🛡️</span>${gob.pielDeCuero > 1 ? `<b style="font-size:0.8rem; margin-left: 2px; color: #fff; font-family: monospace;">x${gob.pielDeCuero}</b>` : ""}</span>`;
-    if (gob.frenesi) buffsHTML += `<span title="Frenesí (+1 Daño en Represalia)" style="filter: drop-shadow(0 0 2px #ff0000);">⚔️</span>`;
-    if (gob.armaduraReactiva) buffsHTML += `<span title="Armadura Reactiva (Daño al atacar sin escudo)" style="filter: drop-shadow(0 0 2px #ffaa00);">💥</span>`;
+    if (gob.frenesi > 0) buffsHTML += `<span title="Frenesí (+${gob.frenesi} Daño en Represalia)"><span style="filter: drop-shadow(0 0 2px #ff0000);">⚔️</span>${gob.frenesi > 1 ? `<b style="font-size:0.8rem; margin-left: 2px; color: #fff; font-family: monospace;">x${gob.frenesi}</b>` : ""}</span>`;
+    if (gob.armaduraReactiva > 0) buffsHTML += `<span title="Armadura Reactiva (${gob.armaduraReactiva} Daño al atacar sin escudo)"><span style="filter: drop-shadow(0 0 2px #ffaa00);">💥</span>${gob.armaduraReactiva > 1 ? `<b style="font-size:0.8rem; margin-left: 2px; color: #fff; font-family: monospace;">x${gob.armaduraReactiva}</b>` : ""}</span>`;
     if (gob.imbuirAlteracion) {
       let altLower = gob.imbuirAlteracion.toLowerCase();
       let iconTitle = `Imbuido con ${gob.imbuirAlteracion}`;
