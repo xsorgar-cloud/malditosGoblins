@@ -97,7 +97,7 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
          id: 'summon_boss_' + chosenBoss.sendaId,
          name: `Invocar Jefe: ${chosenBoss.bossHito.name}`,
          cost: chosenBoss.cost,
-         weight: summonWeight + 50, // High priority to summon bosses
+         weight: 400, // Altísima prioridad, invoca Jefe siempre que pueda
          execute: () => {
            let bossGob = {
              uid: Date.now() + '-' + Math.random().toString(36).substring(2),
@@ -204,10 +204,10 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
     }
 
     // Accion de Ahorrar PR
-    let saveWeight = 25; // Base fuerte desde el principio para que acumule
-    if (budget >= 3) saveWeight += 20;
-    if (budget >= 6) saveWeight += 25; // Quiere ahorrar para un jefe (costes 10-16)
-    if (budget >= 9) saveWeight += 40; // MUY cerca del jefe
+    let saveWeight = 55; // Base altísima (gana a mejoras de 1 PR que tienen ~40-50)
+    if (budget >= 3) saveWeight += 30; // 85 (casi seguro ahorra)
+    if (budget >= 6) saveWeight += 50; // 135 (ahorra 100% para jefe)
+    if (budget >= 9) saveWeight += 50; // 185 (ahorra sí o sí)
     
     // Reducimos las ganas de ahorrar si hay pocos goblins para defenderle (emergencia)
     if (boardGoblins.length === 0) saveWeight -= 50;
