@@ -99,17 +99,20 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
          cost: chosenBoss.cost,
          weight: 400, // Altísima prioridad, invoca Jefe siempre que pueda
          execute: () => {
+           let bossHp = chosenBoss.bossHito.bossStats.hpMultiplier * gameState.players.length;
            let bossGob = {
+             ...DB.goblins[5],
              uid: Date.now() + '-' + Math.random().toString(36).substring(2),
-             name: chosenBoss.bossHito.name,
-             level: chosenBoss.bossHito.level,
-             hp: chosenBoss.bossHito.bossStats.hp,
-             currentHp: chosenBoss.bossHito.bossStats.hp,
-             damage: chosenBoss.bossHito.bossStats.damage,
-             image: chosenBoss.bossHito.bossStats.image,
+             hp: bossHp,
+             currentHp: bossHp,
+             maxHp: bossHp,
+             isBoss: true,
              isHito: true,
-             
-             isBoss: true
+             name: chosenBoss.bossHito.name,
+             dice: chosenBoss.bossHito.bossStats.dice,
+             attacks: chosenBoss.bossHito.bossStats.attacks || DB.goblins[5].attacks,
+             image: chosenBoss.bossHito.bossStats.image || 'assets/Monstruos/Jefes/Inicicion.webp',
+             bossStats: chosenBoss.bossHito.bossStats
            };
            gameState.battlefield.goblins.push(bossGob);
            return `Invocación de Jefe (${bossGob.name})`;
