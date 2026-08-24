@@ -1728,7 +1728,9 @@ class GameState {
       } while (this.players[this.currentPlayerIndex] && this.players[this.currentPlayerIndex].hp <= 0 && !this.isGameOver);
 
       if (roundFinished && this.activeSenda === 'horda' && !this.isGameOver) {
-        this.generateHordaPRPerRound();
+        if (this.battlefield.actionCount < 3) {
+          this.generateHordaPRPerRound();
+        }
       }
 
       if (!this.isGameOver && !this.isRetaliationPhase && !this.isResolvingWaveSequentially) {
@@ -2201,7 +2203,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
 
     this.battlefield.waveLevel++;
     if (this.activeSenda === 'horda') {
-      
+      this.generateHordaPRPerRound();
     }
 
     this.addLog(`<span style="color:#f54281"><strong>*******************************************</strong></span>`);

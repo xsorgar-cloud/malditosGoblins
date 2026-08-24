@@ -218,7 +218,7 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
 
     budget -= chosenAction.cost;
     let logMsg = chosenAction.execute();
-    actionsTaken.push(`- ${logMsg} <span style="color:#ff4d4d;">(-${chosenAction.cost} PR)</span>`);
+    actionsTaken.push(`- ${logMsg} <font color="#ff4d4d">(-${chosenAction.cost} PR)</font>`);
   }
 
   let totalSpent = availablePR - budget;
