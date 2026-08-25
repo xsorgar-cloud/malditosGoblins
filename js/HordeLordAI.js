@@ -100,9 +100,18 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
          weight: 400, // Altísima prioridad, invoca Jefe siempre que pueda
          execute: () => {
            let bossHp = chosenBoss.bossHito.bossStats.hpMultiplier * gameState.players.length;
+           let bName = chosenBoss.bossHito.name;
+           let customMo = 5, customPex = 5;
+           if (bName.includes('Cazador')) { customMo = 8; customPex = 8; }
+           else if (bName.includes('Rey Brujo') || bName.includes('Recaudador')) { customMo = 10; customPex = 10; }
+           else if (bName.includes('Guerra') || bName.includes('Piromante')) { customMo = 12; customPex = 12; }
+           else if (bName.includes('Madre')) { customMo = 15; customPex = 15; }
+           
            let bossGob = {
              ...DB.goblins[5],
              uid: Date.now() + '-' + Math.random().toString(36).substring(2),
+             mo: customMo,
+             pex: customPex,
              hp: bossHp,
              currentHp: bossHp,
              maxHp: bossHp,

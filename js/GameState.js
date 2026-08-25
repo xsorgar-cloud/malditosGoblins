@@ -1261,9 +1261,11 @@ class GameState {
         // Goblin derrotado
         goblinsDefeated++;
         if (targetGoblin.isBoss) {
-          this.isGameWon = true;
-          if (!this.endTime) this.endTime = new Date().toISOString();
-        }
+              if (this.activeSenda !== 'horda') {
+                this.isGameWon = true;
+                if (!this.endTime) this.endTime = new Date().toISOString();
+              }
+            }
         this.checkSpawnNextHito1Goblin(targetGoblin);
         if (!targetGoblin.gaveReward) {
           targetGoblin.gaveReward = true;
@@ -2598,8 +2600,10 @@ Daño directo: Sufres ${brokenCount} de daño.`);
               this.addLog(`💣 <strong>Goblin Bomba:</strong> Al derrotar a ${gob.name} con habilidad de rol, explota y recibes <span style="color:#ff6600">1 Escozor</span>.`);
             }
             if (gob.isBoss) {
-              this.isGameWon = true;
-              if (!this.endTime) this.endTime = new Date().toISOString();
+              if (this.activeSenda !== 'horda') {
+                this.isGameWon = true;
+                if (!this.endTime) this.endTime = new Date().toISOString();
+              }
             }
             this.checkSpawnNextHito1Goblin(gob);
             let isNormalReward = (gob.isHito || gob.level >= p.level);
