@@ -6812,6 +6812,9 @@ const hordaInfoContent = document.getElementById('horda-info-content');
 
 if (btnHordaPr && hordaModal && btnCloseHorda) {
   btnHordaPr.addEventListener('click', () => {
+    let currentPR = (typeof gameState !== 'undefined' && gameState.hordaPR) ? gameState.hordaPR : 0;
+    const getCostColor = (cost) => cost <= currentPR ? '#4ade80' : '#ff4d4d'; // Verde si puede permitírselo, rojo si no
+
     let contentHtml = `
       <div style="background: rgba(255, 77, 77, 0.1); border-left: 3px solid #ff4d4d; padding: 8px 12px; margin-bottom: 15px; border-radius: 4px;">
         <strong style="color: #ff4d4d; font-size: 0.95rem; display: block; margin-bottom: 4px;">Generación de PR:</strong>
@@ -6819,22 +6822,22 @@ if (btnHordaPr && hordaModal && btnCloseHorda) {
       </div>
       <strong style="color: #fff; font-size: 1rem; display: block; margin-bottom: 10px;">Costes de Invocación / Mejoras</strong>
       <ul style="color:#ddd; padding-left:20px; font-size: 0.95rem; line-height: 1.6;">
-        <li><strong style="color:#ff4d4d;">1 PR</strong>: Invocar Goblin de Nivel 1</li>
-        <li><strong style="color:#ff4d4d;">2 PR</strong>: Invocar Goblin de Nivel 2</li>
-        <li><strong style="color:#ff4d4d;">4 PR</strong>: Invocar Goblin de Nivel 3</li>
-        <li><strong style="color:#ff4d4d;">6 PR</strong>: Invocar Goblin de Nivel 4</li>
-        <li><strong style="color:#ff4d4d;">9 PR</strong>: Invocar Goblin de Nivel 5</li>
-        <li><strong style="color:#ff4d4d;">10 PR</strong>: Invocar Jefe: El Cazador</li>
-        <li><strong style="color:#ff4d4d;">12 PR</strong>: Invocar Jefe: Gran Recaudador</li>
-        <li><strong style="color:#ff4d4d;">13 PR</strong>: Invocar Jefe: Rey Brujo / El Piromante</li>
-        <li><strong style="color:#ff4d4d;">14 PR</strong>: Invocar Jefe: El Zeñor de la Guerra</li>
-        <li><strong style="color:#ff4d4d;">16 PR</strong>: Invocar Jefe: La Madre</li>
-        <li><strong style="color:#ff4d4d;">1 PR</strong>: Piel de Cuero (+1 Absorción de daño, acumulable)</li>
-        <li><strong style="color:#ff4d4d;">1 PR</strong>: Frenesí (+1 Daño en Represalia, acumulable)</li>
-        <li><strong style="color:#ff4d4d;">1 PR</strong>: Imbuir Escozor (Escozor al impactar)</li>
-        <li><strong style="color:#ff4d4d;">1 PR</strong>: Imbuir Calambre (Calambre al impactar)</li>
-        <li><strong style="color:#ff4d4d;">2 PR</strong>: Imbuir Tembleque (Tembleque al impactar)</li>
-        <li><strong style="color:#ff4d4d;">2 PR</strong>: Armadura Reactiva (1 Daño al atacarle sin escudo, acumulable)</li>
+        <li><strong style="color:${getCostColor(1)};">1 PR</strong>: Invocar Goblin de Nivel 1</li>
+        <li><strong style="color:${getCostColor(2)};">2 PR</strong>: Invocar Goblin de Nivel 2</li>
+        <li><strong style="color:${getCostColor(4)};">4 PR</strong>: Invocar Goblin de Nivel 3</li>
+        <li><strong style="color:${getCostColor(6)};">6 PR</strong>: Invocar Goblin de Nivel 4</li>
+        <li><strong style="color:${getCostColor(9)};">9 PR</strong>: Invocar Goblin de Nivel 5</li>
+        <li><strong style="color:${getCostColor(10)};">10 PR</strong>: Invocar Jefe: El Cazador</li>
+        <li><strong style="color:${getCostColor(12)};">12 PR</strong>: Invocar Jefe: Gran Recaudador</li>
+        <li><strong style="color:${getCostColor(13)};">13 PR</strong>: Invocar Jefe: Rey Brujo / El Piromante</li>
+        <li><strong style="color:${getCostColor(14)};">14 PR</strong>: Invocar Jefe: El Zeñor de la Guerra</li>
+        <li><strong style="color:${getCostColor(16)};">16 PR</strong>: Invocar Jefe: La Madre</li>
+        <li><strong style="color:${getCostColor(1)};">1 PR</strong>: Piel de Cuero (+1 Absorción de daño, acumulable)</li>
+        <li><strong style="color:${getCostColor(1)};">1 PR</strong>: Frenesí (+1 Daño en Represalia, acumulable)</li>
+        <li><strong style="color:${getCostColor(1)};">1 PR</strong>: Imbuir Escozor (Escozor al impactar)</li>
+        <li><strong style="color:${getCostColor(1)};">1 PR</strong>: Imbuir Calambre (Calambre al impactar)</li>
+        <li><strong style="color:${getCostColor(2)};">2 PR</strong>: Imbuir Tembleque (Tembleque al impactar)</li>
+        <li><strong style="color:${getCostColor(2)};">2 PR</strong>: Armadura Reactiva (1 Daño al atacarle sin escudo, acumulable)</li>
       </ul>
     `;
     hordaInfoContent.innerHTML = contentHtml;
