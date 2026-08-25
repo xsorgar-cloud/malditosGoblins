@@ -173,7 +173,7 @@
                         style="font-size: 0.85rem; padding: 5px 10px; position: relative;"><span class="btn-text">Enfrentar Hito 1</span><img src="assets/btn_hito.png" class="mobile-btn-icon" alt="Hito"><span class="hito-mobile-number">1</span></button>
                     <button id="btn-info-hitos" class="btn secondary"
                         style="font-size: 0.85rem; border-radius: 50%; width: 30px; padding: 0;">?</button>
-                <button id="btn-horda-pr" class="btn secondary hidden" style="font-size: 0.85rem; padding: 5px 10px; position: relative; border-color: #ff3333; color: #ff3333; pointer-events: none;">
+                <button id="btn-horda-pr" class="btn secondary hidden" style="font-size: 0.85rem; padding: 5px 10px; position: relative; border-color: #ff3333; color: #ff3333; cursor: help;">
                     <span class="btn-text" style="color: #ff3333; font-weight: bold;">PUNTOS DE RENCOR: <span id="horda-pr">0</span></span>
                     <img src="assets/icoSH.png" class="mobile-btn-icon" alt="Rencor" style="filter: drop-shadow(0 0 2px red);">
                     <span class="hito-mobile-number" id="horda-pr-mobile" style="color: white; text-shadow: 0 0 2px red;">0</span>
@@ -611,7 +611,21 @@
     <!-- OVERLAY DE PREVIEW DE CARTAS -->
     <div id="card-preview-overlay"></div>
 
-    <!-- MODAL DE INFO HITOS -->
+    
+<!-- MODAL DE INFO SH -->
+<div id="horda-modal" class="modal hidden">
+<div class="modal-content" style="max-width: 500px; text-align: left; max-height: 92vh; overflow-y: auto;">
+<h2>Poderes del Señor de la Horda</h2>
+<div id="horda-info-content" style="margin-top: 20px; font-family: 'Outfit', sans-serif;">
+<!-- Se llenará dinámicamente -->
+</div>
+<div style="text-align: center; margin-top: 25px;">
+<button id="btn-close-horda" class="btn primary">Cerrar</button>
+</div>
+</div>
+</div>
+
+<!-- MODAL DE INFO HITOS -->
     <div id="hitos-modal" class="modal hidden">
         <div class="modal-content" style="width: 95%; max-width: 1200px; text-align: left; max-height: 92vh; overflow-y: auto;">
             <h2>Senda de Iniciación - Hitos</h2>

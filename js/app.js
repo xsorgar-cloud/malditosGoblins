@@ -6802,3 +6802,46 @@ setInterval(() => {
     }
   }
 }, 1000);
+
+
+// Mostrar modal del SH
+const btnHordaPr = document.getElementById('btn-horda-pr');
+const hordaModal = document.getElementById('horda-modal');
+const btnCloseHorda = document.getElementById('btn-close-horda');
+const hordaInfoContent = document.getElementById('horda-info-content');
+
+if (btnHordaPr && hordaModal && btnCloseHorda) {
+  btnHordaPr.addEventListener('click', () => {
+    let contentHtml = `
+      <div style="background: rgba(255, 77, 77, 0.1); border-left: 3px solid #ff4d4d; padding: 8px 12px; margin-bottom: 15px; border-radius: 4px;">
+        <strong style="color: #ff4d4d; font-size: 0.95rem; display: block; margin-bottom: 4px;">Generación de PR:</strong>
+        <p style="margin: 0; color: #ddd; font-size: 0.9rem;"><strong>Goteo (cada Ronda):</strong> Oleada + Jugadores - 1 (mínimo 1).</p>
+      </div>
+      <strong style="color: #fff; font-size: 1rem; display: block; margin-bottom: 10px;">Costes de Invocación / Mejoras</strong>
+      <ul style="color:#ddd; padding-left:20px; font-size: 0.95rem; line-height: 1.6;">
+        <li><strong style="color:#ff4d4d;">1 PR</strong>: Invocar Goblin de Nivel 1</li>
+        <li><strong style="color:#ff4d4d;">2 PR</strong>: Invocar Goblin de Nivel 2</li>
+        <li><strong style="color:#ff4d4d;">4 PR</strong>: Invocar Goblin de Nivel 3</li>
+        <li><strong style="color:#ff4d4d;">6 PR</strong>: Invocar Goblin de Nivel 4</li>
+        <li><strong style="color:#ff4d4d;">9 PR</strong>: Invocar Goblin de Nivel 5</li>
+        <li><strong style="color:#ff4d4d;">10 PR</strong>: Invocar Jefe: El Cazador</li>
+        <li><strong style="color:#ff4d4d;">12 PR</strong>: Invocar Jefe: Gran Recaudador</li>
+        <li><strong style="color:#ff4d4d;">13 PR</strong>: Invocar Jefe: Rey Brujo / El Piromante</li>
+        <li><strong style="color:#ff4d4d;">14 PR</strong>: Invocar Jefe: El Zeñor de la Guerra</li>
+        <li><strong style="color:#ff4d4d;">16 PR</strong>: Invocar Jefe: La Madre</li>
+        <li><strong style="color:#ff4d4d;">1 PR</strong>: Piel de Cuero (+1 Absorción de daño, acumulable)</li>
+        <li><strong style="color:#ff4d4d;">1 PR</strong>: Frenesí (+1 Daño en Represalia, acumulable)</li>
+        <li><strong style="color:#ff4d4d;">1 PR</strong>: Imbuir Escozor (Escozor al impactar)</li>
+        <li><strong style="color:#ff4d4d;">1 PR</strong>: Imbuir Calambre (Calambre al impactar)</li>
+        <li><strong style="color:#ff4d4d;">2 PR</strong>: Imbuir Tembleque (Tembleque al impactar)</li>
+        <li><strong style="color:#ff4d4d;">2 PR</strong>: Armadura Reactiva (1 Daño al atacarle sin escudo, acumulable)</li>
+      </ul>
+    `;
+    hordaInfoContent.innerHTML = contentHtml;
+    hordaModal.classList.remove('hidden');
+  });
+  
+  btnCloseHorda.addEventListener('click', () => {
+    hordaModal.classList.add('hidden');
+  });
+}
