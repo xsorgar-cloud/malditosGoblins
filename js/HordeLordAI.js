@@ -66,12 +66,12 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
 
     // Attempt to invoke a Boss
     const bossCosts = {
-      'cazador': 10,
-      'recaudador': 11,
-      'rey_brujo': 12,
-      'piromante': 13,
-      'guerrero': 14,
-      'la_madre': 16
+      'cazador': 15,
+      'recaudador': 17,
+      'rey_brujo': 18,
+      'piromante': 18,
+      'guerrero': 19,
+      'la_madre': 21
     };
     
     // Find bosses that can be summoned (we need to match them to DB.hitos)
@@ -216,15 +216,15 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
     }
 
     // Accion de Ahorrar PR
-    let saveWeight = 55; // Base altísima (gana a mejoras de 1 PR que tienen ~40-50)
-    if (budget >= 3) saveWeight += 30; // 85 (casi seguro ahorra)
-    if (budget >= 6) saveWeight += 50; // 135 (ahorra 100% para jefe)
-    if (budget >= 9) saveWeight += 50; // 185 (ahorra sí o sí)
+    // BUSCAMOS UN PUNTO MEDIO: 
+    // Que ahorre a veces para llegar al jefe, pero que también gaste de vez en cuando.
+    let prSpentThisTurn = availablePR - budget;
+    let saveWeight = 25 + (budget * 2) + (prSpentThisTurn * 15);
     
     // Reducimos las ganas de ahorrar si hay pocos goblins para defenderle (emergencia)
     if (boardGoblins.length === 0) saveWeight -= 50;
-    else if (boardGoblins.length === 1) saveWeight -= 15;
-
+    else if (boardGoblins.length === 1) saveWeight -= 20;
+    
     if (saveWeight > 0) {
       possibleActions.push({
         id: 'ahorrar',
@@ -240,7 +240,7 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
     if (possibleActions.length === 0) break;
 
     possibleActions.forEach(a => {
-      a.score = a.weight + Math.floor(Math.random() * 15); 
+      a.score = a.weight + Math.floor(Math.random() * 35); 
     });
     
     possibleActions.sort((a, b) => b.score - a.score);
