@@ -2570,10 +2570,10 @@ main {
   }
 
   #goblins-container .goblin-card {
-    flex: 1 1 70px !important;
+    flex: 0 1 calc(25% - 10px) !important;
     width: auto !important;
     min-width: 60px !important;
-    max-width: 110px !important;
+    max-width: 90px !important;
     /* ¡REDUCCIÓN ESTRICTA DE TAMAÑO! */
     height: auto !important;
     max-height: 155px !important;

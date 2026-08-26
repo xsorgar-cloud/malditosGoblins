@@ -3612,7 +3612,7 @@ calculateEquipPower(eq, bot) {
     optimizeEquippedItems(bot) {
         if (!bot || !bot.equipped) return;
 
-        const maxBlocks = DB.playerLevels[bot.level - 1].blocks;
+        const maxBlocks = (6 + (bot.level - 1) * 2);
         let changed = false;
 
         // Priorizar: 1. Armas, 2. Escudos, 3. Curación, 4. Otros, ordenados por poder potencial máximo

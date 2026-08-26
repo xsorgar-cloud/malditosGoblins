@@ -1878,6 +1878,10 @@ Daño directo: Sufres ${brokenCount} de daño.`);
     }
   }
 
+  getPlayerMaxBlocks(player) {
+    return 6 + (player.level - 1) * 2;
+  }
+
   buyFromMarket(type) {
     let p = this.getCurrentPlayer();
     let deck = this.market[type];
@@ -1891,7 +1895,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
       p.mo -= card.cost;
 
       const currentBlocks = this.getPlayerBlocks(p);
-      const maxBlocks = DB.playerLevels[p.level - 1].blocks;
+      const maxBlocks = this.getPlayerMaxBlocks(p);
       const hasDuplicate = p.equipped.some(eq => eq.id === card.id && eq.isActive);
 
       // Solo entra activo si hay espacio Y no es un duplicado de uno ya activo
@@ -1941,7 +1945,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
 
       // 2. Comprobar peso
       const currentBlocks = this.getPlayerBlocks(p);
-      const maxBlocks = DB.playerLevels[p.level - 1].blocks;
+      const maxBlocks = this.getPlayerMaxBlocks(p);
       if (currentBlocks + eq.blocks > maxBlocks) {
         return "OVERWEIGHT";
       }
@@ -2702,6 +2706,16 @@ Daño directo: Sufres ${brokenCount} de daño.`);
     }
 
     return false;
+  }
+
+  getRequiredPex(level) {
+    const expRequerida = {
+      1: 2 * (this.players.length || 1),
+      2: 6 * (this.players.length || 1),
+      3: 12 * (this.players.length || 1),
+      4: 22 * (this.players.length || 1)
+    };
+    return expRequerida[level] || Infinity;
   }
 
   ganarPex(pex) {

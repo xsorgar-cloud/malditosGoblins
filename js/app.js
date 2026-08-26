@@ -956,12 +956,12 @@ function updateSetupSendaPreview() {
       </div>
       <ul style="margin: 0; padding-left: 20px; color: #ddd; font-size: 0.85rem; line-height: 1.5;">
         <li><strong style="color:#ff4d4d;">X PR</strong>: Invocar Goblin Nivel 1 a 5 (Costo: 1, 2, 4, 6, 9 PR)</li>
-        <li><strong style="color:#ff4d4d;">10 PR</strong>: Invocar Jefe: El Cazador</li>
-        <li><strong style="color:#ff4d4d;">11 PR</strong>: Invocar Jefe: El Gran Recaudador</li>
-        <li><strong style="color:#ff4d4d;">12 PR</strong>: Invocar Jefe: El Rey Brujo</li>
-        <li><strong style="color:#ff4d4d;">13 PR</strong>: Invocar Jefe: El Piromante</li>
-        <li><strong style="color:#ff4d4d;">14 PR</strong>: Invocar Jefe: El Zeñor de la Guerra</li>
-        <li><strong style="color:#ff4d4d;">16 PR</strong>: Invocar Jefe: La Madre</li>
+        <li><strong style="color:#ff4d4d;">15 PR</strong>: Invocar Jefe: El Cazador</li>
+        <li><strong style="color:#ff4d4d;">17 PR</strong>: Invocar Jefe: El Gran Recaudador</li>
+        <li><strong style="color:#ff4d4d;">18 PR</strong>: Invocar Jefe: El Rey Brujo</li>
+        <li><strong style="color:#ff4d4d;">18 PR</strong>: Invocar Jefe: El Piromante</li>
+        <li><strong style="color:#ff4d4d;">19 PR</strong>: Invocar Jefe: El Zeñor de la Guerra</li>
+        <li><strong style="color:#ff4d4d;">21 PR</strong>: Invocar Jefe: La Madre</li>
         <li><strong style="color:#ff4d4d;">1 PR</strong>: Piel de Cuero (+1 Absorción de daño, acumulable)</li>
         <li><strong style="color:#ff4d4d;">1 PR</strong>: Frenesí (+1 Daño en Represalia, acumulable)</li>
         <li><strong style="color:#ff4d4d;">1 PR</strong>: Imbuir Escozor (Escozor al impactar)</li>
@@ -4354,7 +4354,7 @@ function renderMarket() {
           window.updateUI = originalUpdateUI; // Restore immediately
           
           if (result === "OVERWEIGHT") {
-            alert(`¡DEMASIADO PESO! No puedes llevar más de ${DB.playerLevels[player.level - 1].blocks} bloques de equipo. Sube de nivel para aumentar tu capacidad.`);
+            alert(`¡DEMASIADO PESO! No puedes llevar más de ${(6 + (player.level - 1) * 2)} bloques de equipo. Sube de nivel para aumentar tu capacidad.`);
           } else if (result) {
             animateCardPurchase(deckEl, () => {
               gameState.justBoughtDeck = type;
@@ -4537,13 +4537,8 @@ function renderBattlefield() {
 
   const pLeader = gameState.players[0];
   if (pLeader) {
-    const expReq = {
-      1: 2 * gameState.players.length,
-      2: 6 * gameState.players.length,
-      3: 12 * gameState.players.length,
-      4: 22 * gameState.players.length
-    };
-    const nextExpLeader = expReq[pLeader.level] || 'MAX';
+    let req = gameState.getRequiredPex(pLeader.level);
+    const nextExpLeader = req === Infinity ? 'MAX' : req;
     const groupLevelSpan = document.getElementById('group-level');
     const groupPexSpan = document.getElementById('group-pex');
     const groupNextPexSpan = document.getElementById('group-next-pex');
@@ -6827,11 +6822,11 @@ if (btnHordaPr && hordaModal && btnCloseHorda) {
         <li><strong style="color:${getCostColor(4)};">4 PR</strong>: Invocar Goblin de Nivel 3</li>
         <li><strong style="color:${getCostColor(6)};">6 PR</strong>: Invocar Goblin de Nivel 4</li>
         <li><strong style="color:${getCostColor(9)};">9 PR</strong>: Invocar Goblin de Nivel 5</li>
-        <li><strong style="color:${getCostColor(10)};">10 PR</strong>: Invocar Jefe: El Cazador</li>
-        <li><strong style="color:${getCostColor(12)};">12 PR</strong>: Invocar Jefe: Gran Recaudador</li>
-        <li><strong style="color:${getCostColor(13)};">13 PR</strong>: Invocar Jefe: Rey Brujo / El Piromante</li>
-        <li><strong style="color:${getCostColor(14)};">14 PR</strong>: Invocar Jefe: El Zeñor de la Guerra</li>
-        <li><strong style="color:${getCostColor(16)};">16 PR</strong>: Invocar Jefe: La Madre</li>
+        <li><strong style="color:${getCostColor(15)};">15 PR</strong>: Invocar Jefe: El Cazador</li>
+        <li><strong style="color:${getCostColor(17)};">17 PR</strong>: Invocar Jefe: Gran Recaudador</li>
+        <li><strong style="color:${getCostColor(18)};">18 PR</strong>: Invocar Jefe: Rey Brujo / El Piromante</li>
+        <li><strong style="color:${getCostColor(19)};">19 PR</strong>: Invocar Jefe: El Zeñor de la Guerra</li>
+        <li><strong style="color:${getCostColor(21)};">21 PR</strong>: Invocar Jefe: La Madre</li>
         <li><strong style="color:${getCostColor(1)};">1 PR</strong>: Piel de Cuero (+1 Absorción de daño, acumulable)</li>
         <li><strong style="color:${getCostColor(1)};">1 PR</strong>: Frenesí (+1 Daño en Represalia, acumulable)</li>
         <li><strong style="color:${getCostColor(1)};">1 PR</strong>: Imbuir Escozor (Escozor al impactar)</li>

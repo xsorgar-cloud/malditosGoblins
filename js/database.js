@@ -274,3 +274,17 @@ const DB = {
   ]
 };
 
+
+
+// Auto-generate levels 6 to 100 for Horde mode
+if (typeof DB !== 'undefined' && DB.playerLevels) {
+  for (let i = 6; i <= 100; i++) {
+    DB.playerLevels.push({
+      level: i,
+      maxHp: 5 + (i * 5),
+      pexNeeded: 0, 
+      blocks: 4 + (i * 2),
+      extraDice: 'choice'
+    });
+  }
+}
