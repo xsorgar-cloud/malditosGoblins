@@ -2124,8 +2124,8 @@ Daño directo: Sufres ${brokenCount} de daño.`);
     if (player) {
       let damage = goblin.level;
       if (goblin.frenesi) {
-        damage += 1;
-        this.addLog(`🩸 <strong>Frenesí:</strong> El ataque de ${goblin.name || ('G' + goblin.level)} hace +1 de daño.`);
+        damage += goblin.frenesi;
+        this.addLog(`🩸 <strong>Frenesí:</strong> El ataque de ${goblin.name || ('G' + goblin.level)} hace +${goblin.frenesi} de daño.`);
       }
 
       if (this.activeSenda !== 'recaudador') {

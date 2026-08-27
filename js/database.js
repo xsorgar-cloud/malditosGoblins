@@ -1,4 +1,13 @@
 const DB = {
+  // CONFIGURACIÓN DEL SEÑOR DE LA HORDA
+  hordeConfig: {
+    SUMMON_COSTS: { 1: 1, 2: 2, 3: 4, 4: 6, 5: 9 },
+    BOSS_COSTS: { 'cazador': 15, 'recaudador': 17, 'rey_brujo': 18, 'piromante': 18, 'guerrero': 19, 'la_madre': 21 },
+    BOSS_NAMES: { 'cazador': 'El Cazador', 'recaudador': 'Gran Recaudador', 'rey_brujo': 'Rey Brujo / El Piromante', 'piromante': 'Rey Brujo / El Piromante', 'guerrero': 'El Zeñor de la Guerra', 'la_madre': 'La Madre' },
+    UPGRADE_COSTS: { 'piel': 1, 'frenesi': 1, 'escozor': 1, 'calambre': 1, 'tembleque': 2, 'armadura': 2 },
+    HORDE_AI_WEIGHTS: { SAVE_BASE: 25, SAVE_PER_PR: 2, SAVE_PER_SPENT_PR: 15, EMERGENCY_NO_GOBLINS: -50, EMERGENCY_ONE_GOBLIN: -20, RANDOM_JITTER_MAX: 35 }
+  },
+
   // LOGOS ESTACIONALES / EVENTOS
   // Formato MM-DD (Mes-Día). Puede abarcar fin de año (ej: "12-15" a "01-06")
   seasonalLogos: [

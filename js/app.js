@@ -955,19 +955,18 @@ function updateSetupSendaPreview() {
         <p style="margin: 0; color: #ddd; font-size: 0.8rem;"><strong>Goteo (cada Ronda):</strong> Oleada + Jugadores - 1 (mínimo 1).</p>
       </div>
       <ul style="margin: 0; padding-left: 20px; color: #ddd; font-size: 0.85rem; line-height: 1.5;">
-        <li><strong style="color:#ff4d4d;">X PR</strong>: Invocar Goblin Nivel 1 a 5 (Costo: 1, 2, 4, 6, 9 PR)</li>
-        <li><strong style="color:#ff4d4d;">15 PR</strong>: Invocar Jefe: El Cazador</li>
-        <li><strong style="color:#ff4d4d;">17 PR</strong>: Invocar Jefe: El Gran Recaudador</li>
-        <li><strong style="color:#ff4d4d;">18 PR</strong>: Invocar Jefe: El Rey Brujo</li>
-        <li><strong style="color:#ff4d4d;">18 PR</strong>: Invocar Jefe: El Piromante</li>
-        <li><strong style="color:#ff4d4d;">19 PR</strong>: Invocar Jefe: El Zeñor de la Guerra</li>
-        <li><strong style="color:#ff4d4d;">21 PR</strong>: Invocar Jefe: La Madre</li>
-        <li><strong style="color:#ff4d4d;">1 PR</strong>: Piel de Cuero (+1 Absorción de daño, acumulable)</li>
-        <li><strong style="color:#ff4d4d;">1 PR</strong>: Frenesí (+1 Daño en Represalia, acumulable)</li>
-        <li><strong style="color:#ff4d4d;">1 PR</strong>: Imbuir Escozor (Escozor al impactar)</li>
-        <li><strong style="color:#ff4d4d;">1 PR</strong>: Imbuir Calambre (Calambre al impactar)</li>
-        <li><strong style="color:#ff4d4d;">2 PR</strong>: Imbuir Tembleque (Tembleque al impactar)</li>
-        <li><strong style="color:#ff4d4d;">2 PR</strong>: Armadura Reactiva (1 Daño al atacarle sin escudo, acumulable)</li>
+        <li><strong style="color:#ff4d4d;">X PR</strong>: Invocar Goblin Nivel 1 a 5 (Costo: ${DB.hordeConfig.SUMMON_COSTS[1]}, ${DB.hordeConfig.SUMMON_COSTS[2]}, ${DB.hordeConfig.SUMMON_COSTS[3]}, ${DB.hordeConfig.SUMMON_COSTS[4]}, ${DB.hordeConfig.SUMMON_COSTS[5]} PR)</li>
+          <li><strong style="color:#ff4d4d;">${DB.hordeConfig.BOSS_COSTS.cazador} PR</strong>: Invocar Jefe: ${DB.hordeConfig.BOSS_NAMES.cazador}</li>
+          <li><strong style="color:#ff4d4d;">${DB.hordeConfig.BOSS_COSTS.recaudador} PR</strong>: Invocar Jefe: ${DB.hordeConfig.BOSS_NAMES.recaudador}</li>
+          <li><strong style="color:#ff4d4d;">${DB.hordeConfig.BOSS_COSTS.rey_brujo} PR</strong>: Invocar Jefe: ${DB.hordeConfig.BOSS_NAMES.rey_brujo}</li>
+          <li><strong style="color:#ff4d4d;">${DB.hordeConfig.BOSS_COSTS.guerrero} PR</strong>: Invocar Jefe: ${DB.hordeConfig.BOSS_NAMES.guerrero}</li>
+          <li><strong style="color:#ff4d4d;">${DB.hordeConfig.BOSS_COSTS.la_madre} PR</strong>: Invocar Jefe: ${DB.hordeConfig.BOSS_NAMES.la_madre}</li>
+          <li><strong style="color:#ff4d4d;">${DB.hordeConfig.UPGRADE_COSTS.piel} PR</strong>: Piel de Cuero (+1 Absorción de daño, acumulable)</li>
+          <li><strong style="color:#ff4d4d;">${DB.hordeConfig.UPGRADE_COSTS.frenesi} PR</strong>: Frenesí (+1 Daño en Represalia, acumulable)</li>
+          <li><strong style="color:#ff4d4d;">${DB.hordeConfig.UPGRADE_COSTS.escozor} PR</strong>: Imbuir Escozor (Escozor al impactar)</li>
+          <li><strong style="color:#ff4d4d;">${DB.hordeConfig.UPGRADE_COSTS.calambre} PR</strong>: Imbuir Calambre (Calambre al impactar)</li>
+          <li><strong style="color:#ff4d4d;">${DB.hordeConfig.UPGRADE_COSTS.tembleque} PR</strong>: Imbuir Tembleque (Tembleque al impactar)</li>
+          <li><strong style="color:#ff4d4d;">${DB.hordeConfig.UPGRADE_COSTS.armadura} PR</strong>: Armadura Reactiva (1 Daño al atacarle sin escudo, acumulable)</li>
       </ul>
     </div>`;
   } else {
@@ -6817,22 +6816,22 @@ if (btnHordaPr && hordaModal && btnCloseHorda) {
       </div>
       <strong style="color: #fff; font-size: 1rem; display: block; margin-bottom: 10px;">Costes de Invocación / Mejoras</strong>
       <ul style="color:#ddd; padding-left:20px; font-size: 0.95rem; line-height: 1.6;">
-        <li><strong style="color:${getCostColor(1)};">1 PR</strong>: Invocar Goblin de Nivel 1</li>
-        <li><strong style="color:${getCostColor(2)};">2 PR</strong>: Invocar Goblin de Nivel 2</li>
-        <li><strong style="color:${getCostColor(4)};">4 PR</strong>: Invocar Goblin de Nivel 3</li>
-        <li><strong style="color:${getCostColor(6)};">6 PR</strong>: Invocar Goblin de Nivel 4</li>
-        <li><strong style="color:${getCostColor(9)};">9 PR</strong>: Invocar Goblin de Nivel 5</li>
-        <li><strong style="color:${getCostColor(15)};">15 PR</strong>: Invocar Jefe: El Cazador</li>
-        <li><strong style="color:${getCostColor(17)};">17 PR</strong>: Invocar Jefe: Gran Recaudador</li>
-        <li><strong style="color:${getCostColor(18)};">18 PR</strong>: Invocar Jefe: Rey Brujo / El Piromante</li>
-        <li><strong style="color:${getCostColor(19)};">19 PR</strong>: Invocar Jefe: El Zeñor de la Guerra</li>
-        <li><strong style="color:${getCostColor(21)};">21 PR</strong>: Invocar Jefe: La Madre</li>
-        <li><strong style="color:${getCostColor(1)};">1 PR</strong>: Piel de Cuero (+1 Absorción de daño, acumulable)</li>
-        <li><strong style="color:${getCostColor(1)};">1 PR</strong>: Frenesí (+1 Daño en Represalia, acumulable)</li>
-        <li><strong style="color:${getCostColor(1)};">1 PR</strong>: Imbuir Escozor (Escozor al impactar)</li>
-        <li><strong style="color:${getCostColor(1)};">1 PR</strong>: Imbuir Calambre (Calambre al impactar)</li>
-        <li><strong style="color:${getCostColor(2)};">2 PR</strong>: Imbuir Tembleque (Tembleque al impactar)</li>
-        <li><strong style="color:${getCostColor(2)};">2 PR</strong>: Armadura Reactiva (1 Daño al atacarle sin escudo, acumulable)</li>
+        <li><strong style="color:${getCostColor(DB.hordeConfig.SUMMON_COSTS[1])};">${DB.hordeConfig.SUMMON_COSTS[1]} PR</strong>: Invocar Goblin de Nivel 1</li>
+        <li><strong style="color:${getCostColor(DB.hordeConfig.SUMMON_COSTS[2])};">${DB.hordeConfig.SUMMON_COSTS[2]} PR</strong>: Invocar Goblin de Nivel 2</li>
+        <li><strong style="color:${getCostColor(DB.hordeConfig.SUMMON_COSTS[3])};">${DB.hordeConfig.SUMMON_COSTS[3]} PR</strong>: Invocar Goblin de Nivel 3</li>
+        <li><strong style="color:${getCostColor(DB.hordeConfig.SUMMON_COSTS[4])};">${DB.hordeConfig.SUMMON_COSTS[4]} PR</strong>: Invocar Goblin de Nivel 4</li>
+        <li><strong style="color:${getCostColor(DB.hordeConfig.SUMMON_COSTS[5])};">${DB.hordeConfig.SUMMON_COSTS[5]} PR</strong>: Invocar Goblin de Nivel 5</li>
+        <li><strong style="color:${getCostColor(DB.hordeConfig.BOSS_COSTS.cazador)};">${DB.hordeConfig.BOSS_COSTS.cazador} PR</strong>: Invocar Jefe: ${DB.hordeConfig.BOSS_NAMES.cazador}</li>
+        <li><strong style="color:${getCostColor(DB.hordeConfig.BOSS_COSTS.recaudador)};">${DB.hordeConfig.BOSS_COSTS.recaudador} PR</strong>: Invocar Jefe: ${DB.hordeConfig.BOSS_NAMES.recaudador}</li>
+        <li><strong style="color:${getCostColor(DB.hordeConfig.BOSS_COSTS.rey_brujo)};">${DB.hordeConfig.BOSS_COSTS.rey_brujo} PR</strong>: Invocar Jefe: ${DB.hordeConfig.BOSS_NAMES.rey_brujo}</li>
+        <li><strong style="color:${getCostColor(DB.hordeConfig.BOSS_COSTS.guerrero)};">${DB.hordeConfig.BOSS_COSTS.guerrero} PR</strong>: Invocar Jefe: ${DB.hordeConfig.BOSS_NAMES.guerrero}</li>
+        <li><strong style="color:${getCostColor(DB.hordeConfig.BOSS_COSTS.la_madre)};">${DB.hordeConfig.BOSS_COSTS.la_madre} PR</strong>: Invocar Jefe: ${DB.hordeConfig.BOSS_NAMES.la_madre}</li>
+        <li><strong style="color:${getCostColor(DB.hordeConfig.UPGRADE_COSTS.piel)};">${DB.hordeConfig.UPGRADE_COSTS.piel} PR</strong>: Piel de Cuero (+1 Absorción de daño, acumulable)</li>
+        <li><strong style="color:${getCostColor(DB.hordeConfig.UPGRADE_COSTS.frenesi)};">${DB.hordeConfig.UPGRADE_COSTS.frenesi} PR</strong>: Frenesí (+1 Daño en Represalia, acumulable)</li>
+        <li><strong style="color:${getCostColor(DB.hordeConfig.UPGRADE_COSTS.escozor)};">${DB.hordeConfig.UPGRADE_COSTS.escozor} PR</strong>: Imbuir Escozor (Escozor al impactar)</li>
+        <li><strong style="color:${getCostColor(DB.hordeConfig.UPGRADE_COSTS.calambre)};">${DB.hordeConfig.UPGRADE_COSTS.calambre} PR</strong>: Imbuir Calambre (Calambre al impactar)</li>
+        <li><strong style="color:${getCostColor(DB.hordeConfig.UPGRADE_COSTS.tembleque)};">${DB.hordeConfig.UPGRADE_COSTS.tembleque} PR</strong>: Imbuir Tembleque (Tembleque al impactar)</li>
+        <li><strong style="color:${getCostColor(DB.hordeConfig.UPGRADE_COSTS.armadura)};">${DB.hordeConfig.UPGRADE_COSTS.armadura} PR</strong>: Armadura Reactiva (1 Daño al atacarle sin escudo, acumulable)</li>
       </ul>
     `;
     hordaInfoContent.innerHTML = contentHtml;

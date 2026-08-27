@@ -27,13 +27,7 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
     // 1. INVOCAR GOBLINS Y JEFES
     let summonWeight = boardGoblins.length === 0 ? 100 : (boardGoblins.length < 3 ? 40 : 5);
 
-    const summonCosts = {
-      1: 1,
-      2: 2,
-      3: 4,
-      4: 6,
-      5: 9
-    };
+    const summonCosts = DB.hordeConfig.SUMMON_COSTS;
     
     // Attempt to invoke a normal goblin
     let possibleLevels = Object.keys(summonCosts).map(Number).filter(lvl => budget >= summonCosts[lvl] && lvl <= gameState.battlefield.waveLevel + 1);
@@ -65,14 +59,7 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
     }
 
     // Attempt to invoke a Boss
-    const bossCosts = {
-      'cazador': 15,
-      'recaudador': 17,
-      'rey_brujo': 18,
-      'piromante': 18,
-      'guerrero': 19,
-      'la_madre': 21
-    };
+    const bossCosts = DB.hordeConfig.BOSS_COSTS;
     
     // Find bosses that can be summoned (we need to match them to DB.hitos)
     let possibleBosses = [];
@@ -138,11 +125,11 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
       let gobName = targetGob.name || ('G' + targetGob.level);
 
       // Piel de Cuero (+1 acumulable) - Costo: 1 PR
-      if (budget >= 1) {
+      if (budget >= DB.hordeConfig.UPGRADE_COSTS.piel) {
         possibleActions.push({
           id: 'piel',
           name: `Piel de Cuero`,
-          cost: 1,
+          cost: DB.hordeConfig.UPGRADE_COSTS.piel,
           weight: player.hp > 3 ? 50 : 20,
           execute: () => {
             targetGob.pielDeCuero = (targetGob.pielDeCuero || 0) + 1;
@@ -152,11 +139,11 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
       }
 
       // Frenesí (+1 Daño en Represalia) - Costo: 1 PR (antes 2)
-      if (budget >= 1) {
+      if (budget >= DB.hordeConfig.UPGRADE_COSTS.frenesi) {
         possibleActions.push({
           id: 'frenesi',
           name: `Frenesí`,
-          cost: 1,
+          cost: DB.hordeConfig.UPGRADE_COSTS.frenesi,
           weight: player.hp <= 3 ? 90 : 35,
           execute: () => {
             targetGob.frenesi = (targetGob.frenesi || 0) + 1;
@@ -166,11 +153,11 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
       }
 
       // Armadura Reactiva (1 Daño al atacarle sin escudo) - Costo: 2 PR
-      if (budget >= 2) {
+      if (budget >= DB.hordeConfig.UPGRADE_COSTS.armadura) {
         possibleActions.push({
           id: 'armadura',
           name: `Armadura Reactiva`,
-          cost: 2,
+          cost: DB.hordeConfig.UPGRADE_COSTS.armadura,
           weight: 40,
           execute: () => {
             targetGob.armaduraReactiva = (targetGob.armaduraReactiva || 0) + 1;
@@ -180,20 +167,20 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
       }
 
       // Imbuir Alteración (Aplica al impactar) - Maldición eliminada
-      if (budget >= 1 && !targetGob.imbuirAlteracion) {
+      if (budget >= Math.min(DB.hordeConfig.UPGRADE_COSTS.escozor, DB.hordeConfig.UPGRADE_COSTS.calambre) && !targetGob.imbuirAlteracion) {
         let altType = '';
         let altCost = 1;
         
         let rnd = Math.random();
-        if (budget >= 2 && rnd < 0.33) {
+        if (budget >= DB.hordeConfig.UPGRADE_COSTS.tembleque && rnd < 0.33) {
            altType = 'Tembleque';
-           altCost = 2; // Imbuir Tembleque: 2 PR
+           altCost = DB.hordeConfig.UPGRADE_COSTS.tembleque; // Imbuir Tembleque
         } else if (rnd < 0.66) {
            altType = 'Escozor';
-           altCost = 1; // Imbuir Escozor: 1 PR
+           altCost = DB.hordeConfig.UPGRADE_COSTS.escozor; // Imbuir Escozor
         } else {
            altType = 'Calambre';
-           altCost = 1; // Imbuir Calambre: 1 PR
+           altCost = DB.hordeConfig.UPGRADE_COSTS.calambre; // Imbuir Calambre
         }
 
         if (budget >= altCost) {
@@ -219,11 +206,13 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
     // BUSCAMOS UN PUNTO MEDIO: 
     // Que ahorre a veces para llegar al jefe, pero que también gaste de vez en cuando.
     let prSpentThisTurn = availablePR - budget;
-    let saveWeight = 25 + (budget * 2) + (prSpentThisTurn * 15);
+    let saveWeight = DB.hordeConfig.HORDE_AI_WEIGHTS.SAVE_BASE + 
+                     (budget * DB.hordeConfig.HORDE_AI_WEIGHTS.SAVE_PER_PR) + 
+                     (prSpentThisTurn * DB.hordeConfig.HORDE_AI_WEIGHTS.SAVE_PER_SPENT_PR);
     
     // Reducimos las ganas de ahorrar si hay pocos goblins para defenderle (emergencia)
-    if (boardGoblins.length === 0) saveWeight -= 50;
-    else if (boardGoblins.length === 1) saveWeight -= 20;
+    if (boardGoblins.length === 0) saveWeight += DB.hordeConfig.HORDE_AI_WEIGHTS.EMERGENCY_NO_GOBLINS;
+    else if (boardGoblins.length === 1) saveWeight += DB.hordeConfig.HORDE_AI_WEIGHTS.EMERGENCY_ONE_GOBLIN;
     
     if (saveWeight > 0) {
       possibleActions.push({
@@ -240,7 +229,7 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
     if (possibleActions.length === 0) break;
 
     possibleActions.forEach(a => {
-      a.score = a.weight + Math.floor(Math.random() * 35); 
+      a.score = a.weight + Math.floor(Math.random() * DB.hordeConfig.HORDE_AI_WEIGHTS.RANDOM_JITTER_MAX); 
     });
     
     possibleActions.sort((a, b) => b.score - a.score);
