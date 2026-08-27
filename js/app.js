@@ -547,8 +547,9 @@ window.alert = function (messageText, callback = null) {
     overlay.classList.add('hidden');
     window.resetEventModalTransparency();
     if (typeof callback === 'function') {
-      callback();
-    }
+        callback();
+      }
+      setTimeout(() => { if (window.botManager) window.botManager.handleGameState(); }, 150);
   };
 
   container.appendChild(btnOk);
