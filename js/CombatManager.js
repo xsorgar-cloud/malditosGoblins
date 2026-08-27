@@ -170,7 +170,7 @@ window.combatDieFusionHandler = (e) => {
      let sourceDie = gameState.currentCombat.playerDice.find(d => d.id === dieId);
      let targetDie = gameState.currentCombat.playerDice.find(d => d.id === targetId);
      if(!sourceDie || !targetDie) return;
-     if((sourceDie.type !== 'red' && sourceDie.type !== 'black' && sourceDie.type !== 'silver') || (targetDie.type !== 'red' && targetDie.type !== 'black')) return;
+     if(sourceDie.type !== 'silver' || (targetDie.type !== 'red' && targetDie.type !== 'black')) return;
      if(sourceDie.silverDieId || targetDie.silverDieId) return;
      if(targetDie.assignedTo) {
        return;
