@@ -477,19 +477,19 @@ triggerAction(type, target = null, reason = "") {
             // Ordenar goblins vivos: mayor nivel primero, luego menor HP
             survivingGoblins.sort((a, b) => {
                 if (a.level !== b.level) return b.level - a.level;
-                return a.currentHp - b.currentHp;
+                return (a.currentHp + (a.pielDeCuero || 0)) - (b.currentHp + (b.pielDeCuero || 0));
             });
 
             for (let g of survivingGoblins) {
                 if (availableSlots.length === 0) break; // Sin objetivos/manos
-                if (g.currentHp <= 0) continue; // Ya está muerto
+                if ((g.currentHp + (g.pielDeCuero || 0)) <= 0) continue; // Ya está muerto
 
                 // Asignar slots a este goblin hasta que muera o nos quedemos sin slots
-                while (g.currentHp > 0 && availableSlots.length > 0) {
+                while ((g.currentHp + (g.pielDeCuero || 0)) > 0 && availableSlots.length > 0) {
                     // Buscar el slot más pequeño que pueda matarlo para no desperdiciar los grandes
                     let slotIdx = -1;
                     for (let i = availableSlots.length - 1; i >= 0; i--) {
-                        if (availableSlots[i] >= g.currentHp) {
+                        if (availableSlots[i] >= (g.currentHp + (g.pielDeCuero || 0))) {
                             slotIdx = i;
                             break;
                         }
@@ -506,7 +506,7 @@ triggerAction(type, target = null, reason = "") {
             }
             
             // Eliminar los goblins muertos para la siguiente acción
-            survivingGoblins = survivingGoblins.filter(g => g.currentHp > 0);
+            survivingGoblins = survivingGoblins.filter(g => (g.currentHp + (g.pielDeCuero || 0)) > 0);
         }
 
         return survivingGoblins;
@@ -616,7 +616,7 @@ triggerAction(type, target = null, reason = "") {
             if (!g.isDying) {
                 projected.push({
                     level: g.level,
-                    currentHp: g.currentHp
+                    currentHp: (g.currentHp + (g.pielDeCuero || 0))
                 });
             }
         });
@@ -660,6 +660,7 @@ triggerAction(type, target = null, reason = "") {
     }
 
     canClearTableAfterDeployingHito() {
+        if (this.gameState.activeSenda === 'horda') return false;
         if (this.gameState.currentHito === 5) {
             // Caso especial: Hito 5 (Jefe Final)
             // El objetivo del juego es eliminar al jefe. No hace falta limpiar la mesa.
@@ -1072,11 +1073,11 @@ performMainTurn(bot) {
                 let canEliminateAnyGoblin = false;
                 const maxPowerAll = this.getPlayerMaxPowerPerAction(bot);
                 if (potentialTargets.length > 0) {
-                    canEliminateAnyGoblin = potentialTargets.some(g => g.currentHp <= maxPowerAll);
+                    canEliminateAnyGoblin = potentialTargets.some(g => (g.currentHp + (g.pielDeCuero || 0)) <= maxPowerAll);
                 }
 
                 let isLastAction = this.gameState.battlefield.actionCount >= 2;
-                let canEliminateAnyGoblinOnTable = goblinsEnMesa.some(g => g.currentHp <= maxPowerAll);
+                let canEliminateAnyGoblinOnTable = goblinsEnMesa.some(g => (g.currentHp + (g.pielDeCuero || 0)) <= maxPowerAll);
 
                 if (isLastAction && !canEliminateAnyGoblinOnTable) {
                     chosenAction = 'gold';
@@ -1101,7 +1102,7 @@ performMainTurn(bot) {
                     // Fallback si no hay objetivos seguros de combate
                     // NUNCA obtener oro ni recargar rol si hay goblins en la mesa, porque desperdicia el turno y adelanta la represalia.
                     // Forzamos combate contra el goblin más débil, asumiendo el riesgo.
-                    let easiest = [...goblinsEnMesa].sort((a,b) => a.level - b.level || a.currentHp - b.currentHp)[0];
+                    let easiest = [...goblinsEnMesa].sort((a,b) => a.level - b.level || (a.currentHp + (a.pielDeCuero || 0)) - (b.currentHp + (b.pielDeCuero || 0)))[0];
                     targetForCombat = [easiest];
                     if (easiest.partnerUid) {
                         let partner = goblinsEnMesa.find(p => p.uid === easiest.partnerUid);
@@ -1761,6 +1762,9 @@ calculateEquipPower(eq, bot) {
              totalMaxDirect += dieMaxDirect;
          }
          
+         if (gob.frenesi) { totalMaxNormal += gob.frenesi; }
+         if (gob.armaduraReactiva) { totalMaxDirect += gob.armaduraReactiva; }
+         if (gob.imbuirAlteracion) { totalMaxDirect += 1; }
          return { normal: totalMaxNormal, direct: totalMaxDirect };
      }
 
@@ -1846,7 +1850,7 @@ calculateEquipPower(eq, bot) {
                 if (isFarmingLife) {
                     // Si buscamos curarnos, queremos el objetivo MÁS DÉBIL
                     if (a.level !== b.level) return a.level - b.level; // Menor nivel primero
-                    return a.currentHp - b.currentHp; // Menor vida primero
+                    return (a.currentHp + (a.pielDeCuero || 0)) - (b.currentHp + (b.pielDeCuero || 0)); // Menor vida primero
                 } else {
                     // Si buscamos combate normal, priorizamos recompensas, luego DAÑO (para mitigar), y vida
                     const aCat = this.getGoblinRewardCategory(a, bot);
@@ -1860,7 +1864,7 @@ calculateEquipPower(eq, bot) {
 
                     if (totalDmgA !== totalDmgB) return totalDmgB - totalDmgA;
 
-                    return a.currentHp - b.currentHp;
+                    return (a.currentHp + (a.pielDeCuero || 0)) - (b.currentHp + (b.pielDeCuero || 0));
                 }
             });
         }
@@ -1907,7 +1911,7 @@ calculateEquipPower(eq, bot) {
             deficitDefense = expectedDamageTaken - bot.hp + 1 - totalMaxHealing; // +1 to survive
             
             let isLastAction = this.gameState.battlefield.actionCount >= 2;
-            let totalTargetsHp = targets.reduce((s, g) => s + g.currentHp, 0);
+            let totalTargetsHp = targets.reduce((s, g) => s + (g.currentHp + (g.pielDeCuero || 0)), 0);
             let canKillTargets = (totalMaxDamage + (isGuerreroOrMago ? bot.energy : 0)) >= totalTargetsHp;
 
             if (isLastAction && !canKillTargets) {
@@ -2340,7 +2344,7 @@ calculateEquipPower(eq, bot) {
         const weapons = bot.equipped.filter(eq => eq.isActive && (this.isWeapon(eq) || (eq.effect && eq.effect.toLowerCase().includes('daño')) || (eq.broken && eq.broken.effect && eq.broken.effect.toLowerCase().includes('daño'))));
         const shields = bot.equipped.filter(eq => eq.isActive && this.isShield(eq));
         const heals = bot.equipped.filter(eq => eq.isActive && this.isHeal(eq));
-        const aliveGoblins = goblins.filter(g => g.currentHp > 0 && !g.isDying);
+        const aliveGoblins = goblins.filter(g => (g.currentHp + (g.pielDeCuero || 0)) > 0 && !g.isDying);
 
         let diceOptions = [];
         for (let d of availableDice) {
@@ -2452,9 +2456,9 @@ calculateEquipPower(eq, bot) {
             let hitoDmgBonus = 0;
             aliveGoblins.forEach(g => {
                 let totalDmg = damageToGoblins[g.uid];
-                if (g.currentHp - totalDmg <= 0) {
+                if ((g.currentHp + (g.pielDeCuero || 0)) - totalDmg <= 0) {
                     goblinsKilled++;
-                    damageDealt += g.currentHp;
+                    damageDealt += (g.currentHp + (g.pielDeCuero || 0));
                     if (g.isHito) hitoKillBonus++;
                 } else {
                     damageDealt += totalDmg;
@@ -2488,7 +2492,7 @@ calculateEquipPower(eq, bot) {
             
             aliveGoblins.forEach(g => {
                 let totalDmg = damageToGoblins[g.uid];
-                if (g.currentHp - totalDmg > 0 && !isLastAction) {
+                if ((g.currentHp + (g.pielDeCuero || 0)) - totalDmg > 0 && !isLastAction) {
                     // Daño no letal empata con energía a 10.000 para priorizar el ataque al estar sano
                     score += totalDmg * 10000;
                 }
@@ -2568,7 +2572,7 @@ calculateEquipPower(eq, bot) {
             }
             
             let aliveGoblins = goblins.filter(g => {
-                let remainingHp = g.currentHp - (goblinDamage[g.uid] || 0);
+                let remainingHp = (g.currentHp + (g.pielDeCuero || 0)) - (goblinDamage[g.uid] || 0);
                 return remainingHp > 0;
             });
             
@@ -2578,7 +2582,7 @@ calculateEquipPower(eq, bot) {
             if (aliveGoblins.length > 0) {
                 // Intentar rematar a un goblin (0 < remainingHp <= dmg)
                 let killableGoblins = aliveGoblins.filter(g => {
-                    let remainingHp = g.currentHp - (goblinDamage[g.uid] || 0);
+                    let remainingHp = (g.currentHp + (g.pielDeCuero || 0)) - (goblinDamage[g.uid] || 0);
                     return remainingHp <= dmg;
                 });
                 
@@ -2590,8 +2594,8 @@ calculateEquipPower(eq, bot) {
                         
                         if (a.level !== b.level) return b.level - a.level;
                         
-                        const aRem = a.currentHp - (goblinDamage[a.uid] || 0);
-                        const bRem = b.currentHp - (goblinDamage[b.uid] || 0);
+                        const aRem = (a.currentHp + (a.pielDeCuero || 0)) - (goblinDamage[a.uid] || 0);
+                        const bRem = (b.currentHp + (b.pielDeCuero || 0)) - (goblinDamage[b.uid] || 0);
                         return aRem - bRem;
                     });
                     targetGoblin = sortedKillable[0];
@@ -2603,8 +2607,8 @@ calculateEquipPower(eq, bot) {
                         
                         if (a.level !== b.level) return b.level - a.level;
                         
-                        const aRem = a.currentHp - (goblinDamage[a.uid] || 0);
-                        const bRem = b.currentHp - (goblinDamage[b.uid] || 0);
+                        const aRem = (a.currentHp + (a.pielDeCuero || 0)) - (goblinDamage[a.uid] || 0);
+                        const bRem = (b.currentHp + (b.pielDeCuero || 0)) - (goblinDamage[b.uid] || 0);
                         return aRem - bRem;
                     });
                     targetGoblin = sortedAlive[0];
@@ -2615,7 +2619,7 @@ calculateEquipPower(eq, bot) {
                     const bCat = this.getGoblinRewardCategory(b, bot);
                     if (aCat !== bCat) return bCat - aCat;
                     
-                    return b.currentHp - a.currentHp;
+                    return (b.currentHp + (b.pielDeCuero || 0)) - (a.currentHp + (a.pielDeCuero || 0));
                 });
                 targetGoblin = sortedGoblins[0];
             }
@@ -2650,7 +2654,7 @@ calculateEquipPower(eq, bot) {
                             });
                         }
                     }
-                    neededDmg = Math.max(0, tgtGob.currentHp - currentDmg);
+                    neededDmg = Math.max(0, (tgtGob.currentHp + (tgtGob.pielDeCuero || 0)) - currentDmg);
                 }
             }
 
@@ -3477,11 +3481,11 @@ calculateEquipPower(eq, bot) {
         else if (rId === 'mago') {
             const validTargets = targetGoblins
                 .map(g => this.gameState.battlefield.goblins.find(bg => bg.uid === g.uid))
-                .filter(g => g && g.currentHp > 0);
+                .filter(g => g && (g.currentHp + (g.pielDeCuero || 0)) > 0);
 
             for (let gob of validTargets) {
                 if (bot.energy <= 0) break;
-                let maxDmg = gob.currentHp - 1;
+                let maxDmg = (gob.currentHp + (gob.pielDeCuero || 0)) - 1;
                 let dmgToApply = Math.min(bot.energy, maxDmg);
                 if (dmgToApply > 0) {
                     this.gameState.addLog(`🤖 <strong>${bot.name}</strong> usa su rol de Mago para infligir ${dmgToApply} de daño directo a ${gob.name || ('G' + gob.level)} antes del combate.`);
@@ -3584,17 +3588,17 @@ calculateEquipPower(eq, bot) {
         }
         else if (rId === 'guerrero') {
             let survivingGobs = this.gameState.battlefield.goblins.filter(g => 
-                g.currentHp > 0 && 
+                (g.currentHp + (g.pielDeCuero || 0)) > 0 && 
                 !g.isDying && 
                 bot.goblinsFoughtThisTurn && 
                 bot.goblinsFoughtThisTurn.includes(g.uid)
             );
             
-            survivingGobs.sort((a, b) => a.currentHp - b.currentHp);
+            survivingGobs.sort((a, b) => (a.currentHp + (a.pielDeCuero || 0)) - (b.currentHp + (b.pielDeCuero || 0)));
             
             for (let gob of survivingGobs) {
                 if (bot.energy <= 0) break;
-                let neededDmg = gob.currentHp;
+                let neededDmg = (gob.currentHp + (gob.pielDeCuero || 0));
                 if (bot.energy >= neededDmg) {
                     this.gameState.addLog(`🤖 <strong>${bot.name}</strong> usa su rol de Guerrero para rematar a ${gob.name || ('G' + gob.level)} con ${neededDmg} de daño.`);
                     this.gameState.useRoleAbility(pIndex, gob.uid, neededDmg, neededDmg);
