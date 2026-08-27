@@ -554,7 +554,7 @@ window.alert = function (messageText, callback = null) {
   container.appendChild(btnOk);
 
   // Lógica de temporizador automático para bots en resolución de combate
-  const isCombatResolution = messageText.includes('¡COMBATE COMPLETADO!');
+  const isCombatResolution = messageText.includes('¡COMBATE COMPLETADO!') || messageText.includes('¡EL SEÑOR DE LA HORDA HA ACTUADO!');
   const activePlayer = typeof gameState !== 'undefined' && gameState.getCurrentPlayer ? gameState.getCurrentPlayer() : null;
   const isBot = activePlayer && activePlayer.isBot;
 
