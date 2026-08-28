@@ -3618,7 +3618,7 @@ main {
 
   #game-version-badge {
     font-size: 0.75rem !important;
-    top: 18px !important;
+    top: -10px !important;
     left: 55px !important;
     padding: 2px 8px !important;
   }
