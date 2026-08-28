@@ -4009,7 +4009,7 @@ main {
     font-size: 0.95rem !important;
   }
 
-  /* Hito Confirm Layout for Mobile - Sticky buttons at the top */
+  /* Hito Confirm Layout for Mobile - Sticky buttons at the bottom */
   #hito-confirm-modal .event-modal {
     display: flex;
     flex-direction: column;
@@ -4017,18 +4017,18 @@ main {
   #hito-confirm-header {
     order: 1;
   }
-  #hito-confirm-buttons {
+  #hito-confirm-body {
     order: 2;
+  }
+  #hito-confirm-buttons {
+    order: 3;
     position: sticky;
-    top: -20px;
+    bottom: -20px;
     z-index: 100;
     background: rgba(15, 10, 25, 0.98);
     padding: 15px 0 10px 0;
-    margin-bottom: 15px;
-    border-bottom: 1px solid rgba(212, 175, 55, 0.3);
-  }
-  #hito-confirm-body {
-    order: 3;
+    margin-top: 15px;
+    border-top: 1px solid rgba(212, 175, 55, 0.3);
   }
 }
 
