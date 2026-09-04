@@ -3683,20 +3683,7 @@ function updateUI() {
   const currentPlayerForShop = gameState.getCurrentPlayer();
   let canAffordSomething = false;
   
-  if (currentPlayerForShop) {
-      if (window._debugCoinAlert !== currentPlayerForShop.mo) {
-          alert(`DEBUG [updateUI]:
-mo=${currentPlayerForShop.mo}
-isBot=${currentPlayerForShop.isBot}
-isMarketPhase=${gameState.isMarketPhase}
-isRetPhase=${gameState.isRetaliationPhase}
-isGameOver=${gameState.isGameOver}
-topEscudosCost=${gameState.market.escudos[0] ? gameState.market.escudos[0].cost : 'N/A'}`);
-          window._debugCoinAlert = currentPlayerForShop.mo;
-      }
-  }
-
-  if (currentPlayerForShop && !currentPlayerForShop.isBot && !gameState.isMarketPhase && !gameState.isRetaliationPhase && !gameState.isGameOver) {
+  if (currentPlayerForShop && !currentPlayerForShop.isBot && !gameState.isRetaliationPhase && !gameState.isGameOver) {
       // Evaluar directamente los mazos del mercado en el estado del juego
       const types = ['ataque', 'escudos', 'curacion'];
       types.forEach(type => {
@@ -3706,7 +3693,6 @@ topEscudosCost=${gameState.market.escudos[0] ? gameState.market.escudos[0].cost 
               // El mismo criterio exacto que renderMarket
               if (currentPlayerForShop.mo >= topCard.cost) {
                   canAffordSomething = true;
-                  console.log(`[DEBUG] Puede comprar ${topCard.name} (coste ${topCard.cost}) con ${currentPlayerForShop.mo} mo.`);
               }
           }
       });
@@ -3718,9 +3704,9 @@ topEscudosCost=${gameState.market.escudos[0] ? gameState.market.escudos[0].cost 
   }
 
   if (canAffordSomething) {
-      btnEndTurn.innerHTML = `<span class="txt-largo">Finalizar Turno (${canAffordSomething}) <img src="assets/btn_gold.png" style="width:18px;vertical-align:middle;margin-bottom:2px;display:inline-block !important;" alt="oro"></span><span class="txt-corto">Finalizar (${canAffordSomething}) <img src="assets/btn_gold.png" style="width:16px;vertical-align:middle;margin-bottom:2px;display:inline-block !important;" alt="oro"></span>`;
+      btnEndTurn.innerHTML = `<span class="txt-largo">Finalizar Turno <img src="assets/btn_gold.png" style="width:18px;vertical-align:middle;margin-bottom:2px;display:inline-block !important;" alt="oro"></span><span class="txt-corto">Finalizar <img src="assets/btn_gold.png" style="width:16px;vertical-align:middle;margin-bottom:2px;display:inline-block !important;" alt="oro"></span>`;
   } else {
-      btnEndTurn.innerHTML = `<span class="txt-largo">Finalizar Turno (${canAffordSomething})</span><span class="txt-corto">Finalizar (${canAffordSomething})</span>`;
+      btnEndTurn.innerHTML = `<span class="txt-largo">Finalizar Turno</span><span class="txt-corto">Finalizar</span>`;
   }
 
   const hasGoblinsAlive = gameState.battlefield.goblins.some(g => !g.isDying);
