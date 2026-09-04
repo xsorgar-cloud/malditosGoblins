@@ -3688,13 +3688,6 @@ function updateUI() {
           canAffordSomething = true;
       } 
       
-      // Pociones solo disponibles a partir de la oleada 3
-      if (!canAffordSomething && gameState.battlefield && gameState.battlefield.waveLevel >= 3) {
-          if (typeof DB !== 'undefined' && DB.equipment && DB.equipment.pociones) {
-              canAffordSomething = DB.equipment.pociones.some(poc => currentPlayerForShop.mo >= poc.cost);
-          }
-      }
-      
       // Hito 3: Fuego Cruzado (Piromante) anula la compra
       if (gameState.activeSenda === 'piromante' && gameState.currentHito === 4) {
           canAffordSomething = false;
