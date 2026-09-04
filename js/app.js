@@ -3680,9 +3680,22 @@ function updateUI() {
 
   btnEndTurn.classList.remove('hidden');
 
-  // UX: Mostrar indicador de oro en el boton si el jugador puede comprar algo
   const currentPlayerForShop = gameState.getCurrentPlayer();
   let canAffordSomething = false;
+  
+  if (currentPlayerForShop) {
+      if (window._debugCoinAlert !== currentPlayerForShop.mo) {
+          alert(`DEBUG [updateUI]:
+mo=${currentPlayerForShop.mo}
+isBot=${currentPlayerForShop.isBot}
+isMarketPhase=${gameState.isMarketPhase}
+isRetPhase=${gameState.isRetaliationPhase}
+isGameOver=${gameState.isGameOver}
+topEscudosCost=${gameState.market.escudos[0] ? gameState.market.escudos[0].cost : 'N/A'}`);
+          window._debugCoinAlert = currentPlayerForShop.mo;
+      }
+  }
+
   if (currentPlayerForShop && !currentPlayerForShop.isBot && !gameState.isMarketPhase && !gameState.isRetaliationPhase && !gameState.isGameOver) {
       // Evaluar directamente los mazos del mercado en el estado del juego
       const types = ['ataque', 'escudos', 'curacion'];
