@@ -3688,8 +3688,13 @@ function updateUI() {
       const types = ['ataque', 'escudos', 'curacion'];
       types.forEach(type => {
           const deck = gameState.market[type];
-          if (deck && deck.length > 0 && currentPlayerForShop.mo >= deck[0].cost) {
-              canAffordSomething = true;
+          if (deck && deck.length > 0) {
+              const topCard = deck[0];
+              // El mismo criterio exacto que renderMarket
+              if (currentPlayerForShop.mo >= topCard.cost) {
+                  canAffordSomething = true;
+                  console.log(`[DEBUG] Puede comprar ${topCard.name} (coste ${topCard.cost}) con ${currentPlayerForShop.mo} mo.`);
+              }
           }
       });
       
@@ -3700,7 +3705,7 @@ function updateUI() {
   }
 
   if (canAffordSomething) {
-      btnEndTurn.innerHTML = `<span class="txt-largo">Finalizar Turno <img src="assets/btn_gold.png" style="width:16px;vertical-align:middle;margin-bottom:2px;" alt="oro"></span><span class="txt-corto">Finalizar <img src="assets/btn_gold.png" style="width:14px;vertical-align:middle;margin-bottom:2px;" alt="oro"></span>`;
+      btnEndTurn.innerHTML = `<span class="txt-largo">Finalizar Turno <img src="assets/btn_gold.png" style="width:18px;vertical-align:middle;margin-bottom:2px;display:inline-block !important;" alt="oro"></span><span class="txt-corto">Finalizar <img src="assets/btn_gold.png" style="width:16px;vertical-align:middle;margin-bottom:2px;display:inline-block !important;" alt="oro"></span>`;
   } else {
       btnEndTurn.innerHTML = `<span class="txt-largo">Finalizar Turno</span><span class="txt-corto">Finalizar</span>`;
   }
