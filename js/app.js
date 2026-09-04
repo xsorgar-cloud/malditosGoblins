@@ -3704,7 +3704,8 @@ function updateUI() {
   }
 
   if (canAffordSomething) {
-      btnEndTurn.innerHTML = `<span class="txt-largo">Finalizar Turno <img src="assets/btn_gold.png" style="width:18px;vertical-align:middle;margin-bottom:2px;display:inline-block !important;" alt="oro"></span><span class="txt-corto">Finalizar <img src="assets/btn_gold.png" style="width:16px;vertical-align:middle;margin-bottom:2px;display:inline-block !important;" alt="oro"></span>`;
+      const iconSvg = `<svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align: middle; margin-left: 5px; margin-bottom: 2px;"><path d="M9 3C8.5 3 8 4 8.5 5.5C9 7 9 7 9 7C6 8 4 12 4 18C4 20.5 6 21 12 21C18 21 20 20.5 20 18C20 12 18 8 15 7C15 7 15 7 15.5 5.5C16 4 15.5 3 15 3C13 3 11 3.5 9 3Z" fill="#ffffff" stroke="#000000" stroke-width="1.8" stroke-linejoin="round"></path><rect x="8" y="6.5" width="8" height="2.5" rx="1" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"></rect><path d="M13 9C13 11 12 12 12 12C12 12 14 11 14 9Z" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"></path><path d="M11 9C11 11 12 12 12 12C12 12 10 11 10 9Z" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"></path></svg>`;
+      btnEndTurn.innerHTML = `<span class="txt-largo">Finalizar Turno ${iconSvg}</span><span class="txt-corto">Finalizar ${iconSvg}</span>`;
   } else {
       btnEndTurn.innerHTML = `<span class="txt-largo">Finalizar Turno</span><span class="txt-corto">Finalizar</span>`;
   }
