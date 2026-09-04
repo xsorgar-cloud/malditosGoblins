@@ -3684,9 +3684,14 @@ function updateUI() {
   const currentPlayerForShop = gameState.getCurrentPlayer();
   let canAffordSomething = false;
   if (currentPlayerForShop && !currentPlayerForShop.isBot && !gameState.isMarketPhase && !gameState.isRetaliationPhase && !gameState.isGameOver) {
-      if (document.querySelector('.market-affordable')) {
-          canAffordSomething = true;
-      } 
+      // Evaluar directamente los mazos del mercado en el estado del juego
+      const types = ['ataque', 'escudos', 'curacion'];
+      types.forEach(type => {
+          const deck = gameState.market[type];
+          if (deck && deck.length > 0 && currentPlayerForShop.mo >= deck[0].cost) {
+              canAffordSomething = true;
+          }
+      });
       
       // Hito 3: Fuego Cruzado (Piromante) anula la compra
       if (gameState.activeSenda === 'piromante' && gameState.currentHito === 4) {
