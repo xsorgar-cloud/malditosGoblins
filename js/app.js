@@ -3680,6 +3680,28 @@ function updateUI() {
 
   btnEndTurn.classList.remove('hidden');
 
+  // UX: Mostrar indicador de oro en el boton si el jugador puede comprar algo
+  const currentPlayerForShop = gameState.getCurrentPlayer();
+  let canAffordSomething = false;
+  if (currentPlayerForShop && !currentPlayerForShop.isBot && !gameState.isMarketPhase && !gameState.isRetaliationPhase && !gameState.isGameOver) {
+      if (document.querySelector('.market-affordable')) {
+          canAffordSomething = true;
+      } else if (typeof DB !== 'undefined' && DB.equipment && DB.equipment.pociones) {
+          canAffordSomething = DB.equipment.pociones.some(poc => currentPlayerForShop.mo >= poc.cost);
+      }
+      
+      // Hito 3: Fuego Cruzado (Piromante) anula la compra
+      if (gameState.activeSenda === 'piromante' && gameState.currentHito === 4) {
+          canAffordSomething = false;
+      }
+  }
+
+  if (canAffordSomething) {
+      btnEndTurn.innerHTML = `<span class="txt-largo">Finalizar Turno 🪙</span><span class="txt-corto">Finalizar 🪙</span>`;
+  } else {
+      btnEndTurn.innerHTML = `<span class="txt-largo">Finalizar Turno</span><span class="txt-corto">Finalizar</span>`;
+  }
+
   const hasGoblinsAlive = gameState.battlefield.goblins.some(g => !g.isDying);
   const isWarlordChoicePhase = gameState.activeSenda === 'guerrero' && !hasGoblinsAlive && !gameState.isMarketPhase && !gameState.isRetaliationPhase && !gameState.isGameOver;
 
