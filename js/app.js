@@ -3705,9 +3705,9 @@ function updateUI() {
   }
 
   if (canAffordSomething) {
-      btnEndTurn.innerHTML = `<span class="txt-largo">Finalizar Turno <img src="assets/btn_gold.png" style="width:18px;vertical-align:middle;margin-bottom:2px;display:inline-block !important;" alt="oro"></span><span class="txt-corto">Finalizar <img src="assets/btn_gold.png" style="width:16px;vertical-align:middle;margin-bottom:2px;display:inline-block !important;" alt="oro"></span>`;
+      btnEndTurn.innerHTML = `<span class="txt-largo">Finalizar Turno (${canAffordSomething}) <img src="assets/btn_gold.png" style="width:18px;vertical-align:middle;margin-bottom:2px;display:inline-block !important;" alt="oro"></span><span class="txt-corto">Finalizar (${canAffordSomething}) <img src="assets/btn_gold.png" style="width:16px;vertical-align:middle;margin-bottom:2px;display:inline-block !important;" alt="oro"></span>`;
   } else {
-      btnEndTurn.innerHTML = `<span class="txt-largo">Finalizar Turno</span><span class="txt-corto">Finalizar</span>`;
+      btnEndTurn.innerHTML = `<span class="txt-largo">Finalizar Turno (${canAffordSomething})</span><span class="txt-corto">Finalizar (${canAffordSomething})</span>`;
   }
 
   const hasGoblinsAlive = gameState.battlefield.goblins.some(g => !g.isDying);
