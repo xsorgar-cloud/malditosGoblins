@@ -3686,8 +3686,13 @@ function updateUI() {
   if (currentPlayerForShop && !currentPlayerForShop.isBot && !gameState.isMarketPhase && !gameState.isRetaliationPhase && !gameState.isGameOver) {
       if (document.querySelector('.market-affordable')) {
           canAffordSomething = true;
-      } else if (typeof DB !== 'undefined' && DB.equipment && DB.equipment.pociones) {
-          canAffordSomething = DB.equipment.pociones.some(poc => currentPlayerForShop.mo >= poc.cost);
+      } 
+      
+      // Pociones solo disponibles a partir de la oleada 3
+      if (!canAffordSomething && gameState.battlefield && gameState.battlefield.waveLevel >= 3) {
+          if (typeof DB !== 'undefined' && DB.equipment && DB.equipment.pociones) {
+              canAffordSomething = DB.equipment.pociones.some(poc => currentPlayerForShop.mo >= poc.cost);
+          }
       }
       
       // Hito 3: Fuego Cruzado (Piromante) anula la compra
@@ -3697,7 +3702,7 @@ function updateUI() {
   }
 
   if (canAffordSomething) {
-      btnEndTurn.innerHTML = `<span class="txt-largo">Finalizar Turno 🪙</span><span class="txt-corto">Finalizar 🪙</span>`;
+      btnEndTurn.innerHTML = `<span class="txt-largo">Finalizar Turno <img src="assets/btn_gold.png" style="width:16px;vertical-align:middle;margin-bottom:2px;" alt="oro"></span><span class="txt-corto">Finalizar <img src="assets/btn_gold.png" style="width:14px;vertical-align:middle;margin-bottom:2px;" alt="oro"></span>`;
   } else {
       btnEndTurn.innerHTML = `<span class="txt-largo">Finalizar Turno</span><span class="txt-corto">Finalizar</span>`;
   }
