@@ -6125,6 +6125,12 @@ if (btnDownloadGame) {
     // Guardar para asegurar que tenemos el estado más reciente
     window.saveGame();
     
+        // Si estamos a mitad de una horda, guardamos el récord hasta ese momento antes de exportar
+    if (typeof gameState !== 'undefined' && gameState.activeSenda === 'horda' && gameState.players && gameState.wave) {
+      const roleIds = gameState.players.map(p => p.role && p.role.id ? p.role.id : null).filter(id => id !== null);
+      Achievements.recordHordeWave(roleIds, gameState.wave);
+    }
+    
     const exportData = {
       achievements: Achievements.load()
     };
