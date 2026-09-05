@@ -26,6 +26,25 @@ const Achievements = {
     });
     if (updated) this.save(data);
   },
+  recordHordeWave: function(roleIds, wave) {
+    const data = this.load();
+    if (!data.horda_max_wave) data.horda_max_wave = {};
+    let updated = false;
+    roleIds.forEach(role => {
+      if (!data.horda_max_wave[role] || wave > data.horda_max_wave[role]) {
+        data.horda_max_wave[role] = wave;
+        updated = true;
+      }
+    });
+    if (updated) this.save(data);
+  },
+  getHordeRecord: function(roleId) {
+    const data = this.load();
+    if (data.horda_max_wave && data.horda_max_wave[roleId]) {
+      return data.horda_max_wave[roleId];
+    }
+    return 0;
+  },
   hasWon: function(sendaId, roleId) {
     const data = this.load();
     return data[sendaId] && data[sendaId].includes(roleId);
@@ -674,18 +693,37 @@ window.updateRoleAchievements = function(roleId) {
     { value: 'piromante', img: 'assets/Monstruos/Jefes/El-Piromante.webp', name: 'El Piromante' },
     { value: 'cazador', img: 'assets/Monstruos/Jefes/El-Cazador.webp', name: 'El Cazador' },
     { value: 'la_madre', img: 'assets/Monstruos/Jefes/La-Madre.webp', name: 'La Madre' }
+  ,
+    { value: 'horda', img: 'assets/Monstruos/Jefes/SenorHorda.jpg', name: 'Señor de la Horda' }
   ];
   
   sendas.forEach(s => {
-    const hasWon = Achievements.hasWon(s.value, roleId);
     const div = document.createElement('div');
-    if (hasWon) {
-      div.title = `Victoria: ${s.name}`;
-      const rColor = window.botManager ? window.botManager.getRoleColor(roleId) : 'var(--gold)';
-      div.style.cssText = `width: 32px; height: 48px; border-radius: 4px; border: 1.5px solid ${rColor}; box-shadow: 0 0 5px ${rColor}; filter: drop-shadow(0 0 5px ${rColor}); background-image: url('${s.bossImg || s.img}'); background-size: 200% auto; background-position: left top;`;
+    if (s.value === 'horda') {
+      const maxWave = Achievements.getHordeRecord(roleId);
+      if (maxWave > 0) {
+        div.title = `Récord: Oleada ${maxWave}`;
+        const rColor = window.botManager ? window.botManager.getRoleColor(roleId) : 'var(--gold)';
+        div.style.cssText = `position: relative; width: 32px; height: 48px; border-radius: 4px; border: 1.5px solid ${rColor}; box-shadow: 0 0 5px ${rColor}; filter: drop-shadow(0 0 5px ${rColor}); background-image: url('${s.img}'); background-size: 200% auto; background-position: center; display: inline-block;`;
+        
+        const badge = document.createElement('div');
+        badge.innerText = maxWave;
+        badge.style.cssText = `position: absolute; bottom: -6px; right: -6px; background: #ff3333; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 0.65rem; font-weight: bold; display: flex; align-items: center; justify-content: center; border: 1.5px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.8); line-height: 1;`;
+        div.appendChild(badge);
+      } else {
+        div.title = `Sin récord: ${s.name}`;
+        div.style.cssText = `width: 32px; height: 48px; border-radius: 4px; border: 1.5px solid rgba(255,255,255,0.2); background-image: url('${s.img}'); background-size: 200% auto; background-position: center; filter: grayscale(100%) opacity(40%); display: inline-block;`;
+      }
     } else {
-      div.title = `Falta superar: ${s.name}`;
-      div.style.cssText = `width: 32px; height: 48px; border-radius: 4px; border: 1.5px solid rgba(255,255,255,0.2); background-image: url('${s.bossImg || s.img}'); background-size: 200% auto; background-position: left top; filter: grayscale(100%) opacity(40%);`;
+      const hasWon = Achievements.hasWon(s.value, roleId);
+      if (hasWon) {
+        div.title = `Victoria: ${s.name}`;
+        const rColor = window.botManager ? window.botManager.getRoleColor(roleId) : 'var(--gold)';
+        div.style.cssText = `width: 32px; height: 48px; border-radius: 4px; border: 1.5px solid ${rColor}; box-shadow: 0 0 5px ${rColor}; filter: drop-shadow(0 0 5px ${rColor}); background-image: url('${s.bossImg || s.img}'); background-size: 200% auto; background-position: left top; display: inline-block;`;
+      } else {
+        div.title = `Falta superar: ${s.name}`;
+        div.style.cssText = `width: 32px; height: 48px; border-radius: 4px; border: 1.5px solid rgba(255,255,255,0.2); background-image: url('${s.bossImg || s.img}'); background-size: 200% auto; background-position: left top; filter: grayscale(100%) opacity(40%); display: inline-block;`;
+      }
     }
     container.appendChild(div);
   });
@@ -5556,6 +5594,11 @@ function renderGameOver() {
   title.innerHTML = `☠️ PARTIDA FINALIZADA ☠️`;
   title.style.color = 'var(--accent-red)';
 
+  if (gameState && gameState.activeSenda === 'horda' && gameState.players && gameState.wave) {
+    const roleIds = gameState.players.map(p => p.role && p.role.id ? p.role.id : null).filter(id => id !== null);
+    Achievements.recordHordeWave(roleIds, gameState.wave);
+  }
+
   const phrase = DB.gameOverPhrases[Math.floor(Math.random() * DB.gameOverPhrases.length)];
 
   desc.innerHTML = `
@@ -6161,6 +6204,16 @@ if (btnLoadFile && inputLoadFile) {
           const sourceAchieve = data.achievements || {};
           const currentAchieve = Achievements.load();
           for (let senda in sourceAchieve) {
+            if (senda === 'horda_max_wave') {
+              if (!currentAchieve.horda_max_wave) currentAchieve.horda_max_wave = {};
+              for (let roleId in sourceAchieve.horda_max_wave) {
+                const incomingWave = sourceAchieve.horda_max_wave[roleId];
+                if (!currentAchieve.horda_max_wave[roleId] || incomingWave > currentAchieve.horda_max_wave[roleId]) {
+                  currentAchieve.horda_max_wave[roleId] = incomingWave;
+                }
+              }
+              continue;
+            }
             if (!currentAchieve[senda]) currentAchieve[senda] = [];
             sourceAchieve[senda].forEach(role => {
               if (typeof role === 'number' && data.gameState) {
