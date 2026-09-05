@@ -708,7 +708,7 @@ window.updateRoleAchievements = function(roleId) {
         
         const badge = document.createElement('div');
         badge.innerText = maxWave;
-        badge.style.cssText = `position: absolute; bottom: -6px; right: -6px; background: #ff3333; color: white; border-radius: 50%; width: 18px; height: 18px; font-size: 0.65rem; font-weight: bold; display: flex; align-items: center; justify-content: center; border: 1.5px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.8); line-height: 1;`;
+        badge.style.cssText = `position: absolute; bottom: -8px; right: -8px; background: #ff3333; color: white; border-radius: 50%; width: 24px; height: 24px; font-size: 0.95rem; font-weight: bold; display: flex; align-items: center; justify-content: center; border: 1.5px solid white; box-shadow: 0 0 4px rgba(0,0,0,0.8); line-height: 1;`;
         div.appendChild(badge);
       } else {
         div.title = `Sin récord: ${s.name}`;
