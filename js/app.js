@@ -5594,9 +5594,9 @@ function renderGameOver() {
   title.innerHTML = `☠️ PARTIDA FINALIZADA ☠️`;
   title.style.color = 'var(--accent-red)';
 
-  if (gameState && gameState.activeSenda === 'horda' && gameState.players && gameState.wave) {
+  if (gameState && gameState.activeSenda === 'horda' && gameState.players && gameState.battlefield && gameState.battlefield.waveLevel) {
     const roleIds = gameState.players.map(p => p.role && p.role.id ? p.role.id : null).filter(id => id !== null);
-    Achievements.recordHordeWave(roleIds, gameState.wave);
+    Achievements.recordHordeWave(roleIds, gameState.battlefield.waveLevel);
   }
 
   const phrase = DB.gameOverPhrases[Math.floor(Math.random() * DB.gameOverPhrases.length)];
@@ -6126,9 +6126,9 @@ if (btnDownloadGame) {
     window.saveGame();
     
         // Si estamos a mitad de una horda, guardamos el récord hasta ese momento antes de exportar
-    if (typeof gameState !== 'undefined' && gameState.activeSenda === 'horda' && gameState.players && gameState.wave) {
+    if (typeof gameState !== 'undefined' && gameState.activeSenda === 'horda' && gameState.players && gameState.battlefield && gameState.battlefield.waveLevel) {
       const roleIds = gameState.players.map(p => p.role && p.role.id ? p.role.id : null).filter(id => id !== null);
-      Achievements.recordHordeWave(roleIds, gameState.wave);
+      Achievements.recordHordeWave(roleIds, gameState.battlefield.waveLevel);
     }
     
     const exportData = {
