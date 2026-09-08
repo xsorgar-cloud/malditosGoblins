@@ -2167,15 +2167,16 @@ function renderPlayer() {
         if (gameState.players.length === 1 && roleId !== 'mago' && roleId !== 'guerrero') {
           if (roleId === 'curandero') {
             const brokenItems = p.equipped.filter(eq => eq.isBroken);
-            if (brokenItems.length > 1) {
-              // Si hay varias, abrir modal para elegir
+            const hasStatus = p.statusEffects && (p.statusEffects.escozor > 0 || p.statusEffects.tembleque > 0 || p.statusEffects.calambre > 0);
+            if (brokenItems.length > 1 || hasStatus) {
+              // Si hay varias o tiene estados alterados, abrir modal para elegir
               showTargetSelectionModal(pIdx);
               return;
             } else if (brokenItems.length === 0) {
-              alert(NO_BROKEN_EQUIP_ALERT);
+              alert("No tienes equipo roto ni estados alterados que purificar.");
               return;
             }
-            // Si solo hay una, aplicar directamente
+            // Si solo hay una rotura y 0 estados, aplicar directamente
           }
 
           const res = gameState.useRoleAbility(pIdx, pIdx);
@@ -2187,7 +2188,7 @@ function renderPlayer() {
             if (roleId === 'sanador' && p.hp >= p.maxHp) {
               alert("Ya tienes la vida al máximo.");
             } else if (roleId === 'curandero') {
-              alert(NO_BROKEN_EQUIP_ALERT);
+              alert("No tienes equipo roto ni estados alterados que purificar.");
             }
           }
           return;
