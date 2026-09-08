@@ -3510,24 +3510,36 @@ calculateEquipPower(eq, bot) {
                 return 0;
             };
 
-            // Purificar estados antes del combate
-            const effects = ['escozor', 'tembleque', 'calambre'];
-            for (let eff of effects) {
-                while (bot.energy >= 1 && bot.statusEffects && bot.statusEffects[eff] > 0) {
-                    this.gameState.useRoleAbility(pIndex, 'purge_' + eff);
-                }
-            }
-
-            let brokenItems = bot.equipped.filter(e => e.isBroken);
-            brokenItems.sort((a, b) => getPriority(b) - getPriority(a));
-
-            for (let eq of brokenItems) {
-                if (bot.energy >= 1 && eq.isBroken) {
-                    const eqIndex = bot.equipped.indexOf(eq);
-                    if (eqIndex !== -1) {
-                        this.gameState.useRoleAbility(pIndex, 'self', eqIndex);
+            const isAdvancedWave = (this.gameState.battlefield && this.gameState.battlefield.waveLevel >= 3) || this.gameState.activeSenda === 'horda';
+            
+            const tryPurge = () => {
+                const effects = ['escozor', 'tembleque', 'calambre'];
+                for (let eff of effects) {
+                    while (bot.energy >= 1 && bot.statusEffects && bot.statusEffects[eff] > 0) {
+                        this.gameState.useRoleAbility(pIndex, 'purge_' + eff);
                     }
                 }
+            };
+
+            const tryRepair = () => {
+                let brokenItems = bot.equipped.filter(e => e.isBroken);
+                brokenItems.sort((a, b) => getPriority(b) - getPriority(a));
+                for (let eq of brokenItems) {
+                    if (bot.energy >= 1 && eq.isBroken) {
+                        const eqIndex = bot.equipped.indexOf(eq);
+                        if (eqIndex !== -1) {
+                            this.gameState.useRoleAbility(pIndex, 'self', eqIndex);
+                        }
+                    }
+                }
+            };
+
+            if (isAdvancedWave) {
+                tryRepair();
+                tryPurge();
+            } else {
+                tryPurge();
+                tryRepair();
             }
         }
         if (typeof window.updateUI === 'function') window.updateUI();
@@ -3563,26 +3575,36 @@ calculateEquipPower(eq, bot) {
                 return 0;
             };
 
-            // Repararse a sí mismo primero
-            // Purificar estados al final del turno
-            const effects = ['escozor', 'tembleque', 'calambre'];
-            for (let eff of effects) {
-                while (bot.energy >= 1 && bot.statusEffects && bot.statusEffects[eff] > 0) {
-                    this.gameState.useRoleAbility(pIndex, 'purge_' + eff);
-                }
-            }
-
-            // Repararse a sí mismo primero
-            let brokenSelf = bot.equipped.filter(e => e.isBroken);
-            brokenSelf.sort((a, b) => getPriority(b) - getPriority(a));
-
-            for (let eq of brokenSelf) {
-                if (bot.energy >= 1 && eq.isBroken) {
-                    const eqIndex = bot.equipped.indexOf(eq);
-                    if (eqIndex !== -1) {
-                        this.gameState.useRoleAbility(pIndex, 'self', eqIndex);
+            const isAdvancedWave = (this.gameState.battlefield && this.gameState.battlefield.waveLevel >= 3) || this.gameState.activeSenda === 'horda';
+            
+            const tryPurge = () => {
+                const effects = ['escozor', 'tembleque', 'calambre'];
+                for (let eff of effects) {
+                    while (bot.energy >= 1 && bot.statusEffects && bot.statusEffects[eff] > 0) {
+                        this.gameState.useRoleAbility(pIndex, 'purge_' + eff);
                     }
                 }
+            };
+
+            const tryRepair = () => {
+                let brokenSelf = bot.equipped.filter(e => e.isBroken);
+                brokenSelf.sort((a, b) => getPriority(b) - getPriority(a));
+                for (let eq of brokenSelf) {
+                    if (bot.energy >= 1 && eq.isBroken) {
+                        const eqIndex = bot.equipped.indexOf(eq);
+                        if (eqIndex !== -1) {
+                            this.gameState.useRoleAbility(pIndex, 'self', eqIndex);
+                        }
+                    }
+                }
+            };
+
+            if (isAdvancedWave) {
+                tryRepair();
+                tryPurge();
+            } else {
+                tryPurge();
+                tryRepair();
             }
 
             // Reparar a compañeros después
