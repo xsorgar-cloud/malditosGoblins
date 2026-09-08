@@ -3510,6 +3510,14 @@ calculateEquipPower(eq, bot) {
                 return 0;
             };
 
+            // Purificar estados antes del combate
+            const effects = ['escozor', 'tembleque', 'calambre'];
+            for (let eff of effects) {
+                while (bot.energy >= 1 && bot.statusEffects && bot.statusEffects[eff] > 0) {
+                    this.gameState.useRoleAbility(pIndex, 'purge_' + eff);
+                }
+            }
+
             let brokenItems = bot.equipped.filter(e => e.isBroken);
             brokenItems.sort((a, b) => getPriority(b) - getPriority(a));
 
@@ -3554,6 +3562,15 @@ calculateEquipPower(eq, bot) {
                 if (isShield) return 1;
                 return 0;
             };
+
+            // Repararse a sí mismo primero
+            // Purificar estados al final del turno
+            const effects = ['escozor', 'tembleque', 'calambre'];
+            for (let eff of effects) {
+                while (bot.energy >= 1 && bot.statusEffects && bot.statusEffects[eff] > 0) {
+                    this.gameState.useRoleAbility(pIndex, 'purge_' + eff);
+                }
+            }
 
             // Repararse a sí mismo primero
             let brokenSelf = bot.equipped.filter(e => e.isBroken);
