@@ -2339,7 +2339,7 @@ window.showTargetSelectionModal = function (playerIndex) {
 
   // LÓGICA ESPECIAL PARA CURANDERO (Mostrar cartas rotas)
   if (roleId === 'curandero') {
-    desc.innerHTML = `Selecciona una carta equipada para <strong>repararla</strong>.<br><small>(Coste: 1🔷 Propio / 2🔷 Aliado)</small>`;
+    desc.innerHTML = `Selecciona una carta para <strong>repararla</strong> o purifica un <strong>estado</strong>.<br><small>(Coste: 1🔷 Propio / 2🔷 Aliado)</small>`;
 
     let anyBroken = false;
     gameState.players.forEach((targetP, targetIdx) => {
