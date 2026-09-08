@@ -2534,7 +2534,12 @@ Daño directo: Sufres ${brokenCount} de daño.`);
     if (roleId === 'curandero') {
       // Para Curandero, el tercer parámetro de la UI es el equipIndex
       equipIndex = energyCost;
-      actualEnergyCost = isSelf ? 1 : 2;
+      if (typeof targetId === 'string' && targetId.startsWith('purge_')) {
+        actualEnergyCost = 1;
+        isSelf = true;
+      } else {
+        actualEnergyCost = isSelf ? 1 : 2;
+      }
     } else {
       if (actualEnergyCost === null) {
         if (roleId === 'guerrero' || roleId === 'mago') {
@@ -2663,6 +2668,16 @@ Daño directo: Sufres ${brokenCount} de daño.`);
       }
     }
     else if (roleId === 'curandero') {
+      if (typeof targetId === 'string' && targetId.startsWith('purge_')) {
+        let eff = targetId.replace('purge_', '');
+        if (p.statusEffects && p.statusEffects[eff] > 0) {
+          p.energy -= actualEnergyCost;
+          p.statusEffects[eff] -= 1;
+          this.addLog(`🔷 <strong>${p.name}</strong> usó su rol (Curandero) para <span style="color:#2a9d8f">PURIFICAR</span> 1 carga de <strong>${eff.toUpperCase()}</strong>.`);
+          return true;
+        }
+        return false;
+      }
       let targetP = isSelf ? p : (typeof targetId === 'number' ? this.players[targetId] : null);
       if (targetP) {
         if (equipIndex !== null && targetP.equipped[equipIndex]) {

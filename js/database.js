@@ -39,7 +39,7 @@ const DB = {
     { id: 'protector', name: 'Protector', image: 'assets/Roles/rol_protector.webp', icon: 'assets/Roles/ico_rol_protector.webp', effect: 'Obtiene o proporciona Escudo a un compañero en el próximo combate.', energyRates: [2, 2, 2, 3, 3, 4] },
     { id: 'sanador', name: 'Sanador', image: 'assets/Roles/rol_sanador.webp', icon: 'assets/Roles/ico_rol_sanador.webp', effect: 'Cura Puntos de Vida a tí mismo o a un compañero.', energyRates: [0, 2, 3, 3, 3, 1] },
     { id: 'ladron', name: 'Ladrón', image: 'assets/Roles/rol_ladron.webp', icon: 'assets/Roles/ico_rol_ladron.webp', effect: 'Obtiene Monedas de oro, o las consigue para un compañero.', energyRates: [1, 1, 2, 2, 2, 3] },
-    { id: 'curandero', name: 'Curandero', image: 'assets/Roles/rol_curandero.webp', icon: 'assets/Roles/ico_rol_curandero.webp', effect: 'Repara tu equipo roto o el de un compañero.', energyRates: [1, 2, 2, 3, 3, 0] }
+    { id: 'curandero', name: 'Curandero', image: 'assets/Roles/rol_curandero.webp', icon: 'assets/Roles/ico_rol_curandero.webp', effect: 'Repara equipo roto o purifica un estado alterado.', energyRates: [1, 2, 2, 3, 3, 0] }
   ],
 
   // CARTAS DE EQUIPO (MERCADO)

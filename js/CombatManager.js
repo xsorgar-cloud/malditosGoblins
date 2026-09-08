@@ -2579,6 +2579,37 @@ window.showTargetSelectionModal = function (playerIndex) {
     };
     options.appendChild(btnSelf);
 
+    if (p.role.id === 'curandero') {
+      const effects = ['escozor', 'tembleque', 'calambre'];
+      effects.forEach(eff => {
+        if (p.statusEffects && p.statusEffects[eff] > 0) {
+          const btnPurge = document.createElement('button');
+          btnPurge.className = 'target-btn self-btn purge-btn';
+          if (p.energy < 1) btnPurge.classList.add('disabled');
+          
+          let icon = eff === 'escozor' ? '🔥' : (eff === 'tembleque' ? '❄️' : '⚡');
+          
+          btnPurge.innerHTML = `
+            <div class="target-name" style="color: #64dfdf;">💧 PURIFICAR ${eff.toUpperCase()}</div>
+            <div class="target-stats">${icon} Tienes ${p.statusEffects[eff]} carga(s)</div>
+            <div class="target-desc">Elimina 1 carga de ${eff}</div>
+            <div class="target-cost ${p.energy < 1 ? 'insufficient' : ''}">COSTE: 1🔷</div>
+          `;
+          btnPurge.onclick = () => {
+            if (p.energy < 1) return;
+            gameState.useRoleAbility(playerIndex, 'purge_' + eff);
+            updateUI();
+            if (p.energy > 0) {
+              showTargetSelectionModal(playerIndex);
+            } else {
+              modal.classList.add('hidden');
+            }
+          };
+          options.appendChild(btnPurge);
+        }
+      });
+    }
+
     // Sección para OTROS (Coste 2)
     if (gameState.players.length > 1) {
       const divOthers = document.createElement('div');
