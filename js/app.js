@@ -751,9 +751,9 @@ window.updateSetupRolePreview = function(roleData, isHover = false) {
       window.updateRoleAchievements(roleData.id);
       
       if (!isHover && setupContent && roleData.icon) {
-        setupContent.style.backgroundImage = `linear-gradient(to right, rgba(10, 10, 10, 0.2) 0%, rgba(10, 10, 10, 0.6) 40%, rgba(10, 10, 10, 0.95) 75%, rgba(10, 10, 10, 1) 100%), url('${roleData.icon}')`;
+        setupContent.style.backgroundImage = `linear-gradient(to right, rgba(10, 10, 10, 0.1) 0%, rgba(10, 10, 10, 0.8) 40%, rgba(10, 10, 10, 1) 50%), url('${roleData.icon}')`;
         setupContent.style.backgroundPosition = 'left center';
-        setupContent.style.backgroundSize = 'cover';
+        setupContent.style.backgroundSize = 'cover, 50% auto';
         setupContent.style.backgroundRepeat = 'no-repeat';
       }
     }
@@ -1090,9 +1090,9 @@ function updateSetupSendaPreview() {
     }
     
     if (imageUrl) {
-      setupSendaContent.style.backgroundImage = `linear-gradient(to right, rgba(10, 10, 10, 0.2) 0%, rgba(10, 10, 10, 0.7) 40%, rgba(10, 10, 10, 0.95) 75%, rgba(10, 10, 10, 1) 100%), url('${imageUrl}')`;
+      setupSendaContent.style.backgroundImage = `linear-gradient(to right, rgba(10, 10, 10, 0.1) 0%, rgba(10, 10, 10, 0.8) 40%, rgba(10, 10, 10, 1) 50%), url('${imageUrl}')`;
       setupSendaContent.style.backgroundPosition = 'left center';
-      setupSendaContent.style.backgroundSize = 'cover';
+      setupSendaContent.style.backgroundSize = 'cover, 50% auto';
       setupSendaContent.style.backgroundRepeat = 'no-repeat';
     } else {
       setupSendaContent.style.backgroundImage = 'none';
