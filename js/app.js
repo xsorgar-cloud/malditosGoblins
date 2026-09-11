@@ -729,7 +729,7 @@ window.updateRoleAchievements = function(roleId) {
   });
 };
 
-window.updateSetupRolePreview = function(roleData) {
+window.updateSetupRolePreview = function(roleData, isHover = false) {
   const previewName = document.getElementById('setup-role-name');
   const previewCard = document.getElementById('setup-role-card');
   const previewEffect = document.getElementById('setup-role-effect');
@@ -742,7 +742,7 @@ window.updateSetupRolePreview = function(roleData) {
       previewCard.style.backgroundColor = '';
       previewEffect.innerText = 'El sistema elegirá un rol al azar para este jugador.';
       window.updateRoleAchievements(null);
-      if (setupContent) setupContent.style.backgroundImage = 'none';
+      if (!isHover && setupContent) setupContent.style.backgroundImage = 'none';
     } else {
       previewName.innerText = roleData.name.toUpperCase();
       const miniImage = roleData.image.replace('rol_', 'mini_rol_');
@@ -750,7 +750,7 @@ window.updateSetupRolePreview = function(roleData) {
       previewEffect.innerText = roleData.effect;
       window.updateRoleAchievements(roleData.id);
       
-      if (setupContent && roleData.icon) {
+      if (!isHover && setupContent && roleData.icon) {
         setupContent.style.backgroundImage = `linear-gradient(to right, rgba(10, 10, 10, 0.2) 0%, rgba(10, 10, 10, 0.6) 40%, rgba(10, 10, 10, 0.95) 75%, rgba(10, 10, 10, 1) 100%), url('${roleData.icon}')`;
         setupContent.style.backgroundPosition = 'left center';
         setupContent.style.backgroundSize = 'cover';
@@ -878,9 +878,7 @@ function renderRoleSelection() {
         renderRoleSelection();
       };
       
-      img.onmouseenter = () => {
-        window.updateSetupRolePreview(r);
-      };
+      img.onmouseenter = () => { window.updateSetupRolePreview(r, true); };
 
       // Si este rol acaba de ser seleccionado (o deseleccionado), mostramos la segunda mitad del giro y el cartel
       if (justSelectedRole && justSelectedRole.playerIndex === i && (justSelectedRole.roleId === r.id || justSelectedRole.wasDeselected === r.id)) {
@@ -939,7 +937,7 @@ function renderRoleSelection() {
       if (window._randomBtnClickedAt && Date.now() - window._randomBtnClickedAt < 1500) {
         return;
       }
-      window.updateSetupRolePreview(null);
+      window.updateSetupRolePreview(null, true);
     };
     randomBtn.onmouseleave = () => {
       const previewCard = document.getElementById('setup-role-card');
