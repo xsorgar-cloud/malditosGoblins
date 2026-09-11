@@ -733,6 +733,7 @@ window.updateSetupRolePreview = function(roleData) {
   const previewName = document.getElementById('setup-role-name');
   const previewCard = document.getElementById('setup-role-card');
   const previewEffect = document.getElementById('setup-role-effect');
+  const setupContent = document.getElementById('setup-content');
   
   if (previewName && previewCard && previewEffect) {
     if (!roleData) {
@@ -741,12 +742,20 @@ window.updateSetupRolePreview = function(roleData) {
       previewCard.style.backgroundColor = '';
       previewEffect.innerText = 'El sistema elegirá un rol al azar para este jugador.';
       window.updateRoleAchievements(null);
+      if (setupContent) setupContent.style.backgroundImage = 'none';
     } else {
       previewName.innerText = roleData.name.toUpperCase();
       const miniImage = roleData.image.replace('rol_', 'mini_rol_');
       previewCard.style.backgroundImage = `url('${miniImage}')`;
       previewEffect.innerText = roleData.effect;
       window.updateRoleAchievements(roleData.id);
+      
+      if (setupContent && roleData.icon) {
+        setupContent.style.backgroundImage = `linear-gradient(to right, rgba(10, 10, 10, 0.2) 0%, rgba(10, 10, 10, 0.6) 40%, rgba(10, 10, 10, 0.95) 75%, rgba(10, 10, 10, 1) 100%), url('${roleData.icon}')`;
+        setupContent.style.backgroundPosition = 'left center';
+        setupContent.style.backgroundSize = 'cover';
+        setupContent.style.backgroundRepeat = 'no-repeat';
+      }
     }
   }
 };
