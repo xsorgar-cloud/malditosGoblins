@@ -1067,6 +1067,26 @@ function updateSetupSendaPreview() {
       });
     }
   }
+
+  // --- ACTUALIZAR FONDO DEL CONTENEDOR DE LA SENDA ---
+  const setupSendaContent = document.getElementById('setup-senda-content');
+  if (setupSendaContent) {
+    let imageUrl = '';
+    if (sendaVal === 'horda') {
+      imageUrl = 'assets/Monstruos/Jefes/SenorHorda.jpg';
+    } else if (bossHito && bossHito.bossStats && bossHito.bossStats.image) {
+      imageUrl = bossHito.bossStats.image;
+    }
+    
+    if (imageUrl) {
+      setupSendaContent.style.backgroundImage = `linear-gradient(to right, rgba(10, 10, 10, 0.2) 0%, rgba(10, 10, 10, 0.7) 40%, rgba(10, 10, 10, 0.95) 75%, rgba(10, 10, 10, 1) 100%), url('${imageUrl}')`;
+      setupSendaContent.style.backgroundPosition = 'left center';
+      setupSendaContent.style.backgroundSize = 'cover';
+      setupSendaContent.style.backgroundRepeat = 'no-repeat';
+    } else {
+      setupSendaContent.style.backgroundImage = 'none';
+    }
+  }
 }
 
 const settingsModal = document.getElementById('settings-modal');
