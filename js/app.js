@@ -878,7 +878,7 @@ function renderRoleSelection() {
         renderRoleSelection();
       };
       
-      img.onmouseenter = () => { window.updateSetupRolePreview(r, true); };
+      img.onmouseenter = () => { if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return; window.updateSetupRolePreview(r, true); };
 
       // Si este rol acaba de ser seleccionado (o deseleccionado), mostramos la segunda mitad del giro y el cartel
       if (justSelectedRole && justSelectedRole.playerIndex === i && (justSelectedRole.roleId === r.id || justSelectedRole.wasDeselected === r.id)) {
@@ -933,6 +933,7 @@ function renderRoleSelection() {
     };
 
     randomBtn.onmouseenter = () => {
+      if (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) return;
       // Suprimir el efecto hover si se acaba de hacer clic para permitir ver el rol elegido
       if (window._randomBtnClickedAt && Date.now() - window._randomBtnClickedAt < 1500) {
         return;
