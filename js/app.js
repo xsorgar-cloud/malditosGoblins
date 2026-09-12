@@ -1091,9 +1091,9 @@ function updateSetupSendaPreview() {
     }
     
     if (imageUrl) {
-      setupSendaContent.style.backgroundImage = `radial-gradient(circle at top left, rgba(10, 10, 10, 0.1) 0%, rgba(10, 10, 10, 0.85) var(--bg-senda-fade-1, 180px), rgba(10, 10, 10, 1) var(--bg-senda-fade-2, 280px)), url('${imageUrl}')`;
+      setupSendaContent.style.backgroundImage = `radial-gradient(circle at top left, rgba(10, 10, 10, 0.1) 0%, rgba(10, 10, 10, 0.85) var(--bg-senda-fade-1, 350px), rgba(10, 10, 10, 1) var(--bg-senda-fade-2, 500px)), url('${imageUrl}')`;
         setupSendaContent.style.backgroundPosition = 'top left, top left';
-        setupSendaContent.style.backgroundSize = 'cover, var(--bg-senda-size, 220px) auto';
+        setupSendaContent.style.backgroundSize = 'cover, var(--bg-senda-size, 420px) auto';
         setupSendaContent.style.backgroundRepeat = 'no-repeat';
     } else {
       setupSendaContent.style.backgroundImage = 'none';
