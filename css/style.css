@@ -4262,3 +4262,17 @@ main {
   0% { transform: translateX(0) rotate(0); }
   100% { transform: translateX(20px) translateY(40px) rotate(45deg); opacity: 0; }
 }
+
+@media (max-width: 768px) {
+  #setup-content {
+    --bg-role-size: 150px;
+    --bg-role-fade-1: 120px;
+    --bg-role-fade-2: 200px;
+  }
+  #setup-senda-content {
+    --bg-senda-size: 320px;
+    --bg-senda-fade-1: 260px;
+    --bg-senda-fade-2: 380px;
+  }
+}
+
