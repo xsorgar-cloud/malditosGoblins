@@ -4265,9 +4265,9 @@ main {
 
 @media (max-width: 768px) {
   #setup-content {
-    --bg-role-size: 150px;
-    --bg-role-fade-1: 120px;
-    --bg-role-fade-2: 200px;
+    --bg-role-size: 250px;
+    --bg-role-fade-1: 200px;
+    --bg-role-fade-2: 320px;
   }
   #setup-senda-content {
     --bg-senda-size: 320px;
