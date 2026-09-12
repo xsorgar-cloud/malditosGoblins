@@ -751,7 +751,7 @@ window.updateSetupRolePreview = function(roleData, isHover = false) {
       window.updateRoleAchievements(roleData.id);
       
       if (!isHover && setupContent && roleData.icon) {
-        setupContent.style.backgroundImage = `radial-gradient(circle at top left, rgba(10, 10, 10, 0.1) 0%, rgba(10, 10, 10, 0.85) 300px, rgba(10, 10, 10, 1) 450px), url('${roleData.icon}')`;
+        setupContent.style.backgroundImage = `radial-gradient(circle at top left, rgba(10, 10, 10, 0.6) 0%, rgba(10, 10, 10, 0.95) 300px, rgba(10, 10, 10, 1) 450px), url('${roleData.icon}')`;
           setupContent.style.backgroundPosition = 'top left, top left';
           setupContent.style.backgroundSize = 'cover, 350px auto';
           setupContent.style.backgroundRepeat = 'no-repeat';
