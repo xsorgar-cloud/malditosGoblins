@@ -4819,7 +4819,7 @@ function renderBattlefield() {
     gobEl.style.setProperty('--hover-dance-speed', goblin.danceSpeed);
     
     // Sync to global timeline so re-renders don't reset animation frame
-    gobEl.style.animationDelay = `-${((Date.now() % 100000) / 1000) + (goblin.animationOffset || 0)}s`;
+    gobEl.style.setProperty('--global-sync-delay', `-${((Date.now() % 100000) / 1000) + (goblin.animationOffset || 0)}s`);
     if (goblin.tauntState === 'resting') {
         gobEl.classList.add('taunt-paused');
     }

@@ -4303,7 +4303,8 @@ main {
 }
 
 .goblin-combat-wrapper.goblin-dance-2 { 
-  animation: taunt-dance-2 1.2s linear infinite; 
+  animation: taunt-dance-2 1.2s linear infinite;
+    animation-delay: var(--global-sync-delay, 0s); 
 }
 
 /* ===================================================
@@ -4332,7 +4333,8 @@ main {
 }
 
 #goblins-container .goblin-card.goblin-dance-2:hover { 
-  animation: taunt-dance-2-hover var(--hover-dance-speed, 1.2s) linear infinite !important; 
+  animation: taunt-dance-2-hover var(--hover-dance-speed, 1.2s) linear infinite !important;
+    animation-delay: var(--global-sync-delay, 0s) !important; 
   z-index: 100; 
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6) !important; 
 }
