@@ -230,7 +230,6 @@ main {
   background-size: auto 100%;
   background-position: left center;
   z-index: 1;
-  transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
 }
 
 #goblins-container .goblin-card:hover {
@@ -4346,10 +4345,4 @@ main {
   box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6) !important; 
 }
 
-.taunt-paused { 
-  animation: none !important; 
-  transform: translateY(0) scale(1) rotate(0deg) skewX(0deg) !important; 
-}
-.goblin-combat-wrapper {
-  transition: transform 0.15s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-}
+.taunt-paused { animation: none !important; transform: translateY(0) scale(1) rotate(0deg) skewX(0deg) !important; }
