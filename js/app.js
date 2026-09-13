@@ -4810,6 +4810,14 @@ function renderBattlefield() {
     const gobEl = document.createElement('div');
     gobEl.className = 'goblin-card';
     gobEl.dataset.uid = goblin.uid;
+
+    if (!goblin.danceClass) {
+      const dances = ['goblin-dance-1', 'goblin-dance-2', 'goblin-dance-3', 'goblin-dance-4'];
+      goblin.danceClass = dances[Math.floor(Math.random() * dances.length)];
+      goblin.danceSpeed = (Math.random() * 0.7 + 0.6).toFixed(2) + 's';
+    }
+    gobEl.classList.add(goblin.danceClass);
+    gobEl.style.setProperty('--hover-dance-speed', goblin.danceSpeed);
     let imageUrl = goblin.image;
     let needsObsoleteOverlay = false;
 
