@@ -1081,7 +1081,7 @@ function updateSetupSendaPreview() {
   if (setupSendaContent) {
     let imageUrl = '';
     if (sendaVal === 'horda') {
-      imageUrl = 'assets/Monstruos/Jefes/SenorHorda.jpg';
+      imageUrl = 'assets/Monstruos/Jefes/i_SenorHorda.png';
     } else if (bossHito && bossHito.bossStats && bossHito.bossStats.image) {
       const originalImage = bossHito.bossStats.image;
       const basePath = originalImage.substring(0, originalImage.lastIndexOf('/') + 1);
