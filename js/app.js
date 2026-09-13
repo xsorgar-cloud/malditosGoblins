@@ -3422,7 +3422,7 @@ async function processWaveSequence() { console.log('Starting processWaveSequence
           void gobel.offsetWidth;
           
           // Apply after a tiny delay to ensure browser paints the initial state
-            setTimeout(() => { gobel.classList.add('goblin-merging'); }, 30);
+            gobel.classList.add('goblin-merging');
         }
       });
       
@@ -4966,13 +4966,11 @@ gobEl.innerHTML = `<div class="goblin-hp">${goblin.currentHp}</div>${badgeHTML}$
       const spawnTime = animatedGoblinUids.get(goblin.uid);
       if (!spawnTime) {
         animatedGoblinUids.set(goblin.uid, Date.now());
-          setTimeout(() => {
-            if (goblin.isMutated) {
-              gobEl.classList.add('goblin-mutation-active');
-            } else {
-              gobEl.classList.add('goblin-wobble-active');
-            }
-          }, 30);
+        if (goblin.isMutated) {
+          gobEl.classList.add('goblin-mutation-active');
+        } else {
+          gobEl.classList.add('goblin-wobble-active');
+        }
       } else if (Date.now() - spawnTime < (goblin.isMutated ? 550 : 850)) {
         if (goblin.isMutated) {
           gobEl.classList.add('goblin-mutation-active');
