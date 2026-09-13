@@ -3422,7 +3422,14 @@ async function processWaveSequence() { console.log('Starting processWaveSequence
           void gobel.offsetWidth;
           
           // Apply after a tiny delay to ensure browser paints the initial state
-            gobel.classList.add('goblin-merging');
+            gobel.animate([
+                  { transform: 'scale(1)', filter: 'hue-rotate(0deg)', opacity: 1 },
+                  { transform: 'scale(0)', filter: 'hue-rotate(180deg) brightness(2)', opacity: 0 }
+                ], {
+                  duration: 600,
+                  easing: 'ease-in-out',
+                  fill: 'forwards'
+                });
         }
       });
       
@@ -4967,13 +4974,27 @@ gobEl.innerHTML = `<div class="goblin-hp">${goblin.currentHp}</div>${badgeHTML}$
       if (!spawnTime) {
         animatedGoblinUids.set(goblin.uid, Date.now());
         if (goblin.isMutated) {
-          gobEl.classList.add('goblin-mutation-active');
+          gobEl.animate([
+            { transform: 'scale(0.4) rotate(0deg)', filter: 'hue-rotate(180deg) brightness(1.5) blur(4px)' },
+            { transform: 'scale(1) rotate(0deg)', filter: 'hue-rotate(0deg) brightness(1) blur(0px)' }
+          ], {
+            duration: 550,
+            easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+            fill: 'forwards'
+          });
         } else {
           gobEl.classList.add('goblin-wobble-active');
         }
       } else if (Date.now() - spawnTime < (goblin.isMutated ? 550 : 850)) {
         if (goblin.isMutated) {
-          gobEl.classList.add('goblin-mutation-active');
+          gobEl.animate([
+            { transform: 'scale(0.4) rotate(0deg)', filter: 'hue-rotate(180deg) brightness(1.5) blur(4px)' },
+            { transform: 'scale(1) rotate(0deg)', filter: 'hue-rotate(0deg) brightness(1) blur(0px)' }
+          ], {
+            duration: 550,
+            easing: 'cubic-bezier(0.25, 1, 0.5, 1)',
+            fill: 'forwards'
+          });
         } else {
           gobEl.classList.add('goblin-wobble-active');
         }
