@@ -4814,10 +4814,20 @@ function renderBattlefield() {
     if (!goblin.danceClass) {
       const dances = ['goblin-dance-1', 'goblin-dance-2', 'goblin-dance-3', 'goblin-dance-4'];
       goblin.danceClass = dances[Math.floor(Math.random() * dances.length)];
-      goblin.danceSpeed = (Math.random() * 0.7 + 0.6).toFixed(2) + 's';
+      goblin.danceSpeed = (Math.random() * 0.5 + 0.7).toFixed(2) + 's';
     }
     gobEl.classList.add(goblin.danceClass);
     gobEl.style.setProperty('--hover-dance-speed', goblin.danceSpeed);
+    
+    gobEl.addEventListener('mouseenter', () => {
+        goblin.isHovered = true;
+        goblin.tauntState = 'dancing';
+        goblin.tauntNextActionTime = Date.now() + 2000;
+        gobEl.classList.remove('taunt-paused');
+    });
+    gobEl.addEventListener('mouseleave', () => {
+        goblin.isHovered = false;
+    });
     let imageUrl = goblin.image;
     let needsObsoleteOverlay = false;
 
@@ -6972,3 +6982,54 @@ if (btnHordaPr && hordaModal && btnCloseHorda) {
     hordaModal.classList.add('hidden');
   });
 }
+
+/* ===================================================
+   SIMPLE ORGANIC PAUSE ENGINE
+   =================================================== */
+setInterval(() => {
+    if (!gameState || !gameState.battlefield || !gameState.battlefield.goblins) return;
+    
+    const now = Date.now();
+    const inCombat = document.getElementById('combat-goblins-container') !== null && document.getElementById('combat-goblins-container').children.length > 0;
+    
+    gameState.battlefield.goblins.forEach(gob => {
+        const isHovered = gob.isHovered || false;
+        const shouldDance = inCombat || isHovered;
+        
+        if (!shouldDance) {
+            gob.tauntState = 'resting';
+            return;
+        }
+        
+        if (now >= (gob.tauntNextActionTime || 0)) {
+            if (gob.tauntState === 'dancing') {
+                // Was dancing, now pause!
+                gob.tauntState = 'resting';
+                const pauseDuration = isHovered ? (Math.random() * 500 + 200) : (Math.random() * 3000 + 1500);
+                gob.tauntNextActionTime = now + pauseDuration;
+            } else {
+                // Was resting, now dance!
+                gob.tauntState = 'dancing';
+                // Dance for a random duration (equivalent to 3 to 8 loops roughly)
+                // A loop is ~1s, so dance for 3s to 8s
+                const danceDuration = isHovered ? (Math.random() * 2000 + 1000) : (Math.random() * 5000 + 3000);
+                gob.tauntNextActionTime = now + danceDuration;
+            }
+        }
+        
+        // Sync DOM
+        const cards = document.querySelectorAll(`[data-uid="${gob.uid}"]`);
+        cards.forEach(card => {
+            let target = card;
+            if (card.parentElement && card.parentElement.classList.contains('goblin-combat-wrapper')) {
+                target = card.parentElement;
+            }
+            
+            if (gob.tauntState === 'resting' && !isHovered) {
+                target.classList.add('taunt-paused');
+            } else {
+                target.classList.remove('taunt-paused');
+            }
+        });
+    });
+}, 200);
