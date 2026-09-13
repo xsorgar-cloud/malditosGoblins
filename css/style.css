@@ -4280,65 +4280,23 @@ main {
 /* ===================================================
    ANIMACIONES DE PROVOCACIÓN / BAILE DE GOBLINS
    =================================================== */
-@keyframes taunt-dance-1 {
-  0%, 100% { transform: translateY(0) scale(1); }
-  50% { transform: translateY(-15px) scale(1.02); }
-}
-
 @keyframes taunt-dance-2 {
   0%, 100% { transform: rotate(0deg) translateY(0); }
   25% { transform: rotate(8deg) translateY(-8px); }
   75% { transform: rotate(-8deg) translateY(-8px); }
 }
 
-@keyframes taunt-dance-3 {
-  0%, 100% { transform: scale(1) rotate(0deg) translateY(0); }
-  25% { transform: scale(1.05) rotate(3deg) translateY(-3px); }
-  75% { transform: scale(1.05) rotate(-3deg) translateY(-3px); }
-}
-
-@keyframes taunt-dance-4 {
-  0%, 100% { transform: skewX(0deg) translateY(0); }
-  25% { transform: skewX(6deg) translateY(-6px); }
-  75% { transform: skewX(-6deg) translateY(-6px); }
-}
-
-.goblin-combat-wrapper.goblin-dance-1 { animation: taunt-dance-1 1s ease-in-out infinite; }
 .goblin-combat-wrapper.goblin-dance-2 { animation: taunt-dance-2 1.2s ease-in-out infinite; }
-.goblin-combat-wrapper.goblin-dance-3 { animation: taunt-dance-3 0.9s ease-in-out infinite; }
-.goblin-combat-wrapper.goblin-dance-4 { animation: taunt-dance-4 1.1s ease-in-out infinite; }
 
 /* ===================================================
    ANIMACIONES DE BAILE EN HOVER (PANTALLA PRINCIPAL)
    =================================================== */
-@keyframes taunt-dance-1-hover {
-  0%, 100% { transform: translateY(-10px) scale(1); }
-  50% { transform: translateY(-25px) scale(1.02); }
-}
-
 @keyframes taunt-dance-2-hover {
   0%, 100% { transform: translateY(-10px) rotate(0deg); }
   25% { transform: translateY(-18px) rotate(8deg); }
   75% { transform: translateY(-18px) rotate(-8deg); }
 }
 
-@keyframes taunt-dance-3-hover {
-  0%, 100% { transform: translateY(-10px) scale(1) rotate(0deg); }
-  25% { transform: translateY(-13px) scale(1.05) rotate(3deg); }
-  75% { transform: translateY(-13px) scale(1.05) rotate(-3deg); }
-}
-
-@keyframes taunt-dance-4-hover {
-  0%, 100% { transform: translateY(-10px) skewX(0deg); }
-  25% { transform: translateY(-16px) skewX(6deg); }
-  75% { transform: translateY(-16px) skewX(-6deg); }
-}
-
-
-
-#goblins-container .goblin-card.goblin-dance-1:hover { animation: taunt-dance-1-hover var(--hover-dance-speed, 1s) ease-in-out infinite !important; z-index: 100; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6) !important; }
 #goblins-container .goblin-card.goblin-dance-2:hover { animation: taunt-dance-2-hover var(--hover-dance-speed, 1.2s) ease-in-out infinite !important; z-index: 100; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6) !important; }
-#goblins-container .goblin-card.goblin-dance-3:hover { animation: taunt-dance-3-hover var(--hover-dance-speed, 0.9s) ease-in-out infinite !important; z-index: 100; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6) !important; }
-#goblins-container .goblin-card.goblin-dance-4:hover { animation: taunt-dance-4-hover var(--hover-dance-speed, 1.1s) ease-in-out infinite !important; z-index: 100; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6) !important; }
 
 .taunt-paused { animation: none !important; transform: translateY(0) scale(1) rotate(0deg) skewX(0deg) !important; }

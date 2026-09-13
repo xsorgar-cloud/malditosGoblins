@@ -4812,7 +4812,7 @@ function renderBattlefield() {
     gobEl.dataset.uid = goblin.uid;
 
     if (!goblin.danceClass) {
-      const dances = ['goblin-dance-1', 'goblin-dance-2', 'goblin-dance-3', 'goblin-dance-4'];
+      const dances = ['goblin-dance-2'];
       goblin.danceClass = dances[Math.floor(Math.random() * dances.length)];
       goblin.danceSpeed = (Math.random() * 0.5 + 0.7).toFixed(2) + 's';
     }
