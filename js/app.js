@@ -7027,11 +7027,9 @@ setInterval(() => {
         
         if (!shouldDance) {
             gob.tauntState = 'resting';
-            return;
-        }
-        
-        if (now >= (gob.tauntNextActionTime || 0)) {
-            if (gob.tauntState === 'dancing') {
+        } else {
+            if (now >= (gob.tauntNextActionTime || 0)) {
+                if (gob.tauntState === 'dancing') {
                 // Was dancing, now pause!
                 gob.tauntState = 'resting';
                 const pauseDuration = isHovered ? (Math.random() * 500 + 200) : (Math.random() * 3000 + 1500);
@@ -7044,6 +7042,7 @@ setInterval(() => {
                 const danceDuration = isHovered ? (Math.random() * 2000 + 1000) : (Math.random() * 5000 + 3000);
                 gob.tauntNextActionTime = now + danceDuration;
             }
+        }
         }
         
         // Sync DOM
