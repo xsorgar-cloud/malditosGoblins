@@ -4973,7 +4973,7 @@ gobEl.innerHTML = `<div class="goblin-hp">${goblin.currentHp}</div>${badgeHTML}$
               gobEl.classList.add('goblin-wobble-active');
             }
           }, 30);
-      } else if (Date.now() - spawnTime < 850) {
+      } else if (Date.now() - spawnTime < (goblin.isMutated ? 550 : 850)) {
         if (goblin.isMutated) {
           gobEl.classList.add('goblin-mutation-active');
         } else {
