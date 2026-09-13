@@ -7027,20 +7027,22 @@ setInterval(() => {
         
         if (!shouldDance) {
             gob.tauntState = 'resting';
-        } else {
-            if (now >= (gob.tauntNextActionTime || 0)) {
-                if (gob.tauntState === 'dancing') {
-                    // Was dancing, now pause!
-                    gob.tauntState = 'resting';
-                    const pauseDuration = isHovered ? (Math.random() * 500 + 200) : (Math.random() * 3000 + 1500);
-                    gob.tauntNextActionTime = now + pauseDuration;
-                } else {
-                    // Was resting, now dance!
-                    gob.tauntState = 'dancing';
-                    // Dance for a random duration
-                    const danceDuration = isHovered ? (Math.random() * 2000 + 1000) : (Math.random() * 5000 + 3000);
-                    gob.tauntNextActionTime = now + danceDuration;
-                }
+            return;
+        }
+        
+        if (now >= (gob.tauntNextActionTime || 0)) {
+            if (gob.tauntState === 'dancing') {
+                // Was dancing, now pause!
+                gob.tauntState = 'resting';
+                const pauseDuration = isHovered ? (Math.random() * 500 + 200) : (Math.random() * 3000 + 1500);
+                gob.tauntNextActionTime = now + pauseDuration;
+            } else {
+                // Was resting, now dance!
+                gob.tauntState = 'dancing';
+                // Dance for a random duration (equivalent to 3 to 8 loops roughly)
+                // A loop is ~1s, so dance for 3s to 8s
+                const danceDuration = isHovered ? (Math.random() * 2000 + 1000) : (Math.random() * 5000 + 3000);
+                gob.tauntNextActionTime = now + danceDuration;
             }
         }
         
