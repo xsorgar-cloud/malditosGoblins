@@ -6990,7 +6990,7 @@ setInterval(() => {
     if (!gameState || !gameState.battlefield || !gameState.battlefield.goblins) return;
     
     const now = Date.now();
-    const inCombat = document.getElementById('combat-goblins-container') !== null && document.getElementById('combat-goblins-container').children.length > 0;
+    const inCombat = !!gameState.currentCombat;
     
     gameState.battlefield.goblins.forEach(gob => {
         const isHovered = gob.isHovered || false;
