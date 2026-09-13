@@ -841,10 +841,12 @@ window.combatDieOnCombatRoleHandler = (e) => {
   c.goblins.forEach(gob => {
     let gobWrapper = document.createElement('div');
       if (!gob.danceClass) {
-        const dances = ['goblin-dance-1', 'goblin-dance-2', 'goblin-dance-3', 'goblin-dance-4'];
-        gob.danceClass = dances[Math.floor(Math.random() * dances.length)];
-      }
-      gobWrapper.className = 'goblin-combat-wrapper ' + gob.danceClass;
+          const dances = ['goblin-dance-1', 'goblin-dance-2', 'goblin-dance-3', 'goblin-dance-4'];
+          gob.danceClass = dances[Math.floor(Math.random() * dances.length)];
+          gob.danceSpeed = (Math.random() * 0.7 + 0.6).toFixed(2) + 's';
+        }
+        gobWrapper.className = 'goblin-combat-wrapper ' + gob.danceClass;
+        gobWrapper.style.animationDuration = gob.danceSpeed;
 
     // Goblin card
     let gobCard = document.createElement('div');
