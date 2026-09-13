@@ -4811,12 +4811,10 @@ function renderBattlefield() {
     gobEl.className = 'goblin-card';
     gobEl.dataset.uid = goblin.uid;
 
-    if (!goblin.danceClass) {
-      const dances = ['goblin-dance-2'];
-      goblin.danceClass = dances[Math.floor(Math.random() * dances.length)];
-      goblin.danceSpeed = (Math.random() * 0.5 + 0.7).toFixed(2) + 's';
-      goblin.animationOffset = Math.random() * 10;
-    }
+    // Forzar siempre goblin-dance-2 para corregir partidas guardadas con clases antiguas
+    goblin.danceClass = 'goblin-dance-2';
+    if (!goblin.danceSpeed) goblin.danceSpeed = (Math.random() * 0.5 + 0.7).toFixed(2) + 's';
+    if (!goblin.animationOffset) goblin.animationOffset = Math.random() * 10;
     gobEl.classList.add(goblin.danceClass);
     gobEl.style.setProperty('--hover-dance-speed', goblin.danceSpeed);
     
