@@ -751,9 +751,9 @@ window.updateSetupRolePreview = function(roleData, isHover = false) {
       window.updateRoleAchievements(roleData.id);
       
       if (!isHover && setupContent && roleData.icon) {
-        setupContent.style.backgroundImage = `radial-gradient(circle at top left, rgba(10, 10, 10, 0.6) 0%, rgba(10, 10, 10, 0.95) var(--bg-role-fade-1, 300px), rgba(10, 10, 10, 1) var(--bg-role-fade-2, 450px)), url('${roleData.icon}')`;
+        setupContent.style.backgroundImage = `radial-gradient(circle at top left, rgba(10, 10, 10, 0.35) 0%, rgba(10, 10, 10, 0.85) var(--bg-role-fade-1, 450px), rgba(10, 10, 10, 1) var(--bg-role-fade-2, 700px)), url('${roleData.icon}')`;
           setupContent.style.backgroundPosition = 'top left, top left';
-          setupContent.style.backgroundSize = 'cover, var(--bg-role-size, 350px) auto';
+          setupContent.style.backgroundSize = 'cover, var(--bg-role-size, 500px) auto';
           setupContent.style.backgroundRepeat = 'no-repeat';
       }
     }
