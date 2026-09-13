@@ -3416,12 +3416,13 @@ async function processWaveSequence() { console.log('Starting processWaveSequence
       stepResult.uidsToRemove.forEach(uid => {
         let gobel = document.querySelector(`.goblin-card[data-uid="${uid}"]`);
         if (gobel) {
-          gobel.classList.remove('goblin-mutation-active', 'goblin-wobble-active');
+          gobel.classList.remove('goblin-mutation-active', 'goblin-wobble-active', 'taunt-paused');
           
           // Forzar reflujo para asegurar que el navegador reinicia las animaciones
           void gobel.offsetWidth;
           
-          gobel.classList.add('goblin-merging');
+          // Apply after a tiny delay to ensure browser paints the initial state
+            setTimeout(() => { gobel.classList.add('goblin-merging'); }, 30);
         }
       });
       
@@ -4820,7 +4821,9 @@ function renderBattlefield() {
     
     // Sync to global timeline so re-renders don't reset animation frame
     gobEl.style.setProperty('--global-sync-delay', `-${((Date.now() % 100000) / 1000) + (goblin.animationOffset || 0)}s`);
-    if (goblin.tauntState === 'resting') {
+    const spawnTimeForTaunt = animatedGoblinUids.get(goblin.uid);
+    const isPlayingSpawnAnim = (!spawnTimeForTaunt) || (Date.now() - spawnTimeForTaunt < 850);
+    if (goblin.tauntState === 'resting' && !isPlayingSpawnAnim) {
         gobEl.classList.add('taunt-paused');
     }
     
@@ -4963,11 +4966,13 @@ gobEl.innerHTML = `<div class="goblin-hp">${goblin.currentHp}</div>${badgeHTML}$
       const spawnTime = animatedGoblinUids.get(goblin.uid);
       if (!spawnTime) {
         animatedGoblinUids.set(goblin.uid, Date.now());
-        if (goblin.isMutated) {
-          gobEl.classList.add('goblin-mutation-active');
-        } else {
-          gobEl.classList.add('goblin-wobble-active');
-        }
+          setTimeout(() => {
+            if (goblin.isMutated) {
+              gobEl.classList.add('goblin-mutation-active');
+            } else {
+              gobEl.classList.add('goblin-wobble-active');
+            }
+          }, 30);
       } else if (Date.now() - spawnTime < 850) {
         if (goblin.isMutated) {
           gobEl.classList.add('goblin-mutation-active');
@@ -7030,11 +7035,14 @@ setInterval(() => {
                 target = card.parentElement;
             }
             
-            if (gob.tauntState === 'resting' && !isHovered) {
-                target.classList.add('taunt-paused');
-            } else {
-                target.classList.remove('taunt-paused');
-            }
+            const sTime = typeof animatedGoblinUids !== 'undefined' ? animatedGoblinUids.get(gob.uid) : null;
+              const isSpawning = sTime && (Date.now() - sTime < 850);
+              
+              if (gob.tauntState === 'resting' && !isHovered && !isSpawning) {
+                  target.classList.add('taunt-paused');
+              } else {
+                  target.classList.remove('taunt-paused');
+              }
         });
     });
 }, 200);
