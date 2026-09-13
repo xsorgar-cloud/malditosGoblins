@@ -287,6 +287,12 @@ class GameState {
     let validGoblins = selectedGoblins.map(g => this.battlefield.goblins.find(bg => bg.uid === g.uid)).filter(g => g);
     if (validGoblins.length === 0) return false;
 
+    // ¡Despertar a todos los goblins para que entren al combate saltando!
+    validGoblins.forEach(gob => {
+        gob.tauntState = 'dancing';
+        gob.tauntNextActionTime = Date.now() + (Math.random() * 3000 + 2000);
+    });
+
     this.lastCombatId++;
 
     // Ordenar los goblins en combate de izquierda a derecha según su orden en el campo de batalla (A, B, C...)
