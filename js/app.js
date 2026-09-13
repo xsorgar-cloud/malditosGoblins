@@ -4842,6 +4842,20 @@ function renderBattlefield() {
     });
     gobEl.addEventListener('mouseleave', () => {
         goblin.isHovered = false;
+        
+        // Movimiento de enfado (latigazo) explícito y robusto usando WAAPI
+        // Solo aplica en pantalla principal y si no está seleccionado
+        if (!gameState.currentCombat && !gobEl.classList.contains('selected')) {
+            gobEl.animate([
+                { transform: 'scale(0.85) translateY(15px) rotate(-8deg)' },
+                { transform: 'scale(1.08) translateY(-5px) rotate(6deg)' },
+                { transform: 'scale(0.96) translateY(2px) rotate(-2deg)' },
+                { transform: 'scale(1) translateY(0) rotate(0deg)' }
+            ], {
+                duration: 450,
+                easing: 'cubic-bezier(0.36, 0.07, 0.19, 0.97)' // Misma curva de rebote del wobble
+            });
+        }
     });
     let imageUrl = goblin.image;
     let needsObsoleteOverlay = false;
