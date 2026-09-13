@@ -233,7 +233,7 @@ main {
 
 #goblins-container .goblin-card:hover {
   z-index: 100;
-  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6);
+  box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6) !important;
   transform: translateY(-10px);
 }
 
@@ -4334,8 +4334,9 @@ main {
   75% { transform: translateY(-16px) skewX(-6deg); }
 }
 
-#goblins-container .goblin-card.goblin-dance-1:hover { animation: taunt-dance-1-hover var(--hover-dance-speed, 1s) ease-in-out infinite; z-index: 100; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6); }
 
-#goblins-container .goblin-card.goblin-dance-2:hover { animation: taunt-dance-2-hover var(--hover-dance-speed, 1.2s) ease-in-out infinite; z-index: 100; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6); }
-#goblins-container .goblin-card.goblin-dance-3:hover { animation: taunt-dance-3-hover var(--hover-dance-speed, 0.9s) ease-in-out infinite; z-index: 100; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6); }
-#goblins-container .goblin-card.goblin-dance-4:hover { animation: taunt-dance-4-hover var(--hover-dance-speed, 1.1s) ease-in-out infinite; z-index: 100; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6); }
+
+#goblins-container .goblin-card.goblin-dance-1:hover { animation: taunt-dance-1-hover var(--hover-dance-speed, 1s) ease-in-out infinite !important; z-index: 100; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6) !important; }
+#goblins-container .goblin-card.goblin-dance-2:hover { animation: taunt-dance-2-hover var(--hover-dance-speed, 1.2s) ease-in-out infinite !important; z-index: 100; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6) !important; }
+#goblins-container .goblin-card.goblin-dance-3:hover { animation: taunt-dance-3-hover var(--hover-dance-speed, 0.9s) ease-in-out infinite !important; z-index: 100; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6) !important; }
+#goblins-container .goblin-card.goblin-dance-4:hover { animation: taunt-dance-4-hover var(--hover-dance-speed, 1.1s) ease-in-out infinite !important; z-index: 100; box-shadow: 0 5px 20px rgba(0, 0, 0, 0.6) !important; }
