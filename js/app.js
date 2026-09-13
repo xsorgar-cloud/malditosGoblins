@@ -4842,6 +4842,14 @@ function renderBattlefield() {
     });
     gobEl.addEventListener('mouseleave', () => {
         goblin.isHovered = false;
+        
+        // Forzamos intencionadamente el "enfado" (animación de aparición)
+        // para todos los goblins no seleccionados en la pantalla principal.
+        if (!gameState.currentCombat && !gobEl.classList.contains('selected')) {
+            gobEl.classList.remove('goblin-wobble-active');
+            void gobEl.offsetWidth; // Forzar reflujo para reiniciar la animación CSS
+            gobEl.classList.add('goblin-wobble-active');
+        }
     });
     let imageUrl = goblin.image;
     let needsObsoleteOverlay = false;
