@@ -4281,27 +4281,22 @@ main {
    ANIMACIONES DE PROVOCACIÓN / BAILE DE GOBLINS
    =================================================== */
 @keyframes taunt-dance-2 {
-  /* En el suelo, apoyado en el pie izquierdo */
   0% { 
     transform: translateY(0) rotate(-8deg); 
-    animation-timing-function: ease-out; /* Decelera al subir */
+    animation-timing-function: ease-out; 
   }
-  /* En el aire, ladeado hacia la derecha */
   25% { 
-    transform: translateY(-15px) rotate(8deg); 
-    animation-timing-function: ease-in; /* Acelera al caer */
+    transform: translateY(-15px) rotate(0deg); /* Movimiento pendular continuo: pasa por 0 en el aire */
+    animation-timing-function: ease-in; 
   }
-  /* En el suelo, apoyado en el pie derecho */
   50% { 
     transform: translateY(0) rotate(8deg); 
-    animation-timing-function: ease-out; /* Decelera al subir */
+    animation-timing-function: ease-out; 
   }
-  /* En el aire, ladeado hacia la izquierda */
   75% { 
-    transform: translateY(-15px) rotate(-8deg); 
-    animation-timing-function: ease-in; /* Acelera al caer */
+    transform: translateY(-15px) rotate(0deg); /* Pasa por 0 en el aire al volver */
+    animation-timing-function: ease-in; 
   }
-  /* Vuelve al suelo en el pie izquierdo */
   100% { 
     transform: translateY(0) rotate(-8deg); 
   }
@@ -4320,7 +4315,7 @@ main {
     animation-timing-function: ease-out; 
   }
   25% { 
-    transform: translateY(-25px) rotate(8deg); 
+    transform: translateY(-25px) rotate(0deg); 
     animation-timing-function: ease-in; 
   }
   50% { 
@@ -4328,7 +4323,7 @@ main {
     animation-timing-function: ease-out; 
   }
   75% { 
-    transform: translateY(-25px) rotate(-8deg); 
+    transform: translateY(-25px) rotate(0deg); 
     animation-timing-function: ease-in; 
   }
   100% { 

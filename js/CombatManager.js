@@ -847,6 +847,12 @@ window.combatDieOnCombatRoleHandler = (e) => {
         }
         gobWrapper.className = 'goblin-combat-wrapper ' + gob.danceClass;
         gobWrapper.style.animationDuration = gob.danceSpeed;
+        
+        // Sync to global timeline and enforce pause state immediately to avoid flickers
+        gobWrapper.style.animationDelay = `-${(Date.now() / 1000) + (gob.animationOffset || 0)}s`;
+        if (gob.tauntState === 'resting') {
+            gobWrapper.classList.add('taunt-paused');
+        }
 
     // Goblin card
     let gobCard = document.createElement('div');

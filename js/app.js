@@ -4815,9 +4815,16 @@ function renderBattlefield() {
       const dances = ['goblin-dance-2'];
       goblin.danceClass = dances[Math.floor(Math.random() * dances.length)];
       goblin.danceSpeed = (Math.random() * 0.5 + 0.7).toFixed(2) + 's';
+      goblin.animationOffset = Math.random() * 10;
     }
     gobEl.classList.add(goblin.danceClass);
     gobEl.style.setProperty('--hover-dance-speed', goblin.danceSpeed);
+    
+    // Sync to global timeline so re-renders don't reset animation frame
+    gobEl.style.animationDelay = `-${(Date.now() / 1000) + (goblin.animationOffset || 0)}s`;
+    if (goblin.tauntState === 'resting') {
+        gobEl.classList.add('taunt-paused');
+    }
     
     gobEl.addEventListener('mouseenter', () => {
         goblin.isHovered = true;
