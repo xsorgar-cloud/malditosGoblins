@@ -3430,14 +3430,14 @@ async function processWaveSequence() { console.log('Starting processWaveSequence
       await new Promise(r => setTimeout(r, 600));
       
       // Renderizar la mesa para que aparezca el nuevo (que tendrá isMutated=true y hará goblin-mutation-active)
-      renderBattlefield();
+      renderBattlefield(); renderLogs();
       
       // Esperar a que el jugador vea el nuevo goblin antes de la siguiente fusión
       await new Promise(r => setTimeout(r, 800));
       
     } else if (stepResult.type === 'spawn') {
       // Mostrar todos los nuevos goblins a la vez
-      renderBattlefield();
+      renderBattlefield(); renderLogs();
       // Esperar a que terminen su animación wobble
       await new Promise(r => setTimeout(r, 1000));
     } else if (stepResult.type === 'continue') {
@@ -3644,7 +3644,7 @@ function updateUI() {
   if (gameState && gameState.assignGoblinLetters) gameState.assignGoblinLetters();
   // 1. Siempre renderizamos primero para que el estado visual refleje los últimos cambios (ej: 0 HP)
   renderMarket();
-  renderBattlefield();
+  renderBattlefield(); renderLogs();
   renderPlayer();
   renderLogs(); // Actualizar el log si está abierto
 

@@ -1752,7 +1752,7 @@ class GameState {
       
       // Forzar actualización de UI si venimos de un callback asíncrono
       if (typeof window !== 'undefined' && window.updateUI) {
-        if (!this.isResolvingCombat) {
+        if (!this.isResolvingCombat && !this.isResolvingWaveSequentially) {
           window.updateUI();
         }
       }
