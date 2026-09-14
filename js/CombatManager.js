@@ -915,7 +915,7 @@ window.combatDieOnCombatRoleHandler = (e) => {
       hordaRewardsHTML = `
       <div style="position: absolute; top: 4%; left: calc(33% + 35px); display: flex; align-items: center; z-index: 10;">
           <div style="width: 35px; height: 35px; z-index: 2; background: url('assets/mo.png') center/contain no-repeat; display: flex; justify-content: center; align-items: center; font-size: 1.05rem; font-weight: 900; color: white; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">${moAmount}</div>
-          <div style="background: #444341; color: #eee; font-family: 'Outfit', sans-serif; font-size: 0.8rem; font-weight: bold; padding: 8px 5px 8px 8px; margin-left: -6px; border-radius: 0 4px 4px 0; display: flex; align-items: center; z-index: 1;"><span style="font-size: 0.65rem; color: #ccc; margin-right: 2px;">EXP</span>${pexAmount}</div>
+          <div style="background: #444341; color: #eee; font-family: 'Outfit', sans-serif; font-size: 0.8rem; font-weight: bold; height: 33px; padding: 0 5px 0 8px; margin-left: -6px; border-radius: 0 4px 4px 0; display: flex; align-items: center; z-index: 1;"><span style="font-size: 0.65rem; color: #ccc; margin-right: 2px;">EXP</span>${pexAmount}</div>
       </div>
     `;
     }
