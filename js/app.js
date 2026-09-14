@@ -1831,6 +1831,43 @@ function initSendaSelectionScreen() {
   container.className = 'split-card-container';
   screen.appendChild(container);
 
+  // Autoscroll de bordes para PC
+  if (window.matchMedia("(hover: hover) and (pointer: fine)").matches) {
+    let scrollRaf;
+    let scrollSpeed = 0;
+
+    screen.addEventListener('mousemove', (e) => {
+      const edgeThreshold = 100;
+      const maxSpeed = 12;
+      const x = e.clientX;
+      const width = window.innerWidth;
+
+      if (x < edgeThreshold) {
+        scrollSpeed = -maxSpeed * (1 - Math.max(0, x / edgeThreshold));
+      } else if (x > width - edgeThreshold) {
+        scrollSpeed = maxSpeed * (1 - Math.max(0, (width - x) / edgeThreshold));
+      } else {
+        scrollSpeed = 0;
+      }
+
+      if (scrollSpeed !== 0 && !scrollRaf) {
+        const loop = () => {
+          if (scrollSpeed !== 0) {
+            container.scrollLeft += scrollSpeed;
+            scrollRaf = requestAnimationFrame(loop);
+          } else {
+            scrollRaf = null;
+          }
+        };
+        scrollRaf = requestAnimationFrame(loop);
+      }
+    });
+
+    screen.addEventListener('mouseleave', () => {
+      scrollSpeed = 0;
+    });
+  }
+
   const sendasData = [
     { value: 'iniciacion', name: 'Senda de Iniciación', stars: '★', bossImg: 'assets/Monstruos/Jefes/Inicicion.webp', rulesImg: 'assets/Monstruos/Jefes/reglas_Inicicion.webp' },
     { value: 'guerrero', name: 'Senda de El Zeñor de la Guerra', stars: '★★', bossImg: 'assets/Monstruos/Jefes/Señor-de-la-Guerra.webp', rulesImg: 'assets/Monstruos/Jefes/reglas_Señor-de-la-Guerra.webp' },
