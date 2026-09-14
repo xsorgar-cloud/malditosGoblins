@@ -7043,7 +7043,7 @@ setInterval(() => {
             // Regla de combate: Bailan durante 2 a 3 segundos y luego se congelan para siempre
             if (!gob.combatTimerSet) {
                 gob.tauntState = 'dancing';
-                gob.tauntNextActionTime = now + 2000 + (Math.random() * 1000); // Entre 2000 y 3000 ms
+                gob.tauntNextActionTime = now + 1500 + (Math.random() * 1500); // Entre 1500 y 3000 ms
                 gob.combatTimerSet = true;
             }
             
