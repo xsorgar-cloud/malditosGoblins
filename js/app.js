@@ -6257,19 +6257,20 @@ if (btnSaveGame) {
 const btnDownloadGame = document.getElementById('btn-download-game');
 if (btnDownloadGame) {
   btnDownloadGame.addEventListener('click', () => {
-    if (!gameState || gameState.players.length === 0) return;
-    
-    // Guardar para asegurar que tenemos el estado más reciente
-    window.saveGame();
-    
-        // Si estamos a mitad de una horda, guardamos el récord hasta ese momento antes de exportar
-    if (typeof gameState !== 'undefined' && gameState.activeSenda === 'horda' && gameState.players && gameState.battlefield && gameState.battlefield.waveLevel) {
-      const roleIds = gameState.players.map(p => p.role && p.role.id ? p.role.id : null).filter(id => id !== null);
-      Achievements.recordHordeWave(roleIds, gameState.battlefield.waveLevel);
+    // Si hay una partida en curso, guardamos y registramos el progreso actual
+    if (typeof gameState !== 'undefined' && gameState.players && gameState.players.length > 0) {
+      if (typeof window.saveGame === 'function') window.saveGame();
+      
+      // Si estamos a mitad de una horda, guardamos el récord hasta ese momento antes de exportar
+      if (gameState.activeSenda === 'horda' && gameState.battlefield && gameState.battlefield.waveLevel) {
+        const roleIds = gameState.players.map(p => p.role && p.role.id ? p.role.id : null).filter(id => id !== null);
+        Achievements.recordHordeWave(roleIds, gameState.battlefield.waveLevel);
+      }
     }
     
+    // Exportamos los logros SIEMPRE (incluso desde el menú de inicio sin partida)
     const exportData = {
-      achievements: Achievements.load()
+      achievements: typeof Achievements !== 'undefined' ? Achievements.load() : {}
     };
     
     const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
