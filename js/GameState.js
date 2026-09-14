@@ -2730,13 +2730,26 @@ Daño directo: Sufres ${brokenCount} de daño.`);
   }
 
   getRequiredPex(level) {
-    const expRequerida = {
-      1: 2 * (this.players.length || 1),
-      2: 6 * (this.players.length || 1),
-      3: 12 * (this.players.length || 1),
-      4: 22 * (this.players.length || 1)
+    const numPlayers = this.players.length || 1;
+    const baseExp = {
+      1: 2,
+      2: 6,
+      3: 12,
+      4: 22
     };
-    return expRequerida[level] || Infinity;
+    
+    // Si no es la Senda de El Señor de la Horda y pasamos del nivel 4, tope máximo.
+    if (this.activeSenda !== 'horda' && level > 4) return Infinity;
+
+    if (level <= 4) return baseExp[level] * numPlayers;
+    
+    // Progresión infinita para Horda
+    // Nivel 5 cuesta 37 (22+15), Nivel 6 cuesta 52...
+    let exp = 22;
+    for (let i = 5; i <= level; i++) {
+        exp += 15;
+    }
+    return exp * numPlayers;
   }
 
   ganarPex(pex) {
@@ -2749,12 +2762,12 @@ Daño directo: Sufres ${brokenCount} de daño.`);
   subirNivel(p) {
     // Definimos la tabla de experiencia requerida para pasar de cada nivel al siguiente.
     // La clave es el nivel actual, el valor son los PEX necesarios.
-    const expRequerida = {
-      1: 2 * this.players.length,
-      2: 6 * this.players.length,
-      3: 12 * this.players.length,
-      4: 22 * this.players.length
-    };
+      // (Tabla de exp movida a getRequiredPex)
+      // 1: 2 * this.players.length,
+      // 2: 6 * this.players.length,
+      // 3: 12 * this.players.length,
+      // 4: 22 * this.players.length
+      // };
 
     const pLeader = this.players[0];
     if (!pLeader) return;
@@ -2762,7 +2775,8 @@ Daño directo: Sufres ${brokenCount} de daño.`);
     // El bucle comprueba dos cosas:
     // 1. Que exista una configuración de experiencia para el nivel actual (evita errores si llega a nivel 5).
     // 2. Que los PEX del jugador líder (que representa al grupo) sean mayores o iguales a la experiencia requerida para ese nivel.
-    while (expRequerida[pLeader.level] && pLeader.pex >= expRequerida[pLeader.level]) {
+      let nextReq = this.getRequiredPex(pLeader.level);
+      while (nextReq !== Infinity && pLeader.pex >= nextReq) {
       // PEX es acumulativo, por lo que NO restamos los PEX. Solo subimos de nivel a todos los jugadores.
       for (let i = 0; i < this.players.length; i++) {
         let pl = this.players[i];
@@ -2776,6 +2790,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
       this.players.forEach(pl => {
         this.adjustDicePoolToLevel(pl, pl.level);
       });
+      nextReq = this.getRequiredPex(pLeader.level);
     }
   }
 
