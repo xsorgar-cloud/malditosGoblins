@@ -913,11 +913,11 @@ window.combatDieOnCombatRoleHandler = (e) => {
       let pexAmount = gob.pex !== undefined ? gob.pex : (DB.goblins[gob.level] ? DB.goblins[gob.level].pex : 0);
       
       hordaRewardsHTML = `
-        <div style="position: absolute; top: 4%; left: calc(33% + 38px); display: flex; gap: 5px; align-items: center; z-index: 10;">
-            <div style="width: 44px; height: 44px; background: url('assets/mo.png') center/contain no-repeat; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; font-weight: 900; color: white; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">${moAmount}</div>
-            <div style="background: #2a2a35; color: #eee; font-family: 'Outfit', sans-serif; font-size: 0.8rem; font-weight: bold; padding: 4px 8px; border-radius: 4px; border: 1px solid #555; box-shadow: 0 2px 4px rgba(0,0,0,0.6);">PEX: ${pexAmount}</div>
-        </div>
-      `;
+      <div style="position: absolute; top: 4%; left: calc(33% + 38px); display: flex; gap: 5px; align-items: center; z-index: 10;">
+          <div style="width: 40px; height: 40px; background: url('assets/mo.png') center/contain no-repeat; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; font-weight: 900; color: white; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">${moAmount}</div>
+          <div style="background: #2a2a35; color: #eee; font-family: 'Outfit', sans-serif; font-size: 0.8rem; font-weight: bold; padding: 4px 8px; border-radius: 4px; border: 1px solid #555; box-shadow: 0 2px 4px rgba(0,0,0,0.6);"><span style="font-size: 0.6rem; color: #ccc; margin-right: 3px;">EXP</span>${pexAmount}</div>
+      </div>
+    `;
     }
 
     gobCard.innerHTML = `<div class="goblin-hp">${gob.currentHp}</div>${hordaRewardsHTML}${badgeHTML}${buffsHTML}`;
