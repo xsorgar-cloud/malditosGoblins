@@ -4830,7 +4830,7 @@ function renderBattlefield() {
     gobEl.style.setProperty('--global-sync-delay', `-${((Date.now() % 100000) / 1000) + (goblin.animationOffset || 0)}s`);
     const spawnTimeForTaunt = animatedGoblinUids.get(goblin.uid);
     const isPlayingSpawnAnim = (!spawnTimeForTaunt) || (Date.now() - spawnTimeForTaunt < 850);
-    if (goblin.tauntState === 'resting' && !isPlayingSpawnAnim) {
+    if (goblin.tauntState === 'resting' && !isPlayingSpawnAnim && !goblin.isDying) {
         gobEl.classList.add('taunt-paused');
     }
     
@@ -7053,7 +7053,11 @@ setInterval(() => {
             }
         } else {
             // Pantalla principal
-            gob.combatTimerSet = false; // Reset para el siguiente combate
+            if (gob.combatTimerSet) {
+                gob.combatTimerSet = false; // Reset para el siguiente combate
+                gob.tauntState = 'dancing'; // Reactivar el baile (sway) en la mesa
+                gob.tauntNextActionTime = 0;
+            }
             
             const shouldDance = isHovered;
             
