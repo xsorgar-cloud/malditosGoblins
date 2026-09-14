@@ -4821,7 +4821,7 @@ function renderBattlefield() {
 
     // Forzar siempre goblin-dance-2 para corregir partidas guardadas con clases antiguas
     goblin.danceClass = 'goblin-dance-2';
-    if (!goblin.danceSpeed) goblin.danceSpeed = (Math.random() * 0.5 + 0.7).toFixed(2) + 's';
+    if (!goblin.danceSpeed) goblin.danceSpeed = (Math.random() * 0.3 + 0.7).toFixed(2) + 's';
     if (!goblin.animationOffset) goblin.animationOffset = Math.random() * 10;
     gobEl.classList.add(goblin.danceClass);
     gobEl.style.setProperty('--hover-dance-speed', goblin.danceSpeed);

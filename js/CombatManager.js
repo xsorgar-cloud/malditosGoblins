@@ -842,7 +842,7 @@ window.combatDieOnCombatRoleHandler = (e) => {
     let gobWrapper = document.createElement('div');
       // Forzar siempre goblin-dance-2 para corregir partidas guardadas
         gob.danceClass = 'goblin-dance-2';
-        if (!gob.danceSpeed) gob.danceSpeed = (Math.random() * 0.7 + 0.6).toFixed(2) + 's';
+        if (!gob.danceSpeed) gob.danceSpeed = (Math.random() * 0.4 + 0.6).toFixed(2) + 's';
         if (!gob.animationOffset) gob.animationOffset = Math.random() * 10;
         gobWrapper.className = 'goblin-combat-wrapper ' + gob.danceClass;
         gobWrapper.style.animationDuration = gob.danceSpeed;
