@@ -7029,16 +7029,40 @@ setInterval(() => {
     const now = Date.now();
     const inCombat = !!gameState.currentCombat;
     
-    gameState.battlefield.goblins.forEach(gob => {
+    const allGoblins = [...gameState.battlefield.goblins];
+    if (inCombat && gameState.currentCombat.goblins) {
+        gameState.currentCombat.goblins.forEach(cg => {
+            if (!allGoblins.find(g => g.uid === cg.uid)) allGoblins.push(cg);
+        });
+    }
+    
+    allGoblins.forEach(gob => {
         const isHovered = gob.isHovered || false;
-        const shouldDance = inCombat || isHovered;
         
-        if (!shouldDance) {
-            gob.tauntState = 'resting';
-            return;
-        }
-        
-        if (now >= (gob.tauntNextActionTime || 0)) {
+        if (inCombat) {
+            // Regla de combate: Bailan durante 2 a 3 segundos y luego se congelan para siempre
+            if (!gob.combatTimerSet) {
+                gob.tauntState = 'dancing';
+                gob.tauntNextActionTime = now + 2000 + (Math.random() * 1000); // Entre 2000 y 3000 ms
+                gob.combatTimerSet = true;
+            }
+            
+            if (now >= gob.tauntNextActionTime) {
+                gob.tauntState = 'resting'; // Se queda quieto
+                gob.tauntNextActionTime = Infinity; // Para siempre
+            }
+        } else {
+            // Pantalla principal
+            gob.combatTimerSet = false; // Reset para el siguiente combate
+            
+            const shouldDance = isHovered;
+            
+            if (!shouldDance) {
+                gob.tauntState = 'resting';
+                return; // Evitamos inyectar la pausa para que sigan balanceándose
+            }
+            
+            if (now >= (gob.tauntNextActionTime || 0)) {
             if (gob.tauntState === 'dancing') {
                 // Was dancing, now pause!
                 gob.tauntState = 'resting';
@@ -7052,6 +7076,7 @@ setInterval(() => {
                 const danceDuration = isHovered ? (Math.random() * 2000 + 1000) : (Math.random() * 5000 + 3000);
                 gob.tauntNextActionTime = now + danceDuration;
             }
+        }
         }
         
         // Sync DOM
