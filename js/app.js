@@ -4958,8 +4958,8 @@ let hordaRewardsHTML = '';
     
     hordaRewardsHTML = `
       <div style="position: absolute; top: 4%; left: calc(33% + 38px); display: flex; gap: 5px; align-items: center; z-index: 10;">
-          <div style="width: 28px; height: 28px; background: url('assets/mo.png') center/contain no-repeat; display: flex; justify-content: center; align-items: center; font-size: 0.85rem; font-weight: 900; color: white; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">${moAmount}</div>
-          <div style="background: #2a2a35; color: #eee; font-family: 'Outfit', sans-serif; font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid #555; box-shadow: 0 2px 4px rgba(0,0,0,0.6);">PEX: ${pexAmount}</div>
+          <div style="width: 44px; height: 44px; background: url('assets/mo.png') center/contain no-repeat; display: flex; justify-content: center; align-items: center; font-size: 1.2rem; font-weight: 900; color: white; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">${moAmount}</div>
+          <div style="background: #2a2a35; color: #eee; font-family: 'Outfit', sans-serif; font-size: 0.8rem; font-weight: bold; padding: 4px 8px; border-radius: 4px; border: 1px solid #555; box-shadow: 0 2px 4px rgba(0,0,0,0.6);">PEX: ${pexAmount}</div>
       </div>
     `;
   }
