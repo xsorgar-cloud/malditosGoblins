@@ -907,7 +907,20 @@ window.combatDieOnCombatRoleHandler = (e) => {
       buffsHTML = `<div class="goblin-buffs" style="position: absolute; bottom: 5px; left: 5px; display: flex; gap: 4px; font-size: 1.1rem; background: rgba(20,0,0,0.8); padding: 3px 6px; border-radius: 8px; border: 1px solid #ff3333; box-shadow: 0 0 5px rgba(255,51,51,0.8); z-index: 10;">${buffsHTML}</div>`;
     }
 
-    gobCard.innerHTML = `<div class="goblin-hp">${gob.currentHp}</div>${badgeHTML}${buffsHTML}`;
+    let hordaRewardsHTML = '';
+    if (gameState.activeSenda === 'horda' && !gob.isDying) {
+      let moAmount = gob.mo !== undefined ? gob.mo : (DB.goblins[gob.level] ? DB.goblins[gob.level].mo : 0);
+      let pexAmount = gob.pex !== undefined ? gob.pex : (DB.goblins[gob.level] ? DB.goblins[gob.level].pex : 0);
+      
+      hordaRewardsHTML = `
+        <div style="position: absolute; top: 4%; left: calc(33% + 38px); display: flex; gap: 5px; align-items: center; z-index: 10;">
+            <div style="width: 28px; height: 28px; background: url('assets/mo.png') center/contain no-repeat; display: flex; justify-content: center; align-items: center; font-size: 0.85rem; font-weight: 900; color: white; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">${moAmount}</div>
+            <div style="background: #2a2a35; color: #eee; font-family: 'Outfit', sans-serif; font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid #555; box-shadow: 0 2px 4px rgba(0,0,0,0.6);">PEX: ${pexAmount}</div>
+        </div>
+      `;
+    }
+
+    gobCard.innerHTML = `<div class="goblin-hp">${gob.currentHp}</div>${hordaRewardsHTML}${badgeHTML}${buffsHTML}`;
 
     // Drop zone logic for the goblin
     gobCard.classList.add('dropzone');

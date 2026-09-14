@@ -4951,7 +4951,20 @@ if (buffsHTML) {
   buffsHTML = `<div class="goblin-buffs" style="position: absolute; bottom: 5px; left: 5px; display: flex; gap: 4px; font-size: 1.1rem; background: rgba(20,0,0,0.8); padding: 3px 6px; border-radius: 8px; border: 1px solid #ff3333; box-shadow: 0 0 5px rgba(255,51,51,0.8); z-index: 10;">${buffsHTML}</div>`;
 }
 
-gobEl.innerHTML = `<div class="goblin-hp">${goblin.currentHp}</div>${badgeHTML}${buffsHTML}`;
+let hordaRewardsHTML = '';
+  if (gameState.activeSenda === 'horda' && !goblin.isDying) {
+    let moAmount = goblin.mo !== undefined ? goblin.mo : (DB.goblins[goblin.level] ? DB.goblins[goblin.level].mo : 0);
+    let pexAmount = goblin.pex !== undefined ? goblin.pex : (DB.goblins[goblin.level] ? DB.goblins[goblin.level].pex : 0);
+    
+    hordaRewardsHTML = `
+      <div style="position: absolute; top: 4%; left: calc(33% + 38px); display: flex; gap: 5px; align-items: center; z-index: 10;">
+          <div style="width: 28px; height: 28px; background: url('assets/mo.png') center/contain no-repeat; display: flex; justify-content: center; align-items: center; font-size: 0.85rem; font-weight: 900; color: white; text-shadow: -1px -1px 0 #000, 1px -1px 0 #000, -1px 1px 0 #000, 1px 1px 0 #000;">${moAmount}</div>
+          <div style="background: #2a2a35; color: #eee; font-family: 'Outfit', sans-serif; font-size: 0.7rem; font-weight: bold; padding: 2px 6px; border-radius: 4px; border: 1px solid #555; box-shadow: 0 2px 4px rgba(0,0,0,0.6);">PEX: ${pexAmount}</div>
+      </div>
+    `;
+  }
+
+  gobEl.innerHTML = `<div class="goblin-hp">${goblin.currentHp}</div>${hordaRewardsHTML}${badgeHTML}${buffsHTML}`;
 
       // Botón de pago del peaje (Hito 2 Senda Recaudador)
       if (gameState.activeSenda === 'recaudador' && gameState.currentHito === 3 && goblin.level === 2 && !goblin.peajePagado) {
