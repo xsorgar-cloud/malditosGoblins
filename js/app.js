@@ -1838,7 +1838,7 @@ function initSendaSelectionScreen() {
 
     screen.addEventListener('mousemove', (e) => {
       const edgeThreshold = 100;
-      const maxSpeed = 12;
+      const maxSpeed = 25;
       const x = e.clientX;
       const width = window.innerWidth;
 
