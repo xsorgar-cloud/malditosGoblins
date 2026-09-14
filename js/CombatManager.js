@@ -908,7 +908,7 @@ window.combatDieOnCombatRoleHandler = (e) => {
     }
 
     let hordaRewardsHTML = '';
-    if (gameState.activeSenda === 'horda' && !gob.isDying) {
+    if (gameState.activeSenda === 'horda' && gob.isBoss && !gob.isDying) {
       let moAmount = gob.mo !== undefined ? gob.mo : (DB.goblins[gob.level] ? DB.goblins[gob.level].mo : 0);
       let pexAmount = gob.pex !== undefined ? gob.pex : (DB.goblins[gob.level] ? DB.goblins[gob.level].pex : 0);
       

@@ -4952,7 +4952,7 @@ if (buffsHTML) {
 }
 
 let hordaRewardsHTML = '';
-  if (gameState.activeSenda === 'horda' && !goblin.isDying) {
+  if (gameState.activeSenda === 'horda' && goblin.isBoss && !goblin.isDying) {
     let moAmount = goblin.mo !== undefined ? goblin.mo : (DB.goblins[goblin.level] ? DB.goblins[goblin.level].mo : 0);
     let pexAmount = goblin.pex !== undefined ? goblin.pex : (DB.goblins[goblin.level] ? DB.goblins[goblin.level].pex : 0);
     
