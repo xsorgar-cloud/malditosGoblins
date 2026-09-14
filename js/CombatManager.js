@@ -913,6 +913,7 @@ window.combatDieOnCombatRoleHandler = (e) => {
     gobCard.classList.add('dropzone');
     gobCard.dataset.dropType = 'goblin';
     gobCard.dataset.goblinUid = gob.uid;
+    gobCard.dataset.uid = gob.uid;
 
     // SISTEMA DE RESPALDO (TAP-TO-SELECT): Asignar dado seleccionado o equipo seleccionado al goblin al hacer clic
     gobCard.addEventListener('click', (e) => {
