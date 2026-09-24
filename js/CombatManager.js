@@ -2936,10 +2936,13 @@ document.addEventListener('mouseover', (e) => {
 
   if (!isTouchDevice) {
     if (card) {
-      showCardPreview(card);
+      if (!window.previewTemporarilyHidden) {
+        showCardPreview(card);
+      }
     } else if (e.target.closest('#card-preview-overlay')) {
       // Keep it visible if hovering over the overlay itself
     } else {
+      window.previewTemporarilyHidden = false;
       if (preview) preview.style.display = 'none';
     }
   }
@@ -2956,8 +2959,9 @@ document.addEventListener('mouseover', (e) => {
 
 const previewOverlayEl = document.getElementById('card-preview-overlay');
 if (previewOverlayEl) {
-  previewOverlayEl.addEventListener('click', () => {
+  previewOverlayEl.addEventListener('click', (e) => {
     previewOverlayEl.style.display = 'none';
+    window.previewTemporarilyHidden = true;
   });
 }
 
