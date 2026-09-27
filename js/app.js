@@ -3730,6 +3730,26 @@ function updateHordeLordUI() {
     if (prCount) {
         prCount.innerText = gameState.hordePR || 0;
     }
+    const currentPR = gameState.hordaPR || 0;
+    const summonCosts = { '1': 2, '2': 4, '3': 7, '4': 11, 'boss': 15 };
+    const summonButtons = document.querySelectorAll('.hl-summon-btn');
+    summonButtons.forEach(btn => {
+        const level = btn.getAttribute('data-level');
+        const cost = summonCosts[level] || 999;
+        
+        if (!gameState.isHordeLordPlanningPhase || currentPR < cost) {
+            btn.disabled = true;
+            btn.style.opacity = '0.4';
+            btn.style.filter = 'grayscale(100%)';
+            btn.style.cursor = 'not-allowed';
+        } else {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.style.filter = 'none';
+            btn.style.cursor = 'pointer';
+        }
+    });
+    
     const btnDesatar = document.getElementById('btn-desatar-horda');
     if (btnDesatar) {
         if (gameState.isHordeLordPlanningPhase) {
