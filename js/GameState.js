@@ -1796,7 +1796,9 @@ class GameState {
     
     // Mini-turno del Señor de la Horda (Modo Horda)
     if (this.activeSenda === 'horda') {
-      if (typeof window !== 'undefined' && typeof window.executeHordeLordTurn === 'function') {
+      if (this.isHordeLordHuman) {
+          // La IA del Señor de la Horda NO actúa porque el humano tiene el control manual
+      } else if (typeof window !== 'undefined' && typeof window.executeHordeLordTurn === 'function') {
         window.executeHordeLordTurn();
       } else {
         // IA pospuesta a una fase posterior
