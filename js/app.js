@@ -3731,11 +3731,26 @@ function updateHordeLordUI() {
         prCount.innerText = gameState.hordePR || 0;
     }
     const currentPR = parseInt(gameState.hordaPR) || 0;
-    const summonCosts = { '1': 2, '2': 4, '3': 7, '4': 11, 'boss': 15 };
+    // Cargar costes reales de la base de datos (DB.hordeConfig)
+    let summonCosts = { '1': 1, '2': 2, '3': 4, '4': 6, 'boss': 15 };
+    if (typeof DB !== 'undefined' && DB.hordeConfig) {
+        summonCosts = {
+            '1': DB.hordeConfig.SUMMON_COSTS[1] || 1,
+            '2': DB.hordeConfig.SUMMON_COSTS[2] || 2,
+            '3': DB.hordeConfig.SUMMON_COSTS[3] || 4,
+            '4': DB.hordeConfig.SUMMON_COSTS[4] || 6,
+            'boss': DB.hordeConfig.BOSS_COSTS[gameState.activeSenda] || 15
+        };
+    }
+    
     const summonButtons = document.querySelectorAll('.hl-summon-btn');
     summonButtons.forEach(btn => {
         const level = btn.getAttribute('data-level');
         const cost = summonCosts[level] || 999;
+        
+        // Actualizar el texto del botón visualmente por si el coste del Jefe varía
+        const costText = btn.querySelector('.cost-text');
+        if (costText) costText.innerText = cost;
         
         if (!gameState.isHordeLordPlanningPhase || currentPR < cost) {
             btn.disabled = true;
