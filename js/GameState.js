@@ -1583,6 +1583,7 @@ class GameState {
     this.currentHito = customSettings.hito !== undefined ? customSettings.hito : 1;
     this.activeSenda = customSettings.senda || 'iniciacion';
     this.isHordeLordPlanningPhase = false;
+    this.hordaPR = 0;
     this.difficulty = customSettings.difficulty || 'facil';
     this.pendingHito1Goblins = 0;
     let initLvl = customSettings.level !== undefined ? customSettings.level : 1;
