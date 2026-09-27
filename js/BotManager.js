@@ -20,6 +20,11 @@ handleGameState() {
             console.log("[BotManager] Bots are paused.");
             return;
         }
+
+        if (this.gameState && this.gameState.isHordeLordHuman && this.gameState.isHordeLordPlanningPhase) {
+            console.log("[BotManager] Horde Lord is planning. Bots are paused.");
+            return;
+        }
         
         if (this.isActing) {
             console.log("[BotManager] isActing is true. Aborting.");
