@@ -1685,7 +1685,10 @@ class GameState {
     let W = this.battlefield.waveLevel;
     let prToGain = Math.max(1, W + P - 1);
     this.hordaPR += prToGain;
-    this.addLog(`🩸 <strong>Rencor Creciente:</strong> Nueva ronda. El Señor de la Horda gana ${prToGain} PR (Total: ${this.hordaPR}).`);
+    this.addLog(`💀 <strong>Rencor Creciente:</strong> Nueva ronda. El Señor de la Horda gana ${prToGain} PR (Total: ${this.hordaPR}).`);
+    if (this.isHordeLordHuman) {
+        this.isHordeLordPlanningPhase = true;
+    }
     
     if (typeof window !== 'undefined' && window.renderBattlefield) {
       setTimeout(() => window.renderBattlefield(), 50);
