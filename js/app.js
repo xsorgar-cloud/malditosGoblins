@@ -675,6 +675,39 @@ const actionCountSpan = document.getElementById('action-count');
 const roleSelectionContainer = document.getElementById('role-selection-container');
 const playersContainer = document.getElementById('players-container');
 
+const toggleHordeLord = document.getElementById('toggle-horde-lord');
+if (toggleHordeLord) {
+  toggleHordeLord.addEventListener('change', (e) => {
+    const isChecked = e.target.checked;
+    const selectSendaEl = document.getElementById('select-senda');
+    
+    if (isChecked) {
+      if (selectSendaEl) {
+        selectSendaEl.value = 'horda';
+        selectSendaEl.disabled = true;
+      }
+      // Force all 4 slots to be bots
+      selectedSetupBots = [true, true, true, true];
+      // Set roles if null to default
+      for(let i=0; i<4; i++) {
+         if (!selectedSetupRoles[i]) selectedSetupRoles[i] = 'guerrero';
+      }
+    } else {
+      if (selectSendaEl) {
+        selectSendaEl.disabled = false;
+      }
+      // Revert player 1 to human
+      selectedSetupBots[0] = false;
+    }
+    renderRoleSelection();
+    
+    // Update visual preview for senda
+    const event = new Event('change');
+    if (selectSendaEl) selectSendaEl.dispatchEvent(event);
+  });
+}
+
+
 let selectedSetupRoles = ['guerrero', null, null, null];
 let selectedSetupBots = [false, true, true, true];
 let justSelectedRole = null;
@@ -840,6 +873,11 @@ function renderRoleSelection() {
       aiToggle.appendChild(aiText);
       
       aiToggle.onclick = () => {
+         const hl = document.getElementById('toggle-horde-lord');
+         if (hl && hl.checked) {
+             alert('En el modo Señor de la Horda, todos los héroes deben ser controlados por la IA.');
+             return;
+         }
          selectedSetupBots[i] = !selectedSetupBots[i];
          renderRoleSelection();
       };
@@ -2197,6 +2235,8 @@ btnStartGame.addEventListener('click', () => {
   lastActivePlayerUid = null;
   removeInitialFocusHighlights();
 
+  gameState.isHordeLordHuman = document.getElementById('toggle-horde-lord') ? document.getElementById('toggle-horde-lord').checked : false;
+  
   gameState.setupPlayers(numPlayers, finalRoles, { hp: initHp, maxHp: initMaxHp, energy: initEnergy, mo: initGold, hito: initHito, level: initLevel, wave: initWave, senda: initSenda, difficulty: initDifficulty }, finalBots);
   setupModal.classList.add('hidden');
   const versionBadge = document.getElementById('game-version-badge');
