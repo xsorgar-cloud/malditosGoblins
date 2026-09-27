@@ -686,18 +686,15 @@ if (toggleHordeLord) {
         selectSendaEl.value = 'horda';
         selectSendaEl.disabled = true;
       }
-      // Force all 4 slots to be bots
-      selectedSetupBots = [true, true, true, true];
-      // Set roles if null to default
-      for(let i=0; i<4; i++) {
-         if (!selectedSetupRoles[i]) selectedSetupRoles[i] = 'guerrero';
+      // Solo nos aseguramos de que el jugador 1 pase a ser bot por comodidad, 
+      // pero dejamos que el usuario configure la mesa como quiera.
+      if (!selectedSetupBots[0]) {
+        selectedSetupBots[0] = true;
       }
     } else {
       if (selectSendaEl) {
         selectSendaEl.disabled = false;
       }
-      // Revert player 1 to human
-      selectedSetupBots[0] = false;
     }
     renderRoleSelection();
     
@@ -873,11 +870,6 @@ function renderRoleSelection() {
       aiToggle.appendChild(aiText);
       
       aiToggle.onclick = () => {
-         const hl = document.getElementById('toggle-horde-lord');
-         if (hl && hl.checked) {
-             alert('En el modo Señor de la Horda, todos los héroes deben ser controlados por la IA.');
-             return;
-         }
          selectedSetupBots[i] = !selectedSetupBots[i];
          renderRoleSelection();
       };
