@@ -2227,7 +2227,25 @@ btnStartGame.addEventListener('click', () => {
   lastActivePlayerUid = null;
   removeInitialFocusHighlights();
 
+
   gameState.isHordeLordHuman = document.getElementById('toggle-horde-lord') ? document.getElementById('toggle-horde-lord').checked : false;
+  
+  if (gameState.isHordeLordHuman) {
+    document.getElementById('hl-tabs-container').style.display = 'flex';
+    document.getElementById('hl-content-portal').style.display = 'flex';
+    document.getElementById('market-decks').style.display = 'none';
+    document.getElementById('market-title-el').style.display = 'none';
+    
+    // Hide standard player buttons for human
+    // Wait, since human doesn't have a hero, they won't see buttons anyway if they are not the active player.
+    // However, they can see the layout. We will hide the bottom panel or just let it render bots.
+  } else {
+    document.getElementById('hl-tabs-container').style.display = 'none';
+    document.getElementById('hl-content-portal').style.display = 'none';
+    document.getElementById('market-decks').style.display = 'flex';
+    document.getElementById('market-title-el').style.display = 'block';
+  }
+
   
   gameState.setupPlayers(numPlayers, finalRoles, { hp: initHp, maxHp: initMaxHp, energy: initEnergy, mo: initGold, hito: initHito, level: initLevel, wave: initWave, senda: initSenda, difficulty: initDifficulty }, finalBots);
   setupModal.classList.add('hidden');
@@ -3706,7 +3724,17 @@ window.syncHitoButtonState = function() {
   }
 };
 
+function updateHordeLordUI() {
+    if (!gameState || !gameState.isHordeLordHuman) return;
+    const prCount = document.getElementById('hl-pr-count');
+    if (prCount) {
+        // PR isn't fully set up yet in GameState, we will mock it or default to 0
+        prCount.innerText = gameState.hordePR || 0;
+    }
+}
+
 function updateUI() {
+    updateHordeLordUI();
   if (window._obsoleteDelayActive) return;
   // Asegurar que botDNA está inicializado antes de cualquier renderizado
   if (gameState && gameState.players) {
@@ -7185,3 +7213,35 @@ setInterval(() => {
         });
     });
 }, 200);
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    const tabPortal = document.getElementById('tab-hl-portal');
+    const tabMarket = document.getElementById('tab-hl-market');
+    
+    if (tabPortal && tabMarket) {
+        tabPortal.addEventListener('click', () => {
+            tabPortal.classList.add('active');
+            tabMarket.classList.remove('active');
+            
+            document.getElementById('hl-content-portal').style.display = 'flex';
+            document.getElementById('market-decks').style.display = 'none';
+            document.getElementById('market-title-el').style.display = 'none';
+            
+            tabPortal.style.background = 'rgba(220,20,60,0.8)';
+            tabMarket.style.background = 'rgba(50,50,50,0.8)';
+        });
+        
+        tabMarket.addEventListener('click', () => {
+            tabMarket.classList.add('active');
+            tabPortal.classList.remove('active');
+            
+            document.getElementById('hl-content-portal').style.display = 'none';
+            document.getElementById('market-decks').style.display = 'flex';
+            document.getElementById('market-title-el').style.display = 'block';
+            
+            tabMarket.style.background = 'rgba(220,20,60,0.8)';
+            tabPortal.style.background = 'rgba(50,50,50,0.8)';
+        });
+    }
+});

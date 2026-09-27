@@ -112,8 +112,28 @@
     <div id="game-container">
 
         <!-- ZONA SUPERIOR: MERCADO -->
-        <header id="market-zone">
-            <div class="market-title">
+        <header id="market-zone" style="flex-direction: column; align-items: center;">
+            <!-- PESTAÑAS DEL SEÑOR DE LA HORDA (Ocultas por defecto) -->
+            <div id="hl-tabs-container" style="display: none; justify-content: center; gap: 10px; width: 100%; margin-bottom: 10px;">
+                <button id="tab-hl-portal" class="hl-tab active" style="padding: 5px 15px; background: rgba(220,20,60,0.8); color: white; border: 1px solid crimson; border-radius: 5px; cursor: pointer; font-family: 'Cinzel', serif; font-weight: bold; transition: all 0.2s;">Portal de Invocación</button>
+                <button id="tab-hl-market" class="hl-tab" style="padding: 5px 15px; background: rgba(50,50,50,0.8); color: white; border: 1px solid #555; border-radius: 5px; cursor: pointer; font-family: 'Cinzel', serif; font-weight: bold; transition: all 0.2s;">Espiar Mercado</button>
+            </div>
+
+            <!-- CONTENIDO DEL PORTAL (Villano) -->
+            <div id="hl-content-portal" style="display: none; flex-direction: column; align-items: center; width: 100%;">
+                <div style="margin-bottom: 10px; font-size: 1.2rem; color: crimson; font-family: 'Cinzel', serif; font-weight: bold; text-shadow: 0 2px 5px rgba(0,0,0,0.8);">
+                    Puntos de Rencor (PR): <span id="hl-pr-count" style="font-size: 1.6rem;">0</span>
+                </div>
+                <div id="hl-summon-buttons" style="display: flex; flex-wrap: wrap; justify-content: center; gap: 10px; max-width: 600px; padding: 0 10px;">
+                    <button class="btn secondary hl-summon-btn" data-level="1" style="border-color: crimson; color: crimson; background: rgba(220,20,60,0.1); flex: 1 1 80px; font-size: 0.85rem; padding: 8px;">Nv 1<br>(2 PR)</button>
+                    <button class="btn secondary hl-summon-btn" data-level="2" style="border-color: crimson; color: crimson; background: rgba(220,20,60,0.1); flex: 1 1 80px; font-size: 0.85rem; padding: 8px;">Nv 2<br>(4 PR)</button>
+                    <button class="btn secondary hl-summon-btn" data-level="3" style="border-color: crimson; color: crimson; background: rgba(220,20,60,0.1); flex: 1 1 80px; font-size: 0.85rem; padding: 8px;">Nv 3<br>(7 PR)</button>
+                    <button class="btn secondary hl-summon-btn" data-level="4" style="border-color: crimson; color: crimson; background: rgba(220,20,60,0.1); flex: 1 1 80px; font-size: 0.85rem; padding: 8px;">Nv 4<br>(11 PR)</button>
+                    <button class="btn secondary hl-summon-btn" data-level="boss" style="border-color: #ff3366; color: #ff3366; background: rgba(255,51,102,0.15); font-weight: bold; flex: 1 1 100px; font-size: 0.85rem; padding: 8px;">Jefe<br>(15 PR)</button>
+                </div>
+            </div>
+
+            <div class="market-title" id="market-title-el">
                 <h2>Mercado</h2>
             </div>
             <div class="market-decks" id="market-decks">
