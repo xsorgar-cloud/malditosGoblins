@@ -3728,8 +3728,19 @@ function updateHordeLordUI() {
     if (!gameState || !gameState.isHordeLordHuman) return;
     const prCount = document.getElementById('hl-pr-count');
     if (prCount) {
-        // PR isn't fully set up yet in GameState, we will mock it or default to 0
         prCount.innerText = gameState.hordePR || 0;
+    }
+    const btnDesatar = document.getElementById('btn-desatar-horda');
+    if (btnDesatar) {
+        if (gameState.isHordeLordPlanningPhase) {
+            btnDesatar.style.display = 'block';
+            btnDesatar.innerText = '¡Desatar la Horda!';
+            btnDesatar.disabled = false;
+        } else {
+            btnDesatar.style.display = 'block';
+            btnDesatar.innerText = 'Fase de Héroes...';
+            btnDesatar.disabled = true;
+        }
     }
 }
 
@@ -3953,7 +3964,11 @@ function updateUI() {
 
   // Activar turno automático de Bot (si es el jugador actual y no hay animaciones/bloqueos)
   if (window.botManager && !gameState.isFirstTurnOfGame) {
-      window.botManager.handleGameState();
+      if (gameState && gameState.isHordeLordHuman && gameState.isHordeLordPlanningPhase) {
+          // Bloquear IA de los héroes
+      } else {
+          window.botManager.handleGameState();
+      }
   }
 
   window.syncHitoButtonState();
@@ -7242,6 +7257,20 @@ document.addEventListener('DOMContentLoaded', () => {
             
             tabMarket.style.background = 'rgba(220,20,60,0.8)';
             tabPortal.style.background = 'rgba(50,50,50,0.8)';
+        });
+    }
+});
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    const btnDesatar = document.getElementById('btn-desatar-horda');
+    if (btnDesatar) {
+        btnDesatar.addEventListener('click', () => {
+            if (gameState && gameState.isHordeLordPlanningPhase) {
+                gameState.isHordeLordPlanningPhase = false;
+                gameState.addLog(`<span style="color:#dc143c; font-weight:bold; font-size:1.1rem;">¡LA HORDA HA SIDO DESATADA!</span>`);
+                updateUI();
+            }
         });
     }
 });
