@@ -3730,7 +3730,7 @@ function updateHordeLordUI() {
     if (prCount) {
         prCount.innerText = gameState.hordePR || 0;
     }
-    const currentPR = gameState.hordaPR || 0;
+    const currentPR = parseInt(gameState.hordaPR) || 0;
     const summonCosts = { '1': 2, '2': 4, '3': 7, '4': 11, 'boss': 15 };
     const summonButtons = document.querySelectorAll('.hl-summon-btn');
     summonButtons.forEach(btn => {
@@ -4799,10 +4799,14 @@ function renderBattlefield() {
     if (btnInfoHitos) btnInfoHitos.style.display = 'none';
     
     if (btnHordaPr) {
-      btnHordaPr.classList.remove('hidden');
-      document.getElementById('horda-pr').innerText = gameState.hordaPR || 0;
-      document.getElementById('horda-pr-mobile').innerText = gameState.hordaPR || 0;
-    }
+        if (gameState.isHordeLordHuman) {
+          btnHordaPr.classList.add('hidden');
+        } else {
+          btnHordaPr.classList.remove('hidden');
+          document.getElementById('horda-pr').innerText = gameState.hordaPR || 0;
+          document.getElementById('horda-pr-mobile').innerText = gameState.hordaPR || 0;
+        }
+      }
   } else {
     if (btnHordaPr) btnHordaPr.classList.add('hidden');
     if (btnInfoHitos) btnInfoHitos.style.display = 'inline-block';
