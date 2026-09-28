@@ -4407,3 +4407,13 @@ main {
 }
 
 .taunt-paused { animation: none !important; transform: translateY(0) scale(1) rotate(0deg) skewX(0deg) !important; }
+
+/* Centrar botones de invocación en PC, pero alinear al inicio en móviles para evitar cortes al hacer scroll */
+#hl-summon-buttons {
+    justify-content: center !important;
+}
+@media (max-width: 768px) {
+    #hl-summon-buttons {
+        justify-content: flex-start !important;
+    }
+}
