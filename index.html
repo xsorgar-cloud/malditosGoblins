@@ -262,7 +262,58 @@
                 <!-- Se llenarán dinámicamente -->
             </div>
 
-            <div class="battle-actions" id="action-buttons" style="justify-content: center; position: relative;">
+            <!-- ZONA DEL SEÑOR DE LA HORDA (Invocaciones) -->
+              <div id="hl-summon-buttons" style="display: none; flex-wrap: nowrap; justify-content: center; gap: 5px; max-width: 100%; padding: 0 10px; overflow-x: auto; width: 100%; scroll-behavior: smooth;">
+                    <!-- INVOCACIONES -->
+                    <button class="btn secondary hl-summon-btn" data-level="1" style="border-color: crimson; color: crimson; background: rgba(220,20,60,0.1); flex: 0 0 auto; min-width: 50px; font-size: 0.7rem; padding: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;">
+                        <img src="assets/Monstruos/t1.webp" style="height: 50px; object-fit: contain;">
+                        <span><span class="cost-text">1</span> PR</span>
+                    </button>
+                    <button class="btn secondary hl-summon-btn" data-level="2" style="border-color: crimson; color: crimson; background: rgba(220,20,60,0.1); flex: 0 0 auto; min-width: 50px; font-size: 0.7rem; padding: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;">
+                        <img src="assets/Monstruos/t2.webp" style="height: 50px; object-fit: contain;">
+                        <span><span class="cost-text">2</span> PR</span>
+                    </button>
+                    <button class="btn secondary hl-summon-btn" data-level="3" style="border-color: crimson; color: crimson; background: rgba(220,20,60,0.1); flex: 0 0 auto; min-width: 50px; font-size: 0.7rem; padding: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;">
+                        <img src="assets/Monstruos/t3.webp" style="height: 50px; object-fit: contain;">
+                        <span><span class="cost-text">4</span> PR</span>
+                    </button>
+                    <button class="btn secondary hl-summon-btn" data-level="4" style="border-color: crimson; color: crimson; background: rgba(220,20,60,0.1); flex: 0 0 auto; min-width: 50px; font-size: 0.7rem; padding: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;">
+                        <img src="assets/Monstruos/t4.webp" style="height: 50px; object-fit: contain;">
+                        <span><span class="cost-text">6</span> PR</span>
+                    </button>
+                    <button class="btn secondary hl-summon-btn" data-level="5" style="border-color: crimson; color: crimson; background: rgba(220,20,60,0.1); flex: 0 0 auto; min-width: 50px; font-size: 0.7rem; padding: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;">
+                        <img src="assets/Monstruos/t5.webp" style="height: 50px; object-fit: contain;">
+                        <span><span class="cost-text">9</span> PR</span>
+                    </button>
+                    <button class="btn secondary hl-summon-btn" data-level="boss_cazador" style="border-color: #ff3366; color: #ff3366; background: rgba(255,51,102,0.15); font-weight: bold; flex: 0 0 auto; min-width: 60px; font-size: 0.7rem; padding: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;">
+                        <img src="assets/Monstruos/Jefes/t5_El-Cazador.webp" style="height: 50px; object-fit: contain;">
+                        <span><span class="cost-text">15</span> PR</span>
+                    </button>
+                    <button class="btn secondary hl-summon-btn" data-level="boss_recaudador" style="border-color: #ff3366; color: #ff3366; background: rgba(255,51,102,0.15); font-weight: bold; flex: 0 0 auto; min-width: 65px; font-size: 0.7rem; padding: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;">
+                        <img src="assets/Monstruos/Jefes/t5_Gran-Recaudador.webp" style="height: 50px; object-fit: contain;">
+                        <span><span class="cost-text">17</span> PR</span>
+                    </button>
+                    <button class="btn secondary hl-summon-btn" data-level="boss_rey_brujo" style="border-color: #ff3366; color: #ff3366; background: rgba(255,51,102,0.15); font-weight: bold; flex: 0 0 auto; min-width: 60px; font-size: 0.7rem; padding: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;">
+                        <img src="assets/Monstruos/Jefes/t5_Rey-Brujo.webp" style="height: 50px; object-fit: contain;">
+                        <span><span class="cost-text">18</span> PR</span>
+                    </button>
+                    <button class="btn secondary hl-summon-btn" data-level="boss_piromante" style="border-color: #ff3366; color: #ff3366; background: rgba(255,51,102,0.15); font-weight: bold; flex: 0 0 auto; min-width: 65px; font-size: 0.7rem; padding: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;">
+                        <img src="assets/Monstruos/Jefes/t5_El-Piromante.webp" style="height: 50px; object-fit: contain;">
+                        <span><span class="cost-text">18</span> PR</span>
+                    </button>
+                    <button class="btn secondary hl-summon-btn" data-level="boss_guerrero" style="border-color: #ff3366; color: #ff3366; background: rgba(255,51,102,0.15); font-weight: bold; flex: 0 0 auto; min-width: 60px; font-size: 0.7rem; padding: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;">
+                        <img src="assets/Monstruos/Jefes/t5_Señor-de-la-Guerra.webp" style="height: 50px; object-fit: contain;">
+                        <span><span class="cost-text">19</span> PR</span>
+                    </button>
+                    <button class="btn secondary hl-summon-btn" data-level="boss_la_madre" style="border-color: #ff3366; color: #ff3366; background: rgba(255,51,102,0.15); font-weight: bold; flex: 0 0 auto; min-width: 60px; font-size: 0.7rem; padding: 4px; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 3px;">
+                        <img src="assets/Monstruos/Jefes/t5_La-Madre.webp" style="height: 50px; object-fit: contain;">
+                        <span><span class="cost-text">21</span> PR</span>
+                    </button>
+                    
+                    <!-- SEPARADOR VISUAL -->
+                    <div style="width: 2px; background: rgba(255,51,102,0.3); margin: 0 2px; flex: 0 0 auto;"></div>
+
+              <div class="battle-actions" id="action-buttons" style="justify-content: center; position: relative;">
                 <div id="hito-actions" style="display: flex; gap: 5px; position: absolute; left: 20px;">
                     <button id="btn-deploy-hito" class="btn secondary"
                         style="font-size: 0.85rem; padding: 5px 10px; position: relative;"><span class="btn-text">Enfrentar Hito 1</span><img src="assets/btn_hito.png" class="mobile-btn-icon" alt="Hito"><span class="hito-mobile-number">1</span></button>
@@ -281,7 +332,10 @@
                 <button id="btn-gold-dmg" class="btn secondary"><span class="txt-largo">Cobrar 2 mo + 1 Daño</span><span class="txt-corto">+2 mo + 1 Daño</span><img src="assets/btn_gold-dmg.png" class="mobile-btn-icon" alt="Oro y Daño"></button>
                 <button id="btn-role" class="btn secondary"><span class="btn-text">Rellenar Rol</span><img src="assets/btn_role.png" class="mobile-btn-icon" alt="Rol"></button>
 
-                <button id="btn-end-turn" class="btn primary"
+                <button id="btn-hl-toggle-view" class="btn secondary" style="display: none; padding: 5px 15px; background: rgba(50,50,50,0.8); color: white; border: 1px solid #555; border-radius: 5px; cursor: pointer; font-family: 'Cinzel', serif; font-weight: bold; transition: all 0.2s; margin-right: 10px;">
+                      Espiar Mercado
+                  </button>
+                  <button id="btn-end-turn" class="btn primary"
                     style="background: linear-gradient(45deg, #2a9d8f, #264653);"><span class="txt-largo">Finalizar Turno</span><span class="txt-corto">Finalizar</span></button>
             </div>
         </main>

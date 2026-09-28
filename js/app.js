@@ -3933,6 +3933,42 @@ function updateUI() {
   const btnEndTurn = document.getElementById('btn-end-turn');
 
   btnEndTurn.classList.remove('hidden');
+  
+  if (gameState.isHordeLordHuman) {
+      if (btnConfirmAttack) btnConfirmAttack.style.display = 'none';
+      if (btnGold) btnGold.style.display = 'none';
+      if (btnGoldDmg) btnGoldDmg.style.display = 'none';
+      if (btnRole) btnRole.style.display = 'none';
+      
+      const hlToggle = document.getElementById('btn-hl-toggle-view');
+      const hlSummonButtons = document.getElementById('hl-summon-buttons');
+      
+      if (gameState.isHordeLordPlanningPhase) {
+          btnEndTurn.innerHTML = '<span class="txt-largo">¡Desatar la Horda!</span><span class="txt-corto">¡Desatar!</span>';
+          btnEndTurn.style.background = 'linear-gradient(45deg, #8B0000, #dc143c)';
+          btnEndTurn.style.boxShadow = '0 0 10px rgba(220,20,60,0.6)';
+          if (hlToggle) hlToggle.style.display = 'inline-block';
+          if (hlSummonButtons && hlToggle.innerText !== 'Ocultar Mercado') hlSummonButtons.style.display = 'flex';
+      } else {
+          btnEndTurn.classList.add('hidden'); // Ocultar mientras juegan los héroes
+          if (hlToggle) hlToggle.style.display = 'none';
+          if (hlSummonButtons) hlSummonButtons.style.display = 'none';
+      }
+  } else {
+      if (btnConfirmAttack) btnConfirmAttack.style.display = '';
+      if (btnGold) btnGold.style.display = '';
+      if (btnGoldDmg) btnGoldDmg.style.display = '';
+      if (btnRole) btnRole.style.display = '';
+      
+      btnEndTurn.innerHTML = '<span class="txt-largo">Finalizar Turno</span><span class="txt-corto">Finalizar</span>';
+      btnEndTurn.style.background = 'linear-gradient(45deg, #2a9d8f, #264653)';
+      btnEndTurn.style.boxShadow = '';
+      
+      const hlToggle = document.getElementById('btn-hl-toggle-view');
+      if (hlToggle) hlToggle.style.display = 'none';
+      const hlSummonButtons = document.getElementById('hl-summon-buttons');
+      if (hlSummonButtons) hlSummonButtons.style.display = 'none';
+  }
 
   const currentPlayerForShop = gameState.getCurrentPlayer();
   let canAffordSomething = false;
