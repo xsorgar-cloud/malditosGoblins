@@ -3024,7 +3024,7 @@ main {
 .equip-slot,
 .orb,
 .goblin-card {
-  touch-action: none !important;
+  /* touch-action: none !important; remobido para permitir zoom */
   /* Evita que Android/iOS asuma que se quiere hacer scroll al tocar */
   -webkit-touch-callout: none !important;
   /* Evita el menÃº contextual emergente en móviles al mantener pulsado */
