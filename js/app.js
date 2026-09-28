@@ -2312,6 +2312,13 @@ function openEndTurnWarningModal(onConfirm) {
 }
 
 document.getElementById('btn-end-turn').addEventListener('click', () => {
+  if (gameState.isHordeLordHuman && gameState.isHordeLordPlanningPhase) {
+      gameState.isHordeLordPlanningPhase = false;
+      gameState.addLog(`<span style="color:#dc143c; font-weight:bold; font-size:1.1rem;">¡LA HORDA HA SIDO DESATADA!</span>`);
+      updateUI();
+      return;
+  }
+
   if (!gameState.isTurnoCompleted) {
     openEndTurnWarningModal(() => {
       gameState.nextTurn();
@@ -7337,23 +7344,23 @@ document.addEventListener('DOMContentLoaded', () => {
     
     if (btnToggle) {
         btnToggle.addEventListener('click', () => {
-            const portal = document.getElementById('hl-content-portal');
-            const isPortalVisible = portal.style.display !== 'none';
+            const marketDecks = document.getElementById('market-decks');
+            const isMarketVisible = marketDecks.style.display !== 'none';
             
-            if (isPortalVisible) {
+            if (!isMarketVisible) {
                 // Switch to Market
-                portal.style.display = 'none';
-                document.getElementById('market-decks').style.display = 'flex';
+                marketDecks.style.display = 'flex';
                 document.getElementById('market-title-el').style.display = 'block';
+                document.getElementById('hl-summon-buttons').style.display = 'none';
                 
                 btnToggle.innerHTML = 'Ocultar Mercado';
                 btnToggle.style.background = 'rgba(220,20,60,0.8)';
                 btnToggle.style.borderColor = 'crimson';
             } else {
                 // Switch to Portal
-                portal.style.display = 'flex';
-                document.getElementById('market-decks').style.display = 'none';
+                marketDecks.style.display = 'none';
                 document.getElementById('market-title-el').style.display = 'none';
+                document.getElementById('hl-summon-buttons').style.display = 'flex';
                 
                 btnToggle.innerHTML = 'Espiar Mercado';
                 btnToggle.style.background = 'rgba(50,50,50,0.8)';
