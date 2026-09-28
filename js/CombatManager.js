@@ -2948,7 +2948,16 @@ document.addEventListener('touchend', (e) => {
     }
   }
 });
-document.addEventListener('touchmove', clearTouchTimer);
+document.addEventListener('touchmove', (e) => {
+  if (touchTimer && e.touches && e.touches.length > 0) {
+    const moveX = e.touches[0].clientX;
+    const moveY = e.touches[0].clientY;
+    // Permitir un margen de 15 píxeles de tolerancia al movimiento del dedo (jitter)
+    if (Math.abs(moveX - touchStartX) > 15 || Math.abs(moveY - touchStartY) > 15) {
+      clearTouchTimer();
+    }
+  }
+}, {passive: true});
 document.addEventListener('touchcancel', clearTouchTimer);
 
 document.addEventListener('mouseover', (e) => {
