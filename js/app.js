@@ -4881,13 +4881,9 @@ function renderBattlefield() {
     if (btnInfoHitos) btnInfoHitos.style.display = 'none';
     
     if (btnHordaPr) {
-        if (gameState.isHordeLordHuman) {
-          btnHordaPr.classList.add('hidden');
-        } else {
-          btnHordaPr.classList.remove('hidden');
-          document.getElementById('horda-pr').innerText = gameState.hordaPR || 0;
-          document.getElementById('horda-pr-mobile').innerText = gameState.hordaPR || 0;
-        }
+        btnHordaPr.classList.remove('hidden');
+        document.getElementById('horda-pr').innerText = gameState.hordaPR || 0;
+        document.getElementById('horda-pr-mobile').innerText = gameState.hordaPR || 0;
       }
   } else {
     if (btnHordaPr) btnHordaPr.classList.add('hidden');
