@@ -2901,7 +2901,7 @@ function showCardPreview(card) {
         if (imgEl) {
           let src = imgEl.getAttribute('src');
           if (src) {
-            bg = "url('" + src.replace('/t5_', '/') + "')";
+            bg = "url('" + src.replace('/t5_', '/').replace('.jpg', '.webp') + "')";
           }
         }
       }
