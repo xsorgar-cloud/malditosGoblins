@@ -7361,13 +7361,9 @@ document.addEventListener('DOMContentLoaded', () => {
             
             const currentPR = parseInt(gameState.hordaPR) || 0;
             
-            if (level === 'boss') {
-                if (currentPR >= 15) {
-                    window.showBossSummonModal();
-                }
-                return;
-            }
-
+            let isBoss = level.startsWith('boss_');
+            let sendaId = isBoss ? level.substring(5) : null;
+            
             // Cargar costes reales
             let summonCosts = { '1': 1, '2': 2, '3': 4, '4': 6, '5': 9 };
             if (typeof DB !== 'undefined' && DB.hordeConfig) {
@@ -7380,22 +7376,61 @@ document.addEventListener('DOMContentLoaded', () => {
                 };
             }
             
-            cost = summonCosts[level] || 999;
+            if (isBoss) {
+                cost = (DB.hordeConfig && DB.hordeConfig.BOSS_COSTS) ? DB.hordeConfig.BOSS_COSTS[sendaId] : 999;
+            } else {
+                cost = summonCosts[level] || 999;
+            }
             
             if (currentPR < cost) return;
             
             // Restar PR
             gameState.hordaPR -= cost;
             
-            const lvlNum = parseInt(level);
-            let newGob = {
-                ...DB.goblins[lvlNum],
-                uid: Date.now() + '-invoke-' + Math.random().toString(36).substring(2),
-                currentHp: DB.goblins[lvlNum].hp,
-                isHito: true,
-            };
-            gameState.battlefield.goblins.push(newGob);
-            logMsg = `Invocación (G${lvlNum})`;
+            if (isBoss) {
+                const sendaHitos = DB.hitos[sendaId];
+                if (sendaHitos) {
+                    const bossHito = sendaHitos.find(h => h.isBoss);
+                    if (bossHito) {
+                        let bossHp = bossHito.bossStats.hpMultiplier * gameState.players.length;
+                        let bName = DB.hordeConfig.BOSS_NAMES[sendaId] || bossHito.name;
+                        let customMo = 5, customPex = 5;
+                        if (bName.includes('Cazador')) { customMo = 8; customPex = 8; }
+                        else if (bName.includes('Rey Brujo') || bName.includes('Recaudador')) { customMo = 10; customPex = 10; }
+                        else if (bName.includes('Guerra') || bName.includes('Piromante')) { customMo = 12; customPex = 12; }
+                        else if (bName.includes('Madre')) { customMo = 15; customPex = 15; }
+
+                        let bossGob = {
+                            ...DB.goblins[5],
+                            uid: Date.now() + '-boss-' + Math.random().toString(36).substring(2),
+                            mo: customMo,
+                            pex: customPex,
+                            hp: bossHp,
+                            currentHp: bossHp,
+                            maxHp: bossHp,
+                            isBoss: true,
+                            isHito: true,
+                            name: bName,
+                            dice: bossHito.bossStats.dice,
+                            attacks: bossHito.bossStats.attacks || DB.goblins[5].attacks,
+                            image: bossHito.bossStats.image || 'assets/Monstruos/Jefes/Inicicion.webp',
+                            bossStats: bossHito.bossStats
+                        };
+                        gameState.battlefield.goblins.push(bossGob);
+                        logMsg = `Invocación de Jefe (${bName})`;
+                    }
+                }
+            } else {
+                const lvlNum = parseInt(level);
+                let newGob = {
+                    ...DB.goblins[lvlNum],
+                    uid: Date.now() + '-invoke-' + Math.random().toString(36).substring(2),
+                    currentHp: DB.goblins[lvlNum].hp,
+                    isHito: true,
+                };
+                gameState.battlefield.goblins.push(newGob);
+                logMsg = `Invocación (G${lvlNum})`;
+            }
             
             gameState.addLog(`💀 <strong>El Señor de la Horda</strong>: ${logMsg} <font color="#ff4d4d">(-${cost} PR)</font>`);
             
@@ -7560,86 +7595,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-window.showBossSummonModal = function() {
-    const currentPR = parseInt(gameState.hordaPR) || 0;
-    const modal = document.getElementById('target-modal');
-    const title = document.getElementById('target-modal-title');
-    const desc = document.getElementById('target-modal-desc');
-    const options = document.getElementById('target-modal-options');
-
-    title.innerText = "Selecciona un Jefe para Invocar";
-    desc.innerHTML = `Tienes <strong>${currentPR} PR</strong> disponibles.`;
-    options.innerHTML = '';
-
-    const modalContent = modal.querySelector('.modal-content');
-    options.classList.remove('curandero-layout');
-    modalContent.classList.remove('wide-modal');
-    modalContent.style.maxWidth = '800px';
-
-    const gobGrid = document.createElement('div');
-    gobGrid.className = 'others-grid';
-    gobGrid.style.justifyContent = 'center';
-    gobGrid.style.display = 'flex';
-    gobGrid.style.flexWrap = 'wrap';
-    gobGrid.style.gap = '15px';
-
-    const bossCosts = DB.hordeConfig.BOSS_COSTS;
-    const bossNames = DB.hordeConfig.BOSS_NAMES;
-
-    for (const [sendaId, cost] of Object.entries(bossCosts)) {
-        const sendaHitos = DB.hitos[sendaId];
-        if (!sendaHitos) continue;
-        const bossHito = sendaHitos.find(h => h.isBoss);
-        if (!bossHito) continue;
-
-        const bName = bossNames[sendaId] || bossHito.name;
-        const canAfford = currentPR >= cost;
-
-        const btn = document.createElement('button');
-        btn.className = 'btn secondary target-other-btn';
-        btn.style.display = 'flex';
-        btn.style.flexDirection = 'column';
-        btn.style.alignItems = 'center';
-        btn.style.padding = '10px';
-        btn.style.background = canAfford ? 'rgba(255, 51, 102, 0.1)' : 'rgba(100, 100, 100, 0.1)';
-        btn.style.border = canAfford ? '1px solid #ff3366' : '1px solid #555';
-        btn.style.opacity = canAfford ? '1' : '0.5';
-        btn.style.cursor = canAfford ? 'pointer' : 'not-allowed';
-
-        let img = bossHito.bossStats.image || 'assets/Monstruos/Jefes/Inicicion.webp';
-
-        btn.innerHTML = `
-            <img src="${img}" style="width:60px; height:60px; object-fit:contain; border-radius:8px; margin-bottom:5px;">
-            <span style="font-size: 0.9rem; font-weight: bold; color: ${canAfford ? '#fff' : '#aaa'};${!canAfford ? 'text-decoration: line-through;' : ''}">${bName}</span>
-            <span style="font-size: 0.8rem; color: ${canAfford ? '#ff4d4d' : '#888'};">Coste: ${cost} PR</span>
-        `;
-
-        if (canAfford) {
-            btn.addEventListener('click', () => {
-                gameState.hordaPR -= cost;
-                let bossHp = bossHito.bossStats.hpMultiplier * gameState.players.length;
-                let customMo = 5, customPex = 5;
-                if (bName.includes('Cazador')) { customMo = 8; customPex = 8; }
-                else if (bName.includes('Rey Brujo') || bName.includes('Recaudador')) { customMo = 10; customPex = 10; }
-                else if (bName.includes('Guerra') || bName.includes('Piromante')) { customMo = 12; customPex = 12; }
-                else if (bName.includes('Madre')) { customMo = 15; customPex = 15; }
-
-                let bossGob = {
-                    ...DB.goblins[5],
-                    uid: Date.now() + '-boss-' + Math.random().toString(36).substring(2),
-                    mo: customMo,
-                    pex: customPex,
-                    hp: bossHp,
-                    currentHp: bossHp,
-                    maxHp: bossHp,
-                    isBoss: true,
-                    isHito: true,
-                    name: bName,
-                    dice: bossHito.bossStats.dice,
-                    attacks: bossHito.bossStats.attacks || DB.goblins[5].attacks,
-                    image: bossHito.bossStats.image || 'assets/Monstruos/Jefes/Inicicion.webp',
-                    bossStats: bossHito.bossStats
-                };
                 gameState.battlefield.goblins.push(bossGob);
                 gameState.addLog(`💀 <strong>El Señor de la Horda</strong>: Invocación de Jefe (${bName}) <font color="#ff4d4d">(-${cost} PR)</font>`);
 
