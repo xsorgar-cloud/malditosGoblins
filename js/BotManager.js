@@ -1084,7 +1084,10 @@ performMainTurn(bot) {
                 let isLastAction = this.gameState.battlefield.actionCount >= 2;
                 let canEliminateAnyGoblinOnTable = goblinsEnMesa.some(g => (g.currentHp + (g.pielDeCuero || 0)) <= maxPowerAll);
 
-                if (isLastAction && !canEliminateAnyGoblinOnTable) {
+                if (goblinsEnMesa.length === 0) {
+                    chosenAction = 'gold';
+                    decisionText = "No hay enemigos a la vista. Aprovecharé para descansar y recoger algo de oro.";
+                } else if (isLastAction && !canEliminateAnyGoblinOnTable) {
                     chosenAction = 'gold';
                     decisionText = "Atacar es inútil porque se curarán al final del turno. Descanso y saco algo de oro.";
                 } else if (tableCanBeClearedAnyway && !canEliminateAnyGoblin && (shortfall === 1 || shortfall === 2)) {
