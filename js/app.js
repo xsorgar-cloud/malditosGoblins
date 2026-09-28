@@ -7595,29 +7595,4 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 });
 
-                gameState.battlefield.goblins.push(bossGob);
-                gameState.addLog(`💀 <strong>El Señor de la Horda</strong>: Invocación de Jefe (${bName}) <font color="#ff4d4d">(-${cost} PR)</font>`);
 
-                modal.classList.add('hidden');
-                updateUI();
-                if (typeof window !== 'undefined' && window.renderBattlefield) {
-                    window.renderBattlefield();
-                }
-            });
-        }
-        gobGrid.appendChild(btn);
-    }
-    
-    options.appendChild(gobGrid);
-
-    const cancelBtn = document.createElement('button');
-    cancelBtn.className = 'btn primary';
-    cancelBtn.style.marginTop = '20px';
-    cancelBtn.innerText = 'Cancelar';
-    cancelBtn.addEventListener('click', () => {
-        modal.classList.add('hidden');
-    });
-    options.appendChild(cancelBtn);
-
-    modal.classList.remove('hidden');
-};
