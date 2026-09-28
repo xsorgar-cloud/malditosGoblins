@@ -2926,7 +2926,28 @@ const clearTouchTimer = () => {
   }
 };
 
-document.addEventListener('touchend', clearTouchTimer);
+
+let lastTapTime = 0;
+let lastTapCard = null;
+
+document.addEventListener('touchend', (e) => {
+  clearTouchTimer();
+  
+  if (isTouchDevice) {
+    const card = e.target.closest('.equipment-card, .deck, .goblin-card, .equip-slot, .player-role, .mini-equip-icon');
+    if (card) {
+      const currentTime = Date.now();
+      const tapLength = currentTime - lastTapTime;
+      if (tapLength > 0 && tapLength < 400 && lastTapCard === card) {
+        showCardPreview(card);
+        lastTapTime = 0; // reset
+      } else {
+        lastTapTime = currentTime;
+        lastTapCard = card;
+      }
+    }
+  }
+});
 document.addEventListener('touchmove', clearTouchTimer);
 document.addEventListener('touchcancel', clearTouchTimer);
 
