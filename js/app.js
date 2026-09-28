@@ -3764,17 +3764,35 @@ function updateHordeLordUI() {
           const costText = btn.querySelector('.cost-text');
           if (costText) costText.innerText = cost;
         
-        if (!gameState.isHordeLordPlanningPhase || currentPR < cost) {
-            btn.disabled = true;
-            btn.style.opacity = '0.4';
-            btn.style.filter = 'grayscale(100%)';
-            btn.style.cursor = 'not-allowed';
-        } else {
-            btn.disabled = false;
-            btn.style.opacity = '1';
-            btn.style.filter = 'none';
-            btn.style.cursor = 'pointer';
-        }
+        const infoSpan = btn.querySelector('span:last-child');
+          if (!gameState.isHordeLordPlanningPhase || currentPR < cost) {
+              btn.disabled = true;
+              btn.style.opacity = '1';
+              btn.style.filter = 'none';
+              btn.style.cursor = 'not-allowed';
+              btn.style.borderColor = '#555';
+              btn.style.background = 'rgba(50,50,50,0.3)';
+              if(infoSpan) {
+                  infoSpan.style.color = '#777';
+                  infoSpan.style.filter = 'grayscale(100%)';
+              }
+          } else {
+              btn.disabled = false;
+              btn.style.opacity = '1';
+              btn.style.filter = 'none';
+              btn.style.cursor = 'pointer';
+              if(infoSpan) {
+                  infoSpan.style.color = '';
+                  infoSpan.style.filter = 'none';
+              }
+              if(level.startsWith('boss_')) {
+                  btn.style.borderColor = '#ff3366';
+                  btn.style.background = 'rgba(255,51,102,0.15)';
+              } else {
+                  btn.style.borderColor = 'crimson';
+                  btn.style.background = 'rgba(220,20,60,0.1)';
+              }
+          }
     });
     
     // Mejoras
@@ -3795,17 +3813,35 @@ function updateHordeLordUI() {
         
         // Disable if not planning phase, not enough PR, OR if there are no goblins to apply to
         const activeGoblins = gameState.battlefield && gameState.battlefield.goblins ? gameState.battlefield.goblins.filter(g => g.currentHp > 0) : [];
-        if (!gameState.isHordeLordPlanningPhase || currentPR < cost || activeGoblins.length === 0) {
-            btn.disabled = true;
-            btn.style.opacity = '0.4';
-            btn.style.filter = 'grayscale(100%)';
-            btn.style.cursor = 'not-allowed';
-        } else {
-            btn.disabled = false;
-            btn.style.opacity = '1';
-            btn.style.filter = 'none';
-            btn.style.cursor = 'pointer';
-        }
+        const infoSpan = btn.querySelector('span:last-child');
+          if (!gameState.isHordeLordPlanningPhase || currentPR < cost || activeGoblins.length === 0) {
+              btn.disabled = true;
+              btn.style.opacity = '1';
+              btn.style.filter = 'none';
+              btn.style.cursor = 'not-allowed';
+              btn.style.borderColor = '#555';
+              btn.style.background = 'rgba(50,50,50,0.3)';
+              if(infoSpan) {
+                  infoSpan.style.color = '#777';
+                  infoSpan.style.filter = 'grayscale(100%)';
+              }
+          } else {
+              btn.disabled = false;
+              btn.style.opacity = '1';
+              btn.style.filter = 'none';
+              btn.style.cursor = 'pointer';
+              if(infoSpan) {
+                  infoSpan.style.color = '';
+                  infoSpan.style.filter = 'none';
+              }
+              if(upgType === 'escozor' || upgType === 'calambre' || upgType === 'tembleque') {
+                  btn.style.borderColor = '#ff9900';
+                  btn.style.background = 'rgba(255,153,0,0.1)';
+              } else {
+                  btn.style.borderColor = '#8a2be2';
+                  btn.style.background = 'rgba(138,43,226,0.1)';
+              }
+          }
     });
 
     
