@@ -2887,7 +2887,7 @@ function showCardPreview(card) {
   const preview = document.getElementById('card-preview-overlay');
   if (!preview) return;
   let bg = card.style.backgroundImage;
-  if (!bg || bg === 'none' || bg === '') {
+  if (!bg || bg === 'none' || bg === '' || bg === 'initial' || !bg.includes('url')) {
     const imgEl = card.querySelector('img');
     if (imgEl) {
       let src = imgEl.getAttribute('src');
@@ -2897,7 +2897,7 @@ function showCardPreview(card) {
       }
     }
   }
-  if (bg && bg !== 'none') {
+  if (bg && bg !== 'none' && bg !== 'initial' && bg.includes('url')) {
     // Si es un rol mini, mostrar la versión normal en el preview
     const fullResBg = bg.replace('mini_rol_', 'rol_');
     preview.style.backgroundImage = fullResBg;
