@@ -3765,6 +3765,38 @@ function updateHordeLordUI() {
         }
     });
     
+    // Mejoras
+    const upgradeCosts = {
+        'piel': DB.hordeConfig?.UPGRADE_COSTS?.piel || 1,
+        'frenesi': DB.hordeConfig?.UPGRADE_COSTS?.frenesi || 1,
+        'armadura': DB.hordeConfig?.UPGRADE_COSTS?.armadura || 2,
+        'escozor': DB.hordeConfig?.UPGRADE_COSTS?.escozor || 1,
+        'calambre': DB.hordeConfig?.UPGRADE_COSTS?.calambre || 1,
+        'tembleque': DB.hordeConfig?.UPGRADE_COSTS?.tembleque || 2
+    };
+    const upgradeButtons = document.querySelectorAll('.hl-upgrade-btn');
+    upgradeButtons.forEach(btn => {
+        const upgType = btn.getAttribute('data-upgrade');
+        const cost = upgradeCosts[upgType] || 999;
+        const costText = btn.querySelector('.upg-cost-text');
+        if (costText) costText.innerText = cost;
+        
+        // Disable if not planning phase, not enough PR, OR if there are no goblins to apply to
+        const activeGoblins = gameState.battlefield && gameState.battlefield.goblins ? gameState.battlefield.goblins.filter(g => g.currentHp > 0) : [];
+        if (!gameState.isHordeLordPlanningPhase || currentPR < cost || activeGoblins.length === 0) {
+            btn.disabled = true;
+            btn.style.opacity = '0.4';
+            btn.style.filter = 'grayscale(100%)';
+            btn.style.cursor = 'not-allowed';
+        } else {
+            btn.disabled = false;
+            btn.style.opacity = '1';
+            btn.style.filter = 'none';
+            btn.style.cursor = 'pointer';
+        }
+    });
+
+    
     const btnDesatar = document.getElementById('btn-desatar-horda');
     if (btnDesatar) {
         if (gameState.isHordeLordPlanningPhase) {
@@ -7396,6 +7428,159 @@ document.addEventListener('DOMContentLoaded', () => {
             updateUI();
             if (typeof window !== 'undefined' && window.renderBattlefield) {
                 window.renderBattlefield();
+            }
+        });
+    });
+});
+
+
+window.showHordeUpgradeModal = function(upgradeType, cost) {
+    if (!gameState || !gameState.battlefield || !gameState.battlefield.goblins) return;
+    const activeGoblins = gameState.battlefield.goblins.filter(g => g.currentHp > 0);
+    if (activeGoblins.length === 0) return;
+    
+    const modal = document.getElementById('target-modal');
+    const title = document.getElementById('target-modal-title');
+    const desc = document.getElementById('target-modal-desc');
+    const options = document.getElementById('target-modal-options');
+    
+    const upgNames = {
+        'piel': 'Piel de Cuero',
+        'frenesi': 'Frenesí',
+        'armadura': 'Armadura Reactiva',
+        'escozor': 'Imbuir Escozor',
+        'calambre': 'Imbuir Calambre',
+        'tembleque': 'Imbuir Tembleque'
+    };
+    
+    const upgDesc = {
+        'piel': 'El goblin gana +1 a su vida máxima y actual (Acumulable).',
+        'frenesi': 'El goblin causa +1 Daño Directo durante su Represalia (Acumulable).',
+        'armadura': 'El goblin hace 1 Daño Directo automático a quien le ataque sin gastar escudo (Acumulable).',
+        'escozor': 'Si este goblin ataca con éxito, quema el dado atacante del héroe.',
+        'calambre': 'Si este goblin ataca con éxito, baja un escalón el dado NEGRO del héroe.',
+        'tembleque': 'Si este goblin ataca con éxito, reduce el dado del héroe a 1.'
+    };
+
+    title.innerText = `Mejora: ${upgNames[upgradeType]}`;
+    desc.innerHTML = `${upgDesc[upgradeType]}<br><small>(Coste: ${cost} PR)</small>`;
+    options.innerHTML = '';
+    
+    // Configuración visual adaptada del curandero/roles
+    const modalContent = modal.querySelector('.modal-content');
+    options.classList.remove('curandero-layout');
+    modalContent.classList.remove('wide-modal');
+    modalContent.style.maxWidth = '800px';
+    
+    const gobGrid = document.createElement('div');
+    gobGrid.className = 'others-grid';
+    gobGrid.style.justifyContent = 'center';
+    gobGrid.style.display = 'flex';
+    gobGrid.style.flexWrap = 'wrap';
+    gobGrid.style.gap = '15px';
+    
+    activeGoblins.forEach((g, idx) => {
+        const btn = document.createElement('button');
+        btn.className = 'btn secondary target-other-btn';
+        btn.style.display = 'flex';
+        btn.style.flexDirection = 'column';
+        btn.style.alignItems = 'center';
+        btn.style.padding = '10px';
+        btn.style.background = 'rgba(255, 51, 102, 0.1)';
+        btn.style.border = '1px solid #ff3366';
+        
+        let gName = g.name || (`G${g.level}`);
+        
+        btn.innerHTML = `
+            <img src="${g.image}" style="width:60px; height:60px; object-fit:contain; border-radius:8px; margin-bottom:5px;">
+            <span style="font-size: 0.9rem; font-weight: bold; color: #fff;">${gName}</span>
+            <span style="font-size: 0.8rem; color: #ff4d4d;">${g.currentHp} / ${g.maxHp || g.hp} HP</span>
+        `;
+        
+        btn.addEventListener('click', () => {
+            // Aplicar la mejora
+            const currentPR = parseInt(gameState.hordaPR) || 0;
+            if (currentPR >= cost) {
+                gameState.hordaPR -= cost;
+                
+                let logDetail = '';
+                if (upgradeType === 'piel') {
+                    g.pielDeCuero = (g.pielDeCuero || 0) + 1;
+                    g.hp = (g.hp || g.currentHp) + 1;
+                    g.maxHp = (g.maxHp || g.hp);
+                    g.currentHp += 1;
+                    logDetail = `Piel de Cuero a ${gName} (+1 HP)`;
+                } else if (upgradeType === 'frenesi') {
+                    g.frenesi = (g.frenesi || 0) + 1;
+                    logDetail = `Frenesí a ${gName} (+${g.frenesi} Daño Represalia)`;
+                } else if (upgradeType === 'armadura') {
+                    g.armaduraReactiva = (g.armaduraReactiva || 0) + 1;
+                    logDetail = `Armadura Reactiva a ${gName}`;
+                } else if (upgradeType === 'escozor') {
+                    g.imbuirAlteracion = 'Escozor';
+                    logDetail = `Escozor imbuido a ${gName}`;
+                } else if (upgradeType === 'calambre') {
+                    g.imbuirAlteracion = 'Calambre';
+                    logDetail = `Calambre imbuido a ${gName}`;
+                } else if (upgradeType === 'tembleque') {
+                    g.imbuirAlteracion = 'Tembleque';
+                    logDetail = `Tembleque imbuido a ${gName}`;
+                }
+                
+                gameState.addLog(`💀 <strong>El Señor de la Horda</strong> aplicó ${logDetail} <font color="#ff4d4d">(-${cost} PR)</font>`);
+                
+                modal.classList.add('hidden');
+                updateUI();
+                if (typeof window !== 'undefined' && window.renderBattlefield) {
+                    window.renderBattlefield();
+                }
+            } else {
+                modal.classList.add('hidden');
+            }
+        });
+        
+        gobGrid.appendChild(btn);
+    });
+    
+    options.appendChild(gobGrid);
+    
+    // Add cancel button
+    const cancelBtn = document.createElement('button');
+    cancelBtn.className = 'btn primary';
+    cancelBtn.style.marginTop = '20px';
+    cancelBtn.innerText = 'Cancelar';
+    cancelBtn.addEventListener('click', () => {
+        modal.classList.add('hidden');
+    });
+    options.appendChild(cancelBtn);
+    
+    modal.classList.remove('hidden');
+};
+
+document.addEventListener('DOMContentLoaded', () => {
+    const upgradeButtons = document.querySelectorAll('.hl-upgrade-btn');
+    upgradeButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (!gameState || !gameState.isHordeLordHuman || !gameState.isHordeLordPlanningPhase) return;
+            if (btn.disabled) return;
+            
+            const upgType = btn.getAttribute('data-upgrade');
+            let upgradeCosts = { 'piel': 1, 'frenesi': 1, 'armadura': 2, 'escozor': 1, 'calambre': 1, 'tembleque': 2 };
+            if (typeof DB !== 'undefined' && DB.hordeConfig) {
+                upgradeCosts = {
+                    'piel': DB.hordeConfig.UPGRADE_COSTS.piel || 1,
+                    'frenesi': DB.hordeConfig.UPGRADE_COSTS.frenesi || 1,
+                    'armadura': DB.hordeConfig.UPGRADE_COSTS.armadura || 2,
+                    'escozor': DB.hordeConfig.UPGRADE_COSTS.escozor || 1,
+                    'calambre': DB.hordeConfig.UPGRADE_COSTS.calambre || 1,
+                    'tembleque': DB.hordeConfig.UPGRADE_COSTS.tembleque || 2
+                };
+            }
+            const cost = upgradeCosts[upgType] || 999;
+            const currentPR = parseInt(gameState.hordaPR) || 0;
+            
+            if (currentPR >= cost) {
+                window.showHordeUpgradeModal(upgType, cost);
             }
         });
     });
