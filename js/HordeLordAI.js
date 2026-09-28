@@ -30,7 +30,7 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
     const summonCosts = DB.hordeConfig.SUMMON_COSTS;
     
     // Attempt to invoke a normal goblin
-    let possibleLevels = Object.keys(summonCosts).map(Number).filter(lvl => budget >= summonCosts[lvl] && lvl <= gameState.battlefield.waveLevel + 1);
+    let possibleLevels = Object.keys(summonCosts).map(Number).filter(lvl => budget >= summonCosts[lvl] && lvl <= gameState.battlefield.waveLevel);
     if (possibleLevels.length > 0) {
       // Prefer highest possible level, or sometimes spam level 1
       let targetLvl = Math.max(...possibleLevels);

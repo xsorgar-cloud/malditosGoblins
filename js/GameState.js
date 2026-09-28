@@ -2242,8 +2242,8 @@ Daño directo: Sufres ${brokenCount} de daño.`);
     if (!this.wavePhaseState.active) return null;
 
     if (this.wavePhaseState.phase === 'mutations') {
-        const maxAllowedLvl = Math.min(5, this.battlefield.waveLevel);
-        while (this.wavePhaseState.currentLvl < maxAllowedLvl) {
+        const maxAllowedLvl = Math.min(4, this.battlefield.waveLevel);
+        while (this.wavePhaseState.currentLvl <= maxAllowedLvl) {
         let lvl = this.wavePhaseState.currentLvl;
         
         // Función auxiliar para buscar y fusionar una pareja
