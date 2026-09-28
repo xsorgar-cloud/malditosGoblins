@@ -2231,17 +2231,15 @@ btnStartGame.addEventListener('click', () => {
   gameState.isHordeLordHuman = document.getElementById('toggle-horde-lord') ? document.getElementById('toggle-horde-lord').checked : false;
   
   if (gameState.isHordeLordHuman) {
-    document.getElementById('hl-tabs-container').style.display = 'flex';
-    document.getElementById('hl-content-portal').style.display = 'flex';
     document.getElementById('market-decks').style.display = 'none';
     document.getElementById('market-title-el').style.display = 'none';
-    
-    // Hide standard player buttons for human
-    // Wait, since human doesn't have a hero, they won't see buttons anyway if they are not the active player.
-    // However, they can see the layout. We will hide the bottom panel or just let it render bots.
+    if (document.getElementById('btn-hl-toggle-view')) {
+        document.getElementById('btn-hl-toggle-view').style.display = 'inline-block';
+        document.getElementById('btn-hl-toggle-view').innerHTML = 'Espiar Mercado';
+        document.getElementById('btn-hl-toggle-view').style.background = 'rgba(50,50,50,0.8)';
+        document.getElementById('btn-hl-toggle-view').style.borderColor = '#555';
+    }
   } else {
-    document.getElementById('hl-tabs-container').style.display = 'none';
-    document.getElementById('hl-content-portal').style.display = 'none';
     document.getElementById('market-decks').style.display = 'flex';
     document.getElementById('market-title-el').style.display = 'block';
   }
