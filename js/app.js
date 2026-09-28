@@ -7303,32 +7303,32 @@ setInterval(() => {
 
 
 document.addEventListener('DOMContentLoaded', () => {
-    const tabPortal = document.getElementById('tab-hl-portal');
-    const tabMarket = document.getElementById('tab-hl-market');
+    const btnToggle = document.getElementById('btn-hl-toggle-view');
     
-    if (tabPortal && tabMarket) {
-        tabPortal.addEventListener('click', () => {
-            tabPortal.classList.add('active');
-            tabMarket.classList.remove('active');
+    if (btnToggle) {
+        btnToggle.addEventListener('click', () => {
+            const portal = document.getElementById('hl-content-portal');
+            const isPortalVisible = portal.style.display !== 'none';
             
-            document.getElementById('hl-content-portal').style.display = 'flex';
-            document.getElementById('market-decks').style.display = 'none';
-            document.getElementById('market-title-el').style.display = 'none';
-            
-            tabPortal.style.background = 'rgba(220,20,60,0.8)';
-            tabMarket.style.background = 'rgba(50,50,50,0.8)';
-        });
-        
-        tabMarket.addEventListener('click', () => {
-            tabMarket.classList.add('active');
-            tabPortal.classList.remove('active');
-            
-            document.getElementById('hl-content-portal').style.display = 'none';
-            document.getElementById('market-decks').style.display = 'flex';
-            document.getElementById('market-title-el').style.display = 'block';
-            
-            tabMarket.style.background = 'rgba(220,20,60,0.8)';
-            tabPortal.style.background = 'rgba(50,50,50,0.8)';
+            if (isPortalVisible) {
+                // Switch to Market
+                portal.style.display = 'none';
+                document.getElementById('market-decks').style.display = 'flex';
+                document.getElementById('market-title-el').style.display = 'block';
+                
+                btnToggle.innerHTML = 'Ocultar Mercado';
+                btnToggle.style.background = 'rgba(220,20,60,0.8)';
+                btnToggle.style.borderColor = 'crimson';
+            } else {
+                // Switch to Portal
+                portal.style.display = 'flex';
+                document.getElementById('market-decks').style.display = 'none';
+                document.getElementById('market-title-el').style.display = 'none';
+                
+                btnToggle.innerHTML = 'Espiar Mercado';
+                btnToggle.style.background = 'rgba(50,50,50,0.8)';
+                btnToggle.style.borderColor = '#555';
+            }
         });
     }
 });
