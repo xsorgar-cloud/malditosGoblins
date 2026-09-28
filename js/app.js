@@ -7313,3 +7313,90 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 });
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    const summonButtons = document.querySelectorAll('.hl-summon-btn');
+    summonButtons.forEach(btn => {
+        btn.addEventListener('click', () => {
+            if (!gameState || !gameState.isHordeLordHuman || !gameState.isHordeLordPlanningPhase) return;
+            if (btn.disabled) return;
+
+            const level = btn.getAttribute('data-level');
+            let cost = 0;
+            let logMsg = '';
+            
+            // Cargar costes reales
+            let summonCosts = { '1': 1, '2': 2, '3': 4, '4': 6, 'boss': 15 };
+            if (typeof DB !== 'undefined' && DB.hordeConfig) {
+                summonCosts = {
+                    '1': DB.hordeConfig.SUMMON_COSTS[1] || 1,
+                    '2': DB.hordeConfig.SUMMON_COSTS[2] || 2,
+                    '3': DB.hordeConfig.SUMMON_COSTS[3] || 4,
+                    '4': DB.hordeConfig.SUMMON_COSTS[4] || 6,
+                    'boss': DB.hordeConfig.BOSS_COSTS[gameState.activeSenda] || 15
+                };
+            }
+            
+            cost = summonCosts[level] || 999;
+            const currentPR = parseInt(gameState.hordaPR) || 0;
+            
+            if (currentPR < cost) return;
+            
+            // Restar PR
+            gameState.hordaPR -= cost;
+            
+            if (level === 'boss') {
+                const sendaHitos = DB.hitos[gameState.activeSenda];
+                if (sendaHitos) {
+                    const bossHito = sendaHitos.find(h => h.isBoss);
+                    if (bossHito) {
+                        let bossHp = bossHito.bossStats.hpMultiplier * gameState.players.length;
+                        let bName = bossHito.name;
+                        let customMo = 5, customPex = 5;
+                        if (bName.includes('Cazador')) { customMo = 8; customPex = 8; }
+                        else if (bName.includes('Rey Brujo') || bName.includes('Recaudador')) { customMo = 10; customPex = 10; }
+                        else if (bName.includes('Guerra') || bName.includes('Piromante')) { customMo = 12; customPex = 12; }
+                        else if (bName.includes('Madre')) { customMo = 15; customPex = 15; }
+                        
+                        let bossGob = {
+                            ...DB.goblins[5],
+                            uid: Date.now() + '-boss-' + Math.random().toString(36).substring(2),
+                            mo: customMo,
+                            pex: customPex,
+                            hp: bossHp,
+                            currentHp: bossHp,
+                            maxHp: bossHp,
+                            isBoss: true,
+                            isHito: true,
+                            name: bName,
+                            dice: bossHito.bossStats.dice,
+                            attacks: bossHito.bossStats.attacks || DB.goblins[5].attacks,
+                            image: bossHito.bossStats.image || 'assets/Monstruos/Jefes/Inicicion.webp',
+                            bossStats: bossHito.bossStats
+                        };
+                        gameState.battlefield.goblins.push(bossGob);
+                        logMsg = `Invocación de Jefe (${bName})`;
+                    }
+                }
+            } else {
+                const lvlNum = parseInt(level);
+                let newGob = {
+                    ...DB.goblins[lvlNum],
+                    uid: Date.now() + '-invoke-' + Math.random().toString(36).substring(2),
+                    currentHp: DB.goblins[lvlNum].hp,
+                    isHito: true,
+                };
+                gameState.battlefield.goblins.push(newGob);
+                logMsg = `Invocación (G${lvlNum})`;
+            }
+            
+            gameState.addLog(`💀 <strong>El Señor de la Horda</strong>: ${logMsg} <font color="#ff4d4d">(-${cost} PR)</font>`);
+            
+            updateUI();
+            if (typeof window !== 'undefined' && window.renderBattlefield) {
+                window.renderBattlefield();
+            }
+        });
+    });
+});
