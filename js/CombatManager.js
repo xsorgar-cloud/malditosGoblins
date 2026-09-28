@@ -2887,6 +2887,16 @@ function showCardPreview(card) {
   const preview = document.getElementById('card-preview-overlay');
   if (!preview) return;
   let bg = card.style.backgroundImage;
+  if (!bg || bg === 'none' || bg === '') {
+    const imgEl = card.querySelector('img');
+    if (imgEl) {
+      let src = imgEl.getAttribute('src');
+      if (src) {
+        src = src.replace('/t5_', '/');
+        bg = "url('" + src + "')";
+      }
+    }
+  }
   if (bg && bg !== 'none') {
     // Si es un rol mini, mostrar la versión normal en el preview
     const fullResBg = bg.replace('mini_rol_', 'rol_');
@@ -2911,7 +2921,7 @@ function showCardPreview(card) {
 
 document.addEventListener('touchstart', (e) => {
   isTouchDevice = true;
-  const card = e.target.closest('.equipment-card, .deck, .goblin-card, .equip-slot, .player-role, .mini-equip-icon');
+  const card = e.target.closest('.equipment-card, .deck, .goblin-card, .equip-slot, .player-role, .mini-equip-icon, .hl-summon-btn');
   if (card) {
     touchTimer = setTimeout(() => {
       showCardPreview(card);
@@ -2934,7 +2944,7 @@ document.addEventListener('touchend', (e) => {
   clearTouchTimer();
   
   if (isTouchDevice) {
-    const card = e.target.closest('.equipment-card, .deck, .goblin-card, .equip-slot, .player-role, .mini-equip-icon');
+    const card = e.target.closest('.equipment-card, .deck, .goblin-card, .equip-slot, .player-role, .mini-equip-icon, .hl-summon-btn');
     if (card) {
       const currentTime = Date.now();
       const tapLength = currentTime - lastTapTime;
@@ -2961,7 +2971,7 @@ document.addEventListener('touchmove', (e) => {
 document.addEventListener('touchcancel', clearTouchTimer);
 
 document.addEventListener('mouseover', (e) => {
-  const card = e.target.closest('.equipment-card, .deck, .goblin-card, .equip-slot, .player-role, .mini-equip-icon');
+  const card = e.target.closest('.equipment-card, .deck, .goblin-card, .equip-slot, .player-role, .mini-equip-icon, .hl-summon-btn');
   const preview = document.getElementById('card-preview-overlay');
 
   if (!isTouchDevice) {
