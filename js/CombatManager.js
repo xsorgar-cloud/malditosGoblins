@@ -2887,12 +2887,30 @@ function showCardPreview(card) {
   const preview = document.getElementById('card-preview-overlay');
   if (!preview) return;
   let bg = card.style.backgroundImage;
-  if (!bg || bg === 'none' || bg === '' || bg === 'initial' || !bg.includes('url')) {
+  if (card.classList.contains('hl-summon-btn')) {
+    const lvl = card.getAttribute('data-level');
+    if (lvl) {
+      if (!lvl.startsWith('boss_')) {
+        if (typeof DB !== 'undefined' && DB.goblins && DB.goblins[lvl]) {
+          bg = "url('" + DB.goblins[lvl].image + "')";
+        } else {
+          bg = "url('assets/Monstruos/0" + lvl + ".webp')";
+        }
+      } else {
+        const imgEl = card.querySelector('img');
+        if (imgEl) {
+          let src = imgEl.getAttribute('src');
+          if (src) {
+            bg = "url('" + src.replace('/t5_', '/') + "')";
+          }
+        }
+      }
+    }
+  } else if (!bg || bg === 'none' || bg === '' || bg === 'initial' || !bg.includes('url')) {
     const imgEl = card.querySelector('img');
     if (imgEl) {
       let src = imgEl.getAttribute('src');
       if (src) {
-        src = src.replace('/t5_', '/');
         bg = "url('" + src + "')";
       }
     }
