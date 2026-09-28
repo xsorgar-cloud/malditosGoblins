@@ -3728,7 +3728,7 @@ function updateHordeLordUI() {
     if (!gameState || !gameState.isHordeLordHuman) return;
     const prCount = document.getElementById('hl-pr-count');
     if (prCount) {
-        prCount.innerText = gameState.hordePR || 0;
+        prCount.innerText = gameState.hordaPR || 0;
     }
     const currentPR = parseInt(gameState.hordaPR) || 0;
     // Cargar costes reales de la base de datos (DB.hordeConfig)
