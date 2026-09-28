@@ -2235,7 +2235,7 @@ btnStartGame.addEventListener('click', () => {
     document.getElementById('market-title-el').style.display = 'none';
     if (document.getElementById('btn-hl-toggle-view')) {
         document.getElementById('btn-hl-toggle-view').style.display = 'inline-block';
-        document.getElementById('btn-hl-toggle-view').innerHTML = 'Espiar Mercado';
+        document.getElementById('btn-hl-toggle-view').innerHTML = 'Mercado';
         document.getElementById('btn-hl-toggle-view').style.background = 'rgba(50,50,50,0.8)';
         document.getElementById('btn-hl-toggle-view').style.borderColor = '#555';
     }
@@ -3992,7 +3992,7 @@ function updateUI() {
   // CONTROL DEL ÁREA SUPERIOR (Mercado vs Invocaciones)
   if (isCurrentlyPlayingAsHordeLord) {
       if (hlToggle) hlToggle.style.display = 'inline-block';
-      if (hlToggle && hlToggle.innerText === 'Ocultar Mercado') {
+      if (hlToggle && hlToggle.innerText === 'Ocultar') {
           if (marketDecks) marketDecks.style.display = 'flex';
           if (marketTitle) marketTitle.style.display = 'block';
           if (hlSummonButtons) hlSummonButtons.style.display = 'none';
@@ -7406,7 +7406,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('market-title-el').style.display = 'block';
                 document.getElementById('hl-summon-buttons').style.display = 'none';
                 
-                btnToggle.innerHTML = 'Ocultar Mercado';
+                btnToggle.innerHTML = 'Ocultar';
                 btnToggle.style.background = 'rgba(220,20,60,0.8)';
                 btnToggle.style.borderColor = 'crimson';
             } else {
@@ -7415,7 +7415,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 document.getElementById('market-title-el').style.display = 'none';
                 document.getElementById('hl-summon-buttons').style.display = 'flex';
                 
-                btnToggle.innerHTML = 'Espiar Mercado';
+                btnToggle.innerHTML = 'Mercado';
                 btnToggle.style.background = 'rgba(50,50,50,0.8)';
                 btnToggle.style.borderColor = '#555';
             }
