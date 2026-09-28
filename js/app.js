@@ -7467,12 +7467,25 @@ document.addEventListener('DOMContentLoaded', () => {
             }
             
             if (isBoss) {
-                cost = (DB.hordeConfig && DB.hordeConfig.BOSS_COSTS) ? DB.hordeConfig.BOSS_COSTS[sendaId] : 999;
-            } else {
-                cost = summonCosts[level] || 999;
-            }
-            
-            if (currentPR < cost) return;
+                  cost = (DB.hordeConfig && DB.hordeConfig.BOSS_COSTS) ? DB.hordeConfig.BOSS_COSTS[sendaId] : 999;
+                  if (gameState.battlefield.waveLevel !== 4) {
+                      alert("Límite de Jefe de Élite: Los Jefes solo se pueden invocar en la Oleada 4.");
+                      return;
+                  }
+                  if (gameState.battlefield.goblins.some(g => g.isBoss && g.currentHp > 0)) {
+                      alert("Límite de 1 Solo Jefe en Mesa: Está prohibido que el Señor de la Horda tenga más de un Jefe activo al mismo tiempo en el tablero.");
+                      return;
+                  }
+              } else {
+                  cost = summonCosts[level] || 999;
+                  const lvlNum = parseInt(level);
+                  if (lvlNum > gameState.battlefield.waveLevel) {
+                      alert("Límite de Nivel por Oleada: El Señor de la Horda no puede invocar ni fusionar goblins de un nivel superior al de la oleada activa.");
+                      return;
+                  }
+              }
+              
+              if (currentPR < cost) return;
             
             // Restar PR
             gameState.hordaPR -= cost;

@@ -69,7 +69,7 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
          const sendaHitos = DB.hitos[sendaId];
          if (sendaHitos) {
            const bossHito = sendaHitos.find(h => h.isBoss);
-           if (bossHito && !boardGoblins.some(g => g.name === bossHito.name)) {
+           if (bossHito && gameState.battlefield.waveLevel === 4 && !boardGoblins.some(g => g.isBoss && g.currentHp > 0)) {
              possibleBosses.push({ sendaId, cost, bossHito });
            }
          }
