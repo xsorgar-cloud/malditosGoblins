@@ -99,7 +99,7 @@ const DB = {
       attacks: { 1: ['Rotura no esquivable', 'Daño Directo'], 2: ['Rotura'], 3: ['Rotura'], 4: ['Rotura no esquivable', '1 escozor'], 5: ['Rotura no esquivable', '1 calambre'], 6: ['Rotura no esquivable', '1 tembleque'] }
     },
     5: {
-      level: 5, hp: 25, mo: 8, pex: 8, dice: ['1d6', '+2', '1d6', '+2'], image: 'assets/Monstruos/05.webp',
+      level: 5, hp: 25, mo: 8, pex: 8, dice: ['1d6', '+2', '1d6', '+2'], image: 'assets/Monstruos/t5.webp',
       attacks: { 1: ['Rotura no esquivable', 'Daño Directo', '1 tembleque'], 2: ['Rotura no esquivable', '1 calambre'], 3: ['Rotura no esquivable', '1 escozor'], 4: ['Rotura no esquivable', '1 escozor'], 5: ['Rotura no esquivable', '1 calambre'], 6: ['Rotura no esquivable', '1 tembleque'] }
     }
   },
