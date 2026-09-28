@@ -3750,13 +3750,19 @@ function updateHordeLordUI() {
     }
     
     const summonButtons = document.querySelectorAll('.hl-summon-btn');
-    summonButtons.forEach(btn => {
-        const level = btn.getAttribute('data-level');
-        const cost = summonCosts[level] || 999;
-        
-        // Actualizar el texto del botón visualmente por si el coste del Jefe varía
-        const costText = btn.querySelector('.cost-text');
-        if (costText) costText.innerText = cost;
+      summonButtons.forEach(btn => {
+          const level = btn.getAttribute('data-level');
+          let cost = 999;
+          if (level.startsWith('boss_')) {
+              let sendaId = level.substring(5);
+              cost = (typeof DB !== 'undefined' && DB.hordeConfig && DB.hordeConfig.BOSS_COSTS) ? DB.hordeConfig.BOSS_COSTS[sendaId] : 999;
+          } else {
+              cost = summonCosts[level] || 999;
+          }
+          
+          // Actualizar el texto del botón visualmente por si el coste del Jefe varía
+          const costText = btn.querySelector('.cost-text');
+          if (costText) costText.innerText = cost;
         
         if (!gameState.isHordeLordPlanningPhase || currentPR < cost) {
             btn.disabled = true;
