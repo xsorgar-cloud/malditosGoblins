@@ -4702,7 +4702,7 @@ function renderMarket() {
     if (oldBtn) oldBtn.remove();
   }
 
-  if (p && p.mo >= 1) {
+  if (p && p.mo >= 1 && !p.isBot && !gameState.isHordeLordHuman && !gameState.isHordeLordPlanningPhase) {
     const btnExplore = document.createElement('button');
     btnExplore.className = 'btn secondary btn-explore-market';
     
