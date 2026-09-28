@@ -3937,35 +3937,40 @@ function updateUI() {
   const btnRole = document.getElementById('btn-role');
   const btnEndTurn = document.getElementById('btn-end-turn');
 
-  btnEndTurn.classList.remove('hidden');
-  
-  if (gameState.isHordeLordHuman) {
+  // DETERMINAR QUIEN JUEGA Y MOSTRAR BOTONES ADECUADOS
+  const isCurrentlyPlayingAsHordeLord = (gameState.isHordeLordHuman && gameState.isHordeLordPlanningPhase);
+  const currentPlayerForShop = gameState.getCurrentPlayer();
+  const isCurrentlyPlayingAsBotHero = (currentPlayerForShop && currentPlayerForShop.isBot && !gameState.isHordeLordPlanningPhase);
+
+  if (isCurrentlyPlayingAsHordeLord) {
       if (btnConfirmAttack) btnConfirmAttack.style.display = 'none';
       if (btnGold) btnGold.style.display = 'none';
       if (btnGoldDmg) btnGoldDmg.style.display = 'none';
       if (btnRole) btnRole.style.display = 'none';
       
+      btnEndTurn.classList.remove('hidden');
+      btnEndTurn.innerHTML = '<span class="txt-largo">¡Desatar la Horda!</span><span class="txt-corto">¡Desatar!</span>';
+      btnEndTurn.style.background = 'linear-gradient(45deg, #8B0000, #dc143c)';
+      btnEndTurn.style.boxShadow = '0 0 10px rgba(220,20,60,0.6)';
+      
       const hlToggle = document.getElementById('btn-hl-toggle-view');
       const hlSummonButtons = document.getElementById('hl-summon-buttons');
+      if (hlToggle) hlToggle.style.display = 'inline-block';
+      if (hlSummonButtons && hlToggle.innerText !== 'Ocultar Mercado') hlSummonButtons.style.display = 'flex';
       
-      if (gameState.isHordeLordPlanningPhase) {
-          btnEndTurn.innerHTML = '<span class="txt-largo">¡Desatar la Horda!</span><span class="txt-corto">¡Desatar!</span>';
-          btnEndTurn.style.background = 'linear-gradient(45deg, #8B0000, #dc143c)';
-          btnEndTurn.style.boxShadow = '0 0 10px rgba(220,20,60,0.6)';
-          if (hlToggle) hlToggle.style.display = 'inline-block';
-          if (hlSummonButtons && hlToggle.innerText !== 'Ocultar Mercado') hlSummonButtons.style.display = 'flex';
-      } else {
-          btnEndTurn.classList.add('hidden'); // Ocultar mientras juegan los héroes
-          if (hlToggle) hlToggle.style.display = 'none';
-          if (hlSummonButtons) hlSummonButtons.style.display = 'none';
-      }
+  } else if (isCurrentlyPlayingAsBotHero) {
+      btnEndTurn.classList.add('hidden'); // Ocultar mientras juegan los bots
+      const hlToggle = document.getElementById('btn-hl-toggle-view');
+      const hlSummonButtons = document.getElementById('hl-summon-buttons');
+      if (hlToggle) hlToggle.style.display = 'none';
+      if (hlSummonButtons) hlSummonButtons.style.display = 'none';
   } else {
       if (btnConfirmAttack) btnConfirmAttack.style.display = '';
       if (btnGold) btnGold.style.display = '';
       if (btnGoldDmg) btnGoldDmg.style.display = '';
       if (btnRole) btnRole.style.display = '';
       
-      btnEndTurn.innerHTML = '<span class="txt-largo">Finalizar Turno</span><span class="txt-corto">Finalizar</span>';
+      btnEndTurn.classList.remove('hidden');
       btnEndTurn.style.background = 'linear-gradient(45deg, #2a9d8f, #264653)';
       btnEndTurn.style.boxShadow = '';
       
@@ -3973,38 +3978,29 @@ function updateUI() {
       if (hlToggle) hlToggle.style.display = 'none';
       const hlSummonButtons = document.getElementById('hl-summon-buttons');
       if (hlSummonButtons) hlSummonButtons.style.display = 'none';
-  }
 
-  const currentPlayerForShop = gameState.getCurrentPlayer();
-  let canAffordSomething = false;
-  
-  if (currentPlayerForShop && !currentPlayerForShop.isBot && !gameState.isRetaliationPhase && !gameState.isGameOver) {
-      // Evaluar directamente los mazos del mercado en el estado del juego
-      const types = ['ataque', 'escudos', 'curacion'];
-      types.forEach(type => {
-          const deck = gameState.market[type];
-          if (deck && deck.length > 0) {
-              const topCard = deck[0];
-              // El mismo criterio exacto que renderMarket
-              if (currentPlayerForShop.mo >= topCard.cost) {
+      let canAffordSomething = false;
+      if (currentPlayerForShop && !gameState.isRetaliationPhase && !gameState.isGameOver) {
+          const types = ['ataque', 'escudos', 'curacion'];
+          types.forEach(type => {
+              const deck = gameState.market[type];
+              if (deck && deck.length > 0 && currentPlayerForShop.mo >= deck[0].cost) {
                   canAffordSomething = true;
               }
+          });
+          if (gameState.activeSenda === 'piromante' && gameState.currentHito === 4) {
+              canAffordSomething = false;
           }
-      });
+      }
       
-      // Hito 3: Fuego Cruzado (Piromante) anula la compra
-      if (gameState.activeSenda === 'piromante' && gameState.currentHito === 4) {
-          canAffordSomething = false;
+      if (canAffordSomething) {
+          const iconSvg = '<svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align: middle; margin-left: 5px; margin-bottom: 2px;"><path d="M9 3C8.5 3 8 4 8.5 5.5C9 7 9 7 9 7C6 8 4 12 4 18C4 20.5 6 21 12 21C18 21 20 20.5 20 18C20 12 18 8 15 7C15 7 15 7 15.5 5.5C16 4 15.5 3 15 3C13 3 11 3.5 9 3Z" fill="#F54927" stroke="#000000" stroke-width="1.8" stroke-linejoin="round"></path><rect x="8" y="6.5" width="8" height="2.5" rx="1" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"></rect><path d="M13 9C13 11 12 12 12 12C12 12 14 11 14 9Z" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"></path><path d="M11 9C11 11 12 12 12 12C12 12 10 11 10 9Z" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"></path></svg>';
+          btnEndTurn.innerHTML = `<span class="txt-largo">Finalizar Turno ${iconSvg}</span><span class="txt-corto">Finalizar ${iconSvg}</span>`;
+      } else {
+          btnEndTurn.innerHTML = `<span class="txt-largo">Finalizar Turno</span><span class="txt-corto">Finalizar</span>`;
       }
   }
-
-  if (canAffordSomething) {
-      const iconSvg = `<svg viewBox="0 0 24 24" width="20" height="20" style="vertical-align: middle; margin-left: 5px; margin-bottom: 2px;"><path d="M9 3C8.5 3 8 4 8.5 5.5C9 7 9 7 9 7C6 8 4 12 4 18C4 20.5 6 21 12 21C18 21 20 20.5 20 18C20 12 18 8 15 7C15 7 15 7 15.5 5.5C16 4 15.5 3 15 3C13 3 11 3.5 9 3Z" fill="#F54927" stroke="#000000" stroke-width="1.8" stroke-linejoin="round"></path><rect x="8" y="6.5" width="8" height="2.5" rx="1" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"></rect><path d="M13 9C13 11 12 12 12 12C12 12 14 11 14 9Z" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"></path><path d="M11 9C11 11 12 12 12 12C12 12 10 11 10 9Z" fill="#7a7a7a" stroke="#000000" stroke-width="1.2"></path></svg>`;
-      btnEndTurn.innerHTML = `<span class="txt-largo">Finalizar Turno ${iconSvg}</span><span class="txt-corto">Finalizar ${iconSvg}</span>`;
-  } else {
-      btnEndTurn.innerHTML = `<span class="txt-largo">Finalizar Turno</span><span class="txt-corto">Finalizar</span>`;
-  }
-
+  
   const hasGoblinsAlive = gameState.battlefield.goblins.some(g => !g.isDying);
   const isWarlordChoicePhase = gameState.activeSenda === 'guerrero' && !hasGoblinsAlive && !gameState.isMarketPhase && !gameState.isRetaliationPhase && !gameState.isGameOver;
 
