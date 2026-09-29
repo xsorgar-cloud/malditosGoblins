@@ -7566,7 +7566,7 @@ window.showHordeUpgradeModal = function(upgradeType, cost) {
     };
     
     const upgDesc = {
-        'piel': 'El goblin gana +1 a su vida máxima y actual (Acumulable).',
+        'piel': 'El goblin absorbe +1 de Daño Directo recibido (Acumulable).',
         'frenesi': 'El goblin causa +1 Daño Directo durante su Represalia (Acumulable).',
         'armadura': 'El goblin hace 1 Daño Directo automático a quien le ataque sin gastar escudo (Acumulable).',
         'escozor': 'Si este goblin ataca con éxito, quema el dado atacante del héroe.',
@@ -7583,6 +7583,7 @@ window.showHordeUpgradeModal = function(upgradeType, cost) {
     options.classList.remove('curandero-layout');
     modalContent.classList.remove('wide-modal');
     modalContent.style.maxWidth = '800px';
+    modalContent.style.width = '90vw';
     
     const gobGrid = document.createElement('div');
     gobGrid.className = 'others-grid';
@@ -7604,7 +7605,7 @@ window.showHordeUpgradeModal = function(upgradeType, cost) {
         let gName = g.name || (`G${g.level}`);
         
         btn.innerHTML = `
-            <img src="${g.image}" style="width:60px; height:60px; object-fit:contain; border-radius:8px; margin-bottom:5px;">
+            <img src="${g.image}" style="width:130px; height:130px; object-fit:contain; border-radius:8px; margin-bottom:5px;">
             <span style="font-size: 0.9rem; font-weight: bold; color: #fff;">${gName}</span>
             <span style="font-size: 0.8rem; color: #ff4d4d;">${g.currentHp} / ${g.maxHp || g.hp} HP</span>
         `;
