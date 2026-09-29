@@ -7556,26 +7556,9 @@ window.showHordeUpgradeModal = function(upgradeType, cost) {
     const desc = document.getElementById('target-modal-desc');
     const options = document.getElementById('target-modal-options');
     
-    const upgNames = {
-        'piel': 'Piel de Cuero',
-        'frenesi': 'Frenesí',
-        'armadura': 'Armadura Reactiva',
-        'escozor': 'Imbuir Escozor',
-        'calambre': 'Imbuir Calambre',
-        'tembleque': 'Imbuir Tembleque'
-    };
-    
-    const upgDesc = {
-        'piel': 'El goblin absorbe +1 de Daño Directo recibido (Acumulable).',
-        'frenesi': 'El goblin causa +1 Daño Directo durante su Represalia (Acumulable).',
-        'armadura': 'El goblin hace 1 Daño Directo automático a quien le ataque sin gastar escudo (Acumulable).',
-        'escozor': 'Si este goblin ataca con éxito, quema el dado atacante del héroe.',
-        'calambre': 'Si este goblin ataca con éxito, baja un escalón el dado NEGRO del héroe.',
-        'tembleque': 'Si este goblin ataca con éxito, reduce el dado del héroe a 1.'
-    };
-
-    title.innerText = `Mejora: ${upgNames[upgradeType]}`;
-    desc.innerHTML = `${upgDesc[upgradeType]}<br><small>(Coste: ${cost} PR)</small>`;
+    const upgInfo = DB.hordeConfig.UPGRADES_INFO[upgradeType];
+    title.innerText = `Mejora: ${upgInfo.name}`;
+    desc.innerHTML = `${upgInfo.modalDesc}<br><small>(Coste: ${cost} PR)</small>`;
     options.innerHTML = '';
     
     // Configuración visual adaptada del curandero/roles

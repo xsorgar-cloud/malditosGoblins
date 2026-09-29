@@ -4,7 +4,15 @@ const DB = {
     SUMMON_COSTS: { 1: 1, 2: 2, 3: 4, 4: 6, 5: 9 },
     BOSS_COSTS: { 'cazador': 15, 'recaudador': 17, 'rey_brujo': 18, 'piromante': 18, 'guerrero': 19, 'la_madre': 21 },
     BOSS_NAMES: { 'cazador': 'El Cazador', 'recaudador': 'Gran Recaudador', 'rey_brujo': 'Rey Brujo / El Piromante', 'piromante': 'Rey Brujo / El Piromante', 'guerrero': 'El Zeñor de la Guerra', 'la_madre': 'La Madre' },
-    UPGRADE_COSTS: { 'piel': 1, 'frenesi': 1, 'escozor': 1, 'calambre': 1, 'tembleque': 2, 'armadura': 2 },
+        UPGRADE_COSTS: { 'piel': 1, 'frenesi': 1, 'escozor': 1, 'calambre': 1, 'tembleque': 2, 'armadura': 2 },
+    UPGRADES_INFO: {
+      'piel': { name: 'Piel de Cuero', icon: '🛡️', tooltip: 'Piel de Cuero (+1 Absorción de daño, acumulable)', modalDesc: 'El goblin absorbe +1 de Daño Directo recibido (Acumulable).', log: 'Absorbe {X} de daño', color: '#fff' },
+      'frenesi': { name: 'Frenesí', icon: '⚔️', tooltip: 'Frenesí (+1 Daño en Represalia, acumulable)', modalDesc: 'El goblin causa +1 Daño Directo durante su Represalia (Acumulable).', log: '+{X} Daño Represalia', color: '#ff0000' },
+      'armadura': { name: 'Armadura Reactiva', icon: '💥', tooltip: 'Armadura Reactiva (1 Daño al atacarle sin escudo, acumulable)', modalDesc: 'El goblin hace 1 Daño Directo automático a quien le ataque sin gastar escudo (Acumulable).', log: 'Armadura Reactiva', color: '#ffaa00' },
+      'escozor': { name: 'Imbuir Escozor', icon: '🔥', tooltip: 'Imbuir Escozor (Escozor al impactar)', modalDesc: 'Si este goblin ataca con éxito, quema el dado atacante del héroe.', log: 'Escozor imbuido', color: '#ff9900' },
+      'calambre': { name: 'Imbuir Calambre', icon: '⚡', tooltip: 'Imbuir Calambre (Calambre al impactar)', modalDesc: 'Si este goblin ataca con éxito, baja un escalón el dado NEGRO del héroe.', log: 'Calambre imbuido', color: '#ff9900' },
+      'tembleque': { name: 'Imbuir Tembleque', icon: '❄️', tooltip: 'Imbuir Tembleque (Tembleque al impactar)', modalDesc: 'Si este goblin ataca con éxito, reduce el dado del héroe a 1.', log: 'Tembleque imbuido', color: '#ff9900' }
+    },
     HORDE_AI_WEIGHTS: { SAVE_BASE: 25, SAVE_PER_PR: 2, SAVE_PER_SPENT_PR: 15, EMERGENCY_NO_GOBLINS: -50, EMERGENCY_ONE_GOBLIN: -20, RANDOM_JITTER_MAX: 35 }
   },
 
