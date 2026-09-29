@@ -7618,10 +7618,7 @@ window.showHordeUpgradeModal = function(upgradeType, cost) {
                 let logDetail = '';
                 if (upgradeType === 'piel') {
                     g.pielDeCuero = (g.pielDeCuero || 0) + 1;
-                    g.hp = (g.hp || g.currentHp) + 1;
-                    g.maxHp = (g.maxHp || g.hp);
-                    g.currentHp += 1;
-                    logDetail = `Piel de Cuero a ${gName} (+1 HP)`;
+                    logDetail = `Piel de Cuero a ${gName} (Absorbe ${g.pielDeCuero} de daño)`;
                 } else if (upgradeType === 'frenesi') {
                     g.frenesi = (g.frenesi || 0) + 1;
                     logDetail = `Frenesí a ${gName} (+${g.frenesi} Daño Represalia)`;
