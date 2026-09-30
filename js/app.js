@@ -685,6 +685,14 @@ if (toggleHordeLord) {
       if (selectSendaEl) {
         selectSendaEl.value = 'horda';
         selectSendaEl.disabled = true;
+        const triggerBtn = selectSendaEl.nextElementSibling;
+        if (triggerBtn && triggerBtn.classList.contains('custom-select-container')) {
+          const textSpan = triggerBtn.querySelector('span');
+          const nativeOpt = selectSendaEl.options[selectSendaEl.selectedIndex];
+          if (textSpan && nativeOpt) textSpan.textContent = nativeOpt.text;
+          triggerBtn.style.opacity = '0.5';
+          triggerBtn.style.pointerEvents = 'none';
+        }
       }
       // Solo nos aseguramos de que el jugador 1 pase a ser bot por comodidad, 
       // pero dejamos que el usuario configure la mesa como quiera.
@@ -694,6 +702,11 @@ if (toggleHordeLord) {
     } else {
       if (selectSendaEl) {
         selectSendaEl.disabled = false;
+        const triggerBtn = selectSendaEl.nextElementSibling;
+        if (triggerBtn && triggerBtn.classList.contains('custom-select-container')) {
+          triggerBtn.style.opacity = '1';
+          triggerBtn.style.pointerEvents = 'auto';
+        }
       }
       selectedSetupBots[0] = false;
     }
