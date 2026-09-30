@@ -3830,7 +3830,8 @@ function updateHordeLordUI() {
         let validTargets = activeGoblins.length;
         let isImbueUpg = ['escozor', 'calambre', 'tembleque'].includes(upgType);
         if (isImbueUpg) {
-            validTargets = activeGoblins.filter(g => !g.imbuirAlteracion).length;
+            const imbueMap = {'escozor': 'Escozor', 'calambre': 'Calambre', 'tembleque': 'Tembleque'};
+            validTargets = activeGoblins.filter(g => !(g.imbuirAlteraciones && g.imbuirAlteraciones.includes(imbueMap[upgType]))).length;
         }
         const infoSpan = btn.querySelector('span:last-child');
           if (!gameState.isHordeLordPlanningPhase || currentPR < cost || validTargets === 0) {
@@ -7607,8 +7608,8 @@ window.showHordeUpgradeModal = function(upgradeType, cost) {
         let gName = g.name || (`G${g.level}`);
         
         let isImbueUpg = ['escozor', 'calambre', 'tembleque'].includes(upgradeType);
-        let hasImbue = g.imbuirAlteracion != null && g.imbuirAlteracion !== '';
-        let isInvalidTarget = isImbueUpg && hasImbue;
+        let targetImbueName = {'escozor': 'Escozor', 'calambre': 'Calambre', 'tembleque': 'Tembleque'}[upgradeType];
+        let isInvalidTarget = isImbueUpg && g.imbuirAlteraciones && g.imbuirAlteraciones.includes(targetImbueName);
         
         btn.innerHTML = `
             <img src="${g.image}" style="width:130px; height:130px; object-fit:contain; border-radius:8px; margin-bottom:5px;">
@@ -7643,13 +7644,13 @@ window.showHordeUpgradeModal = function(upgradeType, cost) {
                     g.armaduraReactiva = (g.armaduraReactiva || 0) + 1;
                     logDetail = `Armadura Reactiva a ${gName}`;
                 } else if (upgradeType === 'escozor') {
-                    g.imbuirAlteracion = 'Escozor';
+                    g.imbuirAlteraciones = g.imbuirAlteraciones || []; g.imbuirAlteraciones.push('Escozor');
                     logDetail = `Escozor imbuido a ${gName}`;
                 } else if (upgradeType === 'calambre') {
-                    g.imbuirAlteracion = 'Calambre';
+                    g.imbuirAlteraciones = g.imbuirAlteraciones || []; g.imbuirAlteraciones.push('Calambre');
                     logDetail = `Calambre imbuido a ${gName}`;
                 } else if (upgradeType === 'tembleque') {
-                    g.imbuirAlteracion = 'Tembleque';
+                    g.imbuirAlteraciones = g.imbuirAlteraciones || []; g.imbuirAlteraciones.push('Tembleque');
                     logDetail = `Tembleque imbuido a ${gName}`;
                 }
                 

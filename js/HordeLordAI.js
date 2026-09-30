@@ -167,7 +167,7 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
       }
 
       // Imbuir Alteración (Aplica al impactar) - Maldición eliminada
-      if (budget >= Math.min(DB.hordeConfig.UPGRADE_COSTS.escozor, DB.hordeConfig.UPGRADE_COSTS.calambre) && !targetGob.imbuirAlteracion) {
+      if (budget >= Math.min(DB.hordeConfig.UPGRADE_COSTS.escozor, DB.hordeConfig.UPGRADE_COSTS.calambre) && (!targetGob.imbuirAlteraciones || targetGob.imbuirAlteraciones.length < 3)) {
         let altType = '';
         let altCost = 1;
         
@@ -190,7 +190,8 @@ window.executeHordeLordTurn = function() { console.log('Starting executeHordeLor
             cost: altCost,
             weight: 30,
             execute: () => {
-              targetGob.imbuirAlteracion = altType;
+              targetGob.imbuirAlteraciones = targetGob.imbuirAlteraciones || [];
+              if (!targetGob.imbuirAlteraciones.includes(altType)) targetGob.imbuirAlteraciones.push(altType);
               let expl = '';
               if (altType === 'Escozor') expl = ' (Si te daña, sufres 2 daño al usar dado rojo)';
               else if (altType === 'Tembleque') expl = ' (Si te daña, tu próximo dado rojo valdrá 1)';

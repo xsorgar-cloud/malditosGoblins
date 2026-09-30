@@ -1247,9 +1247,9 @@ class GameState {
         msgParts.push(`contraataca con ${normalDmg} daño`);
       }
       
-      if (targetGoblin.imbuirAlteracion && (normalDmg > 0 || directDmg > 0)) {
-        pendingImbuements.push(targetGoblin.imbuirAlteracion);
-        msgParts.push(`e intenta imbuir <span style="color:#00ffff">${targetGoblin.imbuirAlteracion}</span>`);
+      if (targetGoblin.imbuirAlteraciones && targetGoblin.imbuirAlteraciones.length > 0 && (normalDmg > 0 || directDmg > 0)) {
+        targetGoblin.imbuirAlteraciones.forEach(alt => pendingImbuements.push(alt));
+        msgParts.push(`e intenta imbuir <span style="color:#00ffff">${targetGoblin.imbuirAlteraciones.join(', ')}</span>`);
       }
       if (directDmg === 0 && normalDmg === 0) {
         if (goblinInterceptions.length > 0) {

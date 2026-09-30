@@ -1772,7 +1772,7 @@ calculateEquipPower(eq, bot) {
          
          if (gob.frenesi) { totalMaxNormal += gob.frenesi; }
          if (gob.armaduraReactiva) { totalMaxDirect += gob.armaduraReactiva; }
-         if (gob.imbuirAlteracion) { totalMaxDirect += 1; }
+         if (gob.imbuirAlteraciones) { totalMaxDirect += gob.imbuirAlteraciones.length; }
          return { normal: totalMaxNormal, direct: totalMaxDirect };
      }
 

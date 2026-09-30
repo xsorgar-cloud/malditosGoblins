@@ -896,15 +896,17 @@ window.combatDieOnCombatRoleHandler = (e) => {
     if (gob.frenesi > 0) buffsHTML += `<span title="${uiFren.name} (${uiFren.log.replace('{X}', gob.frenesi)})"><span style="filter: drop-shadow(0 0 2px ${uiFren.color});">${uiFren.icon}</span>${gob.frenesi > 1 ? `<b style="font-size:0.8rem; margin-left: 2px; color: #fff; font-family: monospace;">x${gob.frenesi}</b>` : ""}</span>`;
     const uiArma = DB.hordeConfig.UPGRADES_INFO['armadura'];
     if (gob.armaduraReactiva > 0) buffsHTML += `<span title="${uiArma.name} (1 Daño al atacar sin escudo)"><span style="filter: drop-shadow(0 0 2px ${uiArma.color});">${uiArma.icon}</span>${gob.armaduraReactiva > 1 ? `<b style="font-size:0.8rem; margin-left: 2px; color: #fff; font-family: monospace;">x${gob.armaduraReactiva}</b>` : ""}</span>`;
-    if (gob.imbuirAlteracion) {
-      let altLower = gob.imbuirAlteracion.toLowerCase();
-      let iconTitle = `Imbuido con ${gob.imbuirAlteracion}`;
-      if (altLower === 'tembleque') iconTitle += `: Si te daña, te contagia Tembleque (Fuerza 1 dado rojo a valor 1 en tu próximo ataque).`;
-      else if (altLower === 'escozor') iconTitle += `: Si te daña, te contagia Escozor (Sufres 2 Daño Directo si usas el dado rojo infectado).`;
-      else if (altLower === 'calambre') iconTitle += `: Si te daña, te contagia Calambre (Infecta 1 dado negro, impidiendo relanzarlo o modificarlo).`;
-      else if (altLower === 'maldición' || altLower === 'maldicion') iconTitle += `: Si te daña, te contagia Maldición (Pierdes 1 dado rojo entero en tu próximo ataque).`;
-      let altIcon = altLower === 'tembleque' ? '❄️' : (altLower === 'escozor' ? '🔥' : (altLower === 'maldición' || altLower === 'maldicion' ? '🔮' : '⚡'));
-      buffsHTML += `<span title="${iconTitle}" style="filter: drop-shadow(0 0 2px #00ffff);">${altIcon}</span>`;
+    if (gob.imbuirAlteraciones && gob.imbuirAlteraciones.length > 0) {
+      gob.imbuirAlteraciones.forEach(alt => {
+          let altLower = alt.toLowerCase();
+          let iconTitle = `Imbuido con ${alt}`;
+          if (altLower === 'tembleque') iconTitle += `: Si te daña, te contagia Tembleque (Fuerza 1 dado rojo a valor 1 en tu próximo ataque).`;
+          else if (altLower === 'escozor') iconTitle += `: Si te daña, te contagia Escozor (Sufres 2 Daño Directo si usas el dado rojo infectado).`;
+          else if (altLower === 'calambre') iconTitle += `: Si te daña, te contagia Calambre (Infecta 1 dado negro, impidiendo relanzarlo o modificarlo).`;
+          else if (altLower === 'maldición' || altLower === 'maldicion') iconTitle += `: Si te daña, te contagia Maldición (Pierdes 1 dado rojo entero en tu próximo ataque).`;
+          let altIcon = altLower === 'tembleque' ? '❄️' : (altLower === 'escozor' ? '🔥' : (altLower === 'maldición' || altLower === 'maldicion' ? '💀' : '⚡'));
+          buffsHTML += `<span title="${iconTitle}" style="filter: drop-shadow(0 0 2px #00ffff);">${altIcon}</span>`;
+      });
     }
     if (buffsHTML) {
       buffsHTML = `<div class="goblin-buffs" style="position: absolute; bottom: 5px; left: 5px; display: flex; gap: 4px; font-size: 1.1rem; background: rgba(20,0,0,0.8); padding: 3px 6px; border-radius: 8px; border: 1px solid #ff3333; box-shadow: 0 0 5px rgba(255,51,51,0.8); z-index: 10;">${buffsHTML}</div>`;
