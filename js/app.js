@@ -3827,8 +3827,13 @@ function updateHordeLordUI() {
         
         // Disable if not planning phase, not enough PR, OR if there are no goblins to apply to
         const activeGoblins = gameState.battlefield && gameState.battlefield.goblins ? gameState.battlefield.goblins.filter(g => g.currentHp > 0) : [];
+        let validTargets = activeGoblins.length;
+        let isImbueUpg = ['escozor', 'calambre', 'tembleque'].includes(upgType);
+        if (isImbueUpg) {
+            validTargets = activeGoblins.filter(g => !g.imbuirAlteracion).length;
+        }
         const infoSpan = btn.querySelector('span:last-child');
-          if (!gameState.isHordeLordPlanningPhase || currentPR < cost || activeGoblins.length === 0) {
+          if (!gameState.isHordeLordPlanningPhase || currentPR < cost || validTargets === 0) {
               btn.disabled = true;
               btn.style.opacity = '1';
               btn.style.filter = 'none';
@@ -7601,11 +7606,25 @@ window.showHordeUpgradeModal = function(upgradeType, cost) {
         
         let gName = g.name || (`G${g.level}`);
         
+        let isImbueUpg = ['escozor', 'calambre', 'tembleque'].includes(upgradeType);
+        let hasImbue = g.imbuirAlteracion != null && g.imbuirAlteracion !== '';
+        let isInvalidTarget = isImbueUpg && hasImbue;
+        
         btn.innerHTML = `
             <img src="${g.image}" style="width:130px; height:130px; object-fit:contain; border-radius:8px; margin-bottom:5px;">
             <span style="font-size: 0.9rem; font-weight: bold; color: #fff;">${gName}</span>
             <span style="font-size: 0.8rem; color: #ff4d4d;">${g.currentHp} / ${g.maxHp || g.hp} HP</span>
         `;
+        
+        if (isInvalidTarget) {
+            btn.disabled = true;
+            btn.style.opacity = '0.4';
+            btn.style.filter = 'grayscale(100%)';
+            btn.style.cursor = 'not-allowed';
+            btn.style.borderColor = '#555';
+            btn.style.background = 'rgba(50,50,50,0.3)';
+            btn.title = "Este goblin ya tiene una alteración imbuida.";
+        }
         
         btn.addEventListener('click', () => {
             // Aplicar la mejora
