@@ -3765,7 +3765,21 @@ function updateHordeLordUI() {
           if (costText) costText.innerText = cost;
         
         const infoSpan = btn.querySelector('span:last-child');
-          if (!gameState.isHordeLordPlanningPhase || currentPR < cost) {
+          let isIllegal = false;
+          let isBossBtn = level.startsWith('boss_');
+          if (gameState.battlefield) {
+              if (isBossBtn) {
+                  if (gameState.battlefield.waveLevel !== 4 || gameState.battlefield.goblins.some(g => g.isBoss && g.currentHp > 0)) {
+                      isIllegal = true;
+                  }
+              } else {
+                  if (parseInt(level) > gameState.battlefield.waveLevel) {
+                      isIllegal = true;
+                  }
+              }
+          }
+          
+          if (!gameState.isHordeLordPlanningPhase || currentPR < cost || isIllegal) {
               btn.disabled = true;
               btn.style.opacity = '1';
               btn.style.filter = 'none';
