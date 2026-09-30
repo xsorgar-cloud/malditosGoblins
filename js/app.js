@@ -695,6 +695,7 @@ if (toggleHordeLord) {
       if (selectSendaEl) {
         selectSendaEl.disabled = false;
       }
+      selectedSetupBots[0] = false;
     }
     renderRoleSelection();
     
