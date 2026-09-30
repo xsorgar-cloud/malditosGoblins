@@ -102,25 +102,25 @@ handleGameState() {
             // Escenario C
             if (!this.isActing) {
                 this.isActing = true;
-                setTimeout(() => this.performCombatTurn(activePlayer), 1000);
+                setTimeout(() => this.performCombatTurn(activePlayer), this.gameState.isHordeLordHuman ? 150 : 1000);
             }
         } else if (this.gameState.isMarketPhase) {
             // Escenario B
             if (!this.isActing) {
                 this.isActing = true;
-                setTimeout(() => this.performMarketTurn(activePlayer), 1500);
+                setTimeout(() => this.performMarketTurn(activePlayer), this.gameState.isHordeLordHuman ? 250 : 1500);
             }
         } else if (this.gameState.isRetaliationPhase) {
             // Escenario D
             if (!this.isActing) {
                 this.isActing = true;
-                setTimeout(() => this.performRetaliationTurn(), 1500);
+                setTimeout(() => this.performRetaliationTurn(), this.gameState.isHordeLordHuman ? 250 : 1500);
             }
         } else if (this.gameState.pendingCorrosionChoice || this.gameState.isGlobalEventActive) {
             // Escenario E
             if (!this.isActing) {
                 this.isActing = true;
-                setTimeout(() => this.performEventTurn(activePlayer), 1500);
+                setTimeout(() => this.performEventTurn(activePlayer), this.gameState.isHordeLordHuman ? 250 : 1500);
             }
         } else {
             // Escenario A
@@ -1533,7 +1533,7 @@ performCombatTurn(bot) {
                 this.gameState.addLog(`🎲 <strong>${bot.name}</strong> decide relanzar su dado negro (valor inicial: <strong>${originalValue}</strong>) buscando un mejor resultado para su equipo.`);
                 
                 // Animación y relanzamiento del dado
-                setTimeout(() => {
+                let d1 = this.gameState.isHordeLordHuman ? 100 : 300; setTimeout(() => {
                     if (window.botsPaused) {
                         this.isActing = false;
                         return;
@@ -1565,9 +1565,9 @@ performCombatTurn(bot) {
                             }
                             this.isActing = false;
                             this.handleGameState();
-                        }, 200);
-                    }, 300);
-                }, 300);
+                        }, this.gameState.isHordeLordHuman ? 50 : 200);
+                    }, this.gameState.isHordeLordHuman ? 100 : 300);
+                }, d1);
                 return;
             }
 
