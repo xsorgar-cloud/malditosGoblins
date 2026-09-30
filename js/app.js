@@ -7586,6 +7586,55 @@ window.showHordeUpgradeModal = function(upgradeType, cost) {
     const activeGoblins = gameState.battlefield.goblins.filter(g => g.currentHp > 0);
     if (activeGoblins.length === 0) return;
     
+    let isImbueUpg = ['escozor', 'calambre', 'tembleque'].includes(upgradeType);
+    let targetImbueName = {'escozor': 'Escozor', 'calambre': 'Calambre', 'tembleque': 'Tembleque'}[upgradeType];
+    
+    const validGoblins = activeGoblins.filter(g => {
+        let isInvalidTarget = isImbueUpg && g.imbuirAlteraciones && g.imbuirAlteraciones.includes(targetImbueName);
+        return !isInvalidTarget;
+    });
+
+    if (validGoblins.length === 0) return;
+
+    if (validGoblins.length === 1) {
+        // Auto-asignación si solo hay 1 válido
+        const g = validGoblins[0];
+        const currentPR = parseInt(gameState.hordaPR) || 0;
+        if (currentPR >= cost) {
+            gameState.hordaPR -= cost;
+            let gName = g.name || (`G${g.level}`);
+            let logDetail = '';
+            
+            if (upgradeType === 'piel') {
+                g.pielDeCuero = (g.pielDeCuero || 0) + 1;
+                logDetail = `Piel de Cuero a ${gName} (Absorbe ${g.pielDeCuero} de daño)`;
+            } else if (upgradeType === 'frenesi') {
+                g.frenesi = (g.frenesi || 0) + 1;
+                logDetail = `Frenesí a ${gName} (+${g.frenesi} Daño Represalia)`;
+            } else if (upgradeType === 'armadura') {
+                g.armaduraReactiva = (g.armaduraReactiva || 0) + 1;
+                logDetail = `Armadura Reactiva a ${gName}`;
+            } else if (upgradeType === 'escozor') {
+                g.imbuirAlteraciones = g.imbuirAlteraciones || []; g.imbuirAlteraciones.push('Escozor');
+                logDetail = `Escozor imbuido a ${gName}`;
+            } else if (upgradeType === 'calambre') {
+                g.imbuirAlteraciones = g.imbuirAlteraciones || []; g.imbuirAlteraciones.push('Calambre');
+                logDetail = `Calambre imbuido a ${gName}`;
+            } else if (upgradeType === 'tembleque') {
+                g.imbuirAlteraciones = g.imbuirAlteraciones || []; g.imbuirAlteraciones.push('Tembleque');
+                logDetail = `Tembleque imbuido a ${gName}`;
+            }
+            
+            gameState.addLog(`💀 <strong>El Señor de la Horda</strong> aplicó ${logDetail} <font color="#ff4d4d">(-${cost} PR)</font>`);
+            updateUI();
+            if (typeof window !== 'undefined' && window.renderBattlefield) {
+                window.renderBattlefield();
+            }
+        }
+        return;
+    }
+    
+    // Si hay > 1, mostrar modal normal
     const modal = document.getElementById('target-modal');
     const title = document.getElementById('target-modal-title');
     const desc = document.getElementById('target-modal-desc');
@@ -7596,7 +7645,6 @@ window.showHordeUpgradeModal = function(upgradeType, cost) {
     desc.innerHTML = `${upgInfo.modalDesc}<br><small>(Coste: ${cost} PR)</small>`;
     options.innerHTML = '';
     
-    // Configuración visual adaptada del curandero/roles
     const modalContent = modal.querySelector('.modal-content');
     options.classList.remove('curandero-layout');
     modalContent.classList.remove('wide-modal');
@@ -7622,8 +7670,6 @@ window.showHordeUpgradeModal = function(upgradeType, cost) {
         
         let gName = g.name || (`G${g.level}`);
         
-        let isImbueUpg = ['escozor', 'calambre', 'tembleque'].includes(upgradeType);
-        let targetImbueName = {'escozor': 'Escozor', 'calambre': 'Calambre', 'tembleque': 'Tembleque'}[upgradeType];
         let isInvalidTarget = isImbueUpg && g.imbuirAlteraciones && g.imbuirAlteraciones.includes(targetImbueName);
         
         btn.innerHTML = `
@@ -7643,7 +7689,6 @@ window.showHordeUpgradeModal = function(upgradeType, cost) {
         }
         
         btn.addEventListener('click', () => {
-            // Aplicar la mejora
             const currentPR = parseInt(gameState.hordaPR) || 0;
             if (currentPR >= cost) {
                 gameState.hordaPR -= cost;
@@ -7686,7 +7731,6 @@ window.showHordeUpgradeModal = function(upgradeType, cost) {
     
     options.appendChild(gobGrid);
     
-    // Add cancel button
     const cancelBtn = document.createElement('button');
     cancelBtn.className = 'btn primary';
     cancelBtn.style.marginTop = '20px';
