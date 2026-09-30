@@ -308,7 +308,7 @@ triggerAction(type, target = null, reason = "") {
                 }
                 this.hideAllBubbles();
                 this.triggerAction('buy-potion', bestPotion.id);
-            }, this.gameState.isHordeLordHuman ? 1500 : 2000);
+            }, this.gameState.isHordeLordHuman ? 500 : 2000);
 
             return true; // Indicamos que se ha tomado una acción principal (asíncrona)
         }
@@ -329,7 +329,7 @@ triggerAction(type, target = null, reason = "") {
                         }
                         this.hideAllBubbles();
                         this.triggerAction('combat', potentialTargets);
-                    }, this.gameState.isHordeLordHuman ? 1000 : 3500);
+                    }, this.gameState.isHordeLordHuman ? 500 : 3500);
                     return true; // Consume la acción principal
                 }
             }
@@ -1142,7 +1142,7 @@ performMainTurn(bot) {
                     }
                     this.hideAllBubbles();
                     this.triggerAction('combat', targetForCombat);
-                }, this.gameState.isHordeLordHuman ? 1000 : 3500);
+                }, this.gameState.isHordeLordHuman ? 500 : 3500);
             } else {
                 setTimeout(() => {
                     if (window.botsPaused) {
@@ -1151,7 +1151,7 @@ performMainTurn(bot) {
                     }
                     this.hideAllBubbles();
                     this.triggerAction(chosenAction);
-                }, this.gameState.isHordeLordHuman ? 1000 : 3500);
+                }, this.gameState.isHordeLordHuman ? 500 : 3500);
             }
         } catch(e) {
             console.error("Error in performMainTurn", e);
@@ -1368,7 +1368,7 @@ performMarketTurn(bot) {
                     }
                     this.hideAllBubbles();
                     this.triggerAction(chosenAction, chosenTarget, actionReason);
-                }, this.gameState.isHordeLordHuman ? 1000 : 3500);
+                }, this.gameState.isHordeLordHuman ? 500 : 3500);
             } else {
                 this.isActing = false;
             }
@@ -1508,7 +1508,7 @@ performCombatTurn(bot) {
                     } else {
                         console.log("[BotManager] Cannot click resolve button. Either missing or disabled.");
                     }
-                }, this.gameState.isHordeLordHuman ? 3000 : 5000);
+                }, this.gameState.isHordeLordHuman ? 2000 : 5000);
                 return;
             }
 
@@ -2884,7 +2884,7 @@ calculateEquipPower(eq, bot) {
                                 buttons[choiceIndex].click();
                                 this.isActing = false;
                                 this.handleGameState();
-                            }, this.gameState.isHordeLordHuman ? 1000 : 3500);
+                            }, this.gameState.isHordeLordHuman ? 500 : 3500);
                             return; // Wait for setTimeout
                         }
                     }
