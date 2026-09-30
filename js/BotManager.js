@@ -1460,7 +1460,7 @@ performCombatTurn(bot) {
                 }
                 
                 window.botCombatCountdownActive = true;
-                let secondsLeft = 5;
+                let secondsLeft = this.gameState.isHordeLordHuman ? 2 : 5;
                 const isCramped = this.gameState.currentCombat && this.gameState.currentCombat.needsCrampResolution;
                 const prefix = isCramped ? "Resolviendo calambres" : "Confirmando combate";
                 
@@ -1575,7 +1575,7 @@ performCombatTurn(bot) {
 
 
             let advice = "";
-            let delay = 500;
+            let delay = this.gameState.isHordeLordHuman ? 200 : 500;
 
             if (availableDice.length === totalActiveDice) {
                 advice = this.getCombatDialogue(availableDice, bot);
