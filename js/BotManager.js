@@ -1776,6 +1776,31 @@ calculateEquipPower(eq, bot) {
          return { normal: totalMaxNormal, direct: totalMaxDirect };
      }
 
+    // Calcula el perfil de daño de un grupo de goblins con degradación de riesgo ponderado (100%, 75%, 50%)
+    calculateGroupDamageProfile(targets) {
+        if (!targets || targets.length === 0) return { normal: 0, direct: 0 };
+        
+        let profiles = targets.map(g => this.getGoblinDamageProfile(g));
+        
+        // Ordenamos los perfiles de más peligroso a menos peligroso (daño total esperado)
+        profiles.sort((a, b) => (b.normal + b.direct) - (a.normal + a.direct));
+        
+        let normalDmg = 0;
+        let directDmg = 0;
+        
+        profiles.forEach((p, idx) => {
+            let multiplier = 1.0;
+            if (idx === 1) multiplier = 0.75;
+            else if (idx >= 2) multiplier = 0.50;
+            
+            normalDmg += (p.normal * multiplier);
+            directDmg += (p.direct * multiplier);
+        });
+        
+        return { normal: Math.ceil(normalDmg), direct: Math.ceil(directDmg) };
+    }
+
+
 // Determina los objetivos de combate seguros según el bot, los goblins presentes y la personalidad
     getSafeCombatTargets(bot, goblinsEnMesa, currentPersonality, isFarmingLife = false) {
         if (!goblinsEnMesa || goblinsEnMesa.length === 0) return [];
@@ -1906,10 +1931,7 @@ calculateEquipPower(eq, bot) {
         let evaluatedDirectDmg = 0;
 
         while (targets.length > 0 && !isSafe) {
-            let dmgProfile = targets.reduce((acc, g) => {
-                let p = this.getGoblinDamageProfile(g);
-                return { normal: acc.normal + p.normal, direct: acc.direct + p.direct };
-            }, { normal: 0, direct: 0 });
+            let dmgProfile = this.calculateGroupDamageProfile(targets);
             
             evaluatedNormalDmg = dmgProfile.normal;
             evaluatedDirectDmg = dmgProfile.direct;
@@ -1951,10 +1973,7 @@ calculateEquipPower(eq, bot) {
         }
 
         const finalHpSum = targets.reduce((s, g) => s + g.hp, 0);
-        const finalDmgProfile = targets.reduce((acc, g) => {
-            let p = this.getGoblinDamageProfile(g);
-            return { normal: acc.normal + p.normal, direct: acc.direct + p.direct };
-        }, { normal: 0, direct: 0 });
+        const finalDmgProfile = this.calculateGroupDamageProfile(targets);
         const finalDmgSum = finalDmgProfile.normal + finalDmgProfile.direct;
         
         const healingMsg = totalMaxHealing > 0 ? `, Curación Máx. ${totalMaxHealing}` : '';
