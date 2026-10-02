@@ -7815,13 +7815,12 @@ window.animateRoleProjectile = function(sourceIndex, targetId, roleId) {
         }
     } else if (typeof targetId === 'string') {
         // Goblin target
-        const gobEl = document.querySelector(`[data-uid="${targetId}"]`);
-        if (gobEl) {
-            destRect = gobEl.getBoundingClientRect();
-        } else {
-            const gobIdEl = document.getElementById(targetId);
-            if (gobIdEl) destRect = gobIdEl.getBoundingClientRect();
-        }
+        
+        let gobEl = document.getElementById('combat-gob-' + targetId);
+        if (!gobEl) gobEl = document.querySelector(`[data-uid="${targetId}"]`);
+        if (!gobEl) gobEl = document.getElementById(targetId);
+        if (gobEl) destRect = gobEl.getBoundingClientRect();
+
     }
     
     if (!destRect) return; // Destino no encontrado en DOM
