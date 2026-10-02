@@ -7944,28 +7944,30 @@ window._launchStoredProjectile = function(proj) {
         clearInterval(particleInterval);
         projectile.style.opacity = '0';
         
-        // Destello de impacto con más partículas
-        for(let i=0; i<30; i++) {
-            const burst = document.createElement('div');
-            burst.style.position = 'fixed';
-            burst.style.left = endX + 'px';
-            burst.style.top = endY + 'px';
-            const size = Math.random() * 4 + 2;
-            burst.style.width = size + 'px';
-            burst.style.height = size + 'px';
-            burst.style.borderRadius = '50%';
-            burst.style.background = pColor;
-            burst.style.boxShadow = `0 0 8px ${pColor}`;
-            burst.style.pointerEvents = 'none';
-            burst.style.zIndex = '99999';
-            const dxB = (Math.random() - 0.5) * 160 + 'px';
-            const dyB = (Math.random() - 0.5) * 160 + 'px';
-            burst.style.setProperty('--drift-x', dxB);
-            burst.style.animation = 'magic-drop 0.6s forwards ease-out';
-            document.body.appendChild(burst);
-            setTimeout(() => { burst.remove(); }, 600);
-        }
+        // Destello de impacto radial (Onda de energía)
+        const flash = document.createElement('div');
+        flash.style.position = 'fixed';
+        flash.style.left = endX + 'px';
+        flash.style.top = endY + 'px';
+        flash.style.width = '50px';
+        flash.style.height = '50px';
+        flash.style.borderRadius = '50%';
+        flash.style.background = `radial-gradient(circle, #fff 0%, ${pColor} 40%, transparent 80%)`;
+        flash.style.boxShadow = `0 0 20px ${pColor}`;
+        flash.style.pointerEvents = 'none';
+        flash.style.zIndex = '99999';
+        document.body.appendChild(flash);
         
+        // Animación radial usando Web Animations API (limpio y sin css)
+        flash.animate([
+            { transform: 'translate(-50%, -50%) scale(0.2)', opacity: 1 },
+            { transform: 'translate(-50%, -50%) scale(2.5)', opacity: 0 }
+        ], {
+            duration: 400,
+            easing: 'ease-out'
+        });
+        
+        setTimeout(() => { flash.remove(); }, 400);
         setTimeout(() => { projectile.remove(); }, 300);
     }, 500); 
 };
