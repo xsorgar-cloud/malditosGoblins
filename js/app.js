@@ -7814,20 +7814,30 @@ window.animateRoleProjectile = function(sourceIndex, targetId, roleId) {
             }
         }
     } else if (typeof targetId === 'string') {
-        // Goblin target
-        
         let gobEl = document.getElementById('goblin-card-' + targetId);
         if (!gobEl) gobEl = document.querySelector(`[data-uid="${targetId}"]`);
         if (!gobEl) gobEl = document.getElementById(targetId);
+        
+        // Si no lo encuentra, buscar en el modal como fallback (aunque no debería)
+        if (!gobEl) {
+            const allBtns = document.querySelectorAll('.goblin-card-modal');
+            gobEl = Array.from(allBtns).find(b => b.innerHTML.includes(targetId)); // Fallback brusco
+        }
+        
         if (gobEl) destRect = gobEl.getBoundingClientRect();
-
     }
     
-    if (!destRect) return; // Destino no encontrado en DOM
+    // Failsafe: Si el DOM se ha destruido, apuntar al centro de la pantalla en lugar de abortar
+    if (!destRect || destRect.width === 0) { 
+        destRect = {
+            left: window.innerWidth / 2,
+            top: window.innerHeight / 2,
+            width: 10,
+            height: 10
+        };
+    }
     
     const sourceRect = roleCard.getBoundingClientRect();
-    
-    // Coordenadas fijas capturadas
     const startX = sourceRect.left + sourceRect.width / 2;
     const startY = sourceRect.top + sourceRect.height / 2;
     const endX = destRect.left + destRect.width / 2;
@@ -7843,32 +7853,39 @@ window.animateRoleProjectile = function(sourceIndex, targetId, roleId) {
     };
     const pColor = colors[roleId] || '#ffffff';
 
-    // ALMACENAR EN MEMORIA (COLA DE PROYECTILES)
     window._projectileQueue.push({
         startX, startY, endX, endY, roleId, pColor
     });
 
     const modal = document.getElementById('target-modal');
-    // Si el modal está cerrado (o no existe), o es el turno de un bot, vaciar la cola inmediatamente
     if (!modal || modal.classList.contains('hidden')) {
-        // Le damos un respiro muy breve (50ms) por si fue una llamada sincrona
         setTimeout(() => window.flushProjectileQueue(), 50);
     }
 };
 
 window.flushProjectileQueue = function() {
     if (!window._projectileQueue || window._projectileQueue.length === 0) return;
-    
     const queue = [...window._projectileQueue];
     window._projectileQueue = [];
-    
     queue.forEach((proj, i) => {
-        // Lanzamos con 200ms de diferencia entre cada uno para el espectáculo visual
         setTimeout(() => {
-            window._launchStoredProjectile(proj);
+            if (typeof window._launchStoredProjectile === 'function') {
+                window._launchStoredProjectile(proj);
+            }
         }, i * 200);
     });
 };
+
+// Polling de seguridad por si el MutationObserver falla por repintados del DOM
+if (!window._modalPollingInterval) {
+    window._modalPollingInterval = setInterval(() => {
+        const modal = document.getElementById('target-modal');
+        if (modal && modal.classList.contains('hidden') && window._projectileQueue && window._projectileQueue.length > 0) {
+            window.flushProjectileQueue();
+        }
+    }, 300);
+}
+
 
 window._launchStoredProjectile = function(proj) {
     const { startX, startY, endX, endY, roleId, pColor } = proj;
