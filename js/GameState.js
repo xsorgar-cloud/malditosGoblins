@@ -2540,6 +2540,10 @@ Daño directo: Sufres ${brokenCount} de daño.`);
     if (targetId === null) {
       return "NEED_TARGET";
     }
+    if (typeof window !== 'undefined' && window.animateRoleProjectile && targetId !== null) {
+        window.animateRoleProjectile(playerIndex, targetId, roleId);
+    }
+
 
     let isSelf = (targetId === 'self' || targetId === playerIndex);
     let actualEnergyCost = energyCost;

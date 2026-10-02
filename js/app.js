@@ -7773,3 +7773,166 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 
+
+
+// --- ANIMACIONES DE ROLES (PROYECTILES MAGICOS) ---
+window.animateRoleProjectile = function(sourceIndex, targetId, roleId) {
+    const playerPanels = document.querySelectorAll('.player-panel');
+    const sourcePanel = playerPanels[sourceIndex];
+    if (!sourcePanel) return;
+    const roleCard = sourcePanel.querySelector('.role-card');
+    if (!roleCard) return;
+    
+    let destRect = null;
+    if (typeof targetId === 'number' || targetId === 'self') {
+        const tIndex = targetId === 'self' ? sourceIndex : targetId;
+        const targetPanel = playerPanels[tIndex];
+        if (targetPanel) {
+            if (roleId === 'sanador') {
+                const el = targetPanel.querySelector('.stat-hp') || targetPanel.querySelector('.fa-heart');
+                if (el) destRect = el.getBoundingClientRect();
+                else destRect = targetPanel.getBoundingClientRect();
+            } else if (roleId === 'protector') {
+                const el = targetPanel.querySelector('.status-effects-container');
+                if (el) destRect = el.getBoundingClientRect();
+                else destRect = targetPanel.getBoundingClientRect();
+            } else if (roleId === 'ladron') {
+                const el = targetPanel.querySelector('.stat-coins') || targetPanel.querySelector('.fa-coins');
+                if (el) destRect = el.getBoundingClientRect();
+                else destRect = targetPanel.getBoundingClientRect();
+            } else if (roleId === 'curandero') {
+                const eqDivs = targetPanel.querySelectorAll('.equipment-card');
+                if (eqDivs && eqDivs.length > 0) destRect = eqDivs[0].getBoundingClientRect();
+                else destRect = targetPanel.getBoundingClientRect();
+            } else {
+                destRect = targetPanel.getBoundingClientRect();
+            }
+        }
+    } else if (typeof targetId === 'string') {
+        // Goblin target
+        const gobEl = document.querySelector(`[data-uid="${targetId}"]`);
+        if (gobEl) {
+            destRect = gobEl.getBoundingClientRect();
+        } else {
+            // Check by generic id just in case
+            const gobIdEl = document.getElementById(targetId);
+            if (gobIdEl) destRect = gobIdEl.getBoundingClientRect();
+        }
+    }
+    
+    if (!destRect) return; // Destino no encontrado en DOM
+    
+    const sourceRect = roleCard.getBoundingClientRect();
+    
+    // Coordenadas
+    const startX = sourceRect.left + sourceRect.width / 2;
+    const startY = sourceRect.top + sourceRect.height / 2;
+    const endX = destRect.left + destRect.width / 2;
+    const endY = destRect.top + destRect.height / 2;
+    
+    const colors = {
+        sanador: '#2ecc71',
+        protector: '#3498db',
+        ladron: '#f1c40f',
+        curandero: '#9b59b6',
+        guerrero: '#e74c3c',
+        mago: '#e74c3c'
+    };
+    const pColor = colors[roleId] || '#ffffff';
+    
+    const dx = endX - startX;
+    const dy = endY - startY;
+    const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+    
+    // Proyectil
+    const projectile = document.createElement('div');
+    projectile.style.position = 'fixed';
+    projectile.style.left = startX + 'px';
+    projectile.style.top = startY + 'px';
+    projectile.style.width = '60px';
+    projectile.style.height = '12px';
+    projectile.style.borderRadius = '6px';
+    projectile.style.background = `linear-gradient(90deg, transparent, ${pColor})`;
+    projectile.style.boxShadow = `0 0 20px ${pColor}`;
+    projectile.style.transformOrigin = 'right center';
+    projectile.style.transform = `translate(-100%, -50%) rotate(${angle}deg)`;
+    projectile.style.zIndex = '100000';
+    projectile.style.pointerEvents = 'none';
+    projectile.style.transition = 'all 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
+    
+    document.body.appendChild(projectile);
+    
+    // Estilos de animación de partículas
+    if (!document.getElementById('magic-drop-keyframes')) {
+        const style = document.createElement('style');
+        style.id = 'magic-drop-keyframes';
+        style.innerHTML = `
+            @keyframes magic-drop {
+                0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+                100% { transform: translate(calc(-50% + var(--drift-x)), 80px) scale(0); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    // Generador de partículas (Estela)
+    let particleInterval = setInterval(() => {
+        const currentRect = projectile.getBoundingClientRect();
+        // Generar cerca de la cabeza del proyectil
+        const px = currentRect.right;
+        const py = currentRect.top + currentRect.height / 2;
+        
+        const part = document.createElement('div');
+        part.style.position = 'fixed';
+        part.style.left = px + 'px';
+        part.style.top = py + 'px';
+        part.style.width = '8px';
+        part.style.height = '8px';
+        part.style.borderRadius = '50%';
+        part.style.background = pColor;
+        part.style.boxShadow = `0 0 10px ${pColor}`;
+        part.style.pointerEvents = 'none';
+        part.style.zIndex = '99999';
+        
+        const driftX = (Math.random() - 0.5) * 80 + 'px';
+        part.style.setProperty('--drift-x', driftX);
+        part.style.animation = 'magic-drop 0.8s forwards ease-in';
+        
+        document.body.appendChild(part);
+        setTimeout(() => { part.remove(); }, 800);
+    }, 40);
+    
+    // Iniciar vuelo
+    projectile.getBoundingClientRect(); // forzar reflow
+    projectile.style.left = endX + 'px';
+    projectile.style.top = endY + 'px';
+    
+    // Limpieza e impacto
+    setTimeout(() => {
+        clearInterval(particleInterval);
+        projectile.style.opacity = '0';
+        
+        // Explosión de impacto
+        for(let i=0; i<10; i++) {
+            const burst = document.createElement('div');
+            burst.style.position = 'fixed';
+            burst.style.left = endX + 'px';
+            burst.style.top = endY + 'px';
+            burst.style.width = '10px';
+            burst.style.height = '10px';
+            burst.style.borderRadius = '50%';
+            burst.style.background = pColor;
+            burst.style.pointerEvents = 'none';
+            burst.style.zIndex = '99999';
+            const dxB = (Math.random() - 0.5) * 120 + 'px';
+            const dyB = (Math.random() - 0.5) * 120 + 'px';
+            burst.style.setProperty('--drift-x', dxB);
+            burst.style.animation = 'magic-drop 0.6s forwards ease-out';
+            document.body.appendChild(burst);
+            setTimeout(() => { burst.remove(); }, 600);
+        }
+        
+        setTimeout(() => { projectile.remove(); }, 300);
+    }, 500); // Coincide con la transición CSS
+};
+
