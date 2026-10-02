@@ -2541,7 +2541,7 @@ Daño directo: Sufres ${brokenCount} de daño.`);
       return "NEED_TARGET";
     }
     if (typeof window !== 'undefined' && window.animateRoleProjectile && targetId !== null) {
-        window.animateRoleProjectile(playerIndex, targetId, roleId);
+        setTimeout(() => { window.animateRoleProjectile(playerIndex, targetId, roleId); }, 400);
     }
 
 
