@@ -7777,10 +7777,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // --- ANIMACIONES DE ROLES (PROYECTILES MAGICOS) ---
 window.animateRoleProjectile = function(sourceIndex, targetId, roleId) {
+    console.log('ANIMATING PROJ:', sourceIndex, targetId, roleId);
     const playerPanels = document.querySelectorAll('.player-panel');
     const sourcePanel = playerPanels[sourceIndex];
     if (!sourcePanel) return;
-    const roleCard = sourcePanel.querySelector('.role-card');
+    const roleCard = sourcePanel.querySelector('.player-role') || sourcePanel.querySelector('.role-card');
     if (!roleCard) return;
     
     let destRect = null;
@@ -7789,7 +7790,7 @@ window.animateRoleProjectile = function(sourceIndex, targetId, roleId) {
         const targetPanel = playerPanels[tIndex];
         if (targetPanel) {
             if (roleId === 'sanador') {
-                const el = targetPanel.querySelector('.stat-hp') || targetPanel.querySelector('.fa-heart');
+                const el = targetPanel.querySelector('.stat.hp') || targetPanel.querySelector('.stat-hp') || targetPanel.querySelector('.fa-heart');
                 if (el) destRect = el.getBoundingClientRect();
                 else destRect = targetPanel.getBoundingClientRect();
             } else if (roleId === 'protector') {
@@ -7797,7 +7798,7 @@ window.animateRoleProjectile = function(sourceIndex, targetId, roleId) {
                 if (el) destRect = el.getBoundingClientRect();
                 else destRect = targetPanel.getBoundingClientRect();
             } else if (roleId === 'ladron') {
-                const el = targetPanel.querySelector('.stat-coins') || targetPanel.querySelector('.fa-coins');
+                const el = targetPanel.querySelector('.stat.gold') || targetPanel.querySelector('.stat-coins') || targetPanel.querySelector('.fa-coins');
                 if (el) destRect = el.getBoundingClientRect();
                 else destRect = targetPanel.getBoundingClientRect();
             } else if (roleId === 'curandero') {
