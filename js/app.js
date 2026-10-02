@@ -7816,7 +7816,7 @@ window.animateRoleProjectile = function(sourceIndex, targetId, roleId) {
     } else if (typeof targetId === 'string') {
         // Goblin target
         
-        let gobEl = document.getElementById('combat-gob-' + targetId);
+        let gobEl = document.getElementById('goblin-card-' + targetId);
         if (!gobEl) gobEl = document.querySelector(`[data-uid="${targetId}"]`);
         if (!gobEl) gobEl = document.getElementById(targetId);
         if (gobEl) destRect = gobEl.getBoundingClientRect();
