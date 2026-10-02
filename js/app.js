@@ -7863,6 +7863,42 @@ window.animateRoleProjectile = function(sourceIndex, targetId, roleId) {
     
     // Failsafe: Si el DOM se ha destruido, apuntar al centro de la pantalla en lugar de abortar
     if (!destRect || destRect.width === 0) { 
+        // ALERTA VISUAL GIGANTE PARA EL USUARIO
+        const alertBox = document.createElement('div');
+        alertBox.style.position = 'fixed';
+        alertBox.style.top = '10%';
+        alertBox.style.left = '10%';
+        alertBox.style.width = '80%';
+        alertBox.style.background = 'rgba(255, 0, 0, 0.9)';
+        alertBox.style.color = 'white';
+        alertBox.style.padding = '20px';
+        alertBox.style.fontSize = '24px';
+        alertBox.style.zIndex = '9999999';
+        alertBox.style.borderRadius = '10px';
+        alertBox.style.border = '5px solid yellow';
+        alertBox.style.fontFamily = 'monospace';
+        
+        let debugText = "ERROR CRÍTICO: OBJETIVO NO ENCONTRADO EN DOM\n";
+        debugText += "TargetId buscado: '" + targetId + "' (tipo: " + typeof targetId + ")\n";
+        
+        // Vamos a volcar qué cartas existían
+        const allCardsDebug = document.querySelectorAll('.combat-goblin-card, .goblin-card, .goblin-card-modal');
+        debugText += "Total cartas goblin renderizadas en DOM: " + allCardsDebug.length + "\n";
+        
+        let foundIds = [];
+        allCardsDebug.forEach(c => {
+            if (c.id) foundIds.push("ID:" + c.id);
+            if (c.dataset && c.dataset.uid) foundIds.push("UID:" + c.dataset.uid);
+        });
+        
+        debugText += "IDs disponibles: " + foundIds.slice(0, 10).join(', ') + (foundIds.length > 10 ? '...' : '') + "\n";
+        
+        // Botón para cerrar
+        debugText += "<br><br><button onclick='this.parentElement.remove()' style='padding:10px 20px; font-size: 20px;'>CERRAR ESTE MENSAJE</button>";
+        
+        alertBox.innerHTML = debugText;
+        document.body.appendChild(alertBox);
+
         destRect = {
             left: window.innerWidth / 2,
             top: window.innerHeight / 2,
