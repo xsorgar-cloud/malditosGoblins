@@ -7834,10 +7834,10 @@ window.animateRoleProjectile = function(sourceIndex, targetId, roleId) {
     const endY = destRect.top + destRect.height / 2;
     
     const colors = {
-        sanador: '#2ecc71',
-        protector: '#3498db',
+        sanador: '#9b59b6',
+        protector: '#cccccc',
         ladron: '#f1c40f',
-        curandero: '#9b59b6',
+        curandero: '#2ecc71',
         guerrero: '#e74c3c',
         mago: '#e74c3c'
     };
@@ -7877,15 +7877,16 @@ window._launchStoredProjectile = function(proj) {
     const dy = endY - startY;
     const angle = Math.atan2(dy, dx) * (180 / Math.PI);
     
+    // Proyectil / Cabeza del cometa
     const projectile = document.createElement('div');
     projectile.style.position = 'fixed';
     projectile.style.left = startX + 'px';
     projectile.style.top = startY + 'px';
-    projectile.style.width = '60px';
-    projectile.style.height = '12px';
-    projectile.style.borderRadius = '6px';
-    projectile.style.background = `linear-gradient(90deg, transparent, ${pColor})`;
-    projectile.style.boxShadow = `0 0 20px ${pColor}`;
+    projectile.style.width = '70px';
+    projectile.style.height = '6px';
+    projectile.style.borderRadius = '3px';
+    projectile.style.background = `linear-gradient(90deg, transparent, ${pColor}, #ffffff)`;
+    projectile.style.boxShadow = `0 0 15px ${pColor}`;
     projectile.style.transformOrigin = 'right center';
     projectile.style.transform = `translate(-100%, -50%) rotate(${angle}deg)`;
     projectile.style.zIndex = '100000';
@@ -7911,25 +7912,29 @@ window._launchStoredProjectile = function(proj) {
         const px = currentRect.right;
         const py = currentRect.top + currentRect.height / 2;
         
-        const part = document.createElement('div');
-        part.style.position = 'fixed';
-        part.style.left = px + 'px';
-        part.style.top = py + 'px';
-        part.style.width = '8px';
-        part.style.height = '8px';
-        part.style.borderRadius = '50%';
-        part.style.background = pColor;
-        part.style.boxShadow = `0 0 10px ${pColor}`;
-        part.style.pointerEvents = 'none';
-        part.style.zIndex = '99999';
-        
-        const driftX = (Math.random() - 0.5) * 80 + 'px';
-        part.style.setProperty('--drift-x', driftX);
-        part.style.animation = 'magic-drop 0.8s forwards ease-in';
-        
-        document.body.appendChild(part);
-        setTimeout(() => { part.remove(); }, 800);
-    }, 40);
+        // Numerosas partículas más pequeñas
+        for(let j=0; j<4; j++) {
+            const part = document.createElement('div');
+            part.style.position = 'fixed';
+            part.style.left = px + 'px';
+            part.style.top = (py + (Math.random() - 0.5) * 6) + 'px';
+            const size = Math.random() * 3 + 2; // 2 a 5px
+            part.style.width = size + 'px';
+            part.style.height = size + 'px';
+            part.style.borderRadius = '50%';
+            part.style.background = pColor;
+            part.style.boxShadow = `0 0 5px ${pColor}`;
+            part.style.pointerEvents = 'none';
+            part.style.zIndex = '99999';
+            
+            const driftX = (Math.random() - 0.5) * 100 + 'px';
+            part.style.setProperty('--drift-x', driftX);
+            part.style.animation = `magic-drop ${0.4 + Math.random()*0.4}s forwards ease-in`;
+            
+            document.body.appendChild(part);
+            setTimeout(() => { part.remove(); }, 800);
+        }
+    }, 15);
     
     projectile.getBoundingClientRect(); 
     projectile.style.left = endX + 'px';
@@ -7939,19 +7944,22 @@ window._launchStoredProjectile = function(proj) {
         clearInterval(particleInterval);
         projectile.style.opacity = '0';
         
-        for(let i=0; i<10; i++) {
+        // Destello de impacto con más partículas
+        for(let i=0; i<30; i++) {
             const burst = document.createElement('div');
             burst.style.position = 'fixed';
             burst.style.left = endX + 'px';
             burst.style.top = endY + 'px';
-            burst.style.width = '10px';
-            burst.style.height = '10px';
+            const size = Math.random() * 4 + 2;
+            burst.style.width = size + 'px';
+            burst.style.height = size + 'px';
             burst.style.borderRadius = '50%';
             burst.style.background = pColor;
+            burst.style.boxShadow = `0 0 8px ${pColor}`;
             burst.style.pointerEvents = 'none';
             burst.style.zIndex = '99999';
-            const dxB = (Math.random() - 0.5) * 120 + 'px';
-            const dyB = (Math.random() - 0.5) * 120 + 'px';
+            const dxB = (Math.random() - 0.5) * 160 + 'px';
+            const dyB = (Math.random() - 0.5) * 160 + 'px';
             burst.style.setProperty('--drift-x', dxB);
             burst.style.animation = 'magic-drop 0.6s forwards ease-out';
             document.body.appendChild(burst);
@@ -7961,7 +7969,6 @@ window._launchStoredProjectile = function(proj) {
         setTimeout(() => { projectile.remove(); }, 300);
     }, 500); 
 };
-
 // Hook MutationObserver para observar cuándo se cierra el target-modal
 function _setupRoleModalObserver() {
     const targetModal = document.getElementById('target-modal');
