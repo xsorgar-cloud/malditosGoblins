@@ -7778,6 +7778,9 @@ document.addEventListener('DOMContentLoaded', () => {
 // --- ANIMACIONES DE ROLES (PROYECTILES MAGICOS) ---
 
 
+
+window._projectileQueue = window._projectileQueue || [];
+
 window.animateRoleProjectile = function(sourceIndex, targetId, roleId) {
     const playerPanels = document.querySelectorAll('.player-panel');
     const sourcePanel = playerPanels[sourceIndex];
@@ -7825,110 +7828,161 @@ window.animateRoleProjectile = function(sourceIndex, targetId, roleId) {
     
     const sourceRect = roleCard.getBoundingClientRect();
     
-    // Retrasar disparo visual 600ms para asegurar el cierre de cualquier div/modal previo
+    // Coordenadas fijas capturadas
+    const startX = sourceRect.left + sourceRect.width / 2;
+    const startY = sourceRect.top + sourceRect.height / 2;
+    const endX = destRect.left + destRect.width / 2;
+    const endY = destRect.top + destRect.height / 2;
+    
+    const colors = {
+        sanador: '#2ecc71',
+        protector: '#3498db',
+        ladron: '#f1c40f',
+        curandero: '#9b59b6',
+        guerrero: '#e74c3c',
+        mago: '#e74c3c'
+    };
+    const pColor = colors[roleId] || '#ffffff';
+
+    // ALMACENAR EN MEMORIA (COLA DE PROYECTILES)
+    window._projectileQueue.push({
+        startX, startY, endX, endY, roleId, pColor
+    });
+
+    const modal = document.getElementById('target-modal');
+    // Si el modal está cerrado (o no existe), o es el turno de un bot, vaciar la cola inmediatamente
+    if (!modal || modal.classList.contains('hidden')) {
+        // Le damos un respiro muy breve (50ms) por si fue una llamada sincrona
+        setTimeout(() => window.flushProjectileQueue(), 50);
+    }
+};
+
+window.flushProjectileQueue = function() {
+    if (!window._projectileQueue || window._projectileQueue.length === 0) return;
+    
+    const queue = [...window._projectileQueue];
+    window._projectileQueue = [];
+    
+    queue.forEach((proj, i) => {
+        // Lanzamos con 200ms de diferencia entre cada uno para el espectáculo visual
+        setTimeout(() => {
+            window._launchStoredProjectile(proj);
+        }, i * 200);
+    });
+};
+
+window._launchStoredProjectile = function(proj) {
+    const { startX, startY, endX, endY, roleId, pColor } = proj;
+    
+    const dx = endX - startX;
+    const dy = endY - startY;
+    const angle = Math.atan2(dy, dx) * (180 / Math.PI);
+    
+    const projectile = document.createElement('div');
+    projectile.style.position = 'fixed';
+    projectile.style.left = startX + 'px';
+    projectile.style.top = startY + 'px';
+    projectile.style.width = '60px';
+    projectile.style.height = '12px';
+    projectile.style.borderRadius = '6px';
+    projectile.style.background = `linear-gradient(90deg, transparent, ${pColor})`;
+    projectile.style.boxShadow = `0 0 20px ${pColor}`;
+    projectile.style.transformOrigin = 'right center';
+    projectile.style.transform = `translate(-100%, -50%) rotate(${angle}deg)`;
+    projectile.style.zIndex = '100000';
+    projectile.style.pointerEvents = 'none';
+    projectile.style.transition = 'all 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
+    
+    document.body.appendChild(projectile);
+    
+    if (!document.getElementById('magic-drop-keyframes')) {
+        const style = document.createElement('style');
+        style.id = 'magic-drop-keyframes';
+        style.innerHTML = `
+            @keyframes magic-drop {
+                0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+                100% { transform: translate(calc(-50% + var(--drift-x)), 80px) scale(0); opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    }
+    
+    let particleInterval = setInterval(() => {
+        const currentRect = projectile.getBoundingClientRect();
+        const px = currentRect.right;
+        const py = currentRect.top + currentRect.height / 2;
+        
+        const part = document.createElement('div');
+        part.style.position = 'fixed';
+        part.style.left = px + 'px';
+        part.style.top = py + 'px';
+        part.style.width = '8px';
+        part.style.height = '8px';
+        part.style.borderRadius = '50%';
+        part.style.background = pColor;
+        part.style.boxShadow = `0 0 10px ${pColor}`;
+        part.style.pointerEvents = 'none';
+        part.style.zIndex = '99999';
+        
+        const driftX = (Math.random() - 0.5) * 80 + 'px';
+        part.style.setProperty('--drift-x', driftX);
+        part.style.animation = 'magic-drop 0.8s forwards ease-in';
+        
+        document.body.appendChild(part);
+        setTimeout(() => { part.remove(); }, 800);
+    }, 40);
+    
+    projectile.getBoundingClientRect(); 
+    projectile.style.left = endX + 'px';
+    projectile.style.top = endY + 'px';
+    
     setTimeout(() => {
-        // Coordenadas fijas capturadas
-        const startX = sourceRect.left + sourceRect.width / 2;
-        const startY = sourceRect.top + sourceRect.height / 2;
-        const endX = destRect.left + destRect.width / 2;
-        const endY = destRect.top + destRect.height / 2;
+        clearInterval(particleInterval);
+        projectile.style.opacity = '0';
         
-        const colors = {
-            sanador: '#2ecc71',
-            protector: '#3498db',
-            ladron: '#f1c40f',
-            curandero: '#9b59b6',
-            guerrero: '#e74c3c',
-            mago: '#e74c3c'
-        };
-        const pColor = colors[roleId] || '#ffffff';
-        
-        const dx = endX - startX;
-        const dy = endY - startY;
-        const angle = Math.atan2(dy, dx) * (180 / Math.PI);
-        
-        const projectile = document.createElement('div');
-        projectile.style.position = 'fixed';
-        projectile.style.left = startX + 'px';
-        projectile.style.top = startY + 'px';
-        projectile.style.width = '60px';
-        projectile.style.height = '12px';
-        projectile.style.borderRadius = '6px';
-        projectile.style.background = `linear-gradient(90deg, transparent, ${pColor})`;
-        projectile.style.boxShadow = `0 0 20px ${pColor}`;
-        projectile.style.transformOrigin = 'right center';
-        projectile.style.transform = `translate(-100%, -50%) rotate(${angle}deg)`;
-        projectile.style.zIndex = '100000';
-        projectile.style.pointerEvents = 'none';
-        projectile.style.transition = 'all 0.5s cubic-bezier(0.25, 1, 0.5, 1)';
-        
-        document.body.appendChild(projectile);
-        
-        if (!document.getElementById('magic-drop-keyframes')) {
-            const style = document.createElement('style');
-            style.id = 'magic-drop-keyframes';
-            style.innerHTML = `
-                @keyframes magic-drop {
-                    0% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
-                    100% { transform: translate(calc(-50% + var(--drift-x)), 80px) scale(0); opacity: 0; }
-                }
-            `;
-            document.head.appendChild(style);
+        for(let i=0; i<10; i++) {
+            const burst = document.createElement('div');
+            burst.style.position = 'fixed';
+            burst.style.left = endX + 'px';
+            burst.style.top = endY + 'px';
+            burst.style.width = '10px';
+            burst.style.height = '10px';
+            burst.style.borderRadius = '50%';
+            burst.style.background = pColor;
+            burst.style.pointerEvents = 'none';
+            burst.style.zIndex = '99999';
+            const dxB = (Math.random() - 0.5) * 120 + 'px';
+            const dyB = (Math.random() - 0.5) * 120 + 'px';
+            burst.style.setProperty('--drift-x', dxB);
+            burst.style.animation = 'magic-drop 0.6s forwards ease-out';
+            document.body.appendChild(burst);
+            setTimeout(() => { burst.remove(); }, 600);
         }
         
-        let particleInterval = setInterval(() => {
-            const currentRect = projectile.getBoundingClientRect();
-            const px = currentRect.right;
-            const py = currentRect.top + currentRect.height / 2;
-            
-            const part = document.createElement('div');
-            part.style.position = 'fixed';
-            part.style.left = px + 'px';
-            part.style.top = py + 'px';
-            part.style.width = '8px';
-            part.style.height = '8px';
-            part.style.borderRadius = '50%';
-            part.style.background = pColor;
-            part.style.boxShadow = `0 0 10px ${pColor}`;
-            part.style.pointerEvents = 'none';
-            part.style.zIndex = '99999';
-            
-            const driftX = (Math.random() - 0.5) * 80 + 'px';
-            part.style.setProperty('--drift-x', driftX);
-            part.style.animation = 'magic-drop 0.8s forwards ease-in';
-            
-            document.body.appendChild(part);
-            setTimeout(() => { part.remove(); }, 800);
-        }, 40);
-        
-        projectile.getBoundingClientRect(); 
-        projectile.style.left = endX + 'px';
-        projectile.style.top = endY + 'px';
-        
-        setTimeout(() => {
-            clearInterval(particleInterval);
-            projectile.style.opacity = '0';
-            
-            for(let i=0; i<10; i++) {
-                const burst = document.createElement('div');
-                burst.style.position = 'fixed';
-                burst.style.left = endX + 'px';
-                burst.style.top = endY + 'px';
-                burst.style.width = '10px';
-                burst.style.height = '10px';
-                burst.style.borderRadius = '50%';
-                burst.style.background = pColor;
-                burst.style.pointerEvents = 'none';
-                burst.style.zIndex = '99999';
-                const dxB = (Math.random() - 0.5) * 120 + 'px';
-                const dyB = (Math.random() - 0.5) * 120 + 'px';
-                burst.style.setProperty('--drift-x', dxB);
-                burst.style.animation = 'magic-drop 0.6s forwards ease-out';
-                document.body.appendChild(burst);
-                setTimeout(() => { burst.remove(); }, 600);
-            }
-            
-            setTimeout(() => { projectile.remove(); }, 300);
-        }, 500); 
-    }, 600);
+        setTimeout(() => { projectile.remove(); }, 300);
+    }, 500); 
 };
+
+// Hook MutationObserver para observar cuándo se cierra el target-modal
+function _setupRoleModalObserver() {
+    const targetModal = document.getElementById('target-modal');
+    if (targetModal) {
+        const observer = new MutationObserver((mutations) => {
+            mutations.forEach((mutation) => {
+                if (mutation.attributeName === 'class') {
+                    if (targetModal.classList.contains('hidden')) {
+                        // El modal se ha cerrado (manual o auto), lanzamos todo lo guardado en memoria!
+                        window.flushProjectileQueue();
+                    }
+                }
+            });
+        });
+        observer.observe(targetModal, { attributes: true });
+    }
+}
+
+if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', _setupRoleModalObserver);
+} else {
+    _setupRoleModalObserver();
+}
