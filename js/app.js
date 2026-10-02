@@ -7788,6 +7788,20 @@ window.animateRoleProjectile = function(sourceIndex, targetId, roleId) {
     const roleCard = sourcePanel.querySelector('.player-role') || sourcePanel.querySelector('.role-card');
     if (!roleCard) return;
     
+        
+    // VISUAL DEBUG TOAST
+    const toast = document.createElement('div');
+    toast.style.position = 'fixed';
+    toast.style.top = '10px';
+    toast.style.left = '10px';
+    toast.style.background = 'red';
+    toast.style.color = 'white';
+    toast.style.padding = '10px';
+    toast.style.zIndex = '9999999';
+    toast.innerText = 'TARGET_ID: ' + targetId + ' TYPE: ' + typeof targetId;
+    document.body.appendChild(toast);
+    setTimeout(() => toast.remove(), 5000);
+
     let destRect = null;
     if (typeof targetId === 'number' || targetId === 'self') {
         const tIndex = targetId === 'self' ? sourceIndex : targetId;
@@ -7814,14 +7828,34 @@ window.animateRoleProjectile = function(sourceIndex, targetId, roleId) {
             }
         }
     } else if (typeof targetId === 'string') {
-        let gobEl = document.getElementById('goblin-card-' + targetId);
-        if (!gobEl) gobEl = document.querySelector(`[data-uid="${targetId}"]`);
-        if (!gobEl) gobEl = document.getElementById(targetId);
+        let gobEl = null;
         
-        // Si no lo encuentra, buscar en el modal como fallback (aunque no debería)
+        // Búsqueda exhaustiva en todo el DOM
+        const allCards = document.querySelectorAll('.combat-goblin-card, .goblin-card, .goblin-card-modal, [data-uid]');
+        for (let i = 0; i < allCards.length; i++) {
+            const c = allCards[i];
+            let isMatch = false;
+            if (c.id && c.id.includes(targetId)) isMatch = true;
+            else if (c.dataset && c.dataset.uid === targetId) isMatch = true;
+            else if (c.getAttribute('data-uid') === targetId) isMatch = true;
+            
+            if (isMatch) {
+                const rect = c.getBoundingClientRect();
+                if (rect.width > 0 && rect.height > 0) { // Ignorar elementos con display: none
+                    gobEl = c;
+                    break;
+                }
+            }
+        }
+        
+        // Último recurso: querySelector nativo validando visibilidad
         if (!gobEl) {
-            const allBtns = document.querySelectorAll('.goblin-card-modal');
-            gobEl = Array.from(allBtns).find(b => b.innerHTML.includes(targetId)); // Fallback brusco
+            const fallback = document.querySelector(`[data-uid="${targetId}"]`);
+            if (fallback && fallback.getBoundingClientRect().width > 0) gobEl = fallback;
+        }
+        if (!gobEl) {
+            const fallback2 = document.getElementById(targetId);
+            if (fallback2 && fallback2.getBoundingClientRect().width > 0) gobEl = fallback2;
         }
         
         if (gobEl) destRect = gobEl.getBoundingClientRect();
